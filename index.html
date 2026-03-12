@@ -3,31 +3,88 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>نظام متابعة مندوب الدفع الإلكتروني</title>
+  <title>Axentro | نظام متابعة مندوب الدفع الإلكتروني</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="app">
     <div id="toast" class="toast hidden"></div>
 
-    <section id="login-view" class="login-container">
-      <div class="login-card">
-        <h1>نظام متابعة مندوب الدفع الإلكتروني</h1>
-        <p class="subtitle">تسجيل الدخول</p>
+    <section id="login-view" class="login-shell">
+      <div class="login-background"></div>
+      <div class="login-container">
+        <div class="login-card brand-surface">
+          <div class="brand-chip">Axentro</div>
+          <h1>نظام متابعة مندوب الدفع الإلكتروني</h1>
+          <p class="subtitle">لوحة تشغيل يومية لإدارة التجار، المكن، التحويلات، والتحصيلات.</p>
 
-        <form id="login-form">
-          <label for="password">كلمة المرور</label>
-          <input type="password" id="password" placeholder="أدخل كلمة المرور" required />
-          <button type="submit">دخول</button>
-        </form>
+          <form id="login-form" class="login-form">
+            <label for="password">كلمة المرور</label>
+            <input type="password" id="password" placeholder="أدخل كلمة المرور" required />
+            <button type="submit" class="primary-btn">دخول</button>
+          </form>
+
+          <div class="login-meta">
+            <span>تشغيل فردي</span>
+            <span>نسخة Axentro</span>
+          </div>
+        </div>
+
+        <aside class="brand-side brand-surface">
+          <div class="brand-side-header">
+            <h2>Axentro</h2>
+            <p>حلول رقمية مبسطة بواجهة موحدة وهوية نظيفة.</p>
+          </div>
+
+          <a
+            class="qr-card"
+            href="https://axentro-official.github.io/axentro-website/links.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="فتح صفحة روابط Axentro"
+            title="فتح صفحة روابط Axentro"
+          >
+            <img src="qr-links.png" alt="QR Code لصفحة روابط Axentro" class="qr-image" />
+            <div class="qr-content">
+              <strong>روابط Axentro</strong>
+              <span>اضغط على الـ QR أو امسحه لفتح صفحة الروابط.</span>
+            </div>
+          </a>
+
+          <div class="brand-note">
+            <span class="dot"></span>
+            <p>تم تصميم هذه النسخة لتكون عملية على الموبايل والكمبيوتر مع تخطيط واضح وسريع.</p>
+          </div>
+        </aside>
       </div>
+
+      <footer class="site-footer login-footer">
+        <div>
+          <strong>Axentro</strong>
+          <span>Software Solutions & Digital Systems</span>
+        </div>
+        <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" rel="noopener noreferrer">
+          فتح صفحة الروابط
+        </a>
+      </footer>
     </section>
 
     <section id="dashboard-view" class="hidden app-layout">
       <aside class="sidebar">
-        <div class="brand">
-          <h2>لوحة النظام</h2>
-          <p id="current-month-label">--</p>
+        <div class="sidebar-top">
+          <div class="brand-mark">A</div>
+          <div class="brand">
+            <h2>Axentro</h2>
+            <p>Merchant Tracker</p>
+          </div>
+        </div>
+
+        <div class="current-month-box">
+          <span>الشهر الحالي</span>
+          <strong id="current-month-label">--</strong>
         </div>
 
         <nav class="menu">
@@ -43,44 +100,61 @@
         <div class="sidebar-footer">
           <button id="refresh-dashboard-btn" class="secondary-btn">تحديث البيانات</button>
           <button id="logout-btn" class="danger-btn">تسجيل الخروج</button>
+
+          <a
+            class="sidebar-qr"
+            href="https://axentro-official.github.io/axentro-website/links.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="فتح صفحة روابط Axentro"
+          >
+            <img src="qr-links.png" alt="QR Code لروابط Axentro" />
+            <span>QR روابط Axentro</span>
+          </a>
         </div>
       </aside>
 
       <main class="main-content">
-        <header class="topbar">
-          <h1 id="page-title">لوحة التحكم</h1>
+        <header class="topbar brand-surface">
+          <div>
+            <div class="eyebrow">Axentro Dashboard</div>
+            <h1 id="page-title">لوحة التحكم</h1>
+          </div>
+          <a class="topbar-link" href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" rel="noopener noreferrer">
+            صفحة الروابط
+          </a>
         </header>
 
         <section id="home-section" class="content-section">
           <div class="cards-grid">
-            <div class="stat-card">
+            <div class="stat-card brand-surface accent-card">
               <span>إجمالي التحويلات</span>
               <strong id="stat-transfers">0</strong>
             </div>
-            <div class="stat-card">
+            <div class="stat-card brand-surface">
               <span>إجمالي التحصيلات</span>
               <strong id="stat-collections">0</strong>
             </div>
-            <div class="stat-card">
+            <div class="stat-card brand-surface warning-card">
               <span>إجمالي المتبقي</span>
               <strong id="stat-remaining">0</strong>
             </div>
-            <div class="stat-card">
+            <div class="stat-card brand-surface">
               <span>عدد التجار</span>
               <strong id="stat-merchants">0</strong>
             </div>
-            <div class="stat-card">
+            <div class="stat-card brand-surface">
               <span>عدد المكن</span>
               <strong id="stat-machines">0</strong>
             </div>
-            <div class="stat-card">
+            <div class="stat-card brand-surface">
               <span>حركات اليوم</span>
               <strong id="stat-today">0</strong>
             </div>
           </div>
 
           <div class="panel-grid">
-            <div class="panel">
+            <div class="panel brand-surface">
               <div class="panel-header">
                 <h3>أعلى التجار مديونية</h3>
               </div>
@@ -98,7 +172,7 @@
               </div>
             </div>
 
-            <div class="panel">
+            <div class="panel brand-surface">
               <div class="panel-header">
                 <h3>أداء المكن</h3>
               </div>
@@ -121,7 +195,7 @@
         </section>
 
         <section id="merchants-section" class="content-section hidden">
-          <div class="panel">
+          <div class="panel brand-surface">
             <div class="panel-header between">
               <h3>إدارة التجار</h3>
               <button id="load-merchants-btn" class="secondary-btn">تحديث</button>
@@ -165,7 +239,7 @@
                 <textarea id="merchant-notes"></textarea>
               </div>
               <div class="form-actions full-width">
-                <button type="submit">حفظ التاجر</button>
+                <button type="submit" class="primary-btn">حفظ التاجر</button>
                 <button type="button" id="merchant-reset-btn" class="secondary-btn">تفريغ الحقول</button>
               </div>
             </form>
@@ -189,7 +263,7 @@
         </section>
 
         <section id="machines-section" class="content-section hidden">
-          <div class="panel">
+          <div class="panel brand-surface">
             <div class="panel-header between">
               <h3>إدارة المكن</h3>
               <button id="load-machines-btn" class="secondary-btn">تحديث</button>
@@ -227,7 +301,7 @@
                 <textarea id="machine-notes"></textarea>
               </div>
               <div class="form-actions full-width">
-                <button type="submit">حفظ المكنة</button>
+                <button type="submit" class="primary-btn">حفظ المكنة</button>
                 <button type="button" id="machine-reset-btn" class="secondary-btn">تفريغ الحقول</button>
               </div>
             </form>
@@ -251,7 +325,7 @@
         </section>
 
         <section id="transfers-section" class="content-section hidden">
-          <div class="panel">
+          <div class="panel brand-surface">
             <div class="panel-header between">
               <h3>التحويلات</h3>
               <button id="load-transfers-btn" class="secondary-btn">تحديث</button>
@@ -275,7 +349,7 @@
                 <textarea id="transfer-notes"></textarea>
               </div>
               <div class="form-actions full-width">
-                <button type="submit">تسجيل التحويل</button>
+                <button type="submit" class="primary-btn">تسجيل التحويل</button>
               </div>
             </form>
 
@@ -299,7 +373,7 @@
         </section>
 
         <section id="collections-section" class="content-section hidden">
-          <div class="panel">
+          <div class="panel brand-surface">
             <div class="panel-header between">
               <h3>التحصيلات</h3>
               <button id="load-collections-btn" class="secondary-btn">تحديث</button>
@@ -330,7 +404,7 @@
                 <textarea id="collection-notes"></textarea>
               </div>
               <div class="form-actions full-width">
-                <button type="submit">تسجيل التحصيل</button>
+                <button type="submit" class="primary-btn">تسجيل التحصيل</button>
               </div>
             </form>
 
@@ -354,7 +428,7 @@
         </section>
 
         <section id="statement-section" class="content-section hidden">
-          <div class="panel">
+          <div class="panel brand-surface">
             <div class="panel-header">
               <h3>كشف حساب التاجر</h3>
             </div>
@@ -365,24 +439,24 @@
                 <select id="statement-merchant-id" required></select>
               </div>
               <div class="form-actions">
-                <button type="submit">عرض كشف الحساب</button>
+                <button type="submit" class="primary-btn">عرض كشف الحساب</button>
               </div>
             </form>
 
             <div id="statement-summary" class="cards-grid small-gap hidden">
-              <div class="stat-card">
+              <div class="stat-card brand-surface">
                 <span>إجمالي التحويلات</span>
                 <strong id="statement-total-transfers">0</strong>
               </div>
-              <div class="stat-card">
+              <div class="stat-card brand-surface">
                 <span>إجمالي التحصيلات</span>
                 <strong id="statement-total-collections">0</strong>
               </div>
-              <div class="stat-card">
+              <div class="stat-card brand-surface warning-card">
                 <span>المتبقي الحالي</span>
                 <strong id="statement-remaining">0</strong>
               </div>
-              <div class="stat-card">
+              <div class="stat-card brand-surface">
                 <span>عدد الحركات</span>
                 <strong id="statement-movements-count">0</strong>
               </div>
@@ -408,7 +482,7 @@
         </section>
 
         <section id="closing-section" class="content-section hidden">
-          <div class="panel">
+          <div class="panel brand-surface">
             <div class="panel-header">
               <h3>إغلاق الشهر</h3>
             </div>
@@ -432,6 +506,17 @@
             </div>
           </div>
         </section>
+
+        <footer class="site-footer dashboard-footer brand-surface">
+          <div class="footer-brand">
+            <strong>Axentro</strong>
+            <span>Merchant Tracker Interface</span>
+          </div>
+          <div class="footer-links">
+            <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" rel="noopener noreferrer">روابط Axentro</a>
+            <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" rel="noopener noreferrer">QR قابل للنقر</a>
+          </div>
+        </footer>
       </main>
     </section>
   </div>

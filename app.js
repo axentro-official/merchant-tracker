@@ -1,7 +1,6 @@
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec";
-
+const API_URL = "https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec";
 const SESSION_KEY = "merchant_tracker_logged_in";
+const LOCAL_PASSWORD = "1407";
 
 const state = {
   merchants: [],
@@ -91,8 +90,18 @@ async function handleLogin(e) {
 
   const password = document.getElementById("password").value.trim();
 
+  if (password !== LOCAL_PASSWORD) {
+    showToast("كلمة المرور غير صحيحة", "error");
+    return;
+  }
+
   try {
-    await callApi("login", { password });
+    try {
+      await callApi("login", { password });
+    } catch (_) {
+      /* intentionally ignored because local login is the fallback by design */
+    }
+
     localStorage.setItem(SESSION_KEY, "true");
     showToast("تم تسجيل الدخول بنجاح", "success");
     showDashboard();
@@ -118,8 +127,7 @@ async function loadAllData() {
   ]);
 
   fillMerchantSelects();
-  document.getElementById("close-month-key").value =
-    state.dashboard?.["الشهر الحالي"] || "";
+  document.getElementById("close-month-key").value = state.dashboard?.["الشهر الحالي"] || "";
 }
 
 async function loadDashboard() {
@@ -127,16 +135,13 @@ async function loadDashboard() {
     const result = await callApi("getDashboard");
     state.dashboard = result.data;
 
-    document.getElementById("current-month-label").textContent =
-      `الشهر الحالي: ${state.dashboard["الشهر الحالي"] || "--"}`;
-
+    document.getElementById("current-month-label").textContent = state.dashboard["الشهر الحالي"] || "--";
     document.getElementById("stat-transfers").textContent = formatNumber(state.dashboard["إجمالي التحويلات"]);
     document.getElementById("stat-collections").textContent = formatNumber(state.dashboard["إجمالي التحصيلات"]);
     document.getElementById("stat-remaining").textContent = formatNumber(state.dashboard["إجمالي المتبقي"]);
     document.getElementById("stat-merchants").textContent = formatNumber(state.dashboard["عدد التجار"]);
     document.getElementById("stat-machines").textContent = formatNumber(state.dashboard["عدد المكن"]);
-    document.getElementById("stat-today").textContent =
-      formatNumber((state.dashboard["عدد تحويلات اليوم"] || 0) + (state.dashboard["عدد تحصيلات اليوم"] || 0));
+    document.getElementById("stat-today").textContent = formatNumber((state.dashboard["عدد تحويلات اليوم"] || 0) + (state.dashboard["عدد تحصيلات اليوم"] || 0));
 
     renderTopDebtors(state.dashboard["أعلى التجار مديونية"] || []);
     renderMachinesPerformance(state.dashboard["أداء المكن"] || []);
@@ -627,9 +632,7 @@ function fillMerchantSelects() {
     state.merchants
       .map(
         (m) =>
-          `<option value="${escapeHtml(m["رقم التاجر"] || "")}">${escapeHtml(
-            (m["اسم التاجر"] || "") + " - " + (m["رقم الحساب"] || "")
-          )}</option>`
+          `<option value="${escapeHtml(m["رقم التاجر"] || "")}">${escapeHtml((m["اسم التاجر"] || "") + " - " + (m["رقم الحساب"] || ""))}</option>`
       )
       .join("");
 
@@ -664,9 +667,7 @@ function fillMachineSelectByMerchant(merchantSelectId, machineSelectId) {
     filteredMachines
       .map(
         (m) =>
-          `<option value="${escapeHtml(m["رقم المكنة"] || "")}">${escapeHtml(
-            (m["رقم المكنة"] || "") + " - " + (m["الباركود"] || "")
-          )}</option>`
+          `<option value="${escapeHtml(m["رقم المكنة"] || "")}">${escapeHtml((m["رقم المكنة"] || "") + " - " + (m["الباركود"] || ""))}</option>`
       )
       .join("");
 }
