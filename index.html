@@ -3,89 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Axentro | نظام متابعة مندوب الدفع الإلكتروني</title>
+  <title>Axentro | Merchant Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-  <div id="app">
-    <div id="toast" class="toast hidden"></div>
+  <div id="toast" class="toast hidden"></div>
 
-    <section id="login-view" class="login-shell">
-      <div class="login-background"></div>
-      <div class="login-container">
-        <div class="login-card brand-surface">
-          <div class="brand-chip">Axentro</div>
-          <h1>نظام متابعة مندوب الدفع الإلكتروني</h1>
-          <p class="subtitle">لوحة تشغيل يومية لإدارة التجار، المكن، التحويلات، والتحصيلات.</p>
-
-          <form id="login-form" class="login-form">
-            <label for="password">كلمة المرور</label>
-            <input type="password" id="password" placeholder="أدخل كلمة المرور" required />
-            <button type="submit" class="primary-btn">دخول</button>
-          </form>
-
-          <div class="login-meta">
-            <span>تشغيل فردي</span>
-            <span>نسخة Axentro</span>
-          </div>
-        </div>
-
-        <aside class="brand-side brand-surface">
-          <div class="brand-side-header">
-            <h2>Axentro</h2>
-            <p>حلول رقمية مبسطة بواجهة موحدة وهوية نظيفة.</p>
-          </div>
-
-          <a
-            class="qr-card"
-            href="https://axentro-official.github.io/axentro-website/links.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="فتح صفحة روابط Axentro"
-            title="فتح صفحة روابط Axentro"
-          >
-            <img src="qr-links.png" alt="QR Code لصفحة روابط Axentro" class="qr-image" />
-            <div class="qr-content">
-              <strong>روابط Axentro</strong>
-              <span>اضغط على الـ QR أو امسحه لفتح صفحة الروابط.</span>
-            </div>
-          </a>
-
-          <div class="brand-note">
-            <span class="dot"></span>
-            <p>تم تصميم هذه النسخة لتكون عملية على الموبايل والكمبيوتر مع تخطيط واضح وسريع.</p>
-          </div>
-        </aside>
-      </div>
-
-      <footer class="site-footer login-footer">
+  <section id="login-view" class="login-shell">
+    <div class="login-card">
+      <div class="brand-block">
+        <div class="brand-icon">A</div>
         <div>
-          <strong>Axentro</strong>
-          <span>Software Solutions & Digital Systems</span>
+          <h1>Axentro Merchant Tracker</h1>
+          <p>نظام احترافي لمتابعة التجار والمكن والتحويلات والتحصيلات</p>
         </div>
-        <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" rel="noopener noreferrer">
-          فتح صفحة الروابط
-        </a>
-      </footer>
-    </section>
+      </div>
+      <form id="login-form" class="login-form">
+        <label for="password">كلمة المرور</label>
+        <input type="password" id="password" placeholder="أدخل كلمة المرور" required />
+        <button type="submit" class="primary-btn full-btn">دخول</button>
+      </form>
+      <div class="login-footer-note">الدخول السريع مخصص للاستخدام الفردي الداخلي</div>
+    </div>
+  </section>
 
-    <section id="dashboard-view" class="hidden app-layout">
-      <aside class="sidebar">
-        <div class="sidebar-top">
-          <div class="brand-mark">A</div>
-          <div class="brand">
-            <h2>Axentro</h2>
-            <p>Merchant Tracker</p>
+  <section id="dashboard-view" class="hidden app-layout">
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-brand">
+          <div class="brand-icon large">A</div>
+          <div>
+            <div class="sidebar-title">Axentro</div>
+            <div class="sidebar-subtitle">Merchant Tracker</div>
           </div>
         </div>
 
-        <div class="current-month-box">
-          <span>الشهر الحالي</span>
-          <strong id="current-month-label">--</strong>
-        </div>
+        <div class="month-badge" id="current-month-label">--</div>
 
         <nav class="menu">
           <button class="menu-btn active" data-view="home-section">لوحة التحكم</button>
@@ -94,432 +51,195 @@
           <button class="menu-btn" data-view="transfers-section">التحويلات</button>
           <button class="menu-btn" data-view="collections-section">التحصيلات</button>
           <button class="menu-btn" data-view="statement-section">كشف الحساب</button>
+          <button class="menu-btn" data-view="archives-section">سجل الإغلاقات</button>
           <button class="menu-btn" data-view="closing-section">إغلاق الشهر</button>
         </nav>
+      </div>
 
-        <div class="sidebar-footer">
-          <button id="refresh-dashboard-btn" class="secondary-btn">تحديث البيانات</button>
-          <button id="logout-btn" class="danger-btn">تسجيل الخروج</button>
+      <div class="sidebar-actions">
+        <button id="refresh-dashboard-btn" class="secondary-btn">تحديث البيانات</button>
+        <button id="export-workbook-btn" class="primary-btn">تصدير Excel</button>
+        <button id="logout-btn" class="danger-btn">تسجيل الخروج</button>
+      </div>
+    </aside>
 
-          <a
-            class="sidebar-qr"
-            href="https://axentro-official.github.io/axentro-website/links.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="فتح صفحة روابط Axentro"
-          >
-            <img src="qr-links.png" alt="QR Code لروابط Axentro" />
-            <span>QR روابط Axentro</span>
-          </a>
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h2 id="page-title">لوحة التحكم</h2>
+          <p class="topbar-sub">إدارة كاملة للتجار والمكن والحركات الشهرية</p>
         </div>
-      </aside>
+        <div class="topbar-tools">
+          <div class="global-search-wrap">
+            <input id="global-search" type="text" placeholder="بحث سريع في الصفحة الحالية" />
+          </div>
+        </div>
+      </header>
 
-      <main class="main-content">
-        <header class="topbar brand-surface">
+      <section id="home-section" class="content-section">
+        <div class="hero-panel">
           <div>
-            <div class="eyebrow">Axentro Dashboard</div>
-            <h1 id="page-title">لوحة التحكم</h1>
+            <div class="section-eyebrow">نظرة عامة</div>
+            <h3>متابعة شهرية دقيقة للتجار والمكن والحركات المالية</h3>
+            <p>واجهة موحدة لإدارة التحويلات والتحصيلات واستخراج التقارير وإقفال الشهر.</p>
           </div>
-          <a class="topbar-link" href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" rel="noopener noreferrer">
-            صفحة الروابط
-          </a>
-        </header>
-
-        <section id="home-section" class="content-section">
-          <div class="cards-grid">
-            <div class="stat-card brand-surface accent-card">
-              <span>إجمالي التحويلات</span>
-              <strong id="stat-transfers">0</strong>
-            </div>
-            <div class="stat-card brand-surface">
-              <span>إجمالي التحصيلات</span>
-              <strong id="stat-collections">0</strong>
-            </div>
-            <div class="stat-card brand-surface warning-card">
-              <span>إجمالي المتبقي</span>
-              <strong id="stat-remaining">0</strong>
-            </div>
-            <div class="stat-card brand-surface">
-              <span>عدد التجار</span>
-              <strong id="stat-merchants">0</strong>
-            </div>
-            <div class="stat-card brand-surface">
-              <span>عدد المكن</span>
-              <strong id="stat-machines">0</strong>
-            </div>
-            <div class="stat-card brand-surface">
-              <span>حركات اليوم</span>
-              <strong id="stat-today">0</strong>
-            </div>
+          <div class="hero-actions">
+            <button class="primary-btn" id="quick-export-btn">تصدير Excel</button>
+            <button class="secondary-btn" onclick="window.open('https://axentro-official.github.io/axentro-website/links.html','_blank')">روابط Axentro</button>
           </div>
+        </div>
 
-          <div class="panel-grid">
-            <div class="panel brand-surface">
-              <div class="panel-header">
-                <h3>أعلى التجار مديونية</h3>
-              </div>
-              <div class="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>اسم التاجر</th>
-                      <th>رقم الحساب</th>
-                      <th>المتبقي</th>
-                    </tr>
-                  </thead>
-                  <tbody id="top-debtors-body"></tbody>
-                </table>
-              </div>
-            </div>
+        <div class="cards-grid">
+          <div class="stat-card accent-blue"><span>إجمالي التحويلات</span><strong id="stat-transfers">0</strong></div>
+          <div class="stat-card accent-green"><span>إجمالي التحصيلات</span><strong id="stat-collections">0</strong></div>
+          <div class="stat-card accent-orange"><span>إجمالي المتبقي</span><strong id="stat-remaining">0</strong></div>
+          <div class="stat-card"><span>عدد التجار</span><strong id="stat-merchants">0</strong></div>
+          <div class="stat-card"><span>عدد المكن</span><strong id="stat-machines">0</strong></div>
+          <div class="stat-card"><span>حركات اليوم</span><strong id="stat-today">0</strong></div>
+        </div>
 
-            <div class="panel brand-surface">
-              <div class="panel-header">
-                <h3>أداء المكن</h3>
-              </div>
-              <div class="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>رقم المكنة</th>
-                      <th>اسم التاجر</th>
-                      <th>التارجت</th>
-                      <th>الفعلي</th>
-                      <th>نسبة الإنجاز</th>
-                    </tr>
-                  </thead>
-                  <tbody id="machines-performance-body"></tbody>
-                </table>
-              </div>
-            </div>
+        <div class="panel-grid two-cols">
+          <div class="panel">
+            <div class="panel-header"><h3>أعلى التجار مديونية</h3></div>
+            <div class="table-wrapper"><table><thead><tr><th>اسم التاجر</th><th>رقم الحساب</th><th>المتبقي</th></tr></thead><tbody id="top-debtors-body"></tbody></table></div>
           </div>
-        </section>
-
-        <section id="merchants-section" class="content-section hidden">
-          <div class="panel brand-surface">
-            <div class="panel-header between">
-              <h3>إدارة التجار</h3>
-              <button id="load-merchants-btn" class="secondary-btn">تحديث</button>
-            </div>
-
-            <form id="merchant-form" class="form-grid">
-              <input type="hidden" id="merchant-id" />
-              <div>
-                <label>اسم التاجر</label>
-                <input type="text" id="merchant-name" required />
-              </div>
-              <div>
-                <label>اسم النشاط</label>
-                <input type="text" id="business-name" />
-              </div>
-              <div>
-                <label>رقم الحساب</label>
-                <input type="text" id="account-number" required />
-              </div>
-              <div>
-                <label>رقم الهاتف</label>
-                <input type="text" id="merchant-phone" />
-              </div>
-              <div>
-                <label>المنطقة</label>
-                <input type="text" id="merchant-area" />
-              </div>
-              <div>
-                <label>العنوان</label>
-                <input type="text" id="merchant-address" />
-              </div>
-              <div>
-                <label>الحالة</label>
-                <select id="merchant-status">
-                  <option value="نشط">نشط</option>
-                  <option value="متوقف">متوقف</option>
-                </select>
-              </div>
-              <div class="full-width">
-                <label>ملاحظات</label>
-                <textarea id="merchant-notes"></textarea>
-              </div>
-              <div class="form-actions full-width">
-                <button type="submit" class="primary-btn">حفظ التاجر</button>
-                <button type="button" id="merchant-reset-btn" class="secondary-btn">تفريغ الحقول</button>
-              </div>
-            </form>
-
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>رقم التاجر</th>
-                    <th>اسم التاجر</th>
-                    <th>اسم النشاط</th>
-                    <th>رقم الحساب</th>
-                    <th>الحالة</th>
-                    <th>إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="merchants-body"></tbody>
-              </table>
-            </div>
+          <div class="panel">
+            <div class="panel-header"><h3>أداء المكن</h3></div>
+            <div class="table-wrapper"><table><thead><tr><th>رقم المكنة</th><th>اسم التاجر</th><th>التارجت</th><th>الفعلي</th><th>نسبة الإنجاز</th></tr></thead><tbody id="machines-performance-body"></tbody></table></div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section id="machines-section" class="content-section hidden">
-          <div class="panel brand-surface">
-            <div class="panel-header between">
-              <h3>إدارة المكن</h3>
-              <button id="load-machines-btn" class="secondary-btn">تحديث</button>
-            </div>
+      <section id="merchants-section" class="content-section hidden">
+        <div class="panel">
+          <div class="panel-header between"><h3>إدارة التجار</h3><button id="load-merchants-btn" class="secondary-btn">تحديث</button></div>
+          <form id="merchant-form" class="form-grid">
+            <input type="hidden" id="merchant-id" />
+            <div><label>اسم التاجر</label><input type="text" id="merchant-name" required /></div>
+            <div><label>اسم النشاط</label><input type="text" id="business-name" /></div>
+            <div><label>رقم الحساب</label><input type="text" id="account-number" required /></div>
+            <div><label>رقم الهاتف</label><input type="text" id="merchant-phone" /></div>
+            <div><label>المنطقة</label><input type="text" id="merchant-area" /></div>
+            <div><label>العنوان</label><input type="text" id="merchant-address" /></div>
+            <div><label>الحالة</label><select id="merchant-status"><option value="نشط">نشط</option><option value="متوقف">متوقف</option></select></div>
+            <div class="full-width"><label>ملاحظات</label><textarea id="merchant-notes"></textarea></div>
+            <div class="form-actions full-width"><button type="submit" class="primary-btn">حفظ التاجر</button><button type="button" id="merchant-reset-btn" class="secondary-btn">تفريغ الحقول</button></div>
+          </form>
+          <div class="filter-row"><input id="merchants-search" type="text" placeholder="بحث في التجار" /></div>
+          <div class="table-wrapper"><table id="merchants-table"><thead><tr><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم الحساب</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="merchants-body"></tbody></table></div>
+        </div>
+      </section>
 
-            <form id="machine-form" class="form-grid">
-              <input type="hidden" id="machine-id" />
-              <div>
-                <label>التاجر</label>
-                <select id="machine-merchant-id" required></select>
-              </div>
-              <div>
-                <label>الباركود</label>
-                <input type="text" id="machine-barcode" required />
-              </div>
-              <div>
-                <label>الرقم التسلسلي</label>
-                <input type="text" id="machine-serial" />
-              </div>
-              <div>
-                <label>التارجت الشهري</label>
-                <input type="number" id="machine-target" min="0" value="0" />
-              </div>
-              <div>
-                <label>الحالة</label>
-                <select id="machine-status">
-                  <option value="نشطة">نشطة</option>
-                  <option value="موقوفة">موقوفة</option>
-                  <option value="صيانة">صيانة</option>
-                  <option value="مسترجعة">مسترجعة</option>
-                </select>
-              </div>
-              <div class="full-width">
-                <label>ملاحظات</label>
-                <textarea id="machine-notes"></textarea>
-              </div>
-              <div class="form-actions full-width">
-                <button type="submit" class="primary-btn">حفظ المكنة</button>
-                <button type="button" id="machine-reset-btn" class="secondary-btn">تفريغ الحقول</button>
-              </div>
-            </form>
+      <section id="machines-section" class="content-section hidden">
+        <div class="panel">
+          <div class="panel-header between"><h3>إدارة المكن</h3><button id="load-machines-btn" class="secondary-btn">تحديث</button></div>
+          <form id="machine-form" class="form-grid">
+            <input type="hidden" id="machine-id" />
+            <div><label>التاجر</label><select id="machine-merchant-id" required></select></div>
+            <div><label>الباركود</label><input type="text" id="machine-barcode" required /></div>
+            <div><label>الرقم التسلسلي</label><input type="text" id="machine-serial" /></div>
+            <div><label>التارجت الشهري</label><input type="number" id="machine-target" min="0" value="0" /></div>
+            <div><label>الحالة</label><select id="machine-status"><option value="نشطة">نشطة</option><option value="موقوفة">موقوفة</option><option value="صيانة">صيانة</option><option value="مسترجعة">مسترجعة</option></select></div>
+            <div class="full-width"><label>ملاحظات</label><textarea id="machine-notes"></textarea></div>
+            <div class="form-actions full-width"><button type="submit" class="primary-btn">حفظ المكنة</button><button type="button" id="machine-reset-btn" class="secondary-btn">تفريغ الحقول</button></div>
+          </form>
+          <div class="filter-row"><input id="machines-search" type="text" placeholder="بحث في المكن" /></div>
+          <div class="table-wrapper"><table id="machines-table"><thead><tr><th>رقم المكنة</th><th>اسم التاجر</th><th>الباركود</th><th>التارجت الشهري</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="machines-body"></tbody></table></div>
+        </div>
+      </section>
 
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>رقم المكنة</th>
-                    <th>اسم التاجر</th>
-                    <th>الباركود</th>
-                    <th>التارجت الشهري</th>
-                    <th>الحالة</th>
-                    <th>إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="machines-body"></tbody>
-              </table>
-            </div>
+      <section id="transfers-section" class="content-section hidden">
+        <div class="panel">
+          <div class="panel-header between"><h3>التحويلات</h3><button id="load-transfers-btn" class="secondary-btn">تحديث</button></div>
+          <form id="transfer-form" class="form-grid">
+            <div><label>التاجر</label><select id="transfer-merchant-id" required></select></div>
+            <div><label>المكنة</label><select id="transfer-machine-id" required></select></div>
+            <div><label>قيمة التحويل</label><input type="number" id="transfer-amount" min="0.01" step="0.01" required /></div>
+            <div class="full-width"><label>ملاحظات</label><textarea id="transfer-notes"></textarea></div>
+            <div class="form-actions full-width"><button type="submit" class="primary-btn">تسجيل التحويل</button></div>
+          </form>
+          <div class="filter-row split-3">
+            <input id="transfers-search" type="text" placeholder="بحث في التحويلات" />
+            <input id="transfers-month-filter" type="month" />
+            <button id="clear-transfers-filter" class="secondary-btn">مسح الفلاتر</button>
           </div>
-        </section>
+          <div class="table-wrapper"><table id="transfers-table"><thead><tr><th>رقم التحويل</th><th>الرقم المرجعي</th><th>اسم التاجر</th><th>رقم المكنة</th><th>القيمة</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody id="transfers-body"></tbody></table></div>
+        </div>
+      </section>
 
-        <section id="transfers-section" class="content-section hidden">
-          <div class="panel brand-surface">
-            <div class="panel-header between">
-              <h3>التحويلات</h3>
-              <button id="load-transfers-btn" class="secondary-btn">تحديث</button>
-            </div>
-
-            <form id="transfer-form" class="form-grid">
-              <div>
-                <label>التاجر</label>
-                <select id="transfer-merchant-id" required></select>
-              </div>
-              <div>
-                <label>المكنة</label>
-                <select id="transfer-machine-id" required></select>
-              </div>
-              <div>
-                <label>قيمة التحويل</label>
-                <input type="number" id="transfer-amount" min="0.01" step="0.01" required />
-              </div>
-              <div class="full-width">
-                <label>ملاحظات</label>
-                <textarea id="transfer-notes"></textarea>
-              </div>
-              <div class="form-actions full-width">
-                <button type="submit" class="primary-btn">تسجيل التحويل</button>
-              </div>
-            </form>
-
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>رقم التحويل</th>
-                    <th>الرقم المرجعي</th>
-                    <th>اسم التاجر</th>
-                    <th>رقم المكنة</th>
-                    <th>القيمة</th>
-                    <th>التاريخ</th>
-                    <th>إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="transfers-body"></tbody>
-              </table>
-            </div>
+      <section id="collections-section" class="content-section hidden">
+        <div class="panel">
+          <div class="panel-header between"><h3>التحصيلات</h3><button id="load-collections-btn" class="secondary-btn">تحديث</button></div>
+          <form id="collection-form" class="form-grid">
+            <div><label>التاجر</label><select id="collection-merchant-id" required></select></div>
+            <div><label>المكنة</label><select id="collection-machine-id" required></select></div>
+            <div><label>قيمة التحصيل</label><input type="number" id="collection-amount" min="0.01" step="0.01" required /></div>
+            <div><label>نوع التحصيل</label><select id="collection-type"><option value="جزئي">جزئي</option><option value="كلي">كلي</option></select></div>
+            <div class="full-width"><label>ملاحظات</label><textarea id="collection-notes"></textarea></div>
+            <div class="form-actions full-width"><button type="submit" class="primary-btn">تسجيل التحصيل</button></div>
+          </form>
+          <div class="filter-row split-3">
+            <input id="collections-search" type="text" placeholder="بحث في التحصيلات" />
+            <input id="collections-month-filter" type="month" />
+            <button id="clear-collections-filter" class="secondary-btn">مسح الفلاتر</button>
           </div>
-        </section>
+          <div class="table-wrapper"><table id="collections-table"><thead><tr><th>رقم التحصيل</th><th>الرقم المرجعي</th><th>اسم التاجر</th><th>رقم المكنة</th><th>القيمة</th><th>النوع</th><th>إجراءات</th></tr></thead><tbody id="collections-body"></tbody></table></div>
+        </div>
+      </section>
 
-        <section id="collections-section" class="content-section hidden">
-          <div class="panel brand-surface">
-            <div class="panel-header between">
-              <h3>التحصيلات</h3>
-              <button id="load-collections-btn" class="secondary-btn">تحديث</button>
-            </div>
-
-            <form id="collection-form" class="form-grid">
-              <div>
-                <label>التاجر</label>
-                <select id="collection-merchant-id" required></select>
-              </div>
-              <div>
-                <label>المكنة</label>
-                <select id="collection-machine-id" required></select>
-              </div>
-              <div>
-                <label>قيمة التحصيل</label>
-                <input type="number" id="collection-amount" min="0.01" step="0.01" required />
-              </div>
-              <div>
-                <label>نوع التحصيل</label>
-                <select id="collection-type">
-                  <option value="جزئي">جزئي</option>
-                  <option value="كلي">كلي</option>
-                </select>
-              </div>
-              <div class="full-width">
-                <label>ملاحظات</label>
-                <textarea id="collection-notes"></textarea>
-              </div>
-              <div class="form-actions full-width">
-                <button type="submit" class="primary-btn">تسجيل التحصيل</button>
-              </div>
-            </form>
-
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>رقم التحصيل</th>
-                    <th>الرقم المرجعي</th>
-                    <th>اسم التاجر</th>
-                    <th>رقم المكنة</th>
-                    <th>القيمة</th>
-                    <th>النوع</th>
-                    <th>إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="collections-body"></tbody>
-              </table>
-            </div>
+      <section id="statement-section" class="content-section hidden">
+        <div class="panel">
+          <div class="panel-header between"><h3>كشف حساب التاجر</h3><button id="print-statement-btn" class="secondary-btn">طباعة الكشف</button></div>
+          <form id="statement-form" class="form-grid compact-grid">
+            <div><label>اختر التاجر</label><select id="statement-merchant-id" required></select></div>
+            <div class="form-actions"><button type="submit" class="primary-btn">عرض كشف الحساب</button></div>
+          </form>
+          <div id="statement-summary" class="cards-grid small-gap hidden">
+            <div class="stat-card"><span>إجمالي التحويلات</span><strong id="statement-total-transfers">0</strong></div>
+            <div class="stat-card"><span>إجمالي التحصيلات</span><strong id="statement-total-collections">0</strong></div>
+            <div class="stat-card"><span>المتبقي الحالي</span><strong id="statement-remaining">0</strong></div>
+            <div class="stat-card"><span>عدد الحركات</span><strong id="statement-movements-count">0</strong></div>
           </div>
-        </section>
-
-        <section id="statement-section" class="content-section hidden">
-          <div class="panel brand-surface">
-            <div class="panel-header">
-              <h3>كشف حساب التاجر</h3>
-            </div>
-
-            <form id="statement-form" class="form-grid">
-              <div>
-                <label>اختر التاجر</label>
-                <select id="statement-merchant-id" required></select>
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="primary-btn">عرض كشف الحساب</button>
-              </div>
-            </form>
-
-            <div id="statement-summary" class="cards-grid small-gap hidden">
-              <div class="stat-card brand-surface">
-                <span>إجمالي التحويلات</span>
-                <strong id="statement-total-transfers">0</strong>
-              </div>
-              <div class="stat-card brand-surface">
-                <span>إجمالي التحصيلات</span>
-                <strong id="statement-total-collections">0</strong>
-              </div>
-              <div class="stat-card brand-surface warning-card">
-                <span>المتبقي الحالي</span>
-                <strong id="statement-remaining">0</strong>
-              </div>
-              <div class="stat-card brand-surface">
-                <span>عدد الحركات</span>
-                <strong id="statement-movements-count">0</strong>
-              </div>
-            </div>
-
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>النوع</th>
-                    <th>الرقم</th>
-                    <th>الرقم المرجعي</th>
-                    <th>التاريخ</th>
-                    <th>الوقت</th>
-                    <th>القيمة</th>
-                    <th>ملاحظات</th>
-                  </tr>
-                </thead>
-                <tbody id="statement-body"></tbody>
-              </table>
-            </div>
+          <div id="statement-print-area">
+            <div class="table-wrapper"><table id="statement-table"><thead><tr><th>النوع</th><th>الرقم</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>القيمة</th><th>ملاحظات</th></tr></thead><tbody id="statement-body"></tbody></table></div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section id="closing-section" class="content-section hidden">
-          <div class="panel brand-surface">
-            <div class="panel-header">
-              <h3>إغلاق الشهر</h3>
-            </div>
+      <section id="archives-section" class="content-section hidden">
+        <div class="panel">
+          <div class="panel-header between"><h3>سجل إغلاقات الشهور</h3><button id="load-archives-btn" class="secondary-btn">تحديث</button></div>
+          <div class="table-wrapper"><table id="archives-table"><thead><tr><th>رقم الأرشيف</th><th>الشهر</th><th>إجمالي التحويلات</th><th>إجمالي التحصيلات</th><th>إجمالي المتبقي</th><th>تاريخ الإغلاق</th><th>ملاحظات</th></tr></thead><tbody id="archives-body"></tbody></table></div>
+        </div>
+      </section>
 
-            <form id="close-month-form" class="form-grid">
-              <div>
-                <label>الشهر</label>
-                <input type="text" id="close-month-key" placeholder="مثال: 2026-03" required />
-              </div>
-              <div class="full-width">
-                <label>ملاحظات</label>
-                <textarea id="close-month-notes" placeholder="اكتب ملاحظات الإغلاق إن وجدت"></textarea>
-              </div>
-              <div class="form-actions full-width">
-                <button type="submit" class="danger-btn">إغلاق الشهر</button>
-              </div>
-            </form>
+      <section id="closing-section" class="content-section hidden">
+        <div class="panel">
+          <div class="panel-header"><h3>إغلاق الشهر</h3></div>
+          <form id="close-month-form" class="form-grid">
+            <div><label>الشهر</label><input type="month" id="close-month-key" required /></div>
+            <div class="full-width"><label>ملاحظات</label><textarea id="close-month-notes" placeholder="اكتب ملاحظات الإغلاق إن وجدت"></textarea></div>
+            <div class="form-actions full-width"><button type="submit" class="danger-btn">إغلاق الشهر</button></div>
+          </form>
+          <div class="warning-box">هذه العملية ستقوم بتسجيل ملخص الشهر في الأرشيف ثم تفريغ بيانات التحويلات والتحصيلات الحالية.</div>
+        </div>
+      </section>
 
-            <div class="warning-box">
-              هذه العملية ستقوم بتسجيل ملخص الشهر في الأرشيف وتفريغ بيانات التحويلات والتحصيلات الحالية.
-            </div>
+      <footer class="app-footer">
+        <div class="footer-brand-wrap">
+          <div class="brand-icon">A</div>
+          <div>
+            <div class="footer-brand-title">Axentro</div>
+            <div class="footer-brand-sub">Digital Solutions</div>
           </div>
-        </section>
-
-        <footer class="site-footer dashboard-footer brand-surface">
-          <div class="footer-brand">
-            <strong>Axentro</strong>
-            <span>Merchant Tracker Interface</span>
-          </div>
-          <div class="footer-links">
-            <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" rel="noopener noreferrer">روابط Axentro</a>
-            <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" rel="noopener noreferrer">QR قابل للنقر</a>
-          </div>
-        </footer>
-      </main>
-    </section>
-  </div>
+        </div>
+        <div class="footer-copy">Merchant Tracker — نظام متابعة احترافي للتجار والمندوبين</div>
+        <a class="footer-qr-link" href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" rel="noopener noreferrer">
+          <img src="qr-links.png" alt="روابط Axentro" class="footer-qr" />
+        </a>
+      </footer>
+    </main>
+  </section>
 
   <script src="app.js"></script>
 </body>
