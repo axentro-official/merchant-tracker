@@ -232,7 +232,7 @@ function renderTransfers() {
   const search = document.getElementById("transfers-search").value;
   const month = document.getElementById("transfers-month-filter").value;
   const rows = filterRows(state.transfers.slice().reverse(), search, "الشهر", month);
-  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["رقم التحويل"] || "")}</td><td>${escapeHtml(row["الرقم المرجعي"] || "")}</td><td>${escapeHtml(row["اسم التاجر"] || "")}</td><td>${escapeHtml(row["رقم المكنة"] || "")}</td><td>${formatNumber(row["قيمة التحويل"] || 0)}</td><td>${escapeHtml(row["التاريخ"] || "")}</td><td><div class="action-buttons"><button class="delete-btn" onclick="deleteTransfer('${escapeJs(row["رقم التحويل"])}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="7">لا توجد تحويلات</td></tr>`;
+  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["رقم التحويل"] || "")}</td><td>${escapeHtml(row["الرقم المرجعي"] || "")}</td><td>${escapeHtml(row["اسم التاجر"] || "")}</td><td>${escapeHtml(row["رقم المكنة"] || "")}</td><td>${formatNumber(row["قيمة التحويل"] || 0)}</td><td>${escapeHtml(row["التاريخ"] || "")}</td><td>${escapeHtml(row["الوقت"] || "")}</td><td><div class="action-buttons"><button class="delete-btn" onclick="deleteTransfer('${escapeJs(row["رقم التحويل"])}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="8">لا توجد تحويلات</td></tr>`;
 }
 
 function renderCollections() {
@@ -240,7 +240,7 @@ function renderCollections() {
   const search = document.getElementById("collections-search").value;
   const month = document.getElementById("collections-month-filter").value;
   const rows = filterRows(state.collections.slice().reverse(), search, "الشهر", month);
-  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["رقم التحصيل"] || "")}</td><td>${escapeHtml(row["الرقم المرجعي"] || "")}</td><td>${escapeHtml(row["اسم التاجر"] || "")}</td><td>${escapeHtml(row["رقم المكنة"] || "")}</td><td>${formatNumber(row["قيمة التحصيل"] || 0)}</td><td>${escapeHtml(row["نوع التحصيل"] || "")}</td><td><div class="action-buttons"><button class="delete-btn" onclick="deleteCollection('${escapeJs(row["رقم التحصيل"])}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="7">لا توجد تحصيلات</td></tr>`;
+  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["رقم التحصيل"] || "")}</td><td>${escapeHtml(row["الرقم المرجعي"] || "")}</td><td>${escapeHtml(row["اسم التاجر"] || "")}</td><td>${escapeHtml(row["رقم المكنة"] || "")}</td><td>${formatNumber(row["قيمة التحصيل"] || 0)}</td><td>${escapeHtml(row["نوع التحصيل"] || "")}</td><td>${escapeHtml(row["الوقت"] || "")}</td><td><div class="action-buttons"><button class="delete-btn" onclick="deleteCollection('${escapeJs(row["رقم التحصيل"])}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="8">لا توجد تحصيلات</td></tr>`;
 }
 
 function renderArchives() {
@@ -441,9 +441,60 @@ function switchSection(sectionId, title, clickedBtn) {
   document.querySelectorAll(".content-section").forEach((section) => section.classList.add("hidden"));
   document.getElementById(sectionId).classList.remove("hidden");
   document.getElementById("page-title").textContent = title;
+  
+  // Sidebar buttons
   document.querySelectorAll(".menu-btn").forEach((btn) => btn.classList.remove("active"));
   if (clickedBtn) clickedBtn.classList.add("active");
+
+  // Bottom Nav Sync
+  const viewMap = {
+      'home-section': 0,
+      'merchants-section': 1,
+      'transfers-section': 2,
+      'collections-section': 3,
+      'archives-section': 4, 
+      'closing-section': 4,
+      'statement-section': 4,
+      'machines-section': 4
+  };
+  const btns = document.querySelectorAll(".bottom-nav-btn");
+  const index = viewMap[sectionId];
+  
+  btns.forEach(b => b.classList.remove("active"));
+  if(index !== undefined && btns[index]) {
+      btns[index].classList.add("active");
+  }
+
   document.getElementById("global-search").value = "";
+}
+
+function switchSectionMobile(sectionId, clickedBtn) {
+  // Map bottom nav clicks to section IDs and titles
+  const titleMap = {
+      'home-section': 'لوحة التحكم',
+      'merchants-section': 'التجار',
+      'transfers-section': 'التحويلات',
+      'collections-section': 'التحصيلات',
+      'archives-section': 'سجل الإغلاقات',
+      'machines-section': 'المكن',
+      'closing-section': 'إغلاق الشهر',
+      'statement-section': 'كشف الحساب'
+  };
+
+  let targetSection = sectionId;
+  let title = titleMap[sectionId] || 'المزيد';
+
+  // Handle "More" button click - show a menu or default to Archives
+  if (sectionId === 'more-menu') {
+      targetSection = 'archives-section'; // Default action for "More"
+      title = 'سجل الإغلاقات';
+  }
+  
+  switchSection(targetSection, title, document.querySelector(`.menu-btn[data-view="${targetSection}"]`));
+  
+  // Update bottom nav visual state
+  document.querySelectorAll(".bottom-nav-btn").forEach((btn) => btn.classList.remove("active"));
+  if (clickedBtn) clickedBtn.classList.add("active");
 }
 
 function handleGlobalSearch() {
