@@ -466,6 +466,7 @@
                     <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
                         <h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3>
                         
+                        <!-- تعديل: إضافة القائمة المنسدلة والبحث -->
                         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                             <select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList')">
                                 <option value="">-- اختر تاجر --</option>
@@ -744,7 +745,7 @@
             renderTransfers();
             renderCollections();
             renderArchive();
-            populateMerchantDropdowns();
+            populateMerchantDropdowns(); // تحديث القوائم المنسدلة
         }
 
         // ==================== Smart Search & Dropdowns ====================
@@ -760,7 +761,7 @@
         const searchMerchantDebounced = debounce((query, listId, hiddenId, callback) => {
             const listEl = document.getElementById(listId);
             const hiddenEl = document.getElementById(hiddenId);
-            hiddenEl.value = '';
+            hiddenEl.value = ''; // Reset selection
             
             if (!query) { listEl.style.display = 'none'; return; }
             
@@ -785,23 +786,28 @@
             searchMerchantDebounced(query, listId, hiddenId, callback);
         }
 
+        // إصلاح: وظيفة اختيار التاجر
         function selectMerchant(id, name, listId, hiddenId, callback) {
             const hiddenInput = document.getElementById(hiddenId);
             const listEl = document.getElementById(listId);
-            const textInput = hiddenInput.previousElementSibling;
+            // إصلاح المسار: البحث عن المدخل النصي بشكل صحيح
+            const textInput = hiddenInput.previousElementSibling; // المدخل النصي يسبق المدخل المخفي دائماً في الهيكل
             
             if(hiddenInput) hiddenInput.value = id;
-            if(textInput && textInput.type === 'text') textInput.value = name;
+            if(textInput && textInput.type === 'text') textInput.value = name; // التأكد من أنه المدخل الصحيح
             if(listEl) listEl.style.display = 'none';
 
+            // تحديث القائمة المنسدلة إذا كانت موجودة
             const selectId = hiddenId.replace('Id', 'Select');
             const selectEl = document.getElementById(selectId);
             if (selectEl) selectEl.value = id;
             
+            // تنفيذ الاستدعاء
             if (hiddenId === 'stmtMerchantId') getStatement();
             if (callback && window[callback]) window[callback](id);
         }
 
+        // جديد: وظيفة اختيار التاجر من القائمة المنسدلة
         function handleDropdownSelect(id, textInputId, hiddenId, listId) {
             const hiddenInput = document.getElementById(hiddenId);
             const textInput = document.getElementById(textInputId);
@@ -816,6 +822,7 @@
                 
                 if (hiddenId === 'stmtMerchantId') getStatement();
                 
+                // ملء المكن تلقائياً إذا كان في صفحة تحويل أو تحصيل
                 if (hiddenId === 'trMerchId' || hiddenId === 'colMerchId') {
                      fillMachines(id);
                 }
@@ -824,9 +831,10 @@
             }
         }
 
+        // جديد: ملء القوائم المنسدلة بالتجار
         function populateMerchantDropdowns() {
             const merchants = DB.merchants || [];
-            // تم إضافة mcMerchSelect هنا
+            // تمت إضافة mcMerchSelect للقائمة
             const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect', 'mcMerchSelect'];
             
             dropdownIds.forEach(dId => {
@@ -1114,11 +1122,11 @@
                     <div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات"></div>
                     <button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ التاجر</button>`;
             } else if (type === 'machine') {
-                // التعديل المطلوب: إضافة القائمة المنسدلة + البحث
+                // تم تعديل هذا الجزء لإضافة القائمة المنسدلة والبحث
                 body.innerHTML = `
                     <h3><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3>
                     <div class="form-group">
-                        <label>اختر التاجر <span class="required">*</span></label>
+                        <label>التاجر <span class="required">*</span></label>
                         <div style="display:flex; gap:0.5rem;">
                             <select id="mcMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'mcMerchSearch', 'mcMerchId', 'mcMerchList')"><option value="">-- اختر --</option></select>
                             <input type="text" id="mcMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')">
@@ -1167,6 +1175,7 @@
                     <div class="form-group"><label>ملاحظات</label><input id="colNotes" class="form-control" placeholder="ملاحظات"></div>
                     <button class="btn btn-primary btn-block" onclick="saveCollection()"><i class="fas fa-check"></i> تأكيد التحصيل</button>`;
             }
+            // ملء القوائم المنسدلة عند فتح المودال
             populateMerchantDropdowns();
         }
 
