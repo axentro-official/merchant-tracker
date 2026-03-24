@@ -1,83 +1,48 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec";
-const SESSION_KEY = "merchant_tracker_logged_in";
-const LOCAL_PASSWORD = "1407";
-
-const state = {
-  merchants: [],
-  machines: [],
-  transfers: [],
-  collections: [],
-  archives: [],
-  dashboard: null,
-  statement: null,
-};
+const SESSION_KEY = "merchant_tracker_auth";
+const state = { merchants: [], machines: [], transfers: [], collections: [], dashboard: {} };
 
 document.addEventListener("DOMContentLoaded", () => {
-  bindEvents();
-  boot();
+  init();
 });
+
+function init() {
+  if (localStorage.getItem(SESSION_KEY) === "true") {
+    showApp();
+  } else {
+    showLogin();
+  }
+  bindEvents();
+}
 
 function bindEvents() {
   document.getElementById("login-form").addEventListener("submit", handleLogin);
   document.getElementById("logout-btn").addEventListener("click", logout);
-  document.querySelectorAll(".menu-btn").forEach((btn) => {
+  
+  // Sidebar Navigation
+  document.querySelectorAll(".menu-btn").forEach(btn => {
     btn.addEventListener("click", () => switchSection(btn.dataset.view, btn.textContent.trim(), btn));
   });
 
+  // Actions
   document.getElementById("refresh-dashboard-btn").addEventListener("click", loadAllData);
-  document.getElementById("quick-export-btn").addEventListener("click", exportWorkbook);
-  document.getElementById("export-workbook-btn").addEventListener("click", exportWorkbook);
-  document.getElementById("print-statement-btn").addEventListener("click", printStatement);
+  document.getElementById("export-workbook-btn").addEventListener("click", exportExcel);
+  
+  // Forms
+  document.getElementById("merchant-form").addEventListener("submit", submitMerchant);
+  document.getElementById("machine-form").addEventListener("submit", submitMachine);
+  document.getElementById("transfer-form").addEventListener("submit", submitTransfer);
+  document.getElementById("collection-form").addEventListener("submit", submitCollection);
+  document.getElementById("statement-form").addEventListener("submit", submitStatement);
+  document.getElementById("close-month-form").addEventListener("submit", submitCloseMonth);
 
-  document.getElementById("merchant-form").addEventListener("submit", submitMerchantForm);
-  document.getElementById("merchant-reset-btn").addEventListener("click", resetMerchantForm);
-  document.getElementById("load-merchants-btn").addEventListener("click", loadMerchants);
-
-  document.getElementById("machine-form").addEventListener("submit", submitMachineForm);
-  document.getElementById("machine-reset-btn").addEventListener("click", resetMachineForm);
-  document.getElementById("load-machines-btn").addEventListener("click", loadMachines);
-
-  document.getElementById("transfer-form").addEventListener("submit", submitTransferForm);
-  document.getElementById("load-transfers-btn").addEventListener("click", loadTransfers);
-
-  document.getElementById("collection-form").addEventListener("submit", submitCollectionForm);
-  document.getElementById("load-collections-btn").addEventListener("click", loadCollections);
-
-  document.getElementById("statement-form").addEventListener("submit", submitStatementForm);
-  document.getElementById("close-month-form").addEventListener("submit", submitCloseMonthForm);
-  document.getElementById("load-archives-btn").addEventListener("click", loadArchives);
-
-  document.getElementById("transfer-merchant-id").addEventListener("change", syncMachineOptionsForTransfer);
-  document.getElementById("collection-merchant-id").addEventListener("change", syncMachineOptionsForCollection);
-
+  // Search
   document.getElementById("merchants-search").addEventListener("input", renderMerchants);
   document.getElementById("machines-search").addEventListener("input", renderMachines);
-  document.getElementById("transfers-search").addEventListener("input", renderTransfers);
-  document.getElementById("collections-search").addEventListener("input", renderCollections);
-  document.getElementById("transfers-month-filter").addEventListener("change", renderTransfers);
-  document.getElementById("collections-month-filter").addEventListener("change", renderCollections);
-  document.getElementById("clear-transfers-filter").addEventListener("click", () => {
-    document.getElementById("transfers-search").value = "";
-    document.getElementById("transfers-month-filter").value = "";
-    renderTransfers();
-  });
-  document.getElementById("clear-collections-filter").addEventListener("click", () => {
-    document.getElementById("collections-search").value = "";
-    document.getElementById("collections-month-filter").value = "";
-    renderCollections();
-  });
-
-  document.getElementById("global-search").addEventListener("input", handleGlobalSearch);
-}
-
-function boot() {
-  const loggedIn = localStorage.getItem(SESSION_KEY) === "true";
-  if (loggedIn) {
-    showDashboard();
-    loadAllData();
-  } else {
-    showLogin();
-  }
+  
+  // Dropdowns
+  document.getElementById("transfer-merchant-id").addEventListener("change", () => syncMachines("transfer-merchant-id", "transfer-machine-id"));
+  document.getElementById("collection-merchant-id").addEventListener("change", () => syncMachines("collection-merchant-id", "collection-machine-id"));
 }
 
 function showLogin() {
@@ -85,45 +50,39 @@ function showLogin() {
   document.getElementById("dashboard-view").classList.add("hidden");
 }
 
-function showDashboard() {
+function showApp() {
   document.getElementById("login-view").classList.add("hidden");
   document.getElementById("dashboard-view").classList.remove("hidden");
+  loadAllData(); // Load data immediately upon showing app
 }
 
-async function callApi(action, data = {}) {
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ action, data }),
-  });
-  const result = await response.json();
-  if (!result.success) throw new Error(result.message || "حدث خطأ أثناء الاتصال بالخدمة");
-  return result;
+async function api(action, data = {}) {
+  showLoader();
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ action, data }),
+      headers: { "Content-Type": "text/plain;charset=utf-8" }
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || "Error");
+    return json;
+  } catch (err) {
+    showToast(err.message, "error");
+    throw err;
+  } finally {
+    hideLoader();
+  }
 }
 
 async function handleLogin(e) {
   e.preventDefault();
-  const password = document.getElementById("password").value.trim();
-  if (!password) return showToast("كلمة المرور مطلوبة", "error");
+  const pwd = document.getElementById("password").value;
   try {
-    if (password === LOCAL_PASSWORD) {
-      try { await callApi("login", { password }); } catch (_) {}
-      localStorage.setItem(SESSION_KEY, "true");
-      showToast("تم تسجيل الدخول بنجاح", "success");
-      showDashboard();
-      await loadAllData();
-      document.getElementById("password").value = "";
-      return;
-    }
-    await callApi("login", { password });
+    await api("login", { password: pwd });
     localStorage.setItem(SESSION_KEY, "true");
-    showToast("تم تسجيل الدخول بنجاح", "success");
-    showDashboard();
-    await loadAllData();
-    document.getElementById("password").value = "";
-  } catch (error) {
-    showToast(error.message, "error");
-  }
+    showApp();
+  } catch {}
 }
 
 function logout() {
@@ -132,413 +91,252 @@ function logout() {
 }
 
 async function loadAllData() {
-  await Promise.all([loadDashboard(), loadMerchants(), loadMachines(), loadTransfers(), loadCollections(), loadArchives()]);
-  fillMerchantSelects();
-  document.getElementById("close-month-key").value = (state.dashboard?.["الشهر الحالي"] || "");
-}
-
-async function loadDashboard() {
   try {
-    const result = await callApi("getDashboard");
-    state.dashboard = result.data;
-    document.getElementById("current-month-label").textContent = `الشهر الحالي: ${state.dashboard["الشهر الحالي"] || "--"}`;
-    document.getElementById("stat-transfers").textContent = formatNumber(state.dashboard["إجمالي التحويلات"]);
-    document.getElementById("stat-collections").textContent = formatNumber(state.dashboard["إجمالي التحصيلات"]);
-    document.getElementById("stat-remaining").textContent = formatNumber(state.dashboard["إجمالي المتبقي"]);
-    document.getElementById("stat-merchants").textContent = formatNumber(state.dashboard["عدد التجار"]);
-    document.getElementById("stat-machines").textContent = formatNumber(state.dashboard["عدد المكن"]);
-    document.getElementById("stat-today").textContent = formatNumber((state.dashboard["عدد تحويلات اليوم"] || 0) + (state.dashboard["عدد تحصيلات اليوم"] || 0));
-    renderTopDebtors(state.dashboard["أعلى التجار مديونية"] || []);
-    renderMachinesPerformance(state.dashboard["أداء المكن"] || []);
-  } catch (error) { showToast(error.message, "error"); }
+    const [dash, merch, mach, trans, coll] = await Promise.all([
+      api("getDashboard"),
+      api("getMerchants"),
+      api("getMachines"),
+      api("getTransfers"),
+      api("getCollections")
+    ]);
+    
+    state.dashboard = dash.data || {};
+    state.merchants = merch.data || [];
+    state.machines = mach.data || [];
+    state.transfers = trans.data || [];
+    state.collections = coll.data || [];
+    
+    updateUI();
+    fillDropdowns();
+  } catch (e) {
+    console.error(e);
+  }
 }
 
-async function loadMerchants() {
-  try {
-    const result = await callApi("getMerchants");
-    state.merchants = result.data || [];
-    renderMerchants();
-    fillMerchantSelects();
-  } catch (error) { showToast(error.message, "error"); }
+function updateUI() {
+  const d = state.dashboard;
+  document.getElementById("current-month-label").textContent = d["الشهر الحالي"] || "--";
+  document.getElementById("stat-transfers").textContent = formatNum(d["إجمالي التحويلات"]);
+  document.getElementById("stat-collections").textContent = formatNum(d["إجمالي التحصيلات"]);
+  document.getElementById("stat-remaining").textContent = formatNum(d["إجمالي المتبقي"]);
+  document.getElementById("stat-merchants").textContent = d["عدد التجار"] || 0;
+  document.getElementById("stat-machines").textContent = d["عدد المكن"] || 0;
+  document.getElementById("stat-today").textContent = (d["عدد تحويلات اليوم"] || 0) + (d["عدد تحصيلات اليوم"] || 0);
+
+  renderMerchants();
+  renderMachines();
+  renderTransfers();
+  renderCollections();
+  
+  // Top Debtors
+  const debtors = d["أعلى التجار مديونية"] || [];
+  document.getElementById("top-debtors-body").innerHTML = debtors.map(m => 
+    `<tr><td>${m['اسم التاجر']}</td><td>${formatNum(m['المتبقي'])}</td></tr>`
+  ).join('') || '<tr><td colspan="2">لا توجد بيانات</td></tr>';
 }
 
-async function loadMachines() {
-  try {
-    const result = await callApi("getMachines");
-    state.machines = result.data || [];
-    renderMachines();
-    syncMachineOptionsForTransfer();
-    syncMachineOptionsForCollection();
-  } catch (error) { showToast(error.message, "error"); }
-}
-
-async function loadTransfers() {
-  try {
-    const result = await callApi("getTransfers");
-    state.transfers = result.data || [];
-    renderTransfers();
-  } catch (error) { showToast(error.message, "error"); }
-}
-
-async function loadCollections() {
-  try {
-    const result = await callApi("getCollections");
-    state.collections = result.data || [];
-    renderCollections();
-  } catch (error) { showToast(error.message, "error"); }
-}
-
-async function loadArchives() {
-  try {
-    const result = await callApi("getArchives");
-    state.archives = result.data || [];
-    renderArchives();
-  } catch (error) { console.warn(error.message); }
-}
-
-function filterRows(rows, searchValue, monthField = null, monthValue = "") {
-  const q = (searchValue || "").trim().toLowerCase();
-  return rows.filter((row) => {
-    const matchesSearch = !q || Object.values(row).some((v) => String(v ?? "").toLowerCase().includes(q));
-    const matchesMonth = !monthField || !monthValue || String(row[monthField] || "") === monthValue;
-    return matchesSearch && matchesMonth;
-  });
-}
-
-function renderTopDebtors(rows) {
-  const tbody = document.getElementById("top-debtors-body");
-  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["اسم التاجر"] || "")}</td><td>${escapeHtml(row["رقم الحساب"] || "")}</td><td>${formatNumber(row["المتبقي"] || 0)}</td></tr>`).join("") : `<tr><td colspan="3">لا توجد بيانات</td></tr>`;
-}
-
-function renderMachinesPerformance(rows) {
-  const tbody = document.getElementById("machines-performance-body");
-  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["رقم المكنة"] || "")}</td><td>${escapeHtml(row["اسم التاجر"] || "")}</td><td>${formatNumber(row["التارجت الشهري"] || 0)}</td><td>${formatNumber(row["الفعلي"] || 0)}</td><td>${formatNumber(row["نسبة الإنجاز"] || 0)}%</td></tr>`).join("") : `<tr><td colspan="5">لا توجد بيانات</td></tr>`;
-}
-
+// --- Renders ---
 function renderMerchants() {
-  const tbody = document.getElementById("merchants-body");
-  const rows = filterRows(state.merchants, document.getElementById("merchants-search").value);
-  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["رقم التاجر"] || "")}</td><td>${escapeHtml(row["اسم التاجر"] || "")}</td><td>${escapeHtml(row["اسم النشاط"] || "")}</td><td>${escapeHtml(row["رقم الحساب"] || "")}</td><td>${escapeHtml(row["الحالة"] || "")}</td><td><div class="action-buttons"><button class="edit-btn" onclick="editMerchant('${escapeJs(row["رقم التاجر"])}')">تعديل</button><button class="delete-btn" onclick="deleteMerchant('${escapeJs(row["رقم التاجر"])}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="6">لا يوجد تجار حالياً</td></tr>`;
+  const q = document.getElementById("merchants-search").value.toLowerCase();
+  const rows = state.merchants.filter(m => m['اسم التاجر']?.toLowerCase().includes(q));
+  document.getElementById("merchants-body").innerHTML = rows.map(m => `
+    <tr>
+      <td>${m['اسم التاجر']}</td><td>${m['رقم الحساب']}</td><td>${m['الحالة']}</td>
+      <td><button class="action-btn edit-btn" onclick="editMerchant('${m['رقم التاجر']}')">تعديل</button> <button class="action-btn delete-btn" onclick="deleteMerchant('${m['رقم التاجر']}')">حذف</button></td>
+    </tr>
+  `).join('') || '<tr><td colspan="4">لا يوجد تجار</td></tr>';
 }
 
 function renderMachines() {
-  const tbody = document.getElementById("machines-body");
-  const rows = filterRows(state.machines, document.getElementById("machines-search").value);
-  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["رقم المكنة"] || "")}</td><td>${escapeHtml(row["اسم التاجر"] || "")}</td><td>${escapeHtml(row["الباركود"] || "")}</td><td>${formatNumber(row["التارجت الشهري"] || 0)}</td><td>${escapeHtml(row["الحالة"] || "")}</td><td><div class="action-buttons"><button class="edit-btn" onclick="editMachine('${escapeJs(row["رقم المكنة"])}')">تعديل</button><button class="delete-btn" onclick="deleteMachine('${escapeJs(row["رقم المكنة"])}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="6">لا يوجد مكن حالياً</td></tr>`;
+  const q = document.getElementById("machines-search").value.toLowerCase();
+  const rows = state.machines.filter(m => m['الباركود']?.toLowerCase().includes(q) || m['اسم التاجر']?.toLowerCase().includes(q));
+  document.getElementById("machines-body").innerHTML = rows.map(m => `
+    <tr>
+      <td>${m['رقم المكنة']}</td><td>${m['اسم التاجر']}</td><td>${m['الباركود']}</td>
+      <td><button class="action-btn delete-btn" onclick="deleteMachine('${m['رقم المكنة']}')">حذف</button></td>
+    </tr>
+  `).join('') || '<tr><td colspan="4">لا يوجد مكن</td></tr>';
 }
 
 function renderTransfers() {
-  const tbody = document.getElementById("transfers-body");
-  const search = document.getElementById("transfers-search").value;
-  const month = document.getElementById("transfers-month-filter").value;
-  const rows = filterRows(state.transfers.slice().reverse(), search, "الشهر", month);
-  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["رقم التحويل"] || "")}</td><td>${escapeHtml(row["الرقم المرجعي"] || "")}</td><td>${escapeHtml(row["اسم التاجر"] || "")}</td><td>${escapeHtml(row["رقم المكنة"] || "")}</td><td>${formatNumber(row["قيمة التحويل"] || 0)}</td><td>${escapeHtml(row["التاريخ"] || "")}</td><td>${escapeHtml(row["الوقت"] || "")}</td><td><div class="action-buttons"><button class="delete-btn" onclick="deleteTransfer('${escapeJs(row["رقم التحويل"])}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="8">لا توجد تحويلات</td></tr>`;
+  const rows = state.transfers.slice().reverse();
+  document.getElementById("transfers-body").innerHTML = rows.map(t => `
+    <tr>
+      <td>${t['التاريخ']}</td><td>${t['اسم التاجر']}</td><td>${formatNum(t['قيمة التحويل'])}</td>
+      <td><button class="action-btn delete-btn" onclick="deleteTransfer('${t['رقم التحويل']}')">حذف</button></td>
+    </tr>
+  `).join('') || '<tr><td colspan="4">لا توجد تحويلات</td></tr>';
 }
 
 function renderCollections() {
-  const tbody = document.getElementById("collections-body");
-  const search = document.getElementById("collections-search").value;
-  const month = document.getElementById("collections-month-filter").value;
-  const rows = filterRows(state.collections.slice().reverse(), search, "الشهر", month);
-  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["رقم التحصيل"] || "")}</td><td>${escapeHtml(row["الرقم المرجعي"] || "")}</td><td>${escapeHtml(row["اسم التاجر"] || "")}</td><td>${escapeHtml(row["رقم المكنة"] || "")}</td><td>${formatNumber(row["قيمة التحصيل"] || 0)}</td><td>${escapeHtml(row["نوع التحصيل"] || "")}</td><td>${escapeHtml(row["الوقت"] || "")}</td><td><div class="action-buttons"><button class="delete-btn" onclick="deleteCollection('${escapeJs(row["رقم التحصيل"])}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="8">لا توجد تحصيلات</td></tr>`;
+  const rows = state.collections.slice().reverse();
+  document.getElementById("collections-body").innerHTML = rows.map(c => `
+    <tr>
+      <td>${c['التاريخ']}</td><td>${c['اسم التاجر']}</td><td>${formatNum(c['قيمة التحصيل'])}</td>
+      <td><button class="action-btn delete-btn" onclick="deleteCollection('${c['رقم التحصيل']}')">حذف</button></td>
+    </tr>
+  `).join('') || '<tr><td colspan="4">لا توجد تحصيلات</td></tr>';
 }
 
-function renderArchives() {
-  const tbody = document.getElementById("archives-body");
-  const rows = state.archives.slice().reverse();
-  tbody.innerHTML = rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["رقم الأرشيف"] || "")}</td><td>${escapeHtml(row["الشهر"] || "")}</td><td>${formatNumber(row["إجمالي التحويلات"] || 0)}</td><td>${formatNumber(row["إجمالي التحصيلات"] || 0)}</td><td>${formatNumber(row["إجمالي المتبقي"] || 0)}</td><td>${escapeHtml(row["تاريخ الإغلاق"] || "")}</td><td>${escapeHtml(row["ملاحظات"] || "")}</td></tr>`).join("") : `<tr><td colspan="7">لا توجد عمليات إغلاق مسجلة</td></tr>`;
+// --- Forms Logic ---
+function fillDropdowns() {
+  const merchOpts = state.merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
+  const selectors = ["machine-merchant-id", "transfer-merchant-id", "collection-merchant-id", "statement-merchant-id"];
+  selectors.forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = `<option value="">اختر...</option>${merchOpts}`;
+  });
 }
 
-async function submitMerchantForm(e) {
+function syncMachines(merchSelectId, machineSelectId) {
+  const mid = document.getElementById(merchSelectId).value;
+  const filtered = state.machines.filter(m => m['رقم التاجر'] === mid);
+  document.getElementById(machineSelectId).innerHTML = `<option value="">اختر...</option>` + 
+    filtered.map(m => `<option value="${m['رقم المكنة']}">${m['الباركود']}</option>`).join('');
+}
+
+async function submitMerchant(e) {
   e.preventDefault();
-  const merchantId = document.getElementById("merchant-id").value.trim();
+  const id = document.getElementById("merchant-id").value;
   const payload = {
-    merchantId,
-    merchantName: document.getElementById("merchant-name").value.trim(),
-    businessName: document.getElementById("business-name").value.trim(),
-    accountNumber: document.getElementById("account-number").value.trim(),
-    phone: document.getElementById("merchant-phone").value.trim(),
-    area: document.getElementById("merchant-area").value.trim(),
-    address: document.getElementById("merchant-address").value.trim(),
-    status: document.getElementById("merchant-status").value,
-    notes: document.getElementById("merchant-notes").value.trim(),
+    merchantId: id,
+    merchantName: document.getElementById("merchant-name").value,
+    accountNumber: document.getElementById("account-number").value,
+    phone: document.getElementById("merchant-phone").value,
+    area: document.getElementById("merchant-area").value
   };
-  try {
-    if (merchantId) await callApi("updateMerchant", payload); else await callApi("addMerchant", payload);
-    showToast(merchantId ? "تم تعديل التاجر بنجاح" : "تمت إضافة التاجر بنجاح", "success");
-    resetMerchantForm();
-    await loadAllData();
-  } catch (error) { showToast(error.message, "error"); }
-}
-
-function resetMerchantForm() {
-  document.getElementById("merchant-form").reset();
+  await api(id ? "updateMerchant" : "addMerchant", payload);
+  showToast("تم الحفظ");
+  this.reset();
   document.getElementById("merchant-id").value = "";
-  document.getElementById("merchant-status").value = "نشط";
+  loadAllData();
 }
 
-function editMerchant(merchantId) {
-  const merchant = state.merchants.find((m) => m["رقم التاجر"] === merchantId); if (!merchant) return;
-  document.getElementById("merchant-id").value = merchant["رقم التاجر"] || "";
-  document.getElementById("merchant-name").value = merchant["اسم التاجر"] || "";
-  document.getElementById("business-name").value = merchant["اسم النشاط"] || "";
-  document.getElementById("account-number").value = merchant["رقم الحساب"] || "";
-  document.getElementById("merchant-phone").value = merchant["رقم الهاتف"] || "";
-  document.getElementById("merchant-area").value = merchant["المنطقة"] || "";
-  document.getElementById("merchant-address").value = merchant["العنوان"] || "";
-  document.getElementById("merchant-status").value = merchant["الحالة"] || "نشط";
-  document.getElementById("merchant-notes").value = merchant["ملاحظات"] || "";
-  switchSection("merchants-section", "التجار", document.querySelector('[data-view="merchants-section"]'));
+function editMerchant(id) {
+  const m = state.merchants.find(x => x['رقم التاجر'] === id);
+  if(!m) return;
+  document.getElementById("merchant-id").value = m['رقم التاجر'];
+  document.getElementById("merchant-name").value = m['اسم التاجر'];
+  document.getElementById("account-number").value = m['رقم الحساب'];
+  document.getElementById("merchant-phone").value = m['رقم الهاتف'];
+  document.getElementById("merchant-area").value = m['المنطقة'];
+  switchSection("merchants-section", "التجار");
 }
 
-async function deleteMerchant(merchantId) {
-  if (!confirm("هل أنت متأكد من حذف هذا التاجر؟")) return;
-  try { await callApi("deleteMerchant", { merchantId }); showToast("تم حذف التاجر بنجاح", "success"); await loadAllData(); } catch (error) { showToast(error.message, "error"); }
-}
+async function deleteMerchant(id) { if(confirm("متأكد؟")) { await api("deleteMerchant", {merchantId: id}); showToast("تم الحذف"); loadAllData(); } }
 
-async function submitMachineForm(e) {
+async function submitMachine(e) {
   e.preventDefault();
-  const machineId = document.getElementById("machine-id").value.trim();
-  const payload = {
-    machineId,
+  await api("addMachine", {
     merchantId: document.getElementById("machine-merchant-id").value,
-    barcode: document.getElementById("machine-barcode").value.trim(),
-    serialNumber: document.getElementById("machine-serial").value.trim(),
-    monthlyTarget: Number(document.getElementById("machine-target").value || 0),
-    status: document.getElementById("machine-status").value,
-    notes: document.getElementById("machine-notes").value.trim(),
-  };
-  try {
-    if (machineId) await callApi("updateMachine", payload); else await callApi("addMachine", payload);
-    showToast(machineId ? "تم تعديل المكنة بنجاح" : "تمت إضافة المكنة بنجاح", "success");
-    resetMachineForm();
-    await loadAllData();
-  } catch (error) { showToast(error.message, "error"); }
+    barcode: document.getElementById("machine-barcode").value,
+    monthlyTarget: document.getElementById("machine-target").value
+  });
+  showToast("تم إضافة المكنة");
+  this.reset();
+  loadAllData();
 }
 
-function resetMachineForm() {
-  document.getElementById("machine-form").reset();
-  document.getElementById("machine-id").value = "";
-  document.getElementById("machine-status").value = "نشطة";
-  document.getElementById("machine-target").value = "0";
-}
+async function deleteMachine(id) { if(confirm("متأكد؟")) { await api("deleteMachine", {machineId: id}); showToast("تم الحذف"); loadAllData(); } }
 
-function editMachine(machineId) {
-  const machine = state.machines.find((m) => m["رقم المكنة"] === machineId); if (!machine) return;
-  document.getElementById("machine-id").value = machine["رقم المكنة"] || "";
-  document.getElementById("machine-merchant-id").value = machine["رقم التاجر"] || "";
-  document.getElementById("machine-barcode").value = machine["الباركود"] || "";
-  document.getElementById("machine-serial").value = machine["الرقم التسلسلي"] || "";
-  document.getElementById("machine-target").value = machine["التارجت الشهري"] || 0;
-  document.getElementById("machine-status").value = machine["الحالة"] || "نشطة";
-  document.getElementById("machine-notes").value = machine["ملاحظات"] || "";
-  switchSection("machines-section", "المكن", document.querySelector('[data-view="machines-section"]'));
-}
-
-async function deleteMachine(machineId) {
-  if (!confirm("هل أنت متأكد من حذف هذه المكنة؟")) return;
-  try { await callApi("deleteMachine", { machineId }); showToast("تم حذف المكنة بنجاح", "success"); await loadAllData(); } catch (error) { showToast(error.message, "error"); }
-}
-
-async function submitTransferForm(e) {
+async function submitTransfer(e) {
   e.preventDefault();
-  const payload = {
+  await api("addTransfer", {
     merchantId: document.getElementById("transfer-merchant-id").value,
     machineId: document.getElementById("transfer-machine-id").value,
-    amount: Number(document.getElementById("transfer-amount").value || 0),
-    notes: document.getElementById("transfer-notes").value.trim(),
-  };
-  try {
-    await callApi("addTransfer", payload);
-    showToast("تم تسجيل التحويل بنجاح", "success");
-    document.getElementById("transfer-form").reset();
-    syncMachineOptionsForTransfer();
-    await loadAllData();
-  } catch (error) { showToast(error.message, "error"); }
+    amount: document.getElementById("transfer-amount").value
+  });
+  showToast("تم التحويل");
+  this.reset();
+  loadAllData();
 }
 
-async function deleteTransfer(transferId) {
-  if (!confirm("هل أنت متأكد من حذف هذا التحويل؟")) return;
-  try { await callApi("deleteTransfer", { transferId }); showToast("تم حذف التحويل بنجاح", "success"); await loadAllData(); } catch (error) { showToast(error.message, "error"); }
-}
+async function deleteTransfer(id) { if(confirm("متأكد؟")) { await api("deleteTransfer", {transferId: id}); showToast("تم الحذف"); loadAllData(); } }
 
-async function submitCollectionForm(e) {
+async function submitCollection(e) {
   e.preventDefault();
-  const payload = {
+  await api("addCollection", {
     merchantId: document.getElementById("collection-merchant-id").value,
     machineId: document.getElementById("collection-machine-id").value,
-    amount: Number(document.getElementById("collection-amount").value || 0),
-    collectionType: document.getElementById("collection-type").value,
-    notes: document.getElementById("collection-notes").value.trim(),
-  };
-  try {
-    await callApi("addCollection", payload);
-    showToast("تم تسجيل التحصيل بنجاح", "success");
-    document.getElementById("collection-form").reset();
-    syncMachineOptionsForCollection();
-    await loadAllData();
-  } catch (error) { showToast(error.message, "error"); }
-}
-
-async function deleteCollection(collectionId) {
-  if (!confirm("هل أنت متأكد من حذف هذا التحصيل؟")) return;
-  try { await callApi("deleteCollection", { collectionId }); showToast("تم حذف التحصيل بنجاح", "success"); await loadAllData(); } catch (error) { showToast(error.message, "error"); }
-}
-
-async function submitStatementForm(e) {
-  e.preventDefault();
-  const merchantId = document.getElementById("statement-merchant-id").value;
-  try {
-    const result = await callApi("getMerchantStatement", { merchantId });
-    const data = result.data; state.statement = data;
-    document.getElementById("statement-summary").classList.remove("hidden");
-    document.getElementById("statement-total-transfers").textContent = formatNumber(data["إجمالي التحويلات"] || 0);
-    document.getElementById("statement-total-collections").textContent = formatNumber(data["إجمالي التحصيلات"] || 0);
-    document.getElementById("statement-remaining").textContent = formatNumber(data["المتبقي الحالي"] || 0);
-    document.getElementById("statement-movements-count").textContent = formatNumber(data["عدد الحركات"] || 0);
-    const tbody = document.getElementById("statement-body");
-    const movements = data["الحركات"] || [];
-    tbody.innerHTML = movements.length ? movements.map((row) => `<tr><td>${escapeHtml(row["النوع"] || "")}</td><td>${escapeHtml(row["الرقم"] || "")}</td><td>${escapeHtml(row["الرقم المرجعي"] || "")}</td><td>${escapeHtml(row["التاريخ"] || "")}</td><td>${escapeHtml(row["الوقت"] || "")}</td><td>${formatNumber(row["القيمة"] || 0)}</td><td>${escapeHtml(row["ملاحظات"] || "")}</td></tr>`).join("") : `<tr><td colspan="7">لا توجد حركات لهذا التاجر</td></tr>`;
-  } catch (error) { showToast(error.message, "error"); }
-}
-
-async function submitCloseMonthForm(e) {
-  e.preventDefault();
-  const monthKey = document.getElementById("close-month-key").value.trim();
-  const notes = document.getElementById("close-month-notes").value.trim();
-  if (!confirm(`هل أنت متأكد من إغلاق الشهر ${monthKey}؟`)) return;
-  try {
-    await callApi("closeMonth", { monthKey, notes });
-    showToast("تم إغلاق الشهر بنجاح", "success");
-    document.getElementById("close-month-form").reset();
-    await loadAllData();
-  } catch (error) { showToast(error.message, "error"); }
-}
-
-function fillMerchantSelects() {
-  const selects = [document.getElementById("machine-merchant-id"), document.getElementById("transfer-merchant-id"), document.getElementById("collection-merchant-id"), document.getElementById("statement-merchant-id")];
-  const options = `<option value="">اختر التاجر</option>` + state.merchants.map((m) => `<option value="${escapeHtml(m["رقم التاجر"] || "")}">${escapeHtml((m["اسم التاجر"] || "") + " - " + (m["رقم الحساب"] || ""))}</option>`).join("");
-  selects.forEach((select) => {
-    const currentValue = select.value;
-    select.innerHTML = options;
-    if ([...select.options].some((o) => o.value === currentValue)) select.value = currentValue;
+    amount: document.getElementById("collection-amount").value,
+    collectionType: document.getElementById("collection-type").value
   });
-  syncMachineOptionsForTransfer();
-  syncMachineOptionsForCollection();
+  showToast("تم التحصيل");
+  this.reset();
+  loadAllData();
 }
 
-function syncMachineOptionsForTransfer() { fillMachineSelectByMerchant("transfer-merchant-id", "transfer-machine-id"); }
-function syncMachineOptionsForCollection() { fillMachineSelectByMerchant("collection-merchant-id", "collection-machine-id"); }
+async function deleteCollection(id) { if(confirm("متأكد؟")) { await api("deleteCollection", {collectionId: id}); showToast("تم الحذف"); loadAllData(); } }
 
-function fillMachineSelectByMerchant(merchantSelectId, machineSelectId) {
-  const merchantId = document.getElementById(merchantSelectId).value;
-  const machineSelect = document.getElementById(machineSelectId);
-  const filteredMachines = state.machines.filter((m) => m["رقم التاجر"] === merchantId);
-  machineSelect.innerHTML = `<option value="">اختر المكنة</option>` + filteredMachines.map((m) => `<option value="${escapeHtml(m["رقم المكنة"] || "")}">${escapeHtml((m["رقم المكنة"] || "") + " - " + (m["الباركود"] || ""))}</option>`).join("");
+async function submitStatement(e) {
+  e.preventDefault();
+  const mid = document.getElementById("statement-merchant-id").value;
+  const res = await api("getMerchantStatement", { merchantId: mid });
+  const data = res.data;
+  document.getElementById("statement-result").classList.remove("hidden");
+  document.getElementById("stmt-t").textContent = formatNum(data["إجمالي التحويلات"]);
+  document.getElementById("stmt-c").textContent = formatNum(data["إجمالي التحصيلات"]);
+  document.getElementById("stmt-r").textContent = formatNum(data["المتبقي الحالي"]);
+  
+  const tbody = document.getElementById("statement-body");
+  tbody.innerHTML = (data["الحركات"] || []).map(m => 
+    `<tr><td>${m['النوع']}</td><td>${formatNum(m['القيمة'])}</td><td>${m['التاريخ']}</td></tr>`
+  ).join('') || '<tr><td colspan="3">لا توجد حركات</td></tr>';
 }
 
-function switchSection(sectionId, title, clickedBtn) {
-  document.querySelectorAll(".content-section").forEach((section) => section.classList.add("hidden"));
-  document.getElementById(sectionId).classList.remove("hidden");
+async function submitCloseMonth(e) {
+  e.preventDefault();
+  if(!confirm("هل تريد إغلاق الشهر؟ لا يمكن التراجع.")) return;
+  await api("closeMonth", { notes: document.getElementById("close-month-notes").value });
+  showToast("تم إغلاق الشهر");
+  loadAllData();
+}
+
+function switchSection(id, title, btn) {
+  document.querySelectorAll(".content-section").forEach(s => s.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
   document.getElementById("page-title").textContent = title;
   
-  // Sidebar buttons
-  document.querySelectorAll(".menu-btn").forEach((btn) => btn.classList.remove("active"));
-  if (clickedBtn) clickedBtn.classList.add("active");
-
-  // Bottom Nav Sync
-  const viewMap = {
-      'home-section': 0,
-      'merchants-section': 1,
-      'transfers-section': 2,
-      'collections-section': 3,
-      'archives-section': 4, 
-      'closing-section': 4,
-      'statement-section': 4,
-      'machines-section': 4
-  };
-  const btns = document.querySelectorAll(".bottom-nav-btn");
-  const index = viewMap[sectionId];
-  
-  btns.forEach(b => b.classList.remove("active"));
-  if(index !== undefined && btns[index]) {
-      btns[index].classList.add("active");
+  if(btn) {
+    document.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
   }
-
-  document.getElementById("global-search").value = "";
 }
 
-function switchSectionMobile(sectionId, clickedBtn) {
-  // Map bottom nav clicks to section IDs and titles
-  const titleMap = {
-      'home-section': 'لوحة التحكم',
-      'merchants-section': 'التجار',
-      'transfers-section': 'التحويلات',
-      'collections-section': 'التحصيلات',
-      'archives-section': 'سجل الإغلاقات',
-      'machines-section': 'المكن',
-      'closing-section': 'إغلاق الشهر',
-      'statement-section': 'كشف الحساب'
+function switchSectionMobile(id, btn) {
+  let targetId = id;
+  if(id === 'more-menu') targetId = 'archives-section'; // Default for more button
+  
+  const map = {
+    'home-section': '🏠 الرئيسية',
+    'transfers-section': '💸 تحويلات',
+    'collections-section': '💰 تحصيلات',
+    'merchants-section': '👥 التجار',
+    'archives-section': '📦 المزيد'
   };
-
-  let targetSection = sectionId;
-  let title = titleMap[sectionId] || 'المزيد';
-
-  // Handle "More" button click - show a menu or default to Archives
-  if (sectionId === 'more-menu') {
-      targetSection = 'archives-section'; // Default action for "More"
-      title = 'سجل الإغلاقات';
-  }
   
-  switchSection(targetSection, title, document.querySelector(`.menu-btn[data-view="${targetSection}"]`));
+  switchSection(targetId, map[targetId] || 'القائمة', document.querySelector(`.menu-btn[data-view="${targetId}"]`));
   
-  // Update bottom nav visual state
-  document.querySelectorAll(".bottom-nav-btn").forEach((btn) => btn.classList.remove("active"));
-  if (clickedBtn) clickedBtn.classList.add("active");
+  document.querySelectorAll(".bottom-nav-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
 }
 
-function handleGlobalSearch() {
-  const active = document.querySelector(".content-section:not(.hidden)");
-  const q = document.getElementById("global-search").value.toLowerCase();
-  if (!active) return;
-  active.querySelectorAll("tbody tr").forEach((row) => {
-    row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
-  });
-}
-
-function exportWorkbook() {
+function exportExcel() {
   const wb = XLSX.utils.book_new();
-  const summaryData = [["البند", "القيمة"]];
-  const dashboard = state.dashboard || {};
-  ["الشهر الحالي", "عدد التجار", "عدد المكن", "إجمالي التحويلات", "إجمالي التحصيلات", "إجمالي المتبقي", "عدد تحويلات اليوم", "عدد تحصيلات اليوم"].forEach((key) => summaryData.push([key, dashboard[key] ?? ""]));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), "الملخص");
-  appendJsonSheet(wb, state.merchants, "التجار");
-  appendJsonSheet(wb, state.machines, "المكن");
-  appendJsonSheet(wb, state.transfers, "التحويلات");
-  appendJsonSheet(wb, state.collections, "التحصيلات");
-  appendJsonSheet(wb, state.archives, "الأرشيف");
-  const month = (dashboard["الشهر الحالي"] || new Date().toISOString().slice(0,7)).replace("-", "_");
-  XLSX.writeFile(wb, `merchant_tracker_${month}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.merchants), "التجار");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.transfers), "التحويلات");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.collections), "التحصيلات");
+  XLSX.writeFile(wb, "Axentro_Report.xlsx");
 }
 
-function appendJsonSheet(wb, rows, name) {
-  const sheet = rows && rows.length ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([["لا توجد بيانات"]]);
-  XLSX.utils.book_append_sheet(wb, sheet, name.slice(0, 31));
+// Utils
+function showLoader() { document.getElementById("loader").classList.remove("hidden"); }
+function hideLoader() { document.getElementById("loader").classList.add("hidden"); }
+function showToast(msg, type="success") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  t.classList.remove("hidden");
+  setTimeout(() => t.classList.add("hidden"), 3000);
 }
-
-function printStatement() {
-  if (!state.statement) return showToast("اعرض كشف حساب أولاً", "error");
-  window.print();
-}
-
-function showToast(message, type = "success") {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.className = `toast ${type}`;
-  toast.classList.remove("hidden");
-  setTimeout(() => { toast.classList.add("hidden"); }, 3000);
-}
-
-function formatNumber(value) { return Number(value || 0).toLocaleString("ar-EG"); }
-function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
-function escapeJs(value) { return String(value ?? "").replaceAll("\\", "\\\\").replaceAll("'", "\\'"); }
+function formatNum(n) { return Number(n || 0).toLocaleString('ar-EG'); }
