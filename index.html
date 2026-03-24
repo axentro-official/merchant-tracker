@@ -13,6 +13,7 @@
 <body>
   <div id="toast" class="toast hidden"></div>
 
+  <!-- Login View -->
   <section id="login-view" class="login-shell">
     <div class="login-card">
       <div class="brand-block">
@@ -31,7 +32,9 @@
     </div>
   </section>
 
+  <!-- Dashboard View -->
   <section id="dashboard-view" class="hidden app-layout">
+    <!-- Sidebar (Desktop) -->
     <aside class="sidebar">
       <div>
         <div class="sidebar-brand">
@@ -41,9 +44,7 @@
             <div class="sidebar-subtitle">Merchant Tracker</div>
           </div>
         </div>
-
         <div class="month-badge" id="current-month-label">--</div>
-
         <nav class="menu">
           <button class="menu-btn active" data-view="home-section">لوحة التحكم</button>
           <button class="menu-btn" data-view="merchants-section">التجار</button>
@@ -55,7 +56,6 @@
           <button class="menu-btn" data-view="closing-section">إغلاق الشهر</button>
         </nav>
       </div>
-
       <div class="sidebar-actions">
         <button id="refresh-dashboard-btn" class="secondary-btn">تحديث البيانات</button>
         <button id="export-workbook-btn" class="primary-btn">تصدير Excel</button>
@@ -63,6 +63,7 @@
       </div>
     </aside>
 
+    <!-- Main Content -->
     <main class="main-content">
       <header class="topbar">
         <div>
@@ -76,6 +77,7 @@
         </div>
       </header>
 
+      <!-- Home Section -->
       <section id="home-section" class="content-section">
         <div class="hero-panel">
           <div>
@@ -110,6 +112,7 @@
         </div>
       </section>
 
+      <!-- Merchants Section -->
       <section id="merchants-section" class="content-section hidden">
         <div class="panel">
           <div class="panel-header between"><h3>إدارة التجار</h3><button id="load-merchants-btn" class="secondary-btn">تحديث</button></div>
@@ -130,6 +133,7 @@
         </div>
       </section>
 
+      <!-- Machines Section -->
       <section id="machines-section" class="content-section hidden">
         <div class="panel">
           <div class="panel-header between"><h3>إدارة المكن</h3><button id="load-machines-btn" class="secondary-btn">تحديث</button></div>
@@ -148,6 +152,7 @@
         </div>
       </section>
 
+      <!-- Transfers Section -->
       <section id="transfers-section" class="content-section hidden">
         <div class="panel">
           <div class="panel-header between"><h3>التحويلات</h3><button id="load-transfers-btn" class="secondary-btn">تحديث</button></div>
@@ -163,10 +168,11 @@
             <input id="transfers-month-filter" type="month" />
             <button id="clear-transfers-filter" class="secondary-btn">مسح الفلاتر</button>
           </div>
-          <div class="table-wrapper"><table id="transfers-table"><thead><tr><th>رقم التحويل</th><th>الرقم المرجعي</th><th>اسم التاجر</th><th>رقم المكنة</th><th>القيمة</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody id="transfers-body"></tbody></table></div>
+          <div class="table-wrapper"><table id="transfers-table"><thead><tr><th>رقم التحويل</th><th>الرقم المرجعي</th><th>اسم التاجر</th><th>رقم المكنة</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>إجراءات</th></tr></thead><tbody id="transfers-body"></tbody></table></div>
         </div>
       </section>
 
+      <!-- Collections Section -->
       <section id="collections-section" class="content-section hidden">
         <div class="panel">
           <div class="panel-header between"><h3>التحصيلات</h3><button id="load-collections-btn" class="secondary-btn">تحديث</button></div>
@@ -183,10 +189,11 @@
             <input id="collections-month-filter" type="month" />
             <button id="clear-collections-filter" class="secondary-btn">مسح الفلاتر</button>
           </div>
-          <div class="table-wrapper"><table id="collections-table"><thead><tr><th>رقم التحصيل</th><th>الرقم المرجعي</th><th>اسم التاجر</th><th>رقم المكنة</th><th>القيمة</th><th>النوع</th><th>إجراءات</th></tr></thead><tbody id="collections-body"></tbody></table></div>
+          <div class="table-wrapper"><table id="collections-table"><thead><tr><th>رقم التحصيل</th><th>الرقم المرجعي</th><th>اسم التاجر</th><th>رقم المكنة</th><th>القيمة</th><th>النوع</th><th>الوقت</th><th>إجراءات</th></tr></thead><tbody id="collections-body"></tbody></table></div>
         </div>
       </section>
 
+      <!-- Statement Section -->
       <section id="statement-section" class="content-section hidden">
         <div class="panel">
           <div class="panel-header between"><h3>كشف حساب التاجر</h3><button id="print-statement-btn" class="secondary-btn">طباعة الكشف</button></div>
@@ -206,6 +213,7 @@
         </div>
       </section>
 
+      <!-- Archives Section -->
       <section id="archives-section" class="content-section hidden">
         <div class="panel">
           <div class="panel-header between"><h3>سجل إغلاقات الشهور</h3><button id="load-archives-btn" class="secondary-btn">تحديث</button></div>
@@ -213,6 +221,7 @@
         </div>
       </section>
 
+      <!-- Closing Section -->
       <section id="closing-section" class="content-section hidden">
         <div class="panel">
           <div class="panel-header"><h3>إغلاق الشهر</h3></div>
@@ -239,6 +248,30 @@
         </a>
       </footer>
     </main>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav" id="bottomNav">
+      <button class="bottom-nav-btn active" onclick="switchSectionMobile('home-section', this)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>الرئيسية</span>
+      </button>
+      <button class="bottom-nav-btn" onclick="switchSectionMobile('merchants-section', this)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span>التجار</span>
+      </button>
+      <button class="bottom-nav-btn" onclick="switchSectionMobile('transfers-section', this)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        <span>تحويلات</span>
+      </button>
+      <button class="bottom-nav-btn" onclick="switchSectionMobile('collections-section', this)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+        <span>تحصيلات</span>
+      </button>
+      <button class="bottom-nav-btn" onclick="switchSectionMobile('more-menu', this)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+        <span>المزيد</span>
+      </button>
+    </nav>
   </section>
 
   <script src="app.js"></script>
