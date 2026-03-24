@@ -198,7 +198,7 @@
         @media (max-width: 768px) {
             .navbar { padding: 0.6rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
             .navbar-actions { width: 100%; justify-content: center; margin-top: 0.5rem; }
-            .tabs-nav { top: 100px; } /* Adjust for wrapped navbar */
+            .tabs-nav { top: 100px; } 
             .tab-link { padding: 0.7rem 0.3rem; font-size: 0.75rem; }
             .content { padding: 1rem; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -465,11 +465,19 @@
                 <div class="table-box">
                     <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
                         <h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3>
-                        <div style="position: relative; width: 250px;">
-                            <input type="text" id="stmtMerchantSearch" class="form-control" placeholder="ابحث عن تاجر..." autocomplete="off">
-                            <input type="hidden" id="stmtMerchantId">
-                            <div id="stmtMerchantList" class="search-results"></div>
+                        
+                        <!-- تعديل: إضافة القائمة المنسدلة والبحث -->
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList')">
+                                <option value="">-- اختر تاجر --</option>
+                            </select>
+                            <div style="position: relative; width: 200px;">
+                                <input type="text" id="stmtMerchantSearch" class="form-control" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'stmtMerchantList', 'stmtMerchantId', 'getStatement')">
+                                <input type="hidden" id="stmtMerchantId">
+                                <div id="stmtMerchantList" class="search-results"></div>
+                            </div>
                         </div>
+                        
                     </div>
                     <div style="padding: 1rem;">
                         <div class="stats-grid">
@@ -594,12 +602,10 @@
 
         function formatTime(t) {
             if (!t) return '-';
-            // Backend sends hh:mm a (12h format)
-            // Just display it nicely
             return t;
         }
 
-        // ==================== Cache Logic (Final) ====================
+        // ==================== Cache Logic ====================
         const CACHE_KEY = 'axentro_dashboard_cache';
         const CACHE_TTL = 10 * 60 * 1000; 
 
@@ -647,7 +653,6 @@
                 document.getElementById('loginBox').style.display = 'none';
                 document.getElementById('appBox').style.display = 'flex';
                 
-                // Optimistic Cache Render
                 const cachedData = getCache();
                 if (cachedData) {
                     DB.dashboard = cachedData;
@@ -700,15 +705,14 @@
             }
         }
 
-        // ==================== Data Loading (Stable) ====================
+        // ==================== Data Loading ====================
         async function loadData() {
-            // Only show full spinner if initial load
             if (!DB.merchants) showLoading(true);
             
             try {
                 const res = await api('getAllData');
                 if (res.success && res.data) {
-                    DB = res.data; // Fresh Data
+                    DB = res.data;
                     if (DB.dashboard) setCache(DB.dashboard);
                     renderAll();
                     setConnectionStatus('live');
@@ -718,7 +722,6 @@
                 }
             } catch (e) {
                 setConnectionStatus('offline');
-                // Fallback Strategy
                 if (!DB.merchants) {
                     const cachedDash = getCache();
                     if (cachedDash) {
@@ -729,7 +732,6 @@
                         showToast('فشل تحميل البيانات', 'error');
                     }
                 } else {
-                    // We have in-memory data, just notify
                     showToast('تحديث فاشل، البيانات قد تكون قديمة', 'warning');
                 }
             }
@@ -743,9 +745,10 @@
             renderTransfers();
             renderCollections();
             renderArchive();
+            populateMerchantDropdowns(); // تحديث القوائم المنسدلة
         }
 
-        // ==================== Smart Search (Optimized) ====================
+        // ==================== Smart Search & Dropdowns ====================
         
         function debounce(func, wait) {
             let timeout;
@@ -765,7 +768,8 @@
             const merchants = (DB.merchants || []);
             const filtered = merchants.filter(m => 
                 (m['اسم التاجر'] || '').includes(query) || 
-                (m['اسم النشاط'] || '').includes(query)
+                (m['اسم النشاط'] || '').includes(query) ||
+                (m['رقم التاجر'] || '').toString().includes(query)
             );
             
             if (filtered.length === 0) {
@@ -782,29 +786,78 @@
             searchMerchantDebounced(query, listId, hiddenId, callback);
         }
 
+        // إصلاح: وظيفة اختيار التاجر
         function selectMerchant(id, name, listId, hiddenId, callback) {
-            const input = document.getElementById(listId).previousElementSibling;
-            const hidden = document.getElementById(hiddenId);
+            const hiddenInput = document.getElementById(hiddenId);
+            const listEl = document.getElementById(listId);
+            // إصلاح المسار: البحث عن المدخل النصي بشكل صحيح
+            const textInput = hiddenInput.previousElementSibling; // المدخل النصي يسبق المدخل المخفي دائماً في الهيكل
             
-            hidden.value = id;
-            input.value = name;
-            document.getElementById(listId).style.display = 'none';
+            if(hiddenInput) hiddenInput.value = id;
+            if(textInput && textInput.type === 'text') textInput.value = name; // التأكد من أنه المدخل الصحيح
+            if(listEl) listEl.style.display = 'none';
+
+            // تحديث القائمة المنسدلة إذا كانت موجودة
+            const selectId = hiddenId.replace('Id', 'Select');
+            const selectEl = document.getElementById(selectId);
+            if (selectEl) selectEl.value = id;
             
+            // تنفيذ الاستدعاء
             if (hiddenId === 'stmtMerchantId') getStatement();
             if (callback && window[callback]) window[callback](id);
         }
 
-        // ==================== Rendering (Performant) ====================
+        // جديد: وظيفة اختيار التاجر من القائمة المنسدلة
+        function handleDropdownSelect(id, textInputId, hiddenId, listId) {
+            const hiddenInput = document.getElementById(hiddenId);
+            const textInput = document.getElementById(textInputId);
+            const listEl = document.getElementById(listId);
+            
+            if(hiddenInput) hiddenInput.value = id;
+            if(listEl) listEl.style.display = 'none';
+
+            if (id) {
+                const merchant = (DB.merchants || []).find(m => m['رقم التاجر'] == id);
+                if(textInput) textInput.value = merchant ? merchant['اسم التاجر'] : '';
+                
+                if (hiddenId === 'stmtMerchantId') getStatement();
+                
+                // ملء المكن تلقائياً إذا كان في صفحة تحويل أو تحصيل
+                if (hiddenId === 'trMerchId' || hiddenId === 'colMerchId') {
+                     fillMachines(id);
+                }
+            } else {
+                if(textInput) textInput.value = '';
+            }
+        }
+
+        // جديد: ملء القوائم المنسدلة بالتجار
+        function populateMerchantDropdowns() {
+            const merchants = DB.merchants || [];
+            const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect'];
+            
+            dropdownIds.forEach(dId => {
+                const el = document.getElementById(dId);
+                if(!el) return;
+                
+                const currentVal = el.value;
+                el.innerHTML = '<option value="">-- اختر تاجر --</option>';
+                merchants.forEach(m => {
+                    el.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`;
+                });
+                if(currentVal) el.value = currentVal;
+            });
+        }
+
+        // ==================== Rendering ====================
 
         function renderDashboard() {
             const d = DB.dashboard;
             if (!d) return;
 
-            // Stats
             const keys = ['التجار', 'المكن', 'التحويلات_شهر', 'التحصيلات_شهر', 'المتبقي_شهر', 'تحويلات_اليوم'];
             const statsContainer = document.getElementById('dashStats');
             
-            // Build HTML string once
             let html = '';
             const labels = ['عدد التجار', 'عدد المكن', 'التحويلات (شهر)', 'التحصيلات (شهر)', 'المتبقي (شهر)', 'تحويلات اليوم'];
             const icons = ['fa-users', 'fa-cash-register', 'fa-exchange-alt', 'fa-hand-holding-usd', 'fa-coins', 'fa-calendar-day'];
@@ -1088,7 +1141,10 @@
                     <h3><i class="fas fa-exchange-alt"></i> تحويل جديد</h3>
                     <div class="form-group">
                         <label>التاجر <span class="required">*</span></label>
-                        <input type="text" id="trMerchSearch" class="form-control" placeholder="ابحث عن تاجر..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'trMerchList', 'trMerchId', 'fillMachines')">
+                        <div style="display:flex; gap:0.5rem;">
+                            <select id="trMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'trMerchSearch', 'trMerchId', 'trMerchList')"><option value="">-- اختر --</option></select>
+                            <input type="text" id="trMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'trMerchList', 'trMerchId', 'fillMachines')">
+                        </div>
                         <input type="hidden" id="trMerchId">
                         <div id="trMerchList" class="search-results"></div>
                     </div>
@@ -1101,7 +1157,10 @@
                     <h3><i class="fas fa-hand-holding-usd"></i> تحصيل جديد</h3>
                     <div class="form-group">
                         <label>التاجر <span class="required">*</span></label>
-                        <input type="text" id="colMerchSearch" class="form-control" placeholder="ابحث عن تاجر..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'colMerchList', 'colMerchId', 'fillMachines')">
+                        <div style="display:flex; gap:0.5rem;">
+                            <select id="colMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'colMerchSearch', 'colMerchId', 'colMerchList')"><option value="">-- اختر --</option></select>
+                            <input type="text" id="colMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'colMerchList', 'colMerchId', 'fillMachines')">
+                        </div>
                         <input type="hidden" id="colMerchId">
                         <div id="colMerchList" class="search-results"></div>
                     </div>
@@ -1111,9 +1170,10 @@
                     <div class="form-group"><label>ملاحظات</label><input id="colNotes" class="form-control" placeholder="ملاحظات"></div>
                     <button class="btn btn-primary btn-block" onclick="saveCollection()"><i class="fas fa-check"></i> تأكيد التحصيل</button>`;
             }
+            // ملء القوائم المنسدلة عند فتح المودال
+            populateMerchantDropdowns();
         }
 
-        // Auto-fill Logic
         function fillMachines(merchantId) {
             const trSelect = document.getElementById('trMach');
             const colSelect = document.getElementById('colMach');
@@ -1131,7 +1191,7 @@
                 targetSelect.innerHTML = '<option value="">لا توجد مكنات</option>';
             } else {
                 filtered.forEach(m => targetSelect.innerHTML += `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`);
-                if (filtered.length === 1) targetSelect.value = filtered[0]['رقم المكنة']; // Auto-select
+                if (filtered.length === 1) targetSelect.value = filtered[0]['رقم المكنة'];
             }
         }
 
@@ -1246,7 +1306,6 @@
             checkSession();
             startLiveUpdates();
             
-            // Handle blur for search inputs
             document.querySelectorAll('.search-results').forEach(el => {
                  el.previousElementSibling.addEventListener('blur', () => {
                      setTimeout(() => el.style.display = 'none', 200);
