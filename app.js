@@ -1,4 +1,4 @@
-const API = "YOUR_SCRIPT_URL"; // استبدل برابط الكود بتاعك
+const API = "YOUR_SCRIPT_URL"; https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec
 const state = { data: {} };
 
 document.addEventListener("DOMContentLoaded", init);
