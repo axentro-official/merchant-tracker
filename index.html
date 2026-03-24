@@ -1,237 +1,190 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Axentro Merchant Tracker</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Axentro Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-  <!-- Loading Overlay -->
-  <div id="loader" class="loader-overlay hidden">
-    <div class="spinner"></div>
+
+  <!-- Splash/Loader -->
+  <div id="splash" class="splash-screen">
+    <div class="loader"></div>
+    <p>جاري تحميل البيانات...</p>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
-
-  <!-- Login -->
-  <section id="login-view" class="login-shell">
-    <div class="login-card">
-      <div class="brand-block">
-        <div class="brand-icon">A</div>
-        <div>
-          <h1>Axentro System</h1>
-          <p>نظام متابعة التجار والتحويلات</p>
-        </div>
+  <div id="app" class="hidden">
+    <!-- Login -->
+    <div id="login-view" class="login-container">
+      <div class="login-box">
+        <h1>Axentro</h1>
+        <p>نظام متابعة التجار</p>
+        <form id="login-form">
+          <input type="password" id="password" placeholder="كلمة المرور" required>
+          <button type="submit">دخول</button>
+        </form>
       </div>
-      <form id="login-form" class="login-form">
-        <label for="password">كلمة المرور</label>
-        <input type="password" id="password" placeholder="••••••" required />
-        <button type="submit" class="primary-btn">دخول</button>
-      </form>
     </div>
-  </section>
 
-  <!-- App -->
-  <section id="dashboard-view" class="hidden app-layout">
-    <!-- Sidebar Desktop -->
-    <aside class="sidebar">
-      <div>
-        <div class="sidebar-brand">
-          <div class="brand-icon large">A</div>
-          <div>
-            <div class="sidebar-title">Axentro</div>
-            <div class="sidebar-subtitle" id="current-month-label">--</div>
-          </div>
-        </div>
-        <nav class="menu">
-          <button class="menu-btn active" data-view="home-section">🏠 الرئيسية</button>
-          <button class="menu-btn" data-view="merchants-section">👥 التجار</button>
-          <button class="menu-btn" data-view="machines-section">🔌 المكن</button>
-          <button class="menu-btn" data-view="transfers-section">💸 تحويلات</button>
-          <button class="menu-btn" data-view="collections-section">💰 تحصيلات</button>
-          <button class="menu-btn" data-view="statement-section">📜 كشف حساب</button>
-          <button class="menu-btn" data-view="archives-section">📦 الأرشيف</button>
-          <button class="menu-btn" data-view="closing-section">🔒 إغلاق شهر</button>
+    <!-- Main Dashboard -->
+    <div id="main-view" class="hidden wrapper">
+      
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="logo">Axentro</div>
+        <nav>
+          <button class="nav-btn active" data-page="home">🏠 الرئيسية</button>
+          <button class="nav-btn" data-page="merchants">👥 التجار</button>
+          <button class="nav-btn" data-page="machines">🔌 المكن</button>
+          <button class="nav-btn" data-page="transfers">💸 تحويلات</button>
+          <button class="nav-btn" data-page="collections">💰 تحصيلات</button>
+          <button class="nav-btn" data-page="statement">📜 كشف حساب</button>
+          <button class="nav-btn" data-page="archives">📦 أرشيف</button>
         </nav>
-      </div>
-      <div class="sidebar-actions">
-         <button id="refresh-dashboard-btn" class="secondary-btn">🔄 تحديث</button>
-         <button id="logout-btn" class="danger-btn">🚪 خروج</button>
-      </div>
-    </aside>
-
-    <!-- Main -->
-    <main class="main-content">
-      <header class="topbar">
-        <h2 id="page-title">لوحة التحكم</h2>
-        <button id="export-workbook-btn" class="primary-btn small-btn">📊 Excel</button>
-      </header>
-
-      <!-- Sections -->
-      <div id="home-section" class="content-section">
-        <div class="cards-grid">
-          <div class="stat-card accent-blue"><span>تحويلات الشهر</span><strong id="stat-transfers">0</strong></div>
-          <div class="stat-card accent-green"><span>تحصيلات الشهر</span><strong id="stat-collections">0</strong></div>
-          <div class="stat-card accent-red"><span>المتبقي</span><strong id="stat-remaining">0</strong></div>
-          <div class="stat-card"><span>عدد التجار</span><strong id="stat-merchants">0</strong></div>
-          <div class="stat-card"><span>عدد المكن</span><strong id="stat-machines">0</strong></div>
-          <div class="stat-card"><span>حركات اليوم</span><strong id="stat-today">0</strong></div>
+        <div class="side-actions">
+          <button id="export-btn" class="action-btn">📊 تصدير Excel</button>
+          <button id="logout-btn" class="action-btn danger">🚪 خروج</button>
         </div>
+      </aside>
+
+      <!-- Content -->
+      <main class="content-area">
         
-        <div class="panel-grid">
-          <div class="panel">
-            <h3>أعلى المديونيات</h3>
-            <div class="table-wrapper"><table><thead><tr><th>التاجر</th><th>المتبقي</th></tr></thead><tbody id="top-debtors-body"></tbody></table></div>
+        <!-- Header -->
+        <header class="top-header">
+          <h2 id="page-title">لوحة التحكم</h2>
+          <div class="header-tools">
+            <button id="refresh-btn" class="icon-btn">🔄 تحديث</button>
           </div>
-        </div>
-      </div>
+        </header>
 
-      <!-- Merchants -->
-      <div id="merchants-section" class="content-section hidden">
-        <div class="panel">
-          <h3>إضافة / تعديل تاجر</h3>
-          <form id="merchant-form" class="form-grid">
-            <input type="hidden" id="merchant-id" />
-            <div><label>اسم التاجر</label><input type="text" id="merchant-name" required /></div>
-            <div><label>رقم الحساب</label><input type="text" id="account-number" required /></div>
-            <div><label>الهاتف</label><input type="text" id="merchant-phone" /></div>
-            <div><label>المنطقة</label><input type="text" id="merchant-area" /></div>
-            <div class="form-actions"><button type="submit" class="primary-btn">حفظ</button><button type="button" id="merchant-reset-btn" class="secondary-btn">جديد</button></div>
-          </form>
-        </div>
-        <div class="panel">
-          <h3>قائمة التجار</h3>
-          <div class="filter-row"><input id="merchants-search" type="text" placeholder="بحث..." /></div>
-          <div class="table-wrapper"><table><thead><tr><th>الاسم</th><th>الحساب</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="merchants-body"></tbody></table></div>
-        </div>
-      </div>
-
-      <!-- Machines -->
-      <div id="machines-section" class="content-section hidden">
-        <div class="panel">
-          <h3>إضافة مكنة</h3>
-          <form id="machine-form" class="form-grid">
-            <input type="hidden" id="machine-id" />
-            <div><label>التاجر</label><select id="machine-merchant-id" required></select></div>
-            <div><label>الباركود</label><input type="text" id="machine-barcode" required /></div>
-            <div><label>التارجت</label><input type="number" id="machine-target" value="0" /></div>
-            <div class="form-actions"><button type="submit" class="primary-btn">حفظ</button></div>
-          </form>
-        </div>
-        <div class="panel">
-          <h3>قائمة المكن</h3>
-          <div class="filter-row"><input id="machines-search" type="text" placeholder="بحث..." /></div>
-          <div class="table-wrapper"><table><thead><tr><th>كود المكنة</th><th>التاجر</th><th>الباركود</th><th>إجراءات</th></tr></thead><tbody id="machines-body"></tbody></table></div>
-        </div>
-      </div>
-
-      <!-- Transfers -->
-      <div id="transfers-section" class="content-section hidden">
-        <div class="panel">
-          <h3>تسجيل تحويل جديد</h3>
-          <form id="transfer-form" class="form-grid">
-            <div><label>التاجر</label><select id="transfer-merchant-id" required></select></div>
-            <div><label>المكنة</label><select id="transfer-machine-id" required></select></div>
-            <div><label>القيمة</label><input type="number" id="transfer-amount" required /></div>
-            <div><label>ملاحظات</label><input type="text" id="transfer-notes" /></div>
-            <div class="form-actions"><button type="submit" class="primary-btn">تسجيل</button></div>
-          </form>
-        </div>
-        <div class="panel">
-          <h3>سجل التحويلات</h3>
-          <div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>التاجر</th><th>القيمة</th><th>إجراء</th></tr></thead><tbody id="transfers-body"></tbody></table></div>
-        </div>
-      </div>
-
-      <!-- Collections -->
-      <div id="collections-section" class="content-section hidden">
-        <div class="panel">
-          <h3>تسجيل تحصيل جديد</h3>
-          <form id="collection-form" class="form-grid">
-            <div><label>التاجر</label><select id="collection-merchant-id" required></select></div>
-            <div><label>المكنة</label><select id="collection-machine-id" required></select></div>
-            <div><label>القيمة</label><input type="number" id="collection-amount" required /></div>
-            <div><label>النوع</label><select id="collection-type"><option value="جزئي">جزئي</option><option value="كلي">كلي</option></select></div>
-            <div class="form-actions"><button type="submit" class="primary-btn">تسجيل</button></div>
-          </form>
-        </div>
-        <div class="panel">
-          <h3>سجل التحصيلات</h3>
-          <div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>التاجر</th><th>القيمة</th><th>إجراء</th></tr></thead><tbody id="collections-body"></tbody></table></div>
-        </div>
-      </div>
-
-      <!-- Statement -->
-      <div id="statement-section" class="content-section hidden">
-        <div class="panel">
-          <h3>كشف حساب تاجر</h3>
-          <form id="statement-form" class="form-inline">
-            <select id="statement-merchant-id" required></select>
-            <button type="submit" class="primary-btn">عرض</button>
-          </form>
-          <div id="statement-result" class="hidden" style="margin-top:20px;">
-            <div class="cards-grid small-gap">
-                <div class="stat-card"><span>إجمالي تحويلات</span><strong id="stmt-t">0</strong></div>
-                <div class="stat-card"><span>إجمالي تحصيلات</span><strong id="stmt-c">0</strong></div>
-                <div class="stat-card accent-red"><span>المتبقي</span><strong id="stmt-r">0</strong></div>
+        <!-- Pages Container -->
+        <div class="pages-wrapper">
+          
+          <!-- HOME -->
+          <section id="home-page" class="page active">
+            <div class="stats-grid">
+              <div class="stat-card blue"><h3>تحويلات الشهر</h3><p id="stat-transfers">0</p></div>
+              <div class="stat-card green"><h3>تحصيلات الشهر</h3><p id="stat-collections">0</p></div>
+              <div class="stat-card red"><h3>المتبقي</h3><p id="stat-remaining">0</p></div>
+              <div class="stat-card dark"><h3>عدد التجار</h3><p id="stat-merchants">0</p></div>
             </div>
-            <div class="table-wrapper"><table><thead><tr><th>النوع</th><th>قيمة</th><th>تاريخ</th></tr></thead><tbody id="statement-body"></tbody></table></div>
-          </div>
+            <div class="data-card">
+              <div class="card-header">أعلى 5 مديونيات</div>
+              <div id="top-debtors" class="list-group"></div>
+            </div>
+          </section>
+
+          <!-- MERCHANTS -->
+          <section id="merchants-page" class="page">
+            <div class="data-card">
+              <div class="card-header">إضافة تاجر جديد</div>
+              <form id="add-merchant-form" class="form-row">
+                <input type="text" id="m-name" placeholder="اسم التاجر" required>
+                <input type="text" id="m-acc" placeholder="رقم الحساب" required>
+                <input type="text" id="m-phone" placeholder="الهاتف">
+                <button type="submit">حفظ</button>
+              </form>
+            </div>
+            <div class="data-card">
+              <div class="card-header">قائمة التجار</div>
+              <input type="text" id="search-merchants" placeholder="بحث..." class="search-input">
+              <div id="merchants-list" class="list-group"></div>
+            </div>
+          </section>
+
+          <!-- MACHINES -->
+          <section id="machines-page" class="page">
+             <div class="data-card">
+              <div class="card-header">إضافة مكنة</div>
+              <form id="add-machine-form" class="form-row">
+                <select id="mach-merchant" required></select>
+                <input type="text" id="mach-barcode" placeholder="الباركود" required>
+                <input type="number" id="mach-target" placeholder="التارجت">
+                <button type="submit">حفظ</button>
+              </form>
+            </div>
+            <div class="data-card">
+              <div id="machines-list" class="list-group"></div>
+            </div>
+          </section>
+
+          <!-- TRANSFERS -->
+          <section id="transfers-page" class="page">
+            <div class="data-card">
+              <div class="card-header">تسجيل تحويل</div>
+              <form id="add-transfer-form" class="form-row">
+                <select id="tr-merchant" required></select>
+                <select id="tr-machine" required></select>
+                <input type="number" id="tr-amount" placeholder="القيمة" required>
+                <button type="submit">تسجيل</button>
+              </form>
+            </div>
+            <div class="data-card">
+              <div id="transfers-list" class="list-group"></div>
+            </div>
+          </section>
+
+          <!-- COLLECTIONS -->
+          <section id="collections-page" class="page">
+            <div class="data-card">
+              <div class="card-header">تسجيل تحصيل</div>
+              <form id="add-coll-form" class="form-row">
+                <select id="co-merchant" required></select>
+                <select id="co-machine" required></select>
+                <input type="number" id="co-amount" placeholder="القيمة" required>
+                <select id="co-type"><option value="جزئي">جزئي</option><option value="كلي">كلي</option></select>
+                <button type="submit">تسجيل</button>
+              </form>
+            </div>
+            <div class="data-card">
+              <div id="collections-list" class="list-group"></div>
+            </div>
+          </section>
+
+          <!-- STATEMENT -->
+          <section id="statement-page" class="page">
+            <div class="data-card">
+              <div class="card-header">كشف حساب</div>
+              <form id="stmt-form" class="form-row">
+                <select id="stmt-merchant" required></select>
+                <button type="submit">عرض</button>
+              </form>
+              <div id="stmt-result" class="hidden">
+                <div class="stmt-summary">
+                  <div>إجمالي تحويلات: <b id="stmt-t">0</b></div>
+                  <div>إجمالي تحصيلات: <b id="stmt-c">0</b></div>
+                  <div class="highlight">المتبقي: <b id="stmt-r">0</b></div>
+                </div>
+                <div id="stmt-moves" class="list-group"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ARCHIVES -->
+          <section id="archives-page" class="page">
+            <div class="data-card">
+              <div class="card-header">سجل الشهور</div>
+              <div id="archives-list" class="list-group"></div>
+            </div>
+          </section>
+
         </div>
-      </div>
+      </main>
+    </div>
 
-      <!-- Archives -->
-      <div id="archives-section" class="content-section hidden">
-        <div class="panel">
-          <h3>سجل الأرشيف</h3>
-          <div class="table-wrapper"><table><thead><tr><th>الشهر</th><th>تحويلات</th><th>تحصيلات</th><th>متبقي</th></tr></thead><tbody id="archives-body"></tbody></table></div>
-        </div>
-      </div>
-
-      <!-- Closing -->
-      <div id="closing-section" class="content-section hidden">
-        <div class="panel">
-          <h3>إغلاق الشهر</h3>
-          <p>سيتم أرشفة جميع البيانات الحالية وتصفير الحسابات.</p>
-          <form id="close-month-form">
-             <div><label>ملاحظات الإغلاق</label><textarea id="close-month-notes"></textarea></div>
-             <button type="submit" class="danger-btn full-btn">تأكيد إغلاق الشهر</button>
-          </form>
-        </div>
-      </div>
-
-      <footer class="app-footer">
-        <p>Axentro Merchant Tracker &copy; 2024</p>
-      </footer>
-    </main>
-
-    <!-- Mobile Nav -->
-    <nav class="bottom-nav" id="bottomNav">
-      <button class="bottom-nav-btn active" onclick="switchSectionMobile('home-section', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-        <span>رئيسية</span>
-      </button>
-      <button class="bottom-nav-btn" onclick="switchSectionMobile('transfers-section', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-        <span>تحويل</span>
-      </button>
-      <button class="bottom-nav-btn" onclick="switchSectionMobile('collections-section', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-        <span>تحصيل</span>
-      </button>
-      <button class="bottom-nav-btn" onclick="switchSectionMobile('merchants-section', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-        <span>تجار</span>
-      </button>
-      <button class="bottom-nav-btn" onclick="switchSectionMobile('more-menu', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-        <span>المزيد</span>
-      </button>
+    <!-- Mobile Navigation -->
+    <nav class="bottom-nav">
+      <button class="b-nav-btn active" data-page="home"><span>🏠</span><label>رئيسية</label></button>
+      <button class="b-nav-btn" data-page="transfers"><span>💸</span><label>تحويل</label></button>
+      <button class="b-nav-btn" data-page="collections"><span>💰</span><label>تحصيل</label></button>
+      <button class="b-nav-btn" data-page="merchants"><span>👥</span><label>تجار</label></button>
+      <button class="b-nav-btn" onclick="showMore()"><span>⚙️</span><label>المزيد</label></button>
     </nav>
-  </section>
+  </div>
 
   <script src="app.js"></script>
 </body>
