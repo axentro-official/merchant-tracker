@@ -3,161 +3,1002 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Axentro System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Axentro System - نظام إدارة التجار</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- مكتبة التصدير اكسيل -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     
     <style>
-        :root { --primary: #2563eb; --secondary: #1e40af; --bg: #f1f5f9; --white: #fff; --text: #1e293b; --muted: #64748b; --success: #10b981; --danger: #ef4444; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --secondary: #6366f1;
+            --bg: #f8fafc;
+            --bg-dark: #0f172a;
+            --white: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
 
-        /* Login */
-        #loginBox { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; }
-        .login-card { background: var(--white); padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        .login-card h2 { margin-bottom: 1.5rem; color: var(--primary); }
-        .login-card input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; }
-        .btn { width: 100%; padding: 0.8rem; border: none; border-radius: 0.5rem; color: white; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s; }
-        .btn-primary { background: var(--primary); } .btn-primary:hover { background: var(--secondary); }
-        .btn-success { background: var(--success); } .btn-danger { background: var(--danger); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
 
-        /* App Layout */
-        .app-container { display: none; flex-direction: column; height: 100vh; }
-        
-        /* Navbar */
-        .navbar { background: var(--white); padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 101; }
-        .navbar-actions { display: flex; gap: 0.5rem; }
-        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto; }
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #e2e8f0 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-        /* Tabs */
-        .tabs-nav { display: flex; background: var(--white); border-bottom: 1px solid #e2e8f0; overflow-x: auto; position: sticky; top: 46px; z-index: 100; }
-        .tab-link { flex: 1; min-width: 85px; padding: 0.8rem; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; transition: 0.2s; white-space: nowrap; font-size: 0.85rem; }
-        .tab-link.active { color: var(--primary); border-color: var(--primary); background: #f8fafc; }
+        /* ==================== Animations ==================== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        /* Content */
-        .content { padding: 1rem; flex: 1; overflow-y: auto; padding-bottom: 150px; /* Space for footer */ }
-        .page { display: none; animation: fadeIn 0.3s; }
-        .page.active { display: block; }
-        
-        /* Dashboard */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem; margin-bottom: 1rem; }
-        .stat-card { background: var(--white); padding: 1rem; border-radius: 0.5rem; border-right: 4px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stat-card h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.2rem; }
-        .stat-card .val { font-size: 1.2rem; font-weight: 700; }
-        
-        /* Tables */
-        .table-box { background: var(--white); border-radius: 0.5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 1rem; }
-        .table-header { padding: 0.8rem 1rem; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { padding: 0.6rem 1rem; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
-        th { background: #f8fafc; color: var(--muted); font-weight: 600; }
-        .table-container { overflow-x: auto; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
 
-        /* Footer & QR - Fixed Alignment */
-        footer { 
-            text-align: center; 
-            padding: 1.5rem; 
-            background: #1e293b; 
-            color: #94a3b8; 
-            margin-top: auto; 
-            width: 100%; 
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+
+        /* ==================== Loading ==================== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 1rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        /* ==================== Login ==================== */
+        #loginBox {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .login-card {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .login-logo i {
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .login-card h2 {
+            margin-bottom: 0.5rem;
+            color: var(--text);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .login-card p {
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: var(--bg);
+        }
+
+        .login-card input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: white;
+        }
+
+        /* ==================== Buttons ==================== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+            box-shadow: 0 4px 14px rgba(100, 116, 139, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 50%;
+        }
+
+        /* ==================== App Layout ==================== */
+        .app-container {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ==================== Navbar ==================== */
+        .navbar {
+            background: var(--white);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .navbar .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+
+        .navbar .logo i {
+            font-size: 1.5rem;
+        }
+
+        .navbar-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* ==================== Tabs ==================== */
+        .tabs-nav {
+            display: flex;
+            background: var(--white);
+            border-bottom: 2px solid var(--border);
+            overflow-x: auto;
+            position: sticky;
+            top: 60px;
+            z-index: 90;
+            scrollbar-width: none;
+        }
+
+        .tabs-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-link {
+            flex: 1;
+            min-width: 90px;
+            padding: 1rem 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            color: var(--muted);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-size: 0.85rem;
+            font-weight: 600;
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 0.3rem;
         }
-        .qr-box { 
-            margin-top: 1rem; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            width: 100%;
-        }
-        .qr-box img { 
-            width: 80px; 
-            height: 80px;
-            border-radius: 8px; 
-            border: 2px solid #fff; 
-            margin-bottom: 5px; 
-            object-fit: cover;
-        }
-        .qr-box a { color: #3b82f6; text-decoration: none; font-size: 0.8rem; font-weight: bold; margin-top: 5px; }
 
-        /* Modal */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 1rem; }
-        .modal-content { background: var(--white); padding: 1.5rem; border-radius: 0.8rem; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; }
-        .modal-close { position: absolute; top: 10px; left: 15px; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
-        .form-group { margin-bottom: 0.8rem; }
-        .form-group label { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; font-weight: 600; }
-        .form-control { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 0.3rem; }
+        .tab-link i {
+            font-size: 1.2rem;
+        }
+
+        .tab-link:hover {
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .tab-link.active {
+            color: var(--primary);
+            border-color: var(--primary);
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+        }
+
+        /* ==================== Content ==================== */
+        .content {
+            padding: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 120px;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* ==================== Stats Grid ==================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .stat-card.success::before { background: var(--success); }
+        .stat-card.danger::before { background: var(--danger); }
+        .stat-card.warning::before { background: var(--warning); }
+
+        .stat-card h4 {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .stat-card .val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .stat-card .trend {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .stat-card .trend.up { color: var(--success); }
+        .stat-card .trend.down { color: var(--danger); }
+
+        /* ==================== Tables ==================== */
+        .table-box {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .table-header {
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .table-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .table-header h3 i {
+            color: var(--primary);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 0.9rem 1rem;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: #f8fafc;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: rgba(59, 130, 246, 0.02);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .badge-danger {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .badge-warning {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .badge-primary {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+        }
+
+        /* ==================== Footer ==================== */
+        footer {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1e293b 100%);
+            padding: 2rem;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        footer p {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .qr-box {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .qr-box img {
+            width: 100px;
+            border-radius: var(--radius-sm);
+            border: 3px solid rgba(255,255,255,0.2);
+            margin-bottom: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .qr-box img:hover {
+            transform: scale(1.1);
+            border-color: var(--primary);
+        }
+
+        .qr-box a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .qr-box a:hover {
+            color: #60a5fa;
+            transform: translateY(-2px);
+        }
+
+        /* ==================== Modal ==================== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 1rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-content h3 i {
+            color: var(--primary);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.3s;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+            background: var(--danger-light);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .form-group label .required {
+            color: var(--danger);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            background: var(--bg);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* ==================== Empty State ==================== */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ==================== Progress Bar ==================== */
+        .progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-bar .fill.success { background: var(--success); }
+        .progress-bar .fill.warning { background: var(--warning); }
+        .progress-bar .fill.danger { background: var(--danger); }
+
+        /* ==================== Quick Actions ==================== */
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border-radius: var(--radius);
+        }
+
+        /* ==================== Responsive ==================== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.6rem 1rem;
+            }
+
+            .navbar .logo {
+                font-size: 1.1rem;
+            }
+
+            .tabs-nav {
+                top: 50px;
+            }
+
+            .tab-link {
+                padding: 0.7rem 0.3rem;
+                font-size: 0.75rem;
+            }
+
+            .tab-link i {
+                font-size: 1rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .stat-card .val {
+                font-size: 1.2rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-actions {
+                gap: 0.3rem;
+            }
+
+            .btn-sm {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.75rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* ==================== Toast Notification ==================== */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-dark);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.warning { background: var(--warning); }
+
+        /* ==================== Print Styles ==================== */
+        @media print {
+            .navbar, .tabs-nav, footer, .btn, .modal {
+                display: none !important;
+            }
+
+            .content {
+                padding: 0;
+            }
+
+            .table-box {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- 1. Login Screen -->
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">جاري التحميل...</div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">تم بنجاح</span>
+    </div>
+
+    <!-- ==================== Login Screen ==================== -->
     <div id="loginBox">
         <div class="login-card">
-            <h2><i class="fas fa-lock"></i> تسجيل الدخول</h2>
+            <div class="login-logo">
+                <i class="fas fa-store"></i>
+            </div>
+            <h2>Axentro System</h2>
+            <p>نظام إدارة التجار والمكن</p>
             <input type="password" id="passInput" placeholder="كلمة المرور" onkeypress="handleEnter(event)">
-            <button class="btn btn-primary" onclick="login()">دخول</button>
+            <button class="btn btn-primary btn-block" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i>
+                دخول
+            </button>
         </div>
+
         <!-- Footer in Login -->
         <footer style="margin-top: 2rem; background: transparent; color: #64748b;">
             <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
             <div class="qr-box">
                 <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
-                    <img src="qr-links.png" alt="QR">
-                    <span>QR Scan Me > Click On Me</span>
+                    <img src="qr-links.png" alt="QR Code">
+                    <span><i class="fas fa-qrcode"></i> QR Scan Me</span>
                 </a>
             </div>
         </footer>
     </div>
 
-    <!-- 2. Main App -->
+    <!-- ==================== Main App ==================== -->
     <div class="app-container" id="appBox">
+        <!-- Navbar -->
         <nav class="navbar">
-            <div class="logo"><i class="fas fa-store"></i> Axentro</div>
+            <div class="logo">
+                <i class="fas fa-store"></i>
+                Axentro
+            </div>
             <div class="navbar-actions">
-                <button class="btn btn-sm btn-primary" onclick="loadData()"><i class="fas fa-sync"></i> تحديث</button>
-                <button class="btn btn-sm btn-success" onclick="exportExcel()"><i class="fas fa-file-excel"></i> تصدير</button>
-                <button class="btn btn-sm btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+                <button class="btn btn-primary btn-sm" onclick="loadData()">
+                    <i class="fas fa-sync-alt"></i>
+                    تحديث
+                </button>
+                <button class="btn btn-success btn-sm" onclick="exportExcel()">
+                    <i class="fas fa-file-excel"></i>
+                    تصدير
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    خروج
+                </button>
             </div>
         </nav>
 
         <!-- Tabs -->
         <div class="tabs-nav">
-            <div class="tab-link active" onclick="showPage('home')"><i class="fas fa-home"></i> الرئيسية</div>
-            <div class="tab-link" onclick="showPage('merchants')"><i class="fas fa-users"></i> التجار</div>
-            <div class="tab-link" onclick="showPage('machines')"><i class="fas fa-cash-register"></i> المكن</div>
-            <div class="tab-link" onclick="showPage('transfers')"><i class="fas fa-exchange-alt"></i> التحويلات</div>
-            <div class="tab-link" onclick="showPage('collections')"><i class="fas fa-hand-holding-usd"></i> التحصيلات</div>
-            <div class="tab-link" onclick="showPage('statement')"><i class="fas fa-file-invoice-dollar"></i> كشف حساب</div>
-            <div class="tab-link" onclick="showPage('archive')"><i class="fas fa-archive"></i> الأرشيف</div>
+            <div class="tab-link active" onclick="showPage('home')">
+                <i class="fas fa-home"></i>
+                الرئيسية
+            </div>
+            <div class="tab-link" onclick="showPage('merchants')">
+                <i class="fas fa-users"></i>
+                التجار
+            </div>
+            <div class="tab-link" onclick="showPage('machines')">
+                <i class="fas fa-cash-register"></i>
+                المكن
+            </div>
+            <div class="tab-link" onclick="showPage('transfers')">
+                <i class="fas fa-exchange-alt"></i>
+                التحويلات
+            </div>
+            <div class="tab-link" onclick="showPage('collections')">
+                <i class="fas fa-hand-holding-usd"></i>
+                التحصيلات
+            </div>
+            <div class="tab-link" onclick="showPage('statement')">
+                <i class="fas fa-file-invoice-dollar"></i>
+                كشف حساب
+            </div>
+            <div class="tab-link" onclick="showPage('archive')">
+                <i class="fas fa-archive"></i>
+                الأرشيف
+            </div>
         </div>
 
+        <!-- Content -->
         <div class="content">
             
             <!-- HOME PAGE -->
             <div id="page-home" class="page active">
                 <div class="stats-grid" id="dashStats"></div>
                 
-                <!-- Top Machines Card -->
+                <!-- Quick Actions -->
                 <div class="table-box">
-                    <div class="table-header"><h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3></div>
-                    <div class="table-container">
-                        <table>
-                            <thead><tr><th>المكنة</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr></thead>
-                            <tbody id="tblTopMachines"></tbody>
-                        </table>
+                    <div class="table-header">
+                        <h3><i class="fas fa-bolt"></i> إجراءات سريعة</h3>
+                    </div>
+                    <div class="quick-actions">
+                        <button class="btn btn-success" onclick="openModal('transfer')">
+                            <i class="fas fa-plus"></i> تحويل جديد
+                        </button>
+                        <button class="btn btn-primary" onclick="openModal('collection')">
+                            <i class="fas fa-plus"></i> تحصيل جديد
+                        </button>
+                        <button class="btn btn-warning" onclick="openModal('merchant')">
+                            <i class="fas fa-user-plus"></i> تاجر جديد
+                        </button>
+                        <button class="btn btn-secondary" onclick="openModal('machine')">
+                            <i class="fas fa-plus"></i> مكنة جديدة
+                        </button>
                     </div>
                 </div>
 
+                <!-- Top Machines -->
                 <div class="table-box">
-                    <div class="table-header"><h3>سريع</h3></div>
-                    <div style="padding:1rem; text-align:center; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
-                        <button class="btn btn-success" style="width:auto" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button>
-                        <button class="btn btn-primary" style="width:auto" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button>
+                    <div class="table-header">
+                        <h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>المكنة</th>
+                                    <th>التاجر</th>
+                                    <th>التحقيق</th>
+                                    <th>التارجت</th>
+                                    <th>النسبة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblTopMachines"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -166,12 +1007,24 @@
             <div id="page-merchants" class="page">
                 <div class="table-box">
                     <div class="table-header">
-                        <h3>قائمة التجار</h3>
-                        <button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button>
+                        <h3><i class="fas fa-users"></i> قائمة التجار</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('merchant')">
+                            <i class="fas fa-plus"></i> إضافة
+                        </button>
                     </div>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>الهاتف</th><th>الحالة</th><th>إجراء</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>رقم التاجر</th>
+                                    <th>الاسم</th>
+                                    <th>النشاط</th>
+                                    <th>الهاتف</th>
+                                    <th>المنطقة</th>
+                                    <th>الحالة</th>
+                                    <th>إجراء</th>
+                                </tr>
+                            </thead>
                             <tbody id="tblMerchants"></tbody>
                         </table>
                     </div>
@@ -182,12 +1035,23 @@
             <div id="page-machines" class="page">
                 <div class="table-box">
                     <div class="table-header">
-                        <h3>المكن</h3>
-                        <button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button>
+                        <h3><i class="fas fa-cash-register"></i> المكن</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('machine')">
+                            <i class="fas fa-plus"></i> إضافة
+                        </button>
                     </div>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>رقم المكنة</th><th>التاجر</th><th>الباركود</th><th>التارجت</th><th>إجراء</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>رقم المكنة</th>
+                                    <th>التاجر</th>
+                                    <th>الباركود</th>
+                                    <th>التارجت</th>
+                                    <th>الحالة</th>
+                                    <th>إجراء</th>
+                                </tr>
+                            </thead>
                             <tbody id="tblMachines"></tbody>
                         </table>
                     </div>
@@ -196,11 +1060,25 @@
 
             <!-- TRANSFERS PAGE -->
             <div id="page-transfers" class="page">
-                 <div class="table-box">
-                    <div class="table-header"><h3>سجل التحويلات</h3></div>
+                <div class="table-box">
+                    <div class="table-header">
+                        <h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3>
+                        <button class="btn btn-success btn-sm" onclick="openModal('transfer')">
+                            <i class="fas fa-plus"></i> تحويل جديد
+                        </button>
+                    </div>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>تاريخ</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>حذف</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>الوقت</th>
+                                    <th>التاجر</th>
+                                    <th>القيمة</th>
+                                    <th>ملاحظات</th>
+                                    <th>حذف</th>
+                                </tr>
+                            </thead>
                             <tbody id="tblTransfers"></tbody>
                         </table>
                     </div>
@@ -209,11 +1087,25 @@
 
             <!-- COLLECTIONS PAGE -->
             <div id="page-collections" class="page">
-                 <div class="table-box">
-                    <div class="table-header"><h3>سجل التحصيلات</h3></div>
+                <div class="table-box">
+                    <div class="table-header">
+                        <h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('collection')">
+                            <i class="fas fa-plus"></i> تحصيل جديد
+                        </button>
+                    </div>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>تاريخ</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>حذف</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>الوقت</th>
+                                    <th>التاجر</th>
+                                    <th>القيمة</th>
+                                    <th>النوع</th>
+                                    <th>حذف</th>
+                                </tr>
+                            </thead>
                             <tbody id="tblCollections"></tbody>
                         </table>
                     </div>
@@ -223,20 +1115,41 @@
             <!-- STATEMENT PAGE -->
             <div id="page-statement" class="page">
                 <div class="table-box">
-                    <div class="table-header" style="flex-wrap:wrap; gap:0.5rem;">
-                        <h3>كشف حساب تاجر</h3>
-                        <select id="stmtMerchant" class="form-control" style="width:auto; min-width:200px;" onchange="getStatement()"></select>
+                    <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
+                        <h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3>
+                        <select id="stmtMerchant" class="form-control" style="width: auto; min-width: 200px;" onchange="getStatement()">
+                            <option value="">-- اختر تاجر --</option>
+                        </select>
                     </div>
-                    <div style="padding:1rem;">
-                        <div class="stats-grid">
-                            <div class="stat-card" style="border-color:var(--primary)"><h4>إجمالي تحويلاته</h4><div class="val" id="stmtT">0</div></div>
-                            <div class="stat-card" style="border-color:var(--success)"><h4>إجمالي تحصيلاته</h4><div class="val" id="stmtC">0</div></div>
-                            <div class="stat-card" style="border-color:var(--danger)"><h4>المتبقي عليه</h4><div class="val" id="stmtR">0</div></div>
+                    <div style="padding: 1rem;">
+                        <div class="stats-grid" id="stmtStats">
+                            <div class="stat-card">
+                                <h4>إجمالي تحويلاته</h4>
+                                <div class="val" id="stmtT">0</div>
+                            </div>
+                            <div class="stat-card success">
+                                <h4>إجمالي تحصيلاته</h4>
+                                <div class="val" id="stmtC">0</div>
+                            </div>
+                            <div class="stat-card danger">
+                                <h4>المتبقي عليه</h4>
+                                <div class="val" id="stmtR">0</div>
+                            </div>
                         </div>
-                        <h4>الحركات</h4>
+                        <h4 style="margin: 1rem 0; color: var(--muted);">
+                            <i class="fas fa-history"></i> الحركات
+                        </h4>
                         <div class="table-container">
-                            <table style="min-width:400px;">
-                                <thead><tr><th>تاريخ</th><th>نوع</th><th>قيمة</th><th>ملاحظات</th></tr></thead>
+                            <table style="min-width: 500px;">
+                                <thead>
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <th>الوقت</th>
+                                        <th>النوع</th>
+                                        <th>القيمة</th>
+                                        <th>ملاحظات</th>
+                                    </tr>
+                                </thead>
                                 <tbody id="tblStatement"></tbody>
                             </table>
                         </div>
@@ -248,12 +1161,23 @@
             <div id="page-archive" class="page">
                 <div class="table-box">
                     <div class="table-header">
-                        <h3>الأرشيف</h3>
-                        <button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد (ترحيل)</button>
+                        <h3><i class="fas fa-archive"></i> الأرشيف</h3>
+                        <button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()">
+                            <i class="fas fa-calendar-check"></i> بدء شهر جديد
+                        </button>
                     </div>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>الشهر</th><th>تحويلات</th><th>تحصيلات</th><th>المتبقي</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>الشهر</th>
+                                    <th>عدد التحويلات</th>
+                                    <th>إجمالي التحويلات</th>
+                                    <th>عدد التحصيلات</th>
+                                    <th>إجمالي التحصيلات</th>
+                                    <th>المتبقي</th>
+                                </tr>
+                            </thead>
                             <tbody id="tblArchive"></tbody>
                         </table>
                     </div>
@@ -262,19 +1186,19 @@
 
         </div>
 
-        <!-- Footer Inside App -->
+        <!-- Footer -->
         <footer>
             <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
             <div class="qr-box">
                 <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
-                    <img src="qr-links.png" alt="QR">
-                    <span>QR Scan Me > Click On Me</span>
+                    <img src="qr-links.png" alt="QR Code">
+                    <span><i class="fas fa-qrcode"></i> QR Scan Me</span>
                 </a>
             </div>
         </footer>
     </div>
 
-    <!-- MODALS -->
+    <!-- Modal -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">×</span>
@@ -283,288 +1207,798 @@
     </div>
 
     <script>
+        // API URL - غيّره لرابط الـ Web App بتاعك
         const API = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec';
         let DB = {};
 
-        // --- Helper: Date Formatter ---
+        // ==================== Utility Functions ====================
+        
+        function showLoading(show = true) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toast.className = `toast ${type}`;
+            toastMessage.textContent = message;
+            
+            const icon = toast.querySelector('i');
+            if (type === 'success') icon.className = 'fas fa-check-circle';
+            else if (type === 'error') icon.className = 'fas fa-times-circle';
+            else if (type === 'warning') icon.className = 'fas fa-exclamation-triangle';
+            
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function formatNumber(num) {
+            if (!num && num !== 0) return '-';
+            return Number(num).toLocaleString('ar-EG');
+        }
+
         function formatDate(dateStr) {
             if (!dateStr) return '-';
-            // Handle ISO String (e.g. 2026-03-23T22:00:00.000Z)
+            
+            // Handle ISO format
             if (typeof dateStr === 'string' && dateStr.includes('T')) {
-                const d = new Date(dateStr);
-                // Format: YYYY/MM/DD
-                return d.toLocaleDateString('ar-EG'); 
+                dateStr = dateStr.split('T')[0];
             }
-            // Handle already formatted or simple strings
+            
+            const parts = String(dateStr).split('-');
+            if (parts.length === 3) {
+                const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
+                               'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+                const day = parts[2];
+                const month = months[parseInt(parts[1]) - 1] || parts[1];
+                const year = parts[0];
+                return `${day} ${month} ${year}`;
+            }
+            
             return dateStr;
         }
 
-        // --- Session & Init ---
-        function handleEnter(e) { if (e.key === 'Enter') login(); }
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            return timeStr;
+        }
+
+        // ==================== Session Management ====================
+        
+        function handleEnter(e) {
+            if (e.key === 'Enter') login();
+        }
         
         function checkSession() {
+            showLoading(true);
             if (localStorage.getItem('axentro_logged') === 'true') {
                 document.getElementById('loginBox').style.display = 'none';
                 document.getElementById('appBox').style.display = 'flex';
                 loadData();
+            } else {
+                showLoading(false);
             }
         }
 
         async function login() {
-            let p = document.getElementById('passInput').value;
-            let res = await api('login', {password: p});
-            if (res.success) {
-                localStorage.setItem('axentro_logged', 'true');
-                document.getElementById('loginBox').style.display = 'none';
-                document.getElementById('appBox').style.display = 'flex';
-                loadData();
-            } else {
-                alert('كلمة المرور خطأ');
+            const password = document.getElementById('passInput').value;
+            if (!password) {
+                showToast('أدخل كلمة المرور', 'warning');
+                return;
+            }
+            
+            showLoading(true);
+            try {
+                const res = await api('login', { password });
+                if (res.success) {
+                    localStorage.setItem('axentro_logged', 'true');
+                    document.getElementById('loginBox').style.display = 'none';
+                    document.getElementById('appBox').style.display = 'flex';
+                    loadData();
+                    showToast('مرحباً بك!', 'success');
+                } else {
+                    showToast('كلمة المرور غير صحيحة', 'error');
+                    showLoading(false);
+                }
+            } catch (e) {
+                showToast('حدث خطأ في الاتصال', 'error');
+                showLoading(false);
             }
         }
 
         function logout() {
-            localStorage.removeItem('axentro_logged');
-            location.reload();
-        }
-
-        async function api(act, data={}) {
-            try {
-                let url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`;
-                let res = await fetch(url);
-                return await res.json();
-            } catch(e) { console.error(e); return {success:false}; }
-        }
-
-        async function loadData() {
-            let res = await api('getAllData');
-            if (res.success) {
-                DB = res.data;
-                renderDashboard();
-                renderMerchants();
-                renderMachines();
-                renderTransfers();
-                renderCollections();
-                renderArchive();
-                populateStatementDropdown();
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                localStorage.removeItem('axentro_logged');
+                location.reload();
             }
         }
 
-        // --- Rendering ---
+        // ==================== API Communication ====================
+        
+        async function api(act, data = {}) {
+            try {
+                const url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`;
+                const res = await fetch(url);
+                return await res.json();
+            } catch (e) {
+                console.error('API Error:', e);
+                return { success: false, message: e.message };
+            }
+        }
+
+        // ==================== Data Loading ====================
+        
+        async function loadData() {
+            showLoading(true);
+            try {
+                const res = await api('getAllData');
+                if (res.success) {
+                    DB = res.data;
+                    renderDashboard();
+                    renderMerchants();
+                    renderMachines();
+                    renderTransfers();
+                    renderCollections();
+                    renderArchive();
+                    populateStatementDropdown();
+                    showToast('تم تحديث البيانات', 'success');
+                } else {
+                    showToast('فشل تحميل البيانات', 'error');
+                }
+            } catch (e) {
+                showToast('حدث خطأ', 'error');
+            }
+            showLoading(false);
+        }
+
+        // ==================== Rendering Functions ====================
         
         function renderDashboard() {
-            let d = DB.dashboard || {}; // Fallback
-            
-            document.getElementById('dashStats').innerHTML = `
-                <div class="stat-card"><h4>عدد التجار</h4><div class="val">${d['التجار'] || 0}</div></div>
-                <div class="stat-card"><h4>عدد المكن</h4><div class="val">${d['المكن'] || 0}</div></div>
-                <div class="stat-card"><h4>التحويلات (شهر)</h4><div class="val">${d['التحويلات'] || 0}</div></div>
-                <div class="stat-card" style="border-color:var(--success)"><h4>التحصيلات (شهر)</h4><div class="val">${d['التحصيلات'] || 0}</div></div>
-                <div class="stat-card" style="border-color:var(--danger)"><h4>المتبقي (شهر)</h4><div class="val">${d['المتبقي'] || 0}</div></div>
-                <div class="stat-card"><h4>تحويلات اليوم</h4><div class="val">${d['تحويلات_اليوم'] || 0}</div></div>
+            const d = DB.dashboard;
+            const statsHtml = `
+                <div class="stat-card">
+                    <h4><i class="fas fa-users"></i> عدد التجار</h4>
+                    <div class="val">${formatNumber(d['التجار'])}</div>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fas fa-cash-register"></i> عدد المكن</h4>
+                    <div class="val">${formatNumber(d['المكن'])}</div>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fas fa-exchange-alt"></i> التحويلات (شهر)</h4>
+                    <div class="val">${formatNumber(d['التحويلات_شهر'])}</div>
+                </div>
+                <div class="stat-card success">
+                    <h4><i class="fas fa-hand-holding-usd"></i> التحصيلات (شهر)</h4>
+                    <div class="val">${formatNumber(d['التحصيلات_شهر'])}</div>
+                </div>
+                <div class="stat-card danger">
+                    <h4><i class="fas fa-coins"></i> المتبقي (شهر)</h4>
+                    <div class="val">${formatNumber(d['المتبقي_شهر'])}</div>
+                </div>
+                <div class="stat-card warning">
+                    <h4><i class="fas fa-calendar-day"></i> تحويلات اليوم</h4>
+                    <div class="val">${formatNumber(d['تحويلات_اليوم'])}</div>
+                    <div class="trend">
+                        <span>قيمة: ${formatNumber(d['قيمة_تحويلات_اليوم'] || 0)}</span>
+                    </div>
+                </div>
             `;
+            document.getElementById('dashStats').innerHTML = statsHtml;
 
             // Top Machines
             const tbody = document.getElementById('tblTopMachines');
             tbody.innerHTML = '';
-            if(d['أعلى_المكن']) {
-                d['أعلى_المكن'].forEach(m => {
+            
+            const topMachines = d['أعلى_المكن'] || [];
+            if (topMachines.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">
+                            <i class="fas fa-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                            لا توجد بيانات
+                        </td>
+                    </tr>
+                `;
+            } else {
+                topMachines.forEach(m => {
+                    const percentageClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
                     tbody.innerHTML += `
                         <tr>
-                            <td>${m.name || '-'}</td>
-                            <td>${m.achieved || 0}</td>
-                            <td>${m.target || 0}</td>
-                            <td>${m.percentage || 0}%</td>
+                            <td><strong>${m.name || '-'}</strong></td>
+                            <td>${m.merchant || '-'}</td>
+                            <td>${formatNumber(m.achieved)}</td>
+                            <td>${formatNumber(m.target)}</td>
+                            <td>
+                                <span class="badge badge-${percentageClass}">${m.percentage}%</span>
+                                <div class="progress-bar">
+                                    <div class="fill ${percentageClass}" style="width: ${Math.min(m.percentage, 100)}%"></div>
+                                </div>
+                            </td>
                         </tr>
                     `;
                 });
             }
         }
 
-        function render(id, data, cols, delFunc) {
-            const tbody = document.getElementById(id);
+        function renderMerchants() {
+            const tbody = document.getElementById('tblMerchants');
             tbody.innerHTML = '';
-            if(!data) return;
             
-            data.forEach(r => {
-                let tds = cols.map(c => {
-                    let val = r[c];
-                    // Apply date formatting if column is 'التاريخ' and value looks like date
-                    if (c === 'التاريخ') val = formatDate(val);
-                    return `<td>${val || '-'}</td>`;
-                }).join('');
-                
-                let btns = delFunc ? `<td><button class="btn btn-danger btn-sm" onclick="${delFunc}('${r[cols[0]]}')"><i class="fas fa-trash"></i></button></td>` : '';
-                tbody.innerHTML += `<tr>${tds}${btns}</tr>`;
+            const merchants = DB.merchants || [];
+            if (merchants.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--muted); padding: 2rem;">
+                            <i class="fas fa-users" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                            لا يوجد تجار مسجلين
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            merchants.forEach(m => {
+                const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${m['رقم التاجر'] || '-'}</strong></td>
+                        <td>${m['اسم التاجر'] || '-'}</td>
+                        <td>${m['اسم النشاط'] || '-'}</td>
+                        <td>${m['رقم الهاتف'] || '-'}</td>
+                        <td>${m['المنطقة'] || '-'}</td>
+                        <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
             });
         }
 
-        function renderMerchants() { render('tblMerchants', DB.merchants, ['رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الهاتف', 'الحالة'], 'delMerchant'); }
-        function renderMachines() { render('tblMachines', DB.machines, ['رقم المكنة', 'اسم التاجر', 'الباركود', 'التارجت الشهري'], 'delMachine'); }
-        function renderTransfers() { render('tblTransfers', DB.transfers.slice(-30).reverse(), ['التاريخ', 'اسم التاجر', 'قيمة التحويل', 'ملاحظات'], 'delTransfer'); }
-        function renderCollections() { render('tblCollections', DB.collections.slice(-30).reverse(), ['التاريخ', 'اسم التاجر', 'قيمة التحصيل', 'نوع التحصيل'], 'delCollection'); }
-        function renderArchive() { render('tblArchive', DB.archives, ['الشهر', 'إجمالي التحويلات', 'إجمالي التحصيلات', 'إجمالي المتبقي']); }
+        function renderMachines() {
+            const tbody = document.getElementById('tblMachines');
+            tbody.innerHTML = '';
+            
+            const machines = DB.machines || [];
+            if (machines.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--muted); padding: 2rem;">
+                            <i class="fas fa-cash-register" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                            لا توجد مكن مسجلة
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            machines.forEach(m => {
+                const statusClass = m['الحالة'] === 'نشطة' ? 'success' : 'danger';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${m['رقم المكنة'] || '-'}</strong></td>
+                        <td>${m['اسم التاجر'] || '-'}</td>
+                        <td><code>${m['الباركود'] || '-'}</code></td>
+                        <td>${formatNumber(m['التارجت الشهري'])}</td>
+                        <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderTransfers() {
+            const tbody = document.getElementById('tblTransfers');
+            tbody.innerHTML = '';
+            
+            const transfers = DB.transfers || [];
+            if (transfers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--muted); padding: 2rem;">
+                            <i class="fas fa-exchange-alt" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                            لا توجد تحويلات
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // عرض آخر 50 تحويل
+            transfers.slice(-50).reverse().forEach(t => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${formatDate(t['التاريخ'])}</td>
+                        <td>${t['الوقت'] || '-'}</td>
+                        <td>${t['اسم التاجر'] || '-'}</td>
+                        <td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td>
+                        <td>${t['ملاحظات'] || '-'}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderCollections() {
+            const tbody = document.getElementById('tblCollections');
+            tbody.innerHTML = '';
+            
+            const collections = DB.collections || [];
+            if (collections.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--muted); padding: 2rem;">
+                            <i class="fas fa-hand-holding-usd" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                            لا توجد تحصيلات
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // عرض آخر 50 تحصيل
+            collections.slice(-50).reverse().forEach(c => {
+                const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${formatDate(c['التاريخ'])}</td>
+                        <td>${c['الوقت'] || '-'}</td>
+                        <td>${c['اسم التاجر'] || '-'}</td>
+                        <td><strong>${formatNumber(c['قيمة التحصيل'])}</strong></td>
+                        <td><span class="badge badge-${typeClass}">${c['نوع التحصيل'] || '-'}</span></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderArchive() {
+            const tbody = document.getElementById('tblArchive');
+            tbody.innerHTML = '';
+            
+            const archives = DB.archives || [];
+            if (archives.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--muted); padding: 2rem;">
+                            <i class="fas fa-archive" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                            لا يوجد أرشيف
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            archives.reverse().forEach(a => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${a['الشهر'] || '-'}</strong></td>
+                        <td>${a['عدد التحويلات'] || 0}</td>
+                        <td>${formatNumber(a['إجمالي التحويلات'])}</td>
+                        <td>${a['عدد التحصيلات'] || 0}</td>
+                        <td>${formatNumber(a['إجمالي التحصيلات'])}</td>
+                        <td>${formatNumber(a['إجمالي المتبقي'])}</td>
+                    </tr>
+                `;
+            });
+        }
 
         function populateStatementDropdown() {
             const sel = document.getElementById('stmtMerchant');
             sel.innerHTML = '<option value="">-- اختر تاجر --</option>';
-            if(DB.merchants) {
-                DB.merchants.forEach(m => {
-                    sel.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`;
-                });
-            }
+            
+            const merchants = DB.merchants || [];
+            merchants.forEach(m => {
+                sel.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`;
+            });
         }
 
+        // ==================== Statement ====================
+        
         async function getStatement() {
             const mid = document.getElementById('stmtMerchant').value;
-            if(!mid) return;
-            const res = await api('getStatement', {merchantId: mid});
-            if(res.success) {
-                const data = res.data;
-                document.getElementById('stmtT').innerText = data.stats.totalT;
-                document.getElementById('stmtC').innerText = data.stats.totalC;
-                document.getElementById('stmtR').innerText = data.stats.remaining;
-                
-                const tbody = document.getElementById('tblStatement');
-                tbody.innerHTML = '';
-                data.movements.forEach(m => {
-                    tbody.innerHTML += `<tr>
-                        <td>${formatDate(m.date)}</td>
-                        <td style="color:${m.type=='تحويل' ? 'var(--primary)' : 'var(--success)'}">${m.type}</td>
-                        <td>${m.amount}</td>
-                        <td>${m.notes || '-'}</td>
-                    </tr>`;
-                });
+            if (!mid) return;
+            
+            showLoading(true);
+            try {
+                const res = await api('getStatement', { merchantId: mid });
+                if (res.success) {
+                    const data = res.data;
+                    
+                    document.getElementById('stmtT').textContent = formatNumber(data.stats.totalTransfers);
+                    document.getElementById('stmtC').textContent = formatNumber(data.stats.totalCollections);
+                    document.getElementById('stmtR').textContent = formatNumber(data.stats.remaining);
+                    
+                    const tbody = document.getElementById('tblStatement');
+                    tbody.innerHTML = '';
+                    
+                    if (data.movements.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">
+                                    لا توجد حركات
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        data.movements.forEach(m => {
+                            const typeClass = m.type === 'تحويل' ? 'primary' : 'success';
+                            const typeIcon = m.type === 'تحويل' ? 'arrow-up' : 'arrow-down';
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td>${formatDate(m.date)}</td>
+                                    <td>${m.time || '-'}</td>
+                                    <td>
+                                        <span class="badge badge-${typeClass}">
+                                            <i class="fas fa-${typeIcon}"></i> ${m.type}
+                                        </span>
+                                    </td>
+                                    <td><strong>${formatNumber(m.amount)}</strong></td>
+                                    <td>${m.notes || '-'}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+                }
+            } catch (e) {
+                showToast('حدث خطأ', 'error');
             }
+            showLoading(false);
         }
 
-        // --- Actions ---
-        async function delMerchant(id) { if(confirm('حذف؟')) { await api('deleteMerchant', {id:id}); loadData(); } }
-        async function delMachine(id) { if(confirm('حذف؟')) { await api('deleteMachine', {id:id}); loadData(); } }
-        async function delTransfer(id) { if(confirm('حذف؟')) { await api('deleteTransfer', {id:id}); loadData(); } }
-        async function delCollection(id) { if(confirm('حذف؟')) { await api('deleteCollection', {id:id}); loadData(); } }
+        // ==================== Delete Functions ====================
+        
+        async function delMerchant(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا التاجر؟')) return;
+            showLoading(true);
+            await api('deleteMerchant', { id });
+            loadData();
+        }
+
+        async function delMachine(id) {
+            if (!confirm('هل أنت متأكد من حذف هذه المكنة؟')) return;
+            showLoading(true);
+            await api('deleteMachine', { id });
+            loadData();
+        }
+
+        async function delTransfer(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا التحويل؟')) return;
+            showLoading(true);
+            await api('deleteTransfer', { id });
+            loadData();
+        }
+
+        async function delCollection(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا التحصيل؟')) return;
+            showLoading(true);
+            await api('deleteCollection', { id });
+            loadData();
+        }
+
+        // ==================== Close Month ====================
         
         async function confirmCloseMonth() {
-            if(confirm('هل أنت متأكد من بدء شهر جديد؟ سيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.')) {
-                let res = await api('closeMonth', {notes: 'إغلاق من النظام'});
-                if(res.success) {
-                    alert(res.data.message);
+            if (!confirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد؟\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.')) return;
+            
+            showLoading(true);
+            try {
+                const res = await api('closeMonth', { notes: 'إغلاق من النظام' });
+                if (res.success) {
+                    showToast(res.data.message, 'success');
                     loadData();
                 } else {
-                    alert('حدث خطأ');
+                    showToast(res.message || 'حدث خطأ', 'error');
+                    showLoading(false);
                 }
+            } catch (e) {
+                showToast('حدث خطأ', 'error');
+                showLoading(false);
             }
         }
 
-        // --- Export Excel ---
+        // ==================== Export Excel ====================
+        
         function exportExcel() {
-            if(!DB.merchants) return alert('لا توجد بيانات');
+            if (!DB.merchants || DB.merchants.length === 0) {
+                showToast('لا توجد بيانات للتصدير', 'warning');
+                return;
+            }
             
-            const wb = XLSX.utils.book_new();
+            showLoading(true);
             
-            // Merchants Sheet
-            const ws1 = XLSX.utils.json_to_sheet(DB.merchants);
-            XLSX.utils.book_append_sheet(wb, ws1, "التجار");
-            
-            // Machines Sheet
-            const ws2 = XLSX.utils.json_to_sheet(DB.machines);
-            XLSX.utils.book_append_sheet(wb, ws2, "المكن");
-            
-            // Transfers Sheet
-            const ws3 = XLSX.utils.json_to_sheet(DB.transfers);
-            XLSX.utils.book_append_sheet(wb, ws3, "التحويلات");
-            
-            // Collections Sheet
-            const ws4 = XLSX.utils.json_to_sheet(DB.collections);
-            XLSX.utils.book_append_sheet(wb, ws4, "التحصيلات");
+            try {
+                const wb = XLSX.utils.book_new();
+                
+                // Dashboard Summary
+                const dashboardData = [{
+                    'البند': 'عدد التجار',
+                    'القيمة': DB.dashboard['التجار']
+                }, {
+                    'البند': 'عدد المكن',
+                    'القيمة': DB.dashboard['المكن']
+                }, {
+                    'البند': 'إجمالي التحويلات (شهر)',
+                    'القيمة': DB.dashboard['التحويلات_شهر']
+                }, {
+                    'البند': 'إجمالي التحصيلات (شهر)',
+                    'القيمة': DB.dashboard['التحصيلات_شهر']
+                }, {
+                    'البند': 'المتبقي (شهر)',
+                    'القيمة': DB.dashboard['المتبقي_شهر']
+                }];
+                const ws0 = XLSX.utils.json_to_sheet(dashboardData);
+                XLSX.utils.book_append_sheet(wb, ws0, "ملخص");
+                
+                // Merchants
+                const ws1 = XLSX.utils.json_to_sheet(DB.merchants);
+                XLSX.utils.book_append_sheet(wb, ws1, "التجار");
+                
+                // Machines
+                const ws2 = XLSX.utils.json_to_sheet(DB.machines);
+                XLSX.utils.book_append_sheet(wb, ws2, "المكن");
+                
+                // Transfers
+                const ws3 = XLSX.utils.json_to_sheet(DB.transfers);
+                XLSX.utils.book_append_sheet(wb, ws3, "التحويلات");
+                
+                // Collections
+                const ws4 = XLSX.utils.json_to_sheet(DB.collections);
+                XLSX.utils.book_append_sheet(wb, ws4, "التحصيلات");
+                
+                // Archive
+                const ws5 = XLSX.utils.json_to_sheet(DB.archives);
+                XLSX.utils.book_append_sheet(wb, ws5, "الأرشيف");
 
-            XLSX.writeFile(wb, `Axentro_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+                const fileName = `Axentro_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+                showToast('تم تصدير التقرير بنجاح', 'success');
+            } catch (e) {
+                showToast('حدث خطأ أثناء التصدير', 'error');
+            }
+            
+            showLoading(false);
         }
 
-        // --- Navigation ---
+        // ==================== Navigation ====================
+        
         function showPage(name) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-            document.getElementById('page-'+name).classList.add('active');
-            // Find the clicked button and add active class (fix for onclick usage)
-            event.target.classList.add('active');
+            
+            document.getElementById('page-' + name).classList.add('active');
+            
+            // Find and activate the clicked tab
+            const tabs = document.querySelectorAll('.tab-link');
+            tabs.forEach(tab => {
+                if (tab.textContent.includes(getTabName(name))) {
+                    tab.classList.add('active');
+                }
+            });
         }
 
-        // --- Modals ---
+        function getTabName(page) {
+            const names = {
+                'home': 'الرئيسية',
+                'merchants': 'التجار',
+                'machines': 'المكن',
+                'transfers': 'التحويلات',
+                'collections': 'التحصيلات',
+                'statement': 'كشف حساب',
+                'archive': 'الأرشيف'
+            };
+            return names[page] || '';
+        }
+
+        // ==================== Modals ====================
+        
         function openModal(type) {
             const body = document.getElementById('modalBody');
             document.getElementById('modal').style.display = 'flex';
 
             if (type === 'merchant') {
                 body.innerHTML = `
-                    <h3>إضافة تاجر</h3>
-                    <div class="form-group"><label>اسم التاجر</label><input id="mName" class="form-control"></div>
-                    <div class="form-group"><label>اسم النشاط</label><input id="mBiz" class="form-control"></div>
-                    <div class="form-group"><label>رقم الحساب</label><input id="mAcc" class="form-control"></div>
-                    <div class="form-group"><label>الهاتف</label><input id="mPhone" class="form-control"></div>
-                    <div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control"></div>
-                    <div class="form-group"><label>العنوان</label><input id="mAddr" class="form-control"></div>
-                    <div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control"></div>
-                    <button class="btn btn-primary" onclick="saveMerchant()">حفظ</button>
+                    <h3><i class="fas fa-user-plus"></i> إضافة تاجر جديد</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>اسم التاجر <span class="required">*</span></label>
+                            <input id="mName" class="form-control" placeholder="اسم التاجر">
+                        </div>
+                        <div class="form-group">
+                            <label>اسم النشاط</label>
+                            <input id="mBiz" class="form-control" placeholder="اسم النشاط">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>رقم الحساب</label>
+                            <input id="mAcc" class="form-control" placeholder="رقم الحساب">
+                        </div>
+                        <div class="form-group">
+                            <label>رقم الهاتف</label>
+                            <input id="mPhone" class="form-control" placeholder="رقم الهاتف">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>المنطقة</label>
+                            <input id="mArea" class="form-control" placeholder="المنطقة">
+                        </div>
+                        <div class="form-group">
+                            <label>العنوان</label>
+                            <input id="mAddr" class="form-control" placeholder="العنوان">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>ملاحظات</label>
+                        <textarea id="mNotes" class="form-control" rows="2" placeholder="ملاحظات"></textarea>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="saveMerchant()">
+                        <i class="fas fa-save"></i> حفظ التاجر
+                    </button>
                 `;
             } else if (type === 'machine') {
-                let opts = DB.merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
+                const merchants = DB.merchants || [];
+                const opts = merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
                 body.innerHTML = `
-                    <h3>إضافة مكنة</h3>
-                    <div class="form-group"><label>اختر التاجر</label><select id="mcMerch" class="form-control">${opts}</select></div>
-                    <div class="form-group"><label>الباركود</label><input id="mcBar" class="form-control"></div>
-                    <div class="form-group"><label>الرقم التسلسلي</label><input id="mcSerial" class="form-control"></div>
-                    <div class="form-group"><label>التارجت الشهري</label><input id="mcTarget" class="form-control"></div>
-                    <div class="form-group"><label>ملاحظات</label><input id="mcNotes" class="form-control"></div>
-                    <button class="btn btn-primary" onclick="saveMachine()">حفظ</button>
+                    <h3><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3>
+                    <div class="form-group">
+                        <label>اختر التاجر <span class="required">*</span></label>
+                        <select id="mcMerch" class="form-control">
+                            <option value="">-- اختر تاجر --</option>
+                            ${opts}
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>الباركود <span class="required">*</span></label>
+                            <input id="mcBar" class="form-control" placeholder="الباركود">
+                        </div>
+                        <div class="form-group">
+                            <label>الرقم التسلسلي</label>
+                            <input id="mcSerial" class="form-control" placeholder="الرقم التسلسلي">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>التارجت الشهري</label>
+                        <input type="number" id="mcTarget" class="form-control" placeholder="التارجت الشهري">
+                    </div>
+                    <div class="form-group">
+                        <label>ملاحظات</label>
+                        <input id="mcNotes" class="form-control" placeholder="ملاحظات">
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="saveMachine()">
+                        <i class="fas fa-save"></i> حفظ المكنة
+                    </button>
                 `;
             } else if (type === 'transfer') {
-                let opts = DB.merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
+                const merchants = DB.merchants || [];
+                const opts = merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
                 body.innerHTML = `
-                    <h3>تحويل جديد</h3>
-                    <div class="form-group"><label>التاجر</label><select id="trMerch" class="form-control" onchange="fillMachines(this.value, 'trMach')">${opts}</select></div>
-                    <div class="form-group"><label>المكنة</label><select id="trMach" class="form-control"></select></div>
-                    <div class="form-group"><label>المبلغ</label><input type="number" id="trAmt" class="form-control"></div>
-                    <div class="form-group"><label>ملاحظات</label><input id="trNotes" class="form-control"></div>
-                    <button class="btn btn-success" onclick="saveTransfer()">تأكيد التحويل</button>
+                    <h3><i class="fas fa-exchange-alt"></i> تحويل جديد</h3>
+                    <div class="form-group">
+                        <label>التاجر <span class="required">*</span></label>
+                        <select id="trMerch" class="form-control" onchange="fillMachines(this.value, 'trMach')">
+                            <option value="">-- اختر تاجر --</option>
+                            ${opts}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>المكنة</label>
+                        <select id="trMach" class="form-control">
+                            <option value="">-- اختر مكنة --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>المبلغ <span class="required">*</span></label>
+                        <input type="number" id="trAmt" class="form-control" placeholder="قيمة التحويل">
+                    </div>
+                    <div class="form-group">
+                        <label>ملاحظات</label>
+                        <input id="trNotes" class="form-control" placeholder="ملاحظات">
+                    </div>
+                    <button class="btn btn-success btn-block" onclick="saveTransfer()">
+                        <i class="fas fa-check"></i> تأكيد التحويل
+                    </button>
                 `;
-                fillMachines(DB.merchants[0]?.['رقم التاجر'], 'trMach');
             } else if (type === 'collection') {
-                let opts = DB.merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
+                const merchants = DB.merchants || [];
+                const opts = merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
                 body.innerHTML = `
-                    <h3>تحصيل جديد</h3>
-                    <div class="form-group"><label>التاجر</label><select id="colMerch" class="form-control" onchange="fillMachines(this.value, 'colMach')">${opts}</select></div>
-                    <div class="form-group"><label>المكنة</label><select id="colMach" class="form-control"></select></div>
-                    <div class="form-group"><label>المبلغ</label><input type="number" id="colAmt" class="form-control"></div>
-                    <div class="form-group"><label>نوع التحصيل</label>
+                    <h3><i class="fas fa-hand-holding-usd"></i> تحصيل جديد</h3>
+                    <div class="form-group">
+                        <label>التاجر <span class="required">*</span></label>
+                        <select id="colMerch" class="form-control" onchange="fillMachines(this.value, 'colMach')">
+                            <option value="">-- اختر تاجر --</option>
+                            ${opts}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>المكنة</label>
+                        <select id="colMach" class="form-control">
+                            <option value="">-- اختر مكنة --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>المبلغ <span class="required">*</span></label>
+                        <input type="number" id="colAmt" class="form-control" placeholder="قيمة التحصيل">
+                    </div>
+                    <div class="form-group">
+                        <label>نوع التحصيل</label>
                         <select id="colType" class="form-control">
                             <option value="كلي">كلي</option>
                             <option value="جزئي">جزئي</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>ملاحظات</label><input id="colNotes" class="form-control"></div>
-                    <button class="btn btn-primary" onclick="saveCollection()">تأكيد التحصيل</button>
+                    <div class="form-group">
+                        <label>ملاحظات</label>
+                        <input id="colNotes" class="form-control" placeholder="ملاحظات">
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="saveCollection()">
+                        <i class="fas fa-check"></i> تأكيد التحصيل
+                    </button>
                 `;
-                fillMachines(DB.merchants[0]?.['رقم التاجر'], 'colMach');
             }
         }
 
         function fillMachines(merchantId, selectId) {
             const select = document.getElementById(selectId);
-            select.innerHTML = '';
-            const filtered = DB.machines.filter(m => m['رقم التاجر'] === merchantId);
-            if (filtered.length === 0) select.innerHTML = '<option>لا توجد مكنات</option>';
+            select.innerHTML = '<option value="">-- اختر مكنة --</option>';
+            
+            if (!merchantId) return;
+            
+            const machines = DB.machines || [];
+            const filtered = machines.filter(m => m['رقم التاجر'] === merchantId);
+            
             filtered.forEach(m => {
-                select.innerHTML += `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`;
+                select.innerHTML += `<option value="${m['رقم المكنة']}">${m['رقم المكنة']} - ${m['الباركود']}</option>`;
             });
+            
+            if (filtered.length === 0) {
+                select.innerHTML = '<option value="">لا توجد مكنات لهذا التاجر</option>';
+            }
         }
 
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
 
-        // Save Functions
+        // Close modal on outside click
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ==================== Save Functions ====================
+        
         async function saveMerchant() {
-            let data = {
-                merchantName: document.getElementById('mName').value,
+            const name = document.getElementById('mName').value.trim();
+            if (!name) {
+                showToast('اسم التاجر مطلوب', 'warning');
+                return;
+            }
+            
+            showLoading(true);
+            closeModal();
+            
+            const data = {
+                merchantName: name,
                 businessName: document.getElementById('mBiz').value,
                 accountNumber: document.getElementById('mAcc').value,
                 phone: document.getElementById('mPhone').value,
@@ -572,47 +2006,148 @@
                 address: document.getElementById('mAddr').value,
                 notes: document.getElementById('mNotes').value
             };
-            await api('addMerchant', data);
-            closeModal(); loadData();
+            
+            try {
+                const res = await api('addMerchant', data);
+                if (res.success) {
+                    showToast('تم إضافة التاجر بنجاح', 'success');
+                    loadData();
+                } else {
+                    showToast(res.message || 'حدث خطأ', 'error');
+                    showLoading(false);
+                }
+            } catch (e) {
+                showToast('حدث خطأ', 'error');
+                showLoading(false);
+            }
         }
 
         async function saveMachine() {
-            let data = {
-                merchantId: document.getElementById('mcMerch').value,
-                barcode: document.getElementById('mcBar').value,
+            const merchantId = document.getElementById('mcMerch').value;
+            const barcode = document.getElementById('mcBar').value.trim();
+            
+            if (!merchantId) {
+                showToast('اختر التاجر', 'warning');
+                return;
+            }
+            if (!barcode) {
+                showToast('الباركود مطلوب', 'warning');
+                return;
+            }
+            
+            showLoading(true);
+            closeModal();
+            
+            const data = {
+                merchantId: merchantId,
+                barcode: barcode,
                 serialNumber: document.getElementById('mcSerial').value,
                 monthlyTarget: document.getElementById('mcTarget').value,
                 notes: document.getElementById('mcNotes').value
             };
-            await api('addMachine', data);
-            closeModal(); loadData();
+            
+            try {
+                const res = await api('addMachine', data);
+                if (res.success) {
+                    showToast('تم إضافة المكنة بنجاح', 'success');
+                    loadData();
+                } else {
+                    showToast(res.message || 'حدث خطأ', 'error');
+                    showLoading(false);
+                }
+            } catch (e) {
+                showToast('حدث خطأ', 'error');
+                showLoading(false);
+            }
         }
 
         async function saveTransfer() {
-            let data = {
-                merchantId: document.getElementById('trMerch').value,
+            const merchantId = document.getElementById('trMerch').value;
+            const amount = document.getElementById('trAmt').value;
+            
+            if (!merchantId) {
+                showToast('اختر التاجر', 'warning');
+                return;
+            }
+            if (!amount || Number(amount) <= 0) {
+                showToast('أدخل قيمة التحويل', 'warning');
+                return;
+            }
+            
+            showLoading(true);
+            closeModal();
+            
+            const data = {
+                merchantId: merchantId,
                 machineId: document.getElementById('trMach').value,
-                amount: document.getElementById('trAmt').value,
+                amount: amount,
                 notes: document.getElementById('trNotes').value
             };
-            await api('addTransfer', data);
-            closeModal(); loadData();
+            
+            try {
+                const res = await api('addTransfer', data);
+                if (res.success) {
+                    showToast('تم التحويل بنجاح', 'success');
+                    loadData();
+                } else {
+                    showToast(res.message || 'حدث خطأ', 'error');
+                    showLoading(false);
+                }
+            } catch (e) {
+                showToast('حدث خطأ', 'error');
+                showLoading(false);
+            }
         }
 
         async function saveCollection() {
-            let data = {
-                merchantId: document.getElementById('colMerch').value,
+            const merchantId = document.getElementById('colMerch').value;
+            const amount = document.getElementById('colAmt').value;
+            
+            if (!merchantId) {
+                showToast('اختر التاجر', 'warning');
+                return;
+            }
+            if (!amount || Number(amount) <= 0) {
+                showToast('أدخل قيمة التحصيل', 'warning');
+                return;
+            }
+            
+            showLoading(true);
+            closeModal();
+            
+            const data = {
+                merchantId: merchantId,
                 machineId: document.getElementById('colMach').value,
-                amount: document.getElementById('colAmt').value,
+                amount: amount,
                 collectionType: document.getElementById('colType').value,
                 notes: document.getElementById('colNotes').value
             };
-            await api('addCollection', data);
-            closeModal(); loadData();
+            
+            try {
+                const res = await api('addCollection', data);
+                if (res.success) {
+                    showToast('تم التحصيل بنجاح', 'success');
+                    loadData();
+                } else {
+                    showToast(res.message || 'حدث خطأ', 'error');
+                    showLoading(false);
+                }
+            } catch (e) {
+                showToast('حدث خطأ', 'error');
+                showLoading(false);
+            }
         }
 
-        // Start
-        checkSession();
+        // ==================== Initialize ====================
+        
+        window.onload = function() {
+            checkSession();
+        };
+
+        // Handle ESC key for modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
     </script>
 </body>
 </html>
