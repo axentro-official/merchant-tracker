@@ -834,7 +834,8 @@
         // جديد: ملء القوائم المنسدلة بالتجار
         function populateMerchantDropdowns() {
             const merchants = DB.merchants || [];
-            const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect'];
+            // تمت إضافة mcMerchSelect للقائمة
+            const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect', 'mcMerchSelect'];
             
             dropdownIds.forEach(dId => {
                 const el = document.getElementById(dId);
@@ -1121,11 +1122,15 @@
                     <div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات"></div>
                     <button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ التاجر</button>`;
             } else if (type === 'machine') {
+                // تم تعديل هذا الجزء لإضافة القائمة المنسدلة والبحث
                 body.innerHTML = `
                     <h3><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3>
                     <div class="form-group">
-                        <label>اختر التاجر <span class="required">*</span></label>
-                        <input type="text" id="mcMerchSearch" class="form-control" placeholder="ابحث عن تاجر..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')">
+                        <label>التاجر <span class="required">*</span></label>
+                        <div style="display:flex; gap:0.5rem;">
+                            <select id="mcMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'mcMerchSearch', 'mcMerchId', 'mcMerchList')"><option value="">-- اختر --</option></select>
+                            <input type="text" id="mcMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')">
+                        </div>
                         <input type="hidden" id="mcMerchId">
                         <div id="mcMerchList" class="search-results"></div>
                     </div>
