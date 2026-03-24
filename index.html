@@ -6,61 +6,60 @@
     <title>Axentro System</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- مكتبة التصدير اكسيل -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    
     <style>
-        /* -- CSS Styles -- */
-        :root { --primary: #2563eb; --secondary: #1e40af; --accent: #3b82f6; --bg: #f1f5f9; --white: #fff; --text: #1e293b; --muted: #64748b; --success: #10b981; --danger: #ef4444; }
+        :root { --primary: #2563eb; --secondary: #1e40af; --bg: #f1f5f9; --white: #fff; --text: #1e293b; --muted: #64748b; --success: #10b981; --danger: #ef4444; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
         /* Login */
-        #loginBox { height: 100vh; display: flex; justify-content: center; align-items: center; }
+        #loginBox { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; }
         .login-card { background: var(--white); padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
         .login-card h2 { margin-bottom: 1.5rem; color: var(--primary); }
-        .login-card input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s; }
-        .login-card input:focus { border-color: var(--primary); outline: none; }
+        .login-card input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; }
         .btn { width: 100%; padding: 0.8rem; border: none; border-radius: 0.5rem; color: white; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s; }
         .btn-primary { background: var(--primary); } .btn-primary:hover { background: var(--secondary); }
+        .btn-success { background: var(--success); } .btn-danger { background: var(--danger); }
 
-        /* Main App */
+        /* App Layout */
         .app-container { display: none; flex-direction: column; height: 100vh; }
         
         /* Navbar */
         .navbar { background: var(--white); padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .logo { font-weight: 700; font-size: 1.2rem; color: var(--primary); }
+        .navbar-actions { display: flex; gap: 0.5rem; }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto; }
 
-        /* Tabs Navigation (Mobile Friendly) */
+        /* Tabs */
         .tabs-nav { display: flex; background: var(--white); border-bottom: 1px solid #e2e8f0; overflow-x: auto; position: sticky; top: 0; z-index: 100; }
-        .tab-link { flex: 1; min-width: 80px; padding: 0.8rem; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; transition: 0.2s; white-space: nowrap; }
+        .tab-link { flex: 1; min-width: 85px; padding: 0.8rem; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; transition: 0.2s; white-space: nowrap; font-size: 0.85rem; }
         .tab-link.active { color: var(--primary); border-color: var(--primary); background: #f8fafc; }
-        .tab-link:hover { background: #f8fafc; }
 
-        /* Content Area */
-        .content { padding: 1rem; flex: 1; overflow-y: auto; }
+        /* Content */
+        .content { padding: 1rem; flex: 1; overflow-y: auto; padding-bottom: 150px; /* Space for footer */ }
         .page { display: none; animation: fadeIn 0.3s; }
         .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Dashboard Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem; margin-bottom: 1.5rem; }
+        
+        /* Dashboard */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem; margin-bottom: 1rem; }
         .stat-card { background: var(--white); padding: 1rem; border-radius: 0.5rem; border-right: 4px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .stat-card h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.2rem; }
         .stat-card .val { font-size: 1.2rem; font-weight: 700; }
-
+        
         /* Tables */
         .table-box { background: var(--white); border-radius: 0.5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 1rem; }
         .table-header { padding: 0.8rem 1rem; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
-        .table-header h3 { font-size: 1rem; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; } /* Scrollable on mobile */
-        th, td { padding: 0.7rem 1rem; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 0.6rem 1rem; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
         th { background: #f8fafc; color: var(--muted); font-weight: 600; }
-        tr:hover { background: #f8fafc; }
         .table-container { overflow-x: auto; }
 
-        /* Buttons Small */
-        .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; width: auto; margin-left: 0.2rem; }
-        .btn-danger { background: var(--danger); }
-        .btn-success { background: var(--success); }
-        .btn-icon { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; }
+        /* Footer */
+        footer { text-align: center; padding: 1.5rem; background: #1e293b; color: #94a3b8; margin-top: auto; }
+        .qr-box { margin-top: 1rem; display: flex; flex-direction: column; align-items: center; }
+        .qr-box img { width: 80px; border-radius: 8px; border: 2px solid #fff; margin-bottom: 5px; }
+        .qr-box a { color: #3b82f6; text-decoration: none; font-size: 0.8rem; font-weight: bold; }
 
         /* Modal */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 1rem; }
@@ -69,12 +68,6 @@
         .form-group { margin-bottom: 0.8rem; }
         .form-group label { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; font-weight: 600; }
         .form-control { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 0.3rem; }
-
-        /* Footer */
-        footer { text-align: center; padding: 1.5rem; background: #1e293b; color: #94a3b8; margin-top: auto; }
-        .qr-box { margin-top: 1rem; }
-        .qr-box img { width: 80px; border-radius: 8px; border: 2px solid #fff; margin-bottom: 5px; }
-        .qr-box a { color: var(--accent); text-decoration: none; font-size: 0.8rem; display: block; }
     </style>
 </head>
 <body>
@@ -86,13 +79,27 @@
             <input type="password" id="passInput" placeholder="كلمة المرور" onkeypress="handleEnter(event)">
             <button class="btn btn-primary" onclick="login()">دخول</button>
         </div>
+        <!-- Footer in Login -->
+        <footer style="margin-top: 2rem; background: transparent; color: #64748b;">
+            <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
+            <div class="qr-box">
+                <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
+                    <img src="qr-links.png" alt="QR">
+                    <span>QR Scan Me > Click On Me</span>
+                </a>
+            </div>
+        </footer>
     </div>
 
     <!-- 2. Main App -->
     <div class="app-container" id="appBox">
         <nav class="navbar">
             <div class="logo"><i class="fas fa-store"></i> Axentro</div>
-            <div style="font-size:0.8rem; color:var(--muted);"><span id="lastUpd"></span></div>
+            <div class="navbar-actions">
+                <button class="btn btn-sm" onclick="loadData()"><i class="fas fa-sync"></i> تحديث</button>
+                <button class="btn btn-sm" onclick="exportExcel()"><i class="fas fa-file-excel"></i> تصدير</button>
+                <button class="btn btn-sm" style="background:#64748b" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+            </div>
         </nav>
 
         <!-- Tabs -->
@@ -102,6 +109,7 @@
             <div class="tab-link" onclick="showPage('machines')"><i class="fas fa-cash-register"></i> المكن</div>
             <div class="tab-link" onclick="showPage('transfers')"><i class="fas fa-exchange-alt"></i> التحويلات</div>
             <div class="tab-link" onclick="showPage('collections')"><i class="fas fa-hand-holding-usd"></i> التحصيلات</div>
+            <div class="tab-link" onclick="showPage('statement')"><i class="fas fa-file-invoice-dollar"></i> كشف حساب</div>
             <div class="tab-link" onclick="showPage('archive')"><i class="fas fa-archive"></i> الأرشيف</div>
         </div>
 
@@ -110,11 +118,23 @@
             <!-- HOME PAGE -->
             <div id="page-home" class="page active">
                 <div class="stats-grid" id="dashStats"></div>
+                
+                <!-- Top Machines Card -->
+                <div class="table-box">
+                    <div class="table-header"><h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3></div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>المكنة</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr></thead>
+                            <tbody id="tblTopMachines"></tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="table-box">
                     <div class="table-header"><h3>سريع</h3></div>
-                    <div style="padding:1rem; text-align:center;">
-                        <button class="btn btn-success" style="width:auto; padding:0.8rem 2rem;" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button>
-                        <button class="btn btn-primary" style="width:auto; padding:0.8rem 2rem;" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button>
+                    <div style="padding:1rem; text-align:center; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+                        <button class="btn btn-success" style="width:auto" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button>
+                        <button class="btn btn-primary" style="width:auto" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button>
                     </div>
                 </div>
             </div>
@@ -157,7 +177,7 @@
                     <div class="table-header"><h3>سجل التحويلات</h3></div>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>تاريخ</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th></tr></thead>
+                            <thead><tr><th>تاريخ</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>حذف</th></tr></thead>
                             <tbody id="tblTransfers"></tbody>
                         </table>
                     </div>
@@ -170,9 +190,33 @@
                     <div class="table-header"><h3>سجل التحصيلات</h3></div>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>تاريخ</th><th>التاجر</th><th>القيمة</th><th>النوع</th></tr></thead>
+                            <thead><tr><th>تاريخ</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>حذف</th></tr></thead>
                             <tbody id="tblCollections"></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATEMENT PAGE (New) -->
+            <div id="page-statement" class="page">
+                <div class="table-box">
+                    <div class="table-header" style="flex-wrap:wrap; gap:0.5rem;">
+                        <h3>كشف حساب تاجر</h3>
+                        <select id="stmtMerchant" class="form-control" style="width:auto; min-width:200px;" onchange="getStatement()"></select>
+                    </div>
+                    <div style="padding:1rem;">
+                        <div class="stats-grid">
+                            <div class="stat-card" style="border-color:var(--primary)"><h4>إجمالي تحويلاته</h4><div class="val" id="stmtT">0</div></div>
+                            <div class="stat-card" style="border-color:var(--success)"><h4>إجمالي تحصيلاته</h4><div class="val" id="stmtC">0</div></div>
+                            <div class="stat-card" style="border-color:var(--danger)"><h4>المتبقي عليه</h4><div class="val" id="stmtR">0</div></div>
+                        </div>
+                        <h4>الحركات</h4>
+                        <div class="table-container">
+                            <table style="min-width:400px;">
+                                <thead><tr><th>تاريخ</th><th>نوع</th><th>قيمة</th><th>ملاحظات</th></tr></thead>
+                                <tbody id="tblStatement"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -180,10 +224,13 @@
             <!-- ARCHIVE PAGE -->
             <div id="page-archive" class="page">
                 <div class="table-box">
-                    <div class="table-header"><h3>الأرشيف</h3></div>
+                    <div class="table-header">
+                        <h3>الأرشيف</h3>
+                        <button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد (ترحيل)</button>
+                    </div>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>الشهر</th><th>إجمالي التحويلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th></tr></thead>
+                            <thead><tr><th>الشهر</th><th>تحويلات</th><th>تحصيلات</th><th>المتبقي</th></tr></thead>
                             <tbody id="tblArchive"></tbody>
                         </table>
                     </div>
@@ -192,13 +239,13 @@
 
         </div>
 
-        <!-- Footer -->
+        <!-- Footer Inside App -->
         <footer>
             <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
             <div class="qr-box">
                 <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
                     <img src="qr-links.png" alt="QR">
-                    <span>Scan Me > Click On Me</span>
+                    <span>QR Scan Me > Click On Me</span>
                 </a>
             </div>
         </footer>
@@ -214,33 +261,47 @@
 
     <script>
         const API = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec';
-        let DB = { merchants: [], machines: [], transfers: [], collections: [], archives: [] };
+        let DB = {};
 
-        // --- Core Functions ---
+        // --- Session & Init ---
         function handleEnter(e) { if (e.key === 'Enter') login(); }
         
-        async function api(act, data={}) {
-            try {
-                let url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`;
-                let res = await fetch(url);
-                return await res.json();
-            } catch(e) { alert('خطأ في الاتصال'); return {success:false}; }
+        function checkSession() {
+            if (localStorage.getItem('axentro_logged') === 'true') {
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('appBox').style.display = 'flex';
+                loadData();
+            }
         }
 
         async function login() {
             let p = document.getElementById('passInput').value;
             let res = await api('login', {password: p});
             if (res.success) {
+                localStorage.setItem('axentro_logged', 'true');
                 document.getElementById('loginBox').style.display = 'none';
                 document.getElementById('appBox').style.display = 'flex';
                 loadData();
-                setInterval(loadData, 60000); // تحديث كل دقيقة
             } else {
                 alert('كلمة المرور خطأ');
             }
         }
 
+        function logout() {
+            localStorage.removeItem('axentro_logged');
+            location.reload();
+        }
+
+        async function api(act, data={}) {
+            try {
+                let url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`;
+                let res = await fetch(url);
+                return await res.json();
+            } catch(e) { console.error(e); return {success:false}; }
+        }
+
         async function loadData() {
+            // Show loading indicator? simplified here.
             let res = await api('getAllData');
             if (res.success) {
                 DB = res.data;
@@ -250,22 +311,38 @@
                 renderTransfers();
                 renderCollections();
                 renderArchive();
-                document.getElementById('lastUpd').innerText = new Date().toLocaleTimeString('ar');
+                populateStatementDropdown();
             }
         }
 
-        // --- Render Functions ---
+        // --- Rendering ---
+        
         function renderDashboard() {
             let d = DB.dashboard;
             document.getElementById('dashStats').innerHTML = `
-                <div class="stat-card"><h4>التحويلات</h4><div class="val">${d['التحويلات']}</div></div>
-                <div class="stat-card"><h4>التحصيلات</h4><div class="val">${d['التحصيلات']}</div></div>
-                <div class="stat-card" style="border-color:var(--danger)"><h4>المتبقي</h4><div class="val">${d['المتبقي']}</div></div>
                 <div class="stat-card"><h4>عدد التجار</h4><div class="val">${d['التجار']}</div></div>
+                <div class="stat-card"><h4>عدد المكن</h4><div class="val">${d['المكن']}</div></div>
+                <div class="stat-card"><h4>التحويلات (شهر)</h4><div class="val">${d['التحويلات']}</div></div>
+                <div class="stat-card" style="border-color:var(--success)"><h4>التحصيلات (شهر)</h4><div class="val">${d['التحصيلات']}</div></div>
+                <div class="stat-card" style="border-color:var(--danger)"><h4>المتبقي (شهر)</h4><div class="val">${d['المتبقي']}</div></div>
+                <div class="stat-card"><h4>تحويلات اليوم</h4><div class="val">${d['تحويلات_اليوم']}</div></div>
             `;
+
+            // Top Machines
+            const tbody = document.getElementById('tblTopMachines');
+            tbody.innerHTML = '';
+            d['أعلى_المكن'].forEach(m => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${m.name}</td>
+                        <td>${m.achieved}</td>
+                        <td>${m.target}</td>
+                        <td>${m.percentage}%</td>
+                    </tr>
+                `;
+            });
         }
-        
-        // Generic Table Renderer
+
         function render(id, data, cols, delFunc) {
             const tbody = document.getElementById(id);
             tbody.innerHTML = '';
@@ -278,25 +355,94 @@
 
         function renderMerchants() { render('tblMerchants', DB.merchants, ['رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الهاتف', 'الحالة'], 'delMerchant'); }
         function renderMachines() { render('tblMachines', DB.machines, ['رقم المكنة', 'اسم التاجر', 'الباركود', 'التارجت الشهري'], 'delMachine'); }
-        function renderTransfers() { render('tblTransfers', DB.transfers.slice(-20).reverse(), ['التاريخ', 'اسم التاجر', 'قيمة التحويل', 'ملاحظات'], 'delTransfer'); }
-        function renderCollections() { render('tblCollections', DB.collections.slice(-20).reverse(), ['التاريخ', 'اسم التاجر', 'قيمة التحصيل', 'نوع التحصيل'], 'delCollection'); }
+        function renderTransfers() { render('tblTransfers', DB.transfers.slice(-30).reverse(), ['التاريخ', 'اسم التاجر', 'قيمة التحويل', 'ملاحظات'], 'delTransfer'); }
+        function renderCollections() { render('tblCollections', DB.collections.slice(-30).reverse(), ['التاريخ', 'اسم التاجر', 'قيمة التحصيل', 'نوع التحصيل'], 'delCollection'); }
         function renderArchive() { render('tblArchive', DB.archives, ['الشهر', 'إجمالي التحويلات', 'إجمالي التحصيلات', 'إجمالي المتبقي']); }
+
+        function populateStatementDropdown() {
+            const sel = document.getElementById('stmtMerchant');
+            sel.innerHTML = '<option value="">-- اختر تاجر --</option>';
+            DB.merchants.forEach(m => {
+                sel.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`;
+            });
+        }
+
+        async function getStatement() {
+            const mid = document.getElementById('stmtMerchant').value;
+            if(!mid) return;
+            const res = await api('getStatement', {merchantId: mid});
+            if(res.success) {
+                const data = res.data;
+                document.getElementById('stmtT').innerText = data.stats.totalT;
+                document.getElementById('stmtC').innerText = data.stats.totalC;
+                document.getElementById('stmtR').innerText = data.stats.remaining;
+                
+                const tbody = document.getElementById('tblStatement');
+                tbody.innerHTML = '';
+                data.movements.forEach(m => {
+                    tbody.innerHTML += `<tr>
+                        <td>${m.date}</td>
+                        <td style="color:${m.type=='تحويل' ? 'var(--primary)' : 'var(--success)'}">${m.type}</td>
+                        <td>${m.amount}</td>
+                        <td>${m.notes || '-'}</td>
+                    </tr>`;
+                });
+            }
+        }
 
         // --- Actions ---
         async function delMerchant(id) { if(confirm('حذف؟')) { await api('deleteMerchant', {id:id}); loadData(); } }
         async function delMachine(id) { if(confirm('حذف؟')) { await api('deleteMachine', {id:id}); loadData(); } }
         async function delTransfer(id) { if(confirm('حذف؟')) { await api('deleteTransfer', {id:id}); loadData(); } }
         async function delCollection(id) { if(confirm('حذف؟')) { await api('deleteCollection', {id:id}); loadData(); } }
+        
+        async function confirmCloseMonth() {
+            if(confirm('هل أنت متأكد من بدء شهر جديد؟ سيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.')) {
+                let res = await api('closeMonth', {notes: 'إغلاق من النظام'});
+                if(res.success) {
+                    alert(res.data.message);
+                    loadData();
+                } else {
+                    alert('حدث خطأ');
+                }
+            }
+        }
+
+        // --- Export Excel ---
+        function exportExcel() {
+            if(!DB.merchants) return alert('لا توجد بيانات');
+            
+            const wb = XLSX.utils.book_new();
+            
+            // Merchants Sheet
+            const ws1 = XLSX.utils.json_to_sheet(DB.merchants);
+            XLSX.utils.book_append_sheet(wb, ws1, "التجار");
+            
+            // Machines Sheet
+            const ws2 = XLSX.utils.json_to_sheet(DB.machines);
+            XLSX.utils.book_append_sheet(wb, ws2, "المكن");
+            
+            // Transfers Sheet
+            const ws3 = XLSX.utils.json_to_sheet(DB.transfers);
+            XLSX.utils.book_append_sheet(wb, ws3, "التحويلات");
+            
+            // Collections Sheet
+            const ws4 = XLSX.utils.json_to_sheet(DB.collections);
+            XLSX.utils.book_append_sheet(wb, ws4, "التحصيلات");
+
+            XLSX.writeFile(wb, `Axentro_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
 
         // --- Navigation ---
         function showPage(name) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
             document.getElementById('page-'+name).classList.add('active');
+            // Find the clicked button and add active class (fix for onclick usage)
             event.target.classList.add('active');
         }
 
-        // --- Modals & Forms ---
+        // --- Modals ---
         function openModal(type) {
             const body = document.getElementById('modalBody');
             document.getElementById('modal').style.display = 'flex';
@@ -334,7 +480,7 @@
                     <div class="form-group"><label>ملاحظات</label><input id="trNotes" class="form-control"></div>
                     <button class="btn btn-success" onclick="saveTransfer()">تأكيد التحويل</button>
                 `;
-                fillMachines(DB.merchants[0]?.['رقم التاجر'], 'trMach'); // Fill first
+                fillMachines(DB.merchants[0]?.['رقم التاجر'], 'trMach');
             } else if (type === 'collection') {
                 let opts = DB.merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
                 body.innerHTML = `
@@ -355,18 +501,19 @@
             }
         }
 
-        // Helper: Filter machines by merchant in dropdown
         function fillMachines(merchantId, selectId) {
             const select = document.getElementById(selectId);
             select.innerHTML = '';
-            DB.machines.filter(m => m['رقم التاجر'] === merchantId).forEach(m => {
+            const filtered = DB.machines.filter(m => m['رقم التاجر'] === merchantId);
+            if (filtered.length === 0) select.innerHTML = '<option>لا توجد مكنات</option>';
+            filtered.forEach(m => {
                 select.innerHTML += `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`;
             });
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        // Save Functions
+        // Save Functions (Same logic)
         async function saveMerchant() {
             let data = {
                 merchantName: document.getElementById('mName').value,
@@ -415,6 +562,9 @@
             await api('addCollection', data);
             closeModal(); loadData();
         }
+
+        // Start
+        checkSession();
     </script>
 </body>
 </html>
