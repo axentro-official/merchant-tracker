@@ -1,191 +1,394 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Axentro Tracker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axentro - نظام إدارة التجار والتحصيل</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --accent: #3b82f6;
+            --bg-light: #f8fafc;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 0.5rem;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo { font-weight: 700; font-size: 1.5rem; color: var(--primary); }
+        .nav-actions button { margin-right: 0.5rem; }
+
+        /* Container */
+        .container { padding: 1rem; width: 100%; max-width: 1200px; margin: 0 auto; flex: 1; }
+
+        /* Cards & Dashboard */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border-right: 4px solid var(--primary);
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card h3 { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .stat-card .value { font-size: 1.5rem; font-weight: 700; color: var(--text-dark); }
+
+        /* Tables */
+        .table-container {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        .table-header {
+            padding: 1rem;
+            background: var(--bg-light);
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td {
+            padding: 0.75rem 1rem;
+            text-align: right;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .data-table th { background-color: #f1f5f9; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; }
+        .data-table tr:hover { background-color: #f8fafc; }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary { background: var(--primary); color: var(--white); }
+        .btn-primary:hover { background: var(--secondary); }
+        .btn-success { background: var(--success); color: var(--white); }
+        .btn-danger { background: var(--danger); color: var(--white); }
+        .btn-sm { padding: 0.25rem 0.75rem; font-size: 0.85rem; }
+
+        /* Footer */
+        footer {
+            background: #1e293b;
+            color: #94a3b8;
+            text-align: center;
+            padding: 2rem 1rem;
+            margin-top: auto;
+        }
+        .footer-content p { margin-bottom: 1rem; font-size: 0.9rem; }
+        .qr-section a { display: inline-block; transition: transform 0.3s; }
+        .qr-section a:hover { transform: scale(1.05); }
+        .qr-section img { width: 100px; height: 100px; border-radius: 10px; margin-bottom: 0.5rem; border: 2px solid #fff; }
+        .qr-section span { display: block; font-size: 0.8rem; color: var(--accent); }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; gap: 1rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .table-header { flex-direction: column; gap: 1rem; align-items: stretch; }
+            /* Scrollable table on mobile */
+            .table-container { overflow-x: auto; }
+            .data-table { min-width: 600px; }
+        }
+        
+        /* Loading Spinner */
+        .loading { text-align: center; padding: 3rem; color: var(--text-muted); }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Modal/Forms (Simplified for brevity) */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; justify-content:center; align-items:center; }
+        .modal-content { background: white; padding: 2rem; border-radius: var(--radius); width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        .form-control { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: var(--radius); font-family: 'Cairo'; }
+    </style>
 </head>
 <body>
 
-  <!-- Splash/Loader -->
-  <div id="splash" class="splash-screen">
-    <div class="loader"></div>
-    <p>جاري تحميل البيانات...</p>
-  </div>
-
-  <div id="app" class="hidden">
-    <!-- Login -->
-    <div id="login-view" class="login-container">
-      <div class="login-box">
-        <h1>Axentro</h1>
-        <p>نظام متابعة التجار</p>
-        <form id="login-form">
-          <input type="password" id="password" placeholder="كلمة المرور" required>
-          <button type="submit">دخول</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Main Dashboard -->
-    <div id="main-view" class="hidden wrapper">
-      
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div class="logo">Axentro</div>
-        <nav>
-          <button class="nav-btn active" data-page="home">🏠 الرئيسية</button>
-          <button class="nav-btn" data-page="merchants">👥 التجار</button>
-          <button class="nav-btn" data-page="machines">🔌 المكن</button>
-          <button class="nav-btn" data-page="transfers">💸 تحويلات</button>
-          <button class="nav-btn" data-page="collections">💰 تحصيلات</button>
-          <button class="nav-btn" data-page="statement">📜 كشف حساب</button>
-          <button class="nav-btn" data-page="archives">📦 أرشيف</button>
-        </nav>
-        <div class="side-actions">
-          <button id="export-btn" class="action-btn">📊 تصدير Excel</button>
-          <button id="logout-btn" class="action-btn danger">🚪 خروج</button>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-cash-register"></i> Axentro System</div>
+        <div class="nav-actions">
+            <button class="btn btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <span id="lastUpdate" style="font-size:0.8rem; color:var(--text-muted);">آخر تحديث: --</span>
         </div>
-      </aside>
-
-      <!-- Content -->
-      <main class="content-area">
-        
-        <!-- Header -->
-        <header class="top-header">
-          <h2 id="page-title">لوحة التحكم</h2>
-          <div class="header-tools">
-            <button id="refresh-btn" class="icon-btn">🔄 تحديث</button>
-          </div>
-        </header>
-
-        <!-- Pages Container -->
-        <div class="pages-wrapper">
-          
-          <!-- HOME -->
-          <section id="home-page" class="page active">
-            <div class="stats-grid">
-              <div class="stat-card blue"><h3>تحويلات الشهر</h3><p id="stat-transfers">0</p></div>
-              <div class="stat-card green"><h3>تحصيلات الشهر</h3><p id="stat-collections">0</p></div>
-              <div class="stat-card red"><h3>المتبقي</h3><p id="stat-remaining">0</p></div>
-              <div class="stat-card dark"><h3>عدد التجار</h3><p id="stat-merchants">0</p></div>
-            </div>
-            <div class="data-card">
-              <div class="card-header">أعلى 5 مديونيات</div>
-              <div id="top-debtors" class="list-group"></div>
-            </div>
-          </section>
-
-          <!-- MERCHANTS -->
-          <section id="merchants-page" class="page">
-            <div class="data-card">
-              <div class="card-header">إضافة تاجر جديد</div>
-              <form id="add-merchant-form" class="form-row">
-                <input type="text" id="m-name" placeholder="اسم التاجر" required>
-                <input type="text" id="m-acc" placeholder="رقم الحساب" required>
-                <input type="text" id="m-phone" placeholder="الهاتف">
-                <button type="submit">حفظ</button>
-              </form>
-            </div>
-            <div class="data-card">
-              <div class="card-header">قائمة التجار</div>
-              <input type="text" id="search-merchants" placeholder="بحث..." class="search-input">
-              <div id="merchants-list" class="list-group"></div>
-            </div>
-          </section>
-
-          <!-- MACHINES -->
-          <section id="machines-page" class="page">
-             <div class="data-card">
-              <div class="card-header">إضافة مكنة</div>
-              <form id="add-machine-form" class="form-row">
-                <select id="mach-merchant" required></select>
-                <input type="text" id="mach-barcode" placeholder="الباركود" required>
-                <input type="number" id="mach-target" placeholder="التارجت">
-                <button type="submit">حفظ</button>
-              </form>
-            </div>
-            <div class="data-card">
-              <div id="machines-list" class="list-group"></div>
-            </div>
-          </section>
-
-          <!-- TRANSFERS -->
-          <section id="transfers-page" class="page">
-            <div class="data-card">
-              <div class="card-header">تسجيل تحويل</div>
-              <form id="add-transfer-form" class="form-row">
-                <select id="tr-merchant" required></select>
-                <select id="tr-machine" required></select>
-                <input type="number" id="tr-amount" placeholder="القيمة" required>
-                <button type="submit">تسجيل</button>
-              </form>
-            </div>
-            <div class="data-card">
-              <div id="transfers-list" class="list-group"></div>
-            </div>
-          </section>
-
-          <!-- COLLECTIONS -->
-          <section id="collections-page" class="page">
-            <div class="data-card">
-              <div class="card-header">تسجيل تحصيل</div>
-              <form id="add-coll-form" class="form-row">
-                <select id="co-merchant" required></select>
-                <select id="co-machine" required></select>
-                <input type="number" id="co-amount" placeholder="القيمة" required>
-                <select id="co-type"><option value="جزئي">جزئي</option><option value="كلي">كلي</option></select>
-                <button type="submit">تسجيل</button>
-              </form>
-            </div>
-            <div class="data-card">
-              <div id="collections-list" class="list-group"></div>
-            </div>
-          </section>
-
-          <!-- STATEMENT -->
-          <section id="statement-page" class="page">
-            <div class="data-card">
-              <div class="card-header">كشف حساب</div>
-              <form id="stmt-form" class="form-row">
-                <select id="stmt-merchant" required></select>
-                <button type="submit">عرض</button>
-              </form>
-              <div id="stmt-result" class="hidden">
-                <div class="stmt-summary">
-                  <div>إجمالي تحويلات: <b id="stmt-t">0</b></div>
-                  <div>إجمالي تحصيلات: <b id="stmt-c">0</b></div>
-                  <div class="highlight">المتبقي: <b id="stmt-r">0</b></div>
-                </div>
-                <div id="stmt-moves" class="list-group"></div>
-              </div>
-            </div>
-          </section>
-
-          <!-- ARCHIVES -->
-          <section id="archives-page" class="page">
-            <div class="data-card">
-              <div class="card-header">سجل الشهور</div>
-              <div id="archives-list" class="list-group"></div>
-            </div>
-          </section>
-
-        </div>
-      </main>
-    </div>
-
-    <!-- Mobile Navigation -->
-    <nav class="bottom-nav">
-      <button class="b-nav-btn active" data-page="home"><span>🏠</span><label>رئيسية</label></button>
-      <button class="b-nav-btn" data-page="transfers"><span>💸</span><label>تحويل</label></button>
-      <button class="b-nav-btn" data-page="collections"><span>💰</span><label>تحصيل</label></button>
-      <button class="b-nav-btn" data-page="merchants"><span>👥</span><label>تجار</label></button>
-      <button class="b-nav-btn" onclick="showMore()"><span>⚙️</span><label>المزيد</label></button>
     </nav>
-  </div>
 
-  <script src="app.js"></script>
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Login Section (Simple) -->
+        <div id="loginSection" class="stat-card" style="max-width: 400px; margin: 2rem auto; text-align: center;">
+            <h3 style="margin-bottom: 1rem;">تسجيل الدخول</h3>
+            <input type="password" id="passInput" class="form-control" placeholder="كلمة المرور" style="margin-bottom:1rem;">
+            <button class="btn btn-primary" style="width:100%;" onclick="login()">دخول</button>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboardSection" style="display:none;">
+            <h2 style="margin-bottom: 1rem;">لوحة التحكم</h2>
+            <div class="stats-grid" id="statsGrid">
+                <!-- Stats will be injected here -->
+            </div>
+
+            <!-- Merchants Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>قائمة التجار</h3>
+                    <button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة تاجر</button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>اسم التاجر</th><th>المنطقة</th><th>الهاتف</th><th>الحالة</th><th>إجراءات</th></tr>
+                    </thead>
+                    <tbody id="merchantsTableBody">
+                        <!-- Data injected here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Transfers Table -->
+             <div class="table-container">
+                <div class="table-header">
+                    <h3>آخر التحويلات</h3>
+                    <button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-exchange-alt"></i> تحويل جديد</button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>التاريخ</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th></tr>
+                    </thead>
+                    <tbody id="transfersTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="loadingSection" class="loading" style="display:none;">
+            <div class="spinner"></div>
+            <p>جاري تحميل البيانات...</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
+            <div class="qr-section">
+                <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
+                    <!-- تأكد من وجود الصورة بجانب الملف أو استبدال الرابط -->
+                    <img src="qr-links.png" alt="QR Code">
+                    <span>Scan Me > Click On Me</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Simple Modal for Adding Data -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span style="position:absolute; left:10px; top:10px; cursor:pointer;" onclick="closeModal()"><i class="fas fa-times"></i></span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec'; // ضع رابط الويب الخاص بك هنا
+        let isLoggedIn = false;
+        let appData = {};
+
+        // Auto Refresh Setup
+        setInterval(() => {
+            if(isLoggedIn) refreshData();
+        }, 30000); // كل 30 ثانية
+
+        // API Helper
+        async function api(action, data = {}) {
+            try {
+                const response = await fetch(`${API_URL}?action=${action}&data=${encodeURIComponent(JSON.stringify(data))}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                return { success: false, message: 'خطأ في الاتصال' };
+            }
+        }
+
+        // Login Function
+        async function login() {
+            const pass = document.getElementById('passInput').value;
+            const res = await api('login', { password: pass });
+            if (res.success) {
+                isLoggedIn = true;
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+                refreshData();
+            } else {
+                alert(res.message);
+            }
+        }
+
+        // Main Data Fetcher
+        async function refreshData() {
+            document.getElementById('loadingSection').style.display = 'block';
+            const res = await api('getAllData');
+            if (res.success) {
+                appData = res.data;
+                renderDashboard(res.data.dashboard);
+                renderMerchants(res.data.merchants);
+                renderTransfers(res.data.transfers);
+                document.getElementById('lastUpdate').innerText = "آخر تحديث: " + new Date().toLocaleTimeString('ar-EG');
+            }
+            document.getElementById('loadingSection').style.display = 'none';
+        }
+
+        // Render Functions
+        function renderDashboard(d) {
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card"><h3>التجار</h3><div class="value">${d['عدد التجار']}</div></div>
+                <div class="stat-card"><h3>التحويلات (شهر)</h3><div class="value">${d['إجمالي التحويلات']}</div></div>
+                <div class="stat-card"><h3>التحصيلات (شهر)</h3><div class="value">${d['إجمالي التحصيلات']}</div></div>
+                <div class="stat-card" style="border-color: var(--danger);"><h3>المتبقي</h3><div class="value">${d['إجمالي المتبقي']}</div></div>
+            `;
+        }
+
+        function renderMerchants(data) {
+            const tbody = document.getElementById('merchantsTableBody');
+            tbody.innerHTML = '';
+            data.forEach(m => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${m['اسم التاجر']}</td>
+                        <td>${m['المنطقة']}</td>
+                        <td>${m['رقم الهاتف']}</td>
+                        <td><span class="btn btn-sm" style="background:${m['الحالة'] == 'نشط' ? '#dcfce7' : '#fee2e2'}; color:${m['الحالة'] == 'نشط' ? '#166534' : '#991b1b'}; cursor:default;">${m['الحالة']}</span></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deleteMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderTransfers(data) {
+            const tbody = document.getElementById('transfersTableBody');
+            tbody.innerHTML = '';
+            // Show last 10
+            data.slice(-10).reverse().forEach(t => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${t['التاريخ']}</td>
+                        <td>${t['اسم التاجر']}</td>
+                        <td>${t['قيمة التحويل']}</td>
+                        <td>${t['ملاحظات'] || '-'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Actions
+        async function deleteMerchant(id) {
+            if(confirm('هل أنت متأكد من الحذف؟')) {
+                await api('deleteMerchant', { merchantId: id });
+                refreshData();
+            }
+        }
+        
+        async function addMerchant() {
+            const data = {
+                merchantName: document.getElementById('mName').value,
+                businessName: document.getElementById('mBiz').value,
+                phone: document.getElementById('mPhone').value,
+                area: document.getElementById('mArea').value
+            };
+            await api('addMerchant', data);
+            closeModal();
+            refreshData();
+        }
+
+        async function addTransfer() {
+            const data = {
+                merchantId: document.getElementById('tMerchant').value,
+                machineId: document.getElementById('tMachine').value,
+                amount: document.getElementById('tAmount').value
+            };
+            await api('addTransfer', data);
+            closeModal();
+            refreshData();
+        }
+
+        // Modal Handling
+        function openModal(type) {
+            const modal = document.getElementById('modal');
+            const body = document.getElementById('modalBody');
+            
+            if(type === 'merchant') {
+                body.innerHTML = `
+                    <h3>إضافة تاجر جديد</h3>
+                    <div class="form-group"><label>الاسم</label><input id="mName" class="form-control"></div>
+                    <div class="form-group"><label>النشاط</label><input id="mBiz" class="form-control"></div>
+                    <div class="form-group"><label>الهاتف</label><input id="mPhone" class="form-control"></div>
+                    <div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control"></div>
+                    <button class="btn btn-primary" onclick="addMerchant()">حفظ</button>
+                `;
+            } else if (type === 'transfer') {
+                // Simple selection for demo
+                let mOpts = appData.merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
+                let mcOpts = appData.machines.map(m => `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`).join('');
+                
+                body.innerHTML = `
+                    <h3>تحويل جديد</h3>
+                    <div class="form-group"><label>التاجر</label><select id="tMerchant" class="form-control">${mOpts}</select></div>
+                    <div class="form-group"><label>المكنة</label><select id="tMachine" class="form-control">${mcOpts}</select></div>
+                    <div class="form-group"><label>القيمة</label><input type="number" id="tAmount" class="form-control"></div>
+                    <button class="btn btn-success" onclick="addTransfer()">تأكيد</button>
+                `;
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+    </script>
 </body>
 </html>
