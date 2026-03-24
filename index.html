@@ -27,12 +27,12 @@
         .app-container { display: none; flex-direction: column; height: 100vh; }
         
         /* Navbar */
-        .navbar { background: var(--white); padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .navbar { background: var(--white); padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 101; }
         .navbar-actions { display: flex; gap: 0.5rem; }
         .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto; }
 
         /* Tabs */
-        .tabs-nav { display: flex; background: var(--white); border-bottom: 1px solid #e2e8f0; overflow-x: auto; position: sticky; top: 0; z-index: 100; }
+        .tabs-nav { display: flex; background: var(--white); border-bottom: 1px solid #e2e8f0; overflow-x: auto; position: sticky; top: 46px; z-index: 100; }
         .tab-link { flex: 1; min-width: 85px; padding: 0.8rem; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; transition: 0.2s; white-space: nowrap; font-size: 0.85rem; }
         .tab-link.active { color: var(--primary); border-color: var(--primary); background: #f8fafc; }
 
@@ -55,11 +55,34 @@
         th { background: #f8fafc; color: var(--muted); font-weight: 600; }
         .table-container { overflow-x: auto; }
 
-        /* Footer */
-        footer { text-align: center; padding: 1.5rem; background: #1e293b; color: #94a3b8; margin-top: auto; }
-        .qr-box { margin-top: 1rem; display: flex; flex-direction: column; align-items: center; }
-        .qr-box img { width: 80px; border-radius: 8px; border: 2px solid #fff; margin-bottom: 5px; }
-        .qr-box a { color: #3b82f6; text-decoration: none; font-size: 0.8rem; font-weight: bold; }
+        /* Footer & QR - Fixed Alignment */
+        footer { 
+            text-align: center; 
+            padding: 1.5rem; 
+            background: #1e293b; 
+            color: #94a3b8; 
+            margin-top: auto; 
+            width: 100%; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .qr-box { 
+            margin-top: 1rem; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            width: 100%;
+        }
+        .qr-box img { 
+            width: 80px; 
+            height: 80px;
+            border-radius: 8px; 
+            border: 2px solid #fff; 
+            margin-bottom: 5px; 
+            object-fit: cover;
+        }
+        .qr-box a { color: #3b82f6; text-decoration: none; font-size: 0.8rem; font-weight: bold; margin-top: 5px; }
 
         /* Modal */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 1rem; }
@@ -96,9 +119,9 @@
         <nav class="navbar">
             <div class="logo"><i class="fas fa-store"></i> Axentro</div>
             <div class="navbar-actions">
-                <button class="btn btn-sm" onclick="loadData()"><i class="fas fa-sync"></i> تحديث</button>
-                <button class="btn btn-sm" onclick="exportExcel()"><i class="fas fa-file-excel"></i> تصدير</button>
-                <button class="btn btn-sm" style="background:#64748b" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+                <button class="btn btn-sm btn-primary" onclick="loadData()"><i class="fas fa-sync"></i> تحديث</button>
+                <button class="btn btn-sm btn-success" onclick="exportExcel()"><i class="fas fa-file-excel"></i> تصدير</button>
+                <button class="btn btn-sm btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
             </div>
         </nav>
 
@@ -197,7 +220,7 @@
                 </div>
             </div>
 
-            <!-- STATEMENT PAGE (New) -->
+            <!-- STATEMENT PAGE -->
             <div id="page-statement" class="page">
                 <div class="table-box">
                     <div class="table-header" style="flex-wrap:wrap; gap:0.5rem;">
@@ -263,6 +286,19 @@
         const API = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec';
         let DB = {};
 
+        // --- Helper: Date Formatter ---
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            // Handle ISO String (e.g. 2026-03-23T22:00:00.000Z)
+            if (typeof dateStr === 'string' && dateStr.includes('T')) {
+                const d = new Date(dateStr);
+                // Format: YYYY/MM/DD
+                return d.toLocaleDateString('ar-EG'); 
+            }
+            // Handle already formatted or simple strings
+            return dateStr;
+        }
+
         // --- Session & Init ---
         function handleEnter(e) { if (e.key === 'Enter') login(); }
         
@@ -301,7 +337,6 @@
         }
 
         async function loadData() {
-            // Show loading indicator? simplified here.
             let res = await api('getAllData');
             if (res.success) {
                 DB = res.data;
@@ -318,36 +353,47 @@
         // --- Rendering ---
         
         function renderDashboard() {
-            let d = DB.dashboard;
+            let d = DB.dashboard || {}; // Fallback
+            
             document.getElementById('dashStats').innerHTML = `
-                <div class="stat-card"><h4>عدد التجار</h4><div class="val">${d['التجار']}</div></div>
-                <div class="stat-card"><h4>عدد المكن</h4><div class="val">${d['المكن']}</div></div>
-                <div class="stat-card"><h4>التحويلات (شهر)</h4><div class="val">${d['التحويلات']}</div></div>
-                <div class="stat-card" style="border-color:var(--success)"><h4>التحصيلات (شهر)</h4><div class="val">${d['التحصيلات']}</div></div>
-                <div class="stat-card" style="border-color:var(--danger)"><h4>المتبقي (شهر)</h4><div class="val">${d['المتبقي']}</div></div>
-                <div class="stat-card"><h4>تحويلات اليوم</h4><div class="val">${d['تحويلات_اليوم']}</div></div>
+                <div class="stat-card"><h4>عدد التجار</h4><div class="val">${d['التجار'] || 0}</div></div>
+                <div class="stat-card"><h4>عدد المكن</h4><div class="val">${d['المكن'] || 0}</div></div>
+                <div class="stat-card"><h4>التحويلات (شهر)</h4><div class="val">${d['التحويلات'] || 0}</div></div>
+                <div class="stat-card" style="border-color:var(--success)"><h4>التحصيلات (شهر)</h4><div class="val">${d['التحصيلات'] || 0}</div></div>
+                <div class="stat-card" style="border-color:var(--danger)"><h4>المتبقي (شهر)</h4><div class="val">${d['المتبقي'] || 0}</div></div>
+                <div class="stat-card"><h4>تحويلات اليوم</h4><div class="val">${d['تحويلات_اليوم'] || 0}</div></div>
             `;
 
             // Top Machines
             const tbody = document.getElementById('tblTopMachines');
             tbody.innerHTML = '';
-            d['أعلى_المكن'].forEach(m => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${m.name}</td>
-                        <td>${m.achieved}</td>
-                        <td>${m.target}</td>
-                        <td>${m.percentage}%</td>
-                    </tr>
-                `;
-            });
+            if(d['أعلى_المكن']) {
+                d['أعلى_المكن'].forEach(m => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${m.name || '-'}</td>
+                            <td>${m.achieved || 0}</td>
+                            <td>${m.target || 0}</td>
+                            <td>${m.percentage || 0}%</td>
+                        </tr>
+                    `;
+                });
+            }
         }
 
         function render(id, data, cols, delFunc) {
             const tbody = document.getElementById(id);
             tbody.innerHTML = '';
+            if(!data) return;
+            
             data.forEach(r => {
-                let tds = cols.map(c => `<td>${r[c] || '-'}</td>`).join('');
+                let tds = cols.map(c => {
+                    let val = r[c];
+                    // Apply date formatting if column is 'التاريخ' and value looks like date
+                    if (c === 'التاريخ') val = formatDate(val);
+                    return `<td>${val || '-'}</td>`;
+                }).join('');
+                
                 let btns = delFunc ? `<td><button class="btn btn-danger btn-sm" onclick="${delFunc}('${r[cols[0]]}')"><i class="fas fa-trash"></i></button></td>` : '';
                 tbody.innerHTML += `<tr>${tds}${btns}</tr>`;
             });
@@ -362,9 +408,11 @@
         function populateStatementDropdown() {
             const sel = document.getElementById('stmtMerchant');
             sel.innerHTML = '<option value="">-- اختر تاجر --</option>';
-            DB.merchants.forEach(m => {
-                sel.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`;
-            });
+            if(DB.merchants) {
+                DB.merchants.forEach(m => {
+                    sel.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`;
+                });
+            }
         }
 
         async function getStatement() {
@@ -381,7 +429,7 @@
                 tbody.innerHTML = '';
                 data.movements.forEach(m => {
                     tbody.innerHTML += `<tr>
-                        <td>${m.date}</td>
+                        <td>${formatDate(m.date)}</td>
                         <td style="color:${m.type=='تحويل' ? 'var(--primary)' : 'var(--success)'}">${m.type}</td>
                         <td>${m.amount}</td>
                         <td>${m.notes || '-'}</td>
@@ -513,7 +561,7 @@
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        // Save Functions (Same logic)
+        // Save Functions
         async function saveMerchant() {
             let data = {
                 merchantName: document.getElementById('mName').value,
