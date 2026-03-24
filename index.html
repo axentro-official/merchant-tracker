@@ -4,992 +4,190 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Axentro System - نظام إدارة التجار</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     
     <style>
+        /* CSS Styles - Unchanged */
         :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --primary-light: #dbeafe;
-            --primary-ghost: rgba(37, 99, 235, 0.08);
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
             --secondary: #6366f1;
-            --bg-main: #f8fafc;
-            --bg-card: #ffffff;
-            --bg-elevated: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --success: #059669;
-            --success-bg: #ecfdf5;
+            --bg: #f8fafc;
+            --bg-dark: #0f172a;
+            --white: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --success: #10b981;
             --success-light: #d1fae5;
-            --danger: #dc2626;
-            --danger-bg: #fef2f2;
-            --danger-light: #fecaca;
-            --warning: #d97706;
-            --warning-bg: #fffbeb;
-            --warning-light: #fde68a;
-            --border-light: #e2e8f0;
-            --border: #cbd5e1;
-            --radius-sm: 6px;
-            --radius: 10px;
-            --radius-lg: 16px;
-            --radius-xl: 24px;
-            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.06), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
-            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-            --transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
-            --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-            --elevation-1: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
-            --elevation-2: 0 4px 6px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.02);
-            --elevation-3: 0 10px 15px rgba(0,0,0,0.04), 0 4px 6px rgba(0,0,0,0.02);
-            --elevation-4: 0 20px 25px rgba(0,0,0,0.05), 0 10px 10px rgba(0,0,0,0.02);
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --radius-sm: 8px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        html { scroll-behavior: smooth; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
 
         body {
-            font-family: 'Cairo', sans-serif;
-            background: var(--bg-main);
-            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--bg) 0%, #e2e8f0 100%);
+            color: var(--text);
             min-height: 100vh;
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        /* ==================== ADVANCED ANIMATIONS ==================== */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.96); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
-        @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(-16px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.92); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95) translateY(8px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        
-        @keyframes valueHighlight {
-            0% { background: var(--primary-ghost); transform: scale(1.02); }
-            100% { background: transparent; transform: scale(1); }
-        }
-        
-        @keyframes ripple {
-            to { transform: scale(2.5); opacity: 0; }
-        }
-        
-        @keyframes staggerFadeIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ==================== SKELETON LOADERS ==================== */
-        .skeleton {
-            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s ease-in-out infinite;
-            border-radius: var(--radius-sm);
-        }
-        
-        .skeleton-text {
-            height: 16px;
-            margin-bottom: 8px;
-        }
-        
-        .skeleton-text.short { width: 60%; }
-        .skeleton-text.medium { width: 80%; }
-        
-        .skeleton-value {
-            height: 32px;
-            width: 70%;
-            margin-top: 4px;
-        }
-        
-        .skeleton-card {
-            background: white;
-            padding: 16px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-xs);
-            border: 1px solid var(--border-light);
-        }
-        
-        .skeleton-row {
             display: flex;
-            gap: 16px;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-light);
-        }
-        
-        .skeleton-cell {
-            height: 16px;
-            border-radius: 4px;
+            flex-direction: column;
         }
 
-        /* ==================== PAGE TRANSITIONS ==================== */
-        .page {
-            display: none;
-            opacity: 0;
-        }
-        
-        .page.active {
-            display: block;
-            animation: fadeIn 0.25s ease-out forwards;
-        }
-        
-        .page.active .stat-card {
-            opacity: 0;
-            animation: staggerFadeIn 0.3s ease-out forwards;
-        }
-        
-        .page.active .stat-card:nth-child(1) { animation-delay: 0ms; }
-        .page.active .stat-card:nth-child(2) { animation-delay: 40ms; }
-        .page.active .stat-card:nth-child(3) { animation-delay: 80ms; }
-        .page.active .stat-card:nth-child(4) { animation-delay: 120ms; }
-        .page.active .stat-card:nth-child(5) { animation-delay: 160ms; }
-        .page.active .stat-card:nth-child(6) { animation-delay: 200ms; }
-        
-        .page.active .table-box {
-            opacity: 0;
-            animation: staggerFadeIn 0.35s ease-out forwards;
-            animation-delay: 120ms;
-        }
-        
-        .page.active .quick-actions-box {
-            opacity: 0;
-            animation: staggerFadeIn 0.3s ease-out forwards;
-            animation-delay: 80ms;
-        }
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        /* ==================== VALUE UPDATE HIGHLIGHT ==================== */
-        .value-updated {
-            animation: valueHighlight 0.6s ease-out;
-        }
-
-        /* ==================== LOADING OVERLAY ==================== */
+        /* Loading */
         .loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(12px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 16px;
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.15s ease;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(4px);
         }
-        
-        .loading-overlay.visible {
-            display: flex;
-            opacity: 1;
-        }
-        
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid var(--border-light);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        
-        .loading-text {
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
+        .spinner { width: 50px; height: 50px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .loading-text { margin-top: 1rem; color: var(--muted); font-weight: 600; }
 
-        /* ==================== TOAST SYSTEM ==================== */
-        #toastContainer {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-        }
-        
-        .toast {
-            background: var(--text-primary);
-            color: white;
-            padding: 12px 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideInUp 0.25s ease-out;
-            pointer-events: auto;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-        
-        .toast.success { background: var(--success); }
-        .toast.error { background: var(--danger); }
-        .toast.warning { background: var(--warning); }
-        .toast.hiding { animation: fadeIn 0.15s ease-out reverse forwards; }
-
-        /* ==================== LOGIN SCREEN ==================== */
-        #loginBox {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 24px;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        #loginBox::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(37, 99, 235, 0.04) 0%, transparent 70%);
-            pointer-events: none;
-        }
-        
+        /* Login */
+        #loginBox { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; }
         .login-card {
-            background: var(--bg-card);
-            width: 100%;
-            max-width: 400px;
-            padding: 40px;
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-2xl);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            animation: scaleIn 0.4s ease-out;
+            background: var(--white); padding: 2.5rem; border-radius: var(--radius);
+            box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; text-align: center;
+            animation: fadeIn 0.5s ease-out; position: relative; overflow: hidden;
         }
-        
-        .login-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-        }
-        
-        .login-logo {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
-            color: white;
-            font-size: 1.5rem;
-        }
-        
-        .login-title {
-            font-size: 1.35rem;
-            font-weight: 800;
-            margin-bottom: 4px;
-            color: var(--text-primary);
-            letter-spacing: -0.02em;
-        }
-        
-        .login-subtitle {
-            color: var(--text-muted);
-            margin-bottom: 28px;
-            font-size: 0.9rem;
-        }
+        .login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--secondary)); }
+        .login-logo { width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; animation: float 3s ease-in-out infinite; }
+        .login-logo i { font-size: 2.5rem; color: white; }
+        .login-card h2 { margin-bottom: 0.5rem; color: var(--text); font-size: 1.5rem; font-weight: 700; }
+        .login-card p { color: var(--muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .login-card input { width: 100%; padding: 1rem 1.2rem; margin-bottom: 1rem; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 1rem; transition: all 0.3s; background: var(--bg); }
+        .login-card input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); background: white; }
 
-        /* ==================== FORM CONTROLS ==================== */
-        .form-group { margin-bottom: 16px; text-align: right; }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid var(--border-light);
-            border-radius: var(--radius);
-            font-size: 0.9rem;
-            font-family: inherit;
-            background: var(--bg-main);
-            transition: all var(--transition-fast);
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: white;
-            box-shadow: 0 0 0 3px var(--primary-ghost);
-        }
-        
-        .form-input:disabled {
-            background: var(--bg-main);
-            color: var(--text-muted);
-            cursor: not-allowed;
-        }
-
-        /* ==================== BUTTONS ==================== */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 18px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            font-family: inherit;
-            border: none;
-            border-radius: var(--radius);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            position: relative;
-            overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.3s, height 0.3s;
-        }
-        
-        .btn:active::after {
-            width: 200px;
-            height: 200px;
-        }
-        
-        .btn:active { transform: scale(0.97); }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
-        }
-        
-        .btn-primary:hover:not(:disabled) {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-        }
-        
-        .btn-success {
-            background: var(--success);
-            color: white;
-            box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);
-        }
-        
-        .btn-success:hover:not(:disabled) {
-            background: #047857;
-            transform: translateY(-1px);
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn-danger:hover:not(:disabled) { opacity: 0.9; }
-        
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-        }
-        
-        .btn-ghost:hover:not(:disabled) {
-            background: var(--bg-main);
-            border-color: var(--border);
-        }
-        
-        .btn-sm { padding: 8px 12px; font-size: 0.8rem; }
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border: none; border-radius: var(--radius-sm); color: white; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: all 0.3s ease; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5); }
+        .btn-success { background: linear-gradient(135deg, var(--success), #059669); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); }
+        .btn-success:hover { transform: translateY(-2px); }
+        .btn-danger { background: linear-gradient(135deg, var(--danger), #dc2626); box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4); }
+        .btn-danger:hover { transform: translateY(-2px); }
+        .btn-secondary { background: linear-gradient(135deg, #64748b, #475569); }
+        .btn-sm { padding: 0.5rem 1rem; font-size: 0.85rem; }
         .btn-block { width: 100%; }
 
-        /* ==================== APP LAYOUT ==================== */
-        .app-container {
-            display: none;
-            flex-direction: column;
-            min-height: 100vh;
-        }
+        /* App Layout */
+        .app-container { display: none; flex-direction: column; min-height: 100vh; }
 
-        /* ==================== NAVBAR ==================== */
-        .navbar {
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-light);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-        
-        .navbar-brand i { font-size: 1.25rem; }
-        
-        .navbar-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        
-        .conn-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 5px 10px;
-            border-radius: 20px;
-            background: var(--bg-main);
-            color: var(--text-muted);
-            transition: all var(--transition);
-            letter-spacing: 0.02em;
-        }
-        
-        .conn-status.live {
-            background: var(--success-bg);
-            color: var(--success);
-        }
-        
-        .conn-status.offline {
-            background: var(--danger-bg);
-            color: var(--danger);
-            animation: pulse 2s infinite;
-        }
-        
-        .conn-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-        }
+        /* Navbar */
+        .navbar { background: var(--white); padding: 0.8rem 1.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
+        .navbar .logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.3rem; color: var(--primary); }
+        .navbar-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
 
-        /* ==================== TABS ==================== */
-        .tabs-nav {
-            display: flex;
-            background: white;
-            border-bottom: 1px solid var(--border-light);
-            overflow-x: auto;
-            position: sticky;
-            top: 53px;
-            z-index: 90;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-        }
-        
+        /* Connection Status Indicator */
+        .conn-status { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 20px; background: var(--bg); color: var(--muted); transition: all 0.3s; }
+        .conn-status.live { background: var(--success-light); color: var(--success); }
+        .conn-status.offline { background: var(--danger-light); color: var(--danger); animation: pulse 2s infinite; }
+        .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+        /* Tabs */
+        .tabs-nav { display: flex; background: var(--white); border-bottom: 2px solid var(--border); overflow-x: auto; position: sticky; top: 60px; z-index: 90; scrollbar-width: none; }
         .tabs-nav::-webkit-scrollbar { display: none; }
-        
-        .tab-link {
-            flex: 0 0 auto;
-            padding: 12px 16px;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all var(--transition-fast);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
-            position: relative;
-        }
-        
-        .tab-link i { font-size: 1rem; }
-        
-        .tab-link:hover {
-            color: var(--primary);
-            background: var(--primary-ghost);
-        }
-        
-        .tab-link.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-            background: linear-gradient(180deg, var(--primary-ghost) 0%, transparent 100%);
-        }
+        .tab-link { flex: 1; min-width: 90px; padding: 1rem 0.5rem; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; transition: all 0.3s; white-space: nowrap; font-size: 0.85rem; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .tab-link i { font-size: 1.2rem; }
+        .tab-link:hover { color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+        .tab-link.active { color: var(--primary); border-color: var(--primary); background: linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%); }
 
-        /* ==================== MAIN CONTENT ==================== */
-        .main-content {
-            flex: 1;
-            padding: 20px;
-            padding-bottom: 100px;
-        }
+        /* Content */
+        .content { padding: 1.5rem; flex: 1; overflow-y: auto; padding-bottom: 120px; }
+        .page { display: none; animation: fadeIn 0.4s ease-out; }
+        .page.active { display: block; }
 
-        /* ==================== STATS GRID ==================== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
-        @media (min-width: 768px) {
-            .stats-grid { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 16px;
-            border-radius: var(--radius);
-            box-shadow: var(--elevation-1);
-            border: 1px solid var(--border-light);
-            position: relative;
-            overflow: hidden;
-            transition: all var(--transition-fast);
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--elevation-2);
-        }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; right: 0;
-            width: 3px; height: 100%;
-            background: var(--primary);
-            border-radius: 0 3px 3px 0;
-        }
-        
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: var(--white); padding: 1.2rem; border-radius: var(--radius); box-shadow: var(--shadow); position: relative; overflow: hidden; transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--primary); }
         .stat-card.success::before { background: var(--success); }
         .stat-card.danger::before { background: var(--danger); }
         .stat-card.warning::before { background: var(--warning); }
-        
-        .stat-label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-        
-        .stat-value {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            letter-spacing: -0.02em;
-            transition: all 0.3s ease;
-        }
+        .stat-card h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; font-weight: 600; }
+        .stat-card .val { font-size: 1.5rem; font-weight: 800; color: var(--text); transition: color 0.3s; }
+        .stat-card .val.updating { color: var(--primary); }
 
-        /* ==================== QUICK ACTIONS ==================== */
-        .quick-actions-box {
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--elevation-1);
-            border: 1px solid var(--border-light);
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        
-        .quick-actions-header {
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--border-light);
-            font-weight: 700;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-primary);
-        }
-        
-        .quick-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--primary-ghost) 0%, rgba(99, 102, 241, 0.03) 100%);
-        }
+        /* Tables */
+        .table-box { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.5rem; }
+        .table-header { padding: 1rem 1.5rem; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.5rem; }
+        .table-header h3 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+        .table-header h3 i { color: var(--primary); }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 0.9rem 1rem; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 0.8rem; }
+        tr:hover { background: rgba(59, 130, 246, 0.02); }
+        .badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; }
+        .badge-success { background: var(--success-light); color: var(--success); }
+        .badge-danger { background: var(--danger-light); color: var(--danger); }
+        .badge-primary { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
 
-        /* ==================== TABLES ==================== */
-        .table-box {
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--elevation-1);
-            border: 1px solid var(--border-light);
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-        
-        .table-header {
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--border-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .table-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .table-scroll {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        
-        .table-scroll.virtualized {
-            position: relative;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-        
-        th, td {
-            padding: 12px 16px;
-            text-align: right;
-            border-bottom: 1px solid var(--border-light);
-            font-size: 0.85rem;
-        }
-        
-        th {
-            background: #fafbfc;
-            color: var(--text-muted);
-            font-weight: 700;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        tbody tr {
-            transition: background var(--transition-fast);
-            animation: fadeIn 0.2s ease-out;
-        }
-        
-        tbody tr:hover { background: var(--primary-ghost); }
+        /* Footer */
+        footer { background: linear-gradient(135deg, var(--bg-dark) 0%, #1e293b 100%); padding: 2rem; text-align: center; margin-top: auto; }
+        footer p { color: #94a3b8; font-size: 0.85rem; line-height: 1.8; }
+        .qr-box { margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: float 4s ease-in-out infinite; }
+        .qr-box img { width: 100px; border-radius: var(--radius-sm); border: 3px solid rgba(255,255,255,0.2); margin-bottom: 0.8rem; transition: all 0.3s; }
+        .qr-box img:hover { transform: scale(1.1); border-color: var(--primary); }
+        .qr-box a { color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; }
 
-        /* ==================== BADGES ==================== */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-        }
-        
-        .badge-success { background: var(--success-bg); color: var(--success); }
-        .badge-danger { background: var(--danger-bg); color: var(--danger); }
-        .badge-primary { background: var(--primary-light); color: var(--primary); }
-        .badge-warning { background: var(--warning-bg); color: var(--warning); }
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 1rem; backdrop-filter: blur(4px); }
+        .modal-content { background: var(--white); padding: 2rem; border-radius: var(--radius); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; animation: fadeIn 0.3s ease-out; }
+        .modal-content h3 { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
+        .modal-content h3 i { color: var(--primary); }
+        .modal-close { position: absolute; top: 15px; left: 15px; font-size: 1.8rem; cursor: pointer; color: var(--muted); transition: all 0.3s; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .modal-close:hover { color: var(--danger); background: var(--danger-light); }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; }
+        .form-group label .required { color: var(--danger); }
+        .form-control { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; transition: all 0.3s; background: var(--bg); }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); background: white; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-        /* ==================== MODAL ==================== */
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            padding: 16px;
-            opacity: 0;
-            transition: opacity 0.15s ease;
-        }
-        
-        .modal.visible {
-            display: flex;
-            opacity: 1;
-        }
-        
-        .modal-content {
-            background: white;
-            width: 100%;
-            max-width: 480px;
-            max-height: 90vh;
-            overflow-y: auto;
-            border-radius: var(--radius-xl);
-            padding: 28px;
-            position: relative;
-            transform: scale(0.95);
-            opacity: 0;
-            transition: all 0.2s ease;
-        }
-        
-        .modal.visible .modal-content {
-            transform: scale(1);
-            opacity: 1;
-        }
-        
-        .modal-close {
-            position: absolute;
-            top: 14px; left: 14px;
-            width: 32px; height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-main);
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            transition: all var(--transition-fast);
-            border: none;
-        }
-        
-        .modal-close:hover {
-            background: var(--danger-bg);
-            color: var(--danger);
-        }
-        
-        .modal-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
+        /* Progress Bar */
+        .progress-bar { height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 0.5rem; }
+        .progress-bar .fill { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
+        .progress-bar .fill.success { background: var(--success); }
+        .progress-bar .fill.warning { background: var(--warning); }
+        .progress-bar .fill.danger { background: var(--danger); }
 
-        /* ==================== PROGRESS BAR ==================== */
-        .progress-bar {
-            height: 4px;
-            background: var(--border-light);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 6px;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.4s ease;
-        }
-        
-        .progress-fill.success { background: var(--success); }
-        .progress-fill.warning { background: var(--warning); }
-        .progress-fill.danger { background: var(--danger); }
+        /* Quick Actions */
+        .quick-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; padding: 1.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%); border-radius: var(--radius); }
 
-        /* ==================== EMPTY STATE ==================== */
-        .empty-state {
-            text-align: center;
-            padding: 48px 24px;
-            color: var(--text-muted);
-        }
-        
-        .empty-state i {
-            font-size: 2.5rem;
-            margin-bottom: 12px;
-            opacity: 0.4;
-            display: block;
-        }
-        
-        .empty-state-text {
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
+        /* Toast */
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--bg-dark); color: white; padding: 1rem 2rem; border-radius: var(--radius); box-shadow: var(--shadow-lg); z-index: 9999; transition: transform 0.3s ease; display: flex; align-items: center; gap: 0.5rem; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.warning { background: var(--warning); }
 
-        /* ==================== FOOTER ==================== */
-        footer {
-            background: var(--text-primary);
-            padding: 32px 24px;
-            text-align: center;
-            margin-top: auto;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.8rem;
-        }
-        
-        .qr-section { margin-top: 20px; }
-        
-        .qr-section img {
-            width: 72px;
-            border-radius: var(--radius);
-            border: 2px solid rgba(255,255,255,0.1);
-            margin-bottom: 8px;
-            transition: transform var(--transition-fast);
-        }
-        
-        .qr-section img:hover { transform: scale(1.08); }
-
-        /* ==================== MOBILE BOTTOM NAV ==================== */
-        .mobile-bottom-nav {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-top: 1px solid var(--border-light);
-            padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-            z-index: 200;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-        }
-        
-        .mobile-bottom-nav-inner {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-        }
-        
-        .mobile-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 12px;
-            color: var(--text-muted);
-            font-size: 0.65rem;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: var(--radius);
-            transition: all var(--transition-fast);
-            min-width: 56px;
-        }
-        
-        .mobile-nav-item i { font-size: 1.15rem; }
-        
-        .mobile-nav-item.active {
-            color: var(--primary);
-            background: var(--primary-ghost);
-        }
-        
-        .mobile-nav-item:active { transform: scale(0.95); }
-
-        /* ==================== RESPONSIVE ==================== */
+        /* Responsive */
         @media (max-width: 768px) {
-            .navbar { padding: 10px 14px; }
-            .tabs-nav { top: 49px; }
-            .tab-link { padding: 10px 12px; font-size: 0.75rem; }
-            .main-content { padding: 14px; padding-bottom: 100px; }
+            .navbar { padding: 0.6rem 1rem; }
+            .tabs-nav { top: 50px; }
+            .tab-link { padding: 0.7rem 0.3rem; font-size: 0.75rem; }
+            .content { padding: 1rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .form-row { grid-template-columns: 1fr; }
-            .navbar-actions { gap: 6px; }
-            
-            .btn span { display: none; }
-            .btn i { margin: 0; }
-            .btn { padding: 8px; }
-            
-            .mobile-bottom-nav { display: block; }
-            .tabs-nav { display: none; }
-            
-            .stat-card { padding: 14px; }
-            .stat-value { font-size: 1.25rem; }
-            
-            .modal-content { padding: 20px; border-radius: var(--radius-lg); }
-            
-            .table-scroll { max-height: 400px; }
-        }
-        
-        @media (min-width: 769px) {
-            .mobile-bottom-nav { display: none !important; }
-        }
-
-        /* ==================== HOVER INTENT ==================== */
-        .hover-intent {
-            transition: all 0.15s ease;
-        }
-        
-        .hover-intent:hover {
-            transition-delay: 0.1s;
         }
     </style>
 </head>
@@ -1001,28 +199,32 @@
         <div class="loading-text">جاري التحميل...</div>
     </div>
 
-    <!-- Toast Container -->
-    <div id="toastContainer"></div>
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">تم بنجاح</span>
+    </div>
 
     <!-- Login Screen -->
     <div id="loginBox">
         <div class="login-card">
-            <div class="login-logo"><i class="fas fa-store"></i></div>
-            <h2 class="login-title">Axentro System</h2>
-            <p class="login-subtitle">نظام إدارة التجار والمكن</p>
-            <div class="form-group">
-                <input type="password" id="passInput" class="form-input" placeholder="كلمة المرور" onkeypress="handleEnter(event)">
+            <div class="login-logo">
+                <i class="fas fa-store"></i>
             </div>
+            <h2>Axentro System</h2>
+            <p>نظام إدارة التجار والمكن</p>
+            <input type="password" id="passInput" placeholder="كلمة المرور" onkeypress="handleEnter(event)">
             <button class="btn btn-primary btn-block" onclick="login()">
                 <i class="fas fa-sign-in-alt"></i>
-                <span>دخول</span>
+                دخول
             </button>
         </div>
 
-        <footer style="margin-top: 32px; background: transparent;">
-            <p style="color: var(--text-muted);">2024 Axentro - All Rights Reserved</p>
-            <div class="qr-section">
-                <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" style="color: var(--primary); text-decoration: none; display: flex; flex-direction: column; align-items: center; font-size: 0.75rem;">
+        <!-- Footer in Login -->
+        <footer style="margin-top: 2rem; background: transparent; color: #64748b;">
+            <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
+            <div class="qr-box">
+                <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
                     <img src="qr-links.png" alt="QR Code">
                     <span><i class="fas fa-qrcode"></i> QR Scan Me</span>
                 </a>
@@ -1030,82 +232,77 @@
         </footer>
     </div>
 
-    <!-- Main Application -->
-    <div id="appBox" class="app-container">
+    <!-- Main App -->
+    <div class="app-container" id="appBox">
+        <!-- Navbar -->
         <nav class="navbar">
-            <div class="navbar-brand">
+            <div class="logo">
                 <i class="fas fa-store"></i>
-                <span>Axentro</span>
+                Axentro
             </div>
             <div class="navbar-actions">
                 <div id="connIndicator" class="conn-status">
                     <div class="conn-dot"></div>
                     <span>متصل</span>
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="loadData()" title="تحديث">
+                <button class="btn btn-primary btn-sm" onclick="loadData()">
                     <i class="fas fa-sync-alt"></i>
-                    <span>تحديث</span>
+                    تحديث
                 </button>
-                <button class="btn btn-success btn-sm" onclick="exportExcel()" title="تصدير">
+                <button class="btn btn-success btn-sm" onclick="exportExcel()">
                     <i class="fas fa-file-excel"></i>
-                    <span>تصدير</span>
+                    تصدير
                 </button>
-                <button class="btn btn-danger btn-sm" onclick="logout()" title="خروج">
+                <button class="btn btn-danger btn-sm" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>خروج</span>
+                    خروج
                 </button>
             </div>
         </nav>
 
-        <div class="tabs-nav" id="tabsNav">
+        <!-- Tabs -->
+        <div class="tabs-nav">
             <div class="tab-link active" onclick="showPage('home', this)">
                 <i class="fas fa-home"></i>
-                <span>الرئيسية</span>
+                الرئيسية
             </div>
             <div class="tab-link" onclick="showPage('merchants', this)">
                 <i class="fas fa-users"></i>
-                <span>التجار</span>
+                التجار
             </div>
             <div class="tab-link" onclick="showPage('machines', this)">
                 <i class="fas fa-cash-register"></i>
-                <span>المكن</span>
+                المكن
             </div>
             <div class="tab-link" onclick="showPage('transfers', this)">
                 <i class="fas fa-exchange-alt"></i>
-                <span>التحويلات</span>
+                التحويلات
             </div>
             <div class="tab-link" onclick="showPage('collections', this)">
                 <i class="fas fa-hand-holding-usd"></i>
-                <span>التحصيلات</span>
+                التحصيلات
             </div>
             <div class="tab-link" onclick="showPage('statement', this)">
                 <i class="fas fa-file-invoice-dollar"></i>
-                <span>كشف حساب</span>
+                كشف حساب
             </div>
             <div class="tab-link" onclick="showPage('archive', this)">
                 <i class="fas fa-archive"></i>
-                <span>الأرشيف</span>
+                الأرشيف
             </div>
         </div>
 
-        <main class="main-content">
+        <!-- Content -->
+        <div class="content">
             
             <!-- HOME PAGE -->
             <div id="page-home" class="page active">
-                <div class="stats-grid" id="dashStats">
-                    <!-- Skeleton Loaders -->
-                    <div class="skeleton-card"><div class="skeleton skeleton-text short"></div><div class="skeleton skeleton-value"></div></div>
-                    <div class="skeleton-card"><div class="skeleton skeleton-text short"></div><div class="skeleton skeleton-value"></div></div>
-                    <div class="skeleton-card"><div class="skeleton skeleton-text short"></div><div class="skeleton skeleton-value"></div></div>
-                    <div class="skeleton-card"><div class="skeleton skeleton-text short"></div><div class="skeleton skeleton-value"></div></div>
-                    <div class="skeleton-card"><div class="skeleton skeleton-text short"></div><div class="skeleton skeleton-value"></div></div>
-                    <div class="skeleton-card"><div class="skeleton skeleton-text short"></div><div class="skeleton skeleton-value"></div></div>
-                </div>
+                <div class="stats-grid" id="dashStats"></div>
                 
-                <div class="quick-actions-box">
-                    <div class="quick-actions-header">
-                        <i class="fas fa-bolt" style="color:var(--warning)"></i>
-                        إجراءات سريعة
+                <!-- Quick Actions -->
+                <div class="table-box">
+                    <div class="table-header">
+                        <h3><i class="fas fa-bolt"></i> إجراءات سريعة</h3>
                     </div>
                     <div class="quick-actions">
                         <button class="btn btn-success" onclick="openModal('transfer')">
@@ -1114,20 +311,21 @@
                         <button class="btn btn-primary" onclick="openModal('collection')">
                             <i class="fas fa-plus"></i> تحصيل جديد
                         </button>
-                        <button class="btn btn-ghost" onclick="openModal('merchant')">
+                        <button class="btn btn-secondary" onclick="openModal('merchant')">
                             <i class="fas fa-user-plus"></i> تاجر جديد
                         </button>
-                        <button class="btn btn-ghost" onclick="openModal('machine')">
+                        <button class="btn btn-secondary" onclick="openModal('machine')">
                             <i class="fas fa-plus"></i> مكنة جديدة
                         </button>
                     </div>
                 </div>
 
+                <!-- Top Machines -->
                 <div class="table-box">
                     <div class="table-header">
-                        <div class="table-title"><i class="fas fa-trophy" style="color:var(--warning)"></i> أعلى المكن تحقيقاً</div>
+                        <h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3>
                     </div>
-                    <div class="table-scroll">
+                    <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
@@ -1138,9 +336,7 @@
                                     <th>النسبة</th>
                                 </tr>
                             </thead>
-                            <tbody id="tblTopMachines">
-                                <tr><td colspan="5"><div class="empty-state"><i class="fas fa-chart-line"></i><span class="empty-state-text">جاري تحميل البيانات...</span></div></td></tr>
-                            </tbody>
+                            <tbody id="tblTopMachines"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1150,19 +346,26 @@
             <div id="page-merchants" class="page">
                 <div class="table-box">
                     <div class="table-header">
-                        <div class="table-title"><i class="fas fa-users" style="color:var(--primary)"></i> قائمة التجار</div>
+                        <h3><i class="fas fa-users"></i> قائمة التجار</h3>
                         <button class="btn btn-primary btn-sm" onclick="openModal('merchant')">
                             <i class="fas fa-plus"></i> إضافة
                         </button>
                     </div>
-                    <div class="table-scroll">
+                    <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr>
+                                <tr>
+                                    <th>رقم التاجر</th>
+                                    <th>الاسم</th>
+                                    <th>النشاط</th>
+                                    <th>الهاتف</th>
+                                    <th>المنطقة</th>
+                                    <th>العنوان</th>
+                                    <th>الحالة</th>
+                                    <th>إجراء</th>
+                                </tr>
                             </thead>
-                            <tbody id="tblMerchants">
-                                <tr><td colspan="8"><div class="empty-state"><i class="fas fa-users"></i><span class="empty-state-text">لا يوجد تجار</span></div></td></tr>
-                            </tbody>
+                            <tbody id="tblMerchants"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1172,19 +375,24 @@
             <div id="page-machines" class="page">
                 <div class="table-box">
                     <div class="table-header">
-                        <div class="table-title"><i class="fas fa-cash-register" style="color:var(--secondary)"></i> المكن</div>
+                        <h3><i class="fas fa-cash-register"></i> المكن</h3>
                         <button class="btn btn-primary btn-sm" onclick="openModal('machine')">
                             <i class="fas fa-plus"></i> إضافة
                         </button>
                     </div>
-                    <div class="table-scroll">
+                    <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>رقم المكنة</th><th>التاجر</th><th>الباركود</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr>
+                                <tr>
+                                    <th>رقم المكنة</th>
+                                    <th>التاجر</th>
+                                    <th>الباركود</th>
+                                    <th>التارجت</th>
+                                    <th>الحالة</th>
+                                    <th>إجراء</th>
+                                </tr>
                             </thead>
-                            <tbody id="tblMachines">
-                                <tr><td colspan="6"><div class="empty-state"><i class="fas fa-cash-register"></i><span class="empty-state-text">لا توجد مكن</span></div></td></tr>
-                            </tbody>
+                            <tbody id="tblMachines"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1194,19 +402,24 @@
             <div id="page-transfers" class="page">
                 <div class="table-box">
                     <div class="table-header">
-                        <div class="table-title"><i class="fas fa-exchange-alt" style="color:var(--primary)"></i> سجل التحويلات</div>
+                        <h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3>
                         <button class="btn btn-success btn-sm" onclick="openModal('transfer')">
                             <i class="fas fa-plus"></i> تحويل جديد
                         </button>
                     </div>
-                    <div class="table-scroll">
+                    <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>حذف</th></tr>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>الوقت</th>
+                                    <th>التاجر</th>
+                                    <th>القيمة</th>
+                                    <th>ملاحظات</th>
+                                    <th>حذف</th>
+                                </tr>
                             </thead>
-                            <tbody id="tblTransfers">
-                                <tr><td colspan="6"><div class="empty-state"><i class="fas fa-exchange-alt"></i><span class="empty-state-text">لا توجد تحويلات</span></div></td></tr>
-                            </tbody>
+                            <tbody id="tblTransfers"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1216,19 +429,24 @@
             <div id="page-collections" class="page">
                 <div class="table-box">
                     <div class="table-header">
-                        <div class="table-title"><i class="fas fa-hand-holding-usd" style="color:var(--success)"></i> سجل التحصيلات</div>
+                        <h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3>
                         <button class="btn btn-primary btn-sm" onclick="openModal('collection')">
                             <i class="fas fa-plus"></i> تحصيل جديد
                         </button>
                     </div>
-                    <div class="table-scroll">
+                    <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>حذف</th></tr>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>الوقت</th>
+                                    <th>التاجر</th>
+                                    <th>القيمة</th>
+                                    <th>النوع</th>
+                                    <th>حذف</th>
+                                </tr>
                             </thead>
-                            <tbody id="tblCollections">
-                                <tr><td colspan="6"><div class="empty-state"><i class="fas fa-hand-holding-usd"></i><span class="empty-state-text">لا توجد تحصيلات</span></div></td></tr>
-                            </tbody>
+                            <tbody id="tblCollections"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1237,35 +455,42 @@
             <!-- STATEMENT PAGE -->
             <div id="page-statement" class="page">
                 <div class="table-box">
-                    <div class="table-header" style="flex-wrap: wrap;">
-                        <div class="table-title"><i class="fas fa-file-invoice-dollar" style="color:var(--secondary)"></i> كشف حساب تاجر</div>
-                        <select id="stmtMerchant" class="form-input" style="width: auto; min-width: 200px; margin-bottom:0;" onchange="getStatement()">
+                    <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
+                        <h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3>
+                        <select id="stmtMerchant" class="form-control" style="width: auto; min-width: 200px;" onchange="getStatement()">
                             <option value="">-- اختر تاجر --</option>
                         </select>
                     </div>
-                    <div style="padding: 16px;">
+                    <div style="padding: 1rem;">
                         <div class="stats-grid">
                             <div class="stat-card">
-                                <div class="stat-label"><i class="fas fa-exchange-alt"></i> إجمالي تحويلاته</div>
-                                <div class="stat-value" id="stmtT">0</div>
+                                <h4>إجمالي تحويلاته</h4>
+                                <div class="val" id="stmtT">0</div>
                             </div>
                             <div class="stat-card success">
-                                <div class="stat-label"><i class="fas fa-hand-holding-usd"></i> إجمالي تحصيلاته</div>
-                                <div class="stat-value" id="stmtC">0</div>
+                                <h4>إجمالي تحصيلاته</h4>
+                                <div class="val" id="stmtC">0</div>
                             </div>
                             <div class="stat-card danger">
-                                <div class="stat-label"><i class="fas fa-coins"></i> المتبقي عليه</div>
-                                <div class="stat-value" id="stmtR">0</div>
+                                <h4>المتبقي عليه</h4>
+                                <div class="val" id="stmtR">0</div>
                             </div>
                         </div>
-                        <div class="table-scroll">
+                        <h4 style="margin: 1rem 0; color: var(--muted);">
+                            <i class="fas fa-history"></i> الحركات
+                        </h4>
+                        <div class="table-container">
                             <table style="min-width: 500px;">
                                 <thead>
-                                    <tr><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th></tr>
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <th>الوقت</th>
+                                        <th>النوع</th>
+                                        <th>القيمة</th>
+                                        <th>ملاحظات</th>
+                                    </tr>
                                 </thead>
-                                <tbody id="tblStatement">
-                                    <tr><td colspan="5"><div class="empty-state"><i class="fas fa-file-invoice-dollar"></i><span class="empty-state-text">اختر تاجر لعرض الكشف</span></div></td></tr>
-                                </tbody>
+                                <tbody id="tblStatement"></tbody>
                             </table>
                         </div>
                     </div>
@@ -1276,58 +501,38 @@
             <div id="page-archive" class="page">
                 <div class="table-box">
                     <div class="table-header">
-                        <div class="table-title"><i class="fas fa-archive" style="color:var(--text-muted)"></i> الأرشيف</div>
+                        <h3><i class="fas fa-archive"></i> الأرشيف</h3>
                         <button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()">
                             <i class="fas fa-calendar-check"></i> بدء شهر جديد
                         </button>
                     </div>
-                    <div class="table-scroll">
+                    <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th></tr>
+                                <tr>
+                                    <th>الشهر</th>
+                                    <th>عدد التحويلات</th>
+                                    <th>إجمالي التحويلات</th>
+                                    <th>عدد التحصيلات</th>
+                                    <th>إجمالي التحصيلات</th>
+                                    <th>المتبقي</th>
+                                </tr>
                             </thead>
-                            <tbody id="tblArchive">
-                                <tr><td colspan="6"><div class="empty-state"><i class="fas fa-archive"></i><span class="empty-state-text">لا يوجد أرشيف</span></div></td></tr>
-                            </tbody>
+                            <tbody id="tblArchive"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-        </main>
-
-        <!-- Mobile Bottom Navigation -->
-        <div class="mobile-bottom-nav">
-            <div class="mobile-bottom-nav-inner">
-                <div class="mobile-nav-item active" onclick="showPage('home', this)">
-                    <i class="fas fa-home"></i>
-                    <span>الرئيسية</span>
-                </div>
-                <div class="mobile-nav-item" onclick="showPage('merchants', this)">
-                    <i class="fas fa-users"></i>
-                    <span>التجار</span>
-                </div>
-                <div class="mobile-nav-item" onclick="showPage('machines', this)">
-                    <i class="fas fa-cash-register"></i>
-                    <span>المكن</span>
-                </div>
-                <div class="mobile-nav-item" onclick="showPage('transfers', this)">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>التحويلات</span>
-                </div>
-                <div class="mobile-nav-item" onclick="showPage('collections', this)">
-                    <i class="fas fa-hand-holding-usd"></i>
-                    <span>التحصيلات</span>
-                </div>
-            </div>
         </div>
 
+        <!-- Footer -->
         <footer>
-            <p>2024 Axentro - All Rights Reserved<br>By Axentro Team</p>
-            <div class="qr-section">
+            <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
+            <div class="qr-box">
                 <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
                     <img src="qr-links.png" alt="QR Code">
-                    <div style="color: var(--primary); font-weight: 600; margin-top: 6px;"><i class="fas fa-qrcode"></i> QR Scan Me</div>
+                    <span><i class="fas fa-qrcode"></i> QR Scan Me</span>
                 </a>
             </div>
         </footer>
@@ -1336,729 +541,649 @@
     <!-- Modal -->
     <div id="modal" class="modal">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">×</button>
+            <span class="modal-close" onclick="closeModal()">×</span>
             <div id="modalBody"></div>
         </div>
     </div>
 
-<script>
-// ==================== CONFIGURATION ====================
-const API_URL = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec';
-const APP_STATE = {
-    db: {},
-    isPolling: false,
-    pollInterval: 5000,
-    connection: 'offline',
-    previousStats: {},
-    isLoading: false
-};
+    <script>
+        // API URL
+        const API = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec';
+        let DB = {};
 
-// ==================== UTILITIES ====================
-const Utils = {
-    showLoading(show) {
-        const el = document.getElementById('loadingOverlay');
-        if (el) {
-            if (show) {
-                el.classList.add('visible');
-            } else {
-                el.classList.remove('visible');
-            }
+        // ==================== State Management ====================
+        const AppState = {
+            isPolling: false,
+            pollInterval: 5000,
+            minInterval: 5000,
+            maxInterval: 20000,
+            connectionStatus: 'offline'
+        };
+
+        // ==================== Utility Functions ====================
+        
+        function showLoading(show = true) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
         }
-    },
 
-    showToast(message, type = 'success') {
-        const container = document.getElementById('toastContainer');
-        if (!container) return;
-        
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'exclamation'}-circle"></i><span>${message}</span>`;
-        
-        container.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.classList.add('hiding');
-            setTimeout(() => toast.remove(), 150);
-        }, 3000);
-    },
-
-    formatNumber(num) {
-        return (num === null || num === undefined || num === '') ? '-' : Number(num).toLocaleString('ar-EG');
-    },
-
-    formatDate(dateStr) {
-        if (!dateStr) return '-';
-        try {
-            const d = new Date(dateStr);
-            return isNaN(d) ? dateStr : d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-        } catch { return dateStr; }
-    },
-
-    formatTime(t) {
-        if (!t) return '-';
-        try {
-            const d = new Date(`1970-01-01 ${t}`);
-            return isNaN(d) ? t : d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-        } catch { return t; }
-    },
-
-    escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    },
-    
-    animateValue(el, newVal) {
-        if (!el) return;
-        const current = el.textContent;
-        const formatted = Utils.formatNumber(newVal);
-        
-        if (current !== formatted) {
-            el.textContent = formatted;
-            el.classList.add('value-updated');
-            setTimeout(() => el.classList.remove('value-updated'), 600);
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toast.className = `toast ${type}`;
+            toastMessage.textContent = message;
+            
+            const icon = toast.querySelector('i');
+            icon.className = type === 'success' ? 'fas fa-check-circle' : 
+                            type === 'error' ? 'fas fa-times-circle' : 'fas fa-exclamation-triangle';
+            
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
-    }
-};
 
-// ==================== API LAYER ====================
-async function api(action, data = {}) {
-    try {
-        const url = `${API_URL}?action=${action}&data=${encodeURIComponent(JSON.stringify(data))}`;
-        const res = await fetch(url);
-        return await res.json();
-    } catch (e) {
-        console.error('API Error:', e);
-        return { success: false, message: e.message };
-    }
-}
+        function formatNumber(num) {
+            if (!num && num !== 0) return '-';
+            return Number(num).toLocaleString('ar-EG');
+        }
 
-// ==================== DIFF-BASEED UPDATE SYSTEM ====================
-const DiffUpdate = {
-    updateStats(newData) {
-        if (!newData) return;
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            try {
+                const d = new Date(dateStr);
+                if (isNaN(d)) return dateStr;
+                return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+            } catch { return dateStr; }
+        }
+
+        function formatTime(t) {
+            if (!t) return '-';
+            try {
+                const d = new Date(`1970-01-01 ${t}`);
+                if (isNaN(d)) return t;
+                return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+            } catch { return t; }
+        }
+
+        // ==================== Cache Management (TTL) ====================
         
-        const stats = [
-            { key: 'التجار', id: 'stat-merchants' },
-            { key: 'المكن', id: 'stat-machines' },
-            { key: 'التحويلات_شهر', id: 'stat-transfers-month' },
-            { key: 'التحصيلات_شهر', id: 'stat-collections-month' },
-            { key: 'المتبقي_شهر', id: 'stat-remaining-month' },
-            { key: 'تحويلات_اليوم', id: 'stat-transfers-today' }
-        ];
-        
-        stats.forEach(s => {
-            const el = document.querySelector(`[data-key="${s.key}"]`);
-            if (el) {
-                const newVal = newData[s.key];
-                const oldVal = APP_STATE.previousStats[s.key];
-                
-                if (oldVal !== newVal) {
-                    Utils.animateValue(el, newVal);
-                    APP_STATE.previousStats[s.key] = newVal;
+        const CACHE_KEY = 'axentro_dashboard_cache';
+        const CACHE_TTL = 10 * 60 * 1000; // 10 Minutes
+
+        function setCache(data) {
+            try {
+                const cacheObj = { timestamp: Date.now(), data: data };
+                localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
+            } catch (e) { console.log('Cache write failed'); }
+        }
+
+        function getCache() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (!cached) return null;
+                const parsed = JSON.parse(cached);
+                if (Date.now() - parsed.timestamp > CACHE_TTL) {
+                    localStorage.removeItem(CACHE_KEY);
+                    return null;
                 }
-            }
-        });
-    }
-};
+                return parsed.data;
+            } catch (e) { return null; }
+        }
 
-// ==================== RENDERERS ====================
-const Renderer = {
-    dashboard(data) {
-        if (!data) return;
-        const container = document.getElementById('dashStats');
-        if (!container) return;
-
-        const frag = document.createDocumentFragment();
+        // ==================== Connection Indicator ====================
         
-        const stats = [
-            { key: 'التجار', label: 'عدد التجار', icon: 'fa-users', val: data['التجار'] },
-            { key: 'المكن', label: 'عدد المكن', icon: 'fa-cash-register', val: data['المكن'] },
-            { key: 'التحويلات_شهر', label: 'التحويلات (شهر)', icon: 'fa-exchange-alt', val: data['التحويلات_شهر'] },
-            { key: 'التحصيلات_شهر', label: 'التحصيلات (شهر)', icon: 'fa-hand-holding-usd', val: data['التحصيلات_شهر'], type: 'success' },
-            { key: 'المتبقي_شهر', label: 'المتبقي (شهر)', icon: 'fa-coins', val: data['المتبقي_شهر'], type: 'danger' },
-            { key: 'تحويلات_اليوم', label: 'تحويلات اليوم', icon: 'fa-calendar-day', val: data['تحويلات_اليوم'], type: 'warning' }
-        ];
-
-        stats.forEach((s, idx) => {
-            APP_STATE.previousStats[s.key] = s.val;
+        function setConnectionStatus(status) {
+            const prevStatus = AppState.connectionStatus;
+            AppState.connectionStatus = status;
             
-            const div = document.createElement('div');
-            div.className = `stat-card ${s.type || ''}`;
-            div.style.animationDelay = `${idx * 40}ms`;
-            div.innerHTML = `
-                <div class="stat-label"><i class="fas ${s.icon}"></i> ${s.label}</div>
-                <div class="stat-value" data-key="${s.key}">${Utils.formatNumber(s.val)}</div>
-            `;
-            frag.appendChild(div);
-        });
+            const indicator = document.getElementById('connIndicator');
+            if (!indicator) return;
 
-        container.innerHTML = '';
-        container.appendChild(frag);
-        
-        this.topMachines(data['أعلى_المكن'] || []);
-    },
-
-    topMachines(list) {
-        const tbody = document.getElementById('tblTopMachines');
-        if (!tbody) return;
-        const frag = document.createDocumentFragment();
-        
-        if (!list || list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-chart-line"></i><span class="empty-state-text">لا توجد بيانات كافية</span></div></td></tr>';
-            return;
-        }
-
-        list.forEach((m, idx) => {
-            const pct = Math.min(m.percentage || 0, 100);
-            const pctClass = pct >= 80 ? 'success' : pct >= 50 ? 'warning' : 'danger';
-            const tr = document.createElement('tr');
-            tr.style.animationDelay = `${idx * 30}ms`;
-            tr.innerHTML = `
-                <td><strong>${Utils.escapeHtml(m.name)}</strong></td>
-                <td>${Utils.escapeHtml(m.merchant)}</td>
-                <td>${Utils.formatNumber(m.achieved)}</td>
-                <td>${Utils.formatNumber(m.target)}</td>
-                <td>
-                    <span class="badge badge-${pctClass}">${pct}%</span>
-                    <div class="progress-bar"><div class="progress-fill ${pctClass}" style="width: ${pct}%"></div></div>
-                </td>
-            `;
-            frag.appendChild(tr);
-        });
-        
-        tbody.innerHTML = '';
-        tbody.appendChild(frag);
-    },
-
-    merchants(list) {
-        const tbody = document.getElementById('tblMerchants');
-        if (!tbody) return;
-        const frag = document.createDocumentFragment();
-        
-        if (!list || list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-users"></i><span class="empty-state-text">لا يوجد تجار</span></div></td></tr>';
-            return;
-        }
-
-        list.forEach((m, idx) => {
-            const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
-            const tr = document.createElement('tr');
-            tr.style.animationDelay = `${Math.min(idx * 20, 300)}ms`;
-            tr.innerHTML = `
-                <td><strong>${Utils.escapeHtml(m['رقم التاجر'])}</strong></td>
-                <td>${Utils.escapeHtml(m['اسم التاجر'])}</td>
-                <td>${Utils.escapeHtml(m['اسم النشاط'])}</td>
-                <td>${Utils.escapeHtml(m['رقم الهاتف'])}</td>
-                <td>${Utils.escapeHtml(m['المنطقة'])}</td>
-                <td>${Utils.escapeHtml(m['العنوان'])}</td>
-                <td><span class="badge badge-${statusClass}">${m['الحالة']}</span></td>
-                <td><button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button></td>
-            `;
-            frag.appendChild(tr);
-        });
-        
-        tbody.innerHTML = '';
-        tbody.appendChild(frag);
-    },
-
-    machines(list) {
-        const tbody = document.getElementById('tblMachines');
-        if (!tbody) return;
-        const frag = document.createDocumentFragment();
-        
-        if (!list || list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-cash-register"></i><span class="empty-state-text">لا توجد مكن</span></div></td></tr>';
-            return;
-        }
-
-        list.forEach((m, idx) => {
-            const statusClass = m['الحالة'] === 'نشطة' ? 'success' : 'danger';
-            const tr = document.createElement('tr');
-            tr.style.animationDelay = `${Math.min(idx * 20, 300)}ms`;
-            tr.innerHTML = `
-                <td><strong>${Utils.escapeHtml(m['رقم المكنة'])}</strong></td>
-                <td>${Utils.escapeHtml(m['اسم التاجر'])}</td>
-                <td><code>${Utils.escapeHtml(m['الباركود'])}</code></td>
-                <td>${Utils.formatNumber(m['التارجت الشهري'])}</td>
-                <td><span class="badge badge-${statusClass}">${m['الحالة']}</span></td>
-                <td><button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button></td>
-            `;
-            frag.appendChild(tr);
-        });
-        
-        tbody.innerHTML = '';
-        tbody.appendChild(frag);
-    },
-
-    transfers(list) {
-        const tbody = document.getElementById('tblTransfers');
-        if (!tbody) return;
-        const frag = document.createDocumentFragment();
-        
-        if (!list || list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-exchange-alt"></i><span class="empty-state-text">لا توجد تحويلات</span></div></td></tr>';
-            return;
-        }
-
-        const displayList = list.slice(-100).reverse();
-        displayList.forEach((t, idx) => {
-            const tr = document.createElement('tr');
-            tr.style.animationDelay = `${Math.min(idx * 15, 200)}ms`;
-            tr.innerHTML = `
-                <td>${Utils.formatDate(t['التاريخ'])}</td>
-                <td>${Utils.formatTime(t['الوقت'])}</td>
-                <td>${Utils.escapeHtml(t['اسم التاجر'])}</td>
-                <td><strong>${Utils.formatNumber(t['قيمة التحويل'])}</strong></td>
-                <td>${Utils.escapeHtml(t['ملاحظات'] || '-')}</td>
-                <td><button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')"><i class="fas fa-trash"></i></button></td>
-            `;
-            frag.appendChild(tr);
-        });
-        
-        tbody.innerHTML = '';
-        tbody.appendChild(frag);
-    },
-
-    collections(list) {
-        const tbody = document.getElementById('tblCollections');
-        if (!tbody) return;
-        const frag = document.createDocumentFragment();
-        
-        if (!list || list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-hand-holding-usd"></i><span class="empty-state-text">لا توجد تحصيلات</span></div></td></tr>';
-            return;
-        }
-
-        const displayList = list.slice(-100).reverse();
-        displayList.forEach((c, idx) => {
-            const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
-            const tr = document.createElement('tr');
-            tr.style.animationDelay = `${Math.min(idx * 15, 200)}ms`;
-            tr.innerHTML = `
-                <td>${Utils.formatDate(c['التاريخ'])}</td>
-                <td>${Utils.formatTime(c['الوقت'])}</td>
-                <td>${Utils.escapeHtml(c['اسم التاجر'])}</td>
-                <td><strong>${Utils.formatNumber(c['قيمة التحصيل'])}</strong></td>
-                <td><span class="badge badge-${typeClass}">${c['نوع التحصيل']}</span></td>
-                <td><button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button></td>
-            `;
-            frag.appendChild(tr);
-        });
-        
-        tbody.innerHTML = '';
-        tbody.appendChild(frag);
-    },
-
-    archive(list) {
-        const tbody = document.getElementById('tblArchive');
-        if (!tbody) return;
-        const frag = document.createDocumentFragment();
-        
-        if (!list || list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-archive"></i><span class="empty-state-text">لا يوجد أرشيف</span></div></td></tr>';
-            return;
-        }
-
-        list.slice().reverse().forEach((a, idx) => {
-            const tr = document.createElement('tr');
-            tr.style.animationDelay = `${idx * 30}ms`;
-            tr.innerHTML = `
-                <td><strong>${Utils.escapeHtml(a['الشهر'])}</strong></td>
-                <td>${a['عدد التحويلات'] || 0}</td>
-                <td>${Utils.formatNumber(a['إجمالي التحويلات'])}</td>
-                <td>${a['عدد التحصيلات'] || 0}</td>
-                <td>${Utils.formatNumber(a['إجمالي التحصيلات'])}</td>
-                <td>${Utils.formatNumber(a['إجمالي المتبقي'])}</td>
-            `;
-            frag.appendChild(tr);
-        });
-        
-        tbody.innerHTML = '';
-        tbody.appendChild(frag);
-    },
-
-    statementDropdown(list) {
-        const select = document.getElementById('stmtMerchant');
-        if (!select) return;
-        
-        const frag = document.createDocumentFragment();
-        const defaultOpt = document.createElement('option');
-        defaultOpt.value = '';
-        defaultOpt.textContent = '-- اختر تاجر --';
-        frag.appendChild(defaultOpt);
-        
-        (list || []).forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m['رقم التاجر'];
-            opt.textContent = m['اسم التاجر'];
-            frag.appendChild(opt);
-        });
-        
-        select.innerHTML = '';
-        select.appendChild(frag);
-    }
-};
-
-// ==================== CORE FUNCTIONS ====================
-function handleEnter(e) { if (e.key === 'Enter') login(); }
-
-function setConnection(status) {
-    const indicator = document.getElementById('connIndicator');
-    if (!indicator) return;
-    
-    const prev = APP_STATE.connection;
-    APP_STATE.connection = status;
-    
-    const statusText = indicator.querySelector('span');
-    
-    if (status === 'live') {
-        indicator.className = 'conn-status live';
-        if (statusText) statusText.textContent = 'متصل';
-    } else {
-        indicator.className = 'conn-status offline';
-        if (statusText) statusText.textContent = 'غير متصل';
-    }
-    
-    if (prev !== status) {
-        if (status === 'offline') Utils.showToast('فقدان الاتصال...', 'error');
-        else if (prev === 'offline') Utils.showToast('تم استعادة الاتصال', 'success');
-    }
-}
-
-function checkSession() {
-    Utils.showLoading(true);
-    if (localStorage.getItem('axentro_logged') === 'true') {
-        document.getElementById('loginBox').style.display = 'none';
-        document.getElementById('appBox').style.display = 'flex';
-        loadData();
-    } else {
-        Utils.showLoading(false);
-    }
-}
-
-async function login() {
-    const pass = document.getElementById('passInput').value;
-    if (!pass) { Utils.showToast('أدخل كلمة المرور', 'warning'); return; }
-    
-    Utils.showLoading(true);
-    try {
-        const res = await api('login', { password: pass });
-        if (res.success) {
-            localStorage.setItem('axentro_logged', 'true');
-            document.getElementById('loginBox').style.display = 'none';
-            document.getElementById('appBox').style.display = 'flex';
-            loadData();
-            Utils.showToast('مرحباً بك!', 'success');
-        } else {
-            Utils.showToast(res.message || 'كلمة المرور غير صحيحة', 'error');
-            Utils.showLoading(false);
-        }
-    } catch (e) {
-        Utils.showToast('حدث خطأ في الاتصال', 'error');
-        Utils.showLoading(false);
-    }
-}
-
-function logout() {
-    if (confirm('هل تريد تسجيل الخروج؟')) {
-        localStorage.removeItem('axentro_logged');
-        location.reload();
-    }
-}
-
-async function loadData() {
-    if (APP_STATE.isLoading) return;
-    APP_STATE.isLoading = true;
-    
-    Utils.showLoading(true);
-    try {
-        const res = await api('getAllData');
-        if (res.success && res.data) {
-            APP_STATE.db = res.data;
-            renderAll(res.data);
-            setConnection('live');
-            Utils.showToast('تم تحديث البيانات', 'success');
-        } else {
-            setConnection('offline');
-            Utils.showToast(res.message || 'فشل تحميل البيانات', 'error');
-        }
-    } catch (e) {
-        setConnection('offline');
-        Utils.showToast('حدث خطأ', 'error');
-    }
-    Utils.showLoading(false);
-    APP_STATE.isLoading = false;
-}
-
-function renderAll(data) {
-    if (data.dashboard) Renderer.dashboard(data.dashboard);
-    Renderer.merchants(data.merchants);
-    Renderer.machines(data.machines);
-    Renderer.transfers(data.transfers);
-    Renderer.collections(data.collections);
-    Renderer.archive(data.archives);
-    Renderer.statementDropdown(data.merchants);
-}
-
-// ==================== ACTIONS ====================
-async function getStatement() {
-    const mid = document.getElementById('stmtMerchant').value;
-    if (!mid) return;
-    Utils.showLoading(true);
-    try {
-        const res = await api('getStatement', { merchantId: mid });
-        if (res.success && res.data) {
-            document.getElementById('stmtT').textContent = Utils.formatNumber(res.data.stats.totalTransfers);
-            document.getElementById('stmtC').textContent = Utils.formatNumber(res.data.stats.totalCollections);
-            document.getElementById('stmtR').textContent = Utils.formatNumber(res.data.stats.remaining);
-            
-            const tbody = document.getElementById('tblStatement');
-            const frag = document.createDocumentFragment();
-            
-            if (!res.data.movements || res.data.movements.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-file-invoice-dollar"></i><span class="empty-state-text">لا توجد حركات</span></div></td></tr>';
+            if (status === 'live') {
+                indicator.className = 'conn-status live';
+                indicator.querySelector('span').textContent = 'متصل';
             } else {
-                res.data.movements.forEach((m, idx) => {
-                    const tr = document.createElement('tr');
-                    tr.style.animationDelay = `${idx * 20}ms`;
-                    tr.innerHTML = `
-                        <td>${Utils.formatDate(m.date)}</td>
-                        <td>${Utils.formatTime(m.time)}</td>
-                        <td><span class="badge badge-${m.type === 'تحويل' ? 'primary' : 'success'}">${m.type}</span></td>
-                        <td><strong>${Utils.formatNumber(m.amount)}</strong></td>
-                        <td>${Utils.escapeHtml(m.notes || '-')}</td>
-                    `;
-                    frag.appendChild(tr);
-                });
-                tbody.innerHTML = '';
-                tbody.appendChild(frag);
+                indicator.className = 'conn-status offline';
+                indicator.querySelector('span').textContent = 'غير متصل';
+            }
+            
+            // Toast only on state change
+            if (prevStatus !== status) {
+                if (status === 'offline') showToast('فقدان الاتصال...', 'error');
+                else if (prevStatus === 'offline' && status === 'live') showToast('تم استعادة الاتصال', 'success');
             }
         }
-    } catch (e) { Utils.showToast('حدث خطأ', 'error'); }
-    Utils.showLoading(false);
-}
 
-async function delMerchant(id) { if (!confirm('هل أنت متأكد؟')) return; Utils.showLoading(true); await api('deleteMerchant', { id }); loadData(); }
-async function delMachine(id) { if (!confirm('هل أنت متأكد؟')) return; Utils.showLoading(true); await api('deleteMachine', { id }); loadData(); }
-async function delTransfer(id) { if (!confirm('هل أنت متأكد؟')) return; Utils.showLoading(true); await api('deleteTransfer', { id }); loadData(); }
-async function delCollection(id) { if (!confirm('هل أنت متأكد؟')) return; Utils.showLoading(true); await api('deleteCollection', { id }); loadData(); }
-
-async function confirmCloseMonth() {
-    if (!confirm('تحذير! سيتم ترحيل البيانات للأرشيف. هل أنت متأكد؟')) return;
-    Utils.showLoading(true);
-    try {
-        const res = await api('closeMonth', { notes: 'إغلاق من النظام' });
-        if (res.success) { Utils.showToast(res.data.message, 'success'); loadData(); }
-        else { Utils.showToast(res.message || 'حدث خطأ', 'error'); Utils.showLoading(false); }
-    } catch (e) { Utils.showToast('حدث خطأ', 'error'); Utils.showLoading(false); }
-}
-
-function exportExcel() {
-    if (!APP_STATE.db.merchants || APP_STATE.db.merchants.length === 0) { Utils.showToast('لا توجد بيانات', 'warning'); return; }
-    Utils.showLoading(true);
-    try {
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(APP_STATE.db.merchants), "التجار");
-        if(APP_STATE.db.machines) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(APP_STATE.db.machines), "المكن");
-        if(APP_STATE.db.transfers) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(APP_STATE.db.transfers), "التحويلات");
-        if(APP_STATE.db.collections) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(APP_STATE.db.collections), "التحصيلات");
-        XLSX.writeFile(wb, `Axentro_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
-        Utils.showToast('تم التصدير', 'success');
-    } catch (e) { Utils.showToast('حدث خطأ', 'error'); }
-    Utils.showLoading(false);
-}
-
-// ==================== NAVIGATION ====================
-function showPage(name, el) {
-    // Desktop tabs
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-    
-    // Mobile nav
-    document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
-    
-    const page = document.getElementById('page-' + name);
-    if (page) page.classList.add('active');
-    
-    // Update both tab and mobile nav
-    document.querySelectorAll('.tab-link').forEach(t => {
-        if (t.querySelector('span') && t.querySelector('span').textContent.includes(
-            name === 'home' ? 'الرئيسية' :
-            name === 'merchants' ? 'التجار' :
-            name === 'machines' ? 'المكن' :
-            name === 'transfers' ? 'التحويلات' :
-            name === 'collections' ? 'التحصيلات' :
-            name === 'statement' ? 'كشف حساب' :
-            name === 'archive' ? 'الأرشيف' : ''
-        )) {
-            t.classList.add('active');
+        // ==================== Session Management ====================
+        
+        function handleEnter(e) { if (e.key === 'Enter') login(); }
+        
+        function checkSession() {
+            showLoading(true);
+            if (localStorage.getItem('axentro_logged') === 'true') {
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('appBox').style.display = 'flex';
+                
+                const cachedData = getCache();
+                if (cachedData) updateDashboardUI(cachedData);
+                
+                loadData();
+            } else {
+                showLoading(false);
+            }
         }
-    });
-    
-    document.querySelectorAll('.mobile-nav-item').forEach(n => {
-        const navName = n.querySelector('span');
-        if (navName && navName.textContent.includes(
-            name === 'home' ? 'الرئيسية' :
-            name === 'merchants' ? 'التجار' :
-            name === 'machines' ? 'المكن' :
-            name === 'transfers' ? 'التحويلات' :
-            name === 'collections' ? 'التحصيلات' : ''
-        )) {
-            n.classList.add('active');
-        }
-    });
-}
 
-// ==================== MODALS ====================
-function openModal(type) {
-    const modal = document.getElementById('modal');
-    const body = document.getElementById('modalBody');
-    const m = APP_STATE.db.merchants || [];
-    const opts = m.map(x => `<option value="${Utils.escapeHtml(x['رقم التاجر'])}">${Utils.escapeHtml(x['اسم التاجر'])}</option>`).join('');
-
-    if (type === 'merchant') {
-        body.innerHTML = `
-            <h3 class="modal-title"><i class="fas fa-user-plus"></i> إضافة تاجر جديد</h3>
-            <div class="form-row"><div class="form-group"><label class="form-label">اسم التاجر *</label><input id="mName" class="form-input" placeholder="اسم التاجر"></div><div class="form-group"><label class="form-label">اسم النشاط</label><input id="mBiz" class="form-input" placeholder="اسم النشاط"></div></div>
-            <div class="form-row"><div class="form-group"><label class="form-label">رقم الحساب</label><input id="mAcc" class="form-input" placeholder="رقم الحساب"></div><div class="form-group"><label class="form-label">رقم الهاتف</label><input id="mPhone" class="form-input" placeholder="رقم الهاتف"></div></div>
-            <div class="form-row"><div class="form-group"><label class="form-label">المنطقة</label><input id="mArea" class="form-input" placeholder="المنطقة"></div><div class="form-group"><label class="form-label">العنوان</label><input id="mAddr" class="form-input" placeholder="العنوان"></div></div>
-            <div class="form-group"><label class="form-label">ملاحظات</label><input id="mNotes" class="form-input" placeholder="ملاحظات"></div>
-            <button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ</button>`;
-    } else if (type === 'machine') {
-        body.innerHTML = `
-            <h3 class="modal-title"><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3>
-            <div class="form-group"><label class="form-label">اختر التاجر *</label><select id="mcMerch" class="form-input"><option value="">-- اختر تاجر --</option>${opts}</select></div>
-            <div class="form-row"><div class="form-group"><label class="form-label">الباركود *</label><input id="mcBar" class="form-input" placeholder="الباركود"></div><div class="form-group"><label class="form-label">الرقم التسلسلي</label><input id="mcSerial" class="form-input" placeholder="الرقم التسلسلي"></div></div>
-            <div class="form-group"><label class="form-label">التارجت الشهري</label><input type="number" id="mcTarget" class="form-input" placeholder="التارجت"></div>
-            <div class="form-group"><label class="form-label">ملاحظات</label><input id="mcNotes" class="form-input" placeholder="ملاحظات"></div>
-            <button class="btn btn-primary btn-block" onclick="saveMachine()"><i class="fas fa-save"></i> حفظ</button>`;
-    } else if (type === 'transfer') {
-        body.innerHTML = `
-            <h3 class="modal-title"><i class="fas fa-exchange-alt"></i> تحويل جديد</h3>
-            <div class="form-group"><label class="form-label">التاجر *</label><select id="trMerch" class="form-input" onchange="fillMachines(this.value, 'trMach')"><option value="">-- اختر تاجر --</option>${opts}</select></div>
-            <div class="form-group"><label class="form-label">المكنة</label><select id="trMach" class="form-input"><option value="">-- اختر مكنة --</option></select></div>
-            <div class="form-group"><label class="form-label">المبلغ *</label><input type="number" id="trAmt" class="form-input" placeholder="القيمة"></div>
-            <div class="form-group"><label class="form-label">ملاحظات</label><input id="trNotes" class="form-input" placeholder="ملاحظات"></div>
-            <button class="btn btn-success btn-block" onclick="saveTransfer()"><i class="fas fa-check"></i> تأكيد</button>`;
-    } else if (type === 'collection') {
-        body.innerHTML = `
-            <h3 class="modal-title"><i class="fas fa-hand-holding-usd"></i> تحصيل جديد</h3>
-            <div class="form-group"><label class="form-label">التاجر *</label><select id="colMerch" class="form-input" onchange="fillMachines(this.value, 'colMach')"><option value="">-- اختر تاجر --</option>${opts}</select></div>
-            <div class="form-group"><label class="form-label">المكنة</label><select id="colMach" class="form-input"><option value="">-- اختر مكنة --</option></select></div>
-            <div class="form-group"><label class="form-label">المبلغ *</label><input type="number" id="colAmt" class="form-input" placeholder="القيمة"></div>
-            <div class="form-group"><label class="form-label">نوع التحصيل</label><select id="colType" class="form-input"><option value="كلي">كلي</option><option value="جزئي">جزئي</option></select></div>
-            <div class="form-group"><label class="form-label">ملاحظات</label><input id="colNotes" class="form-input" placeholder="ملاحظات"></div>
-            <button class="btn btn-primary btn-block" onclick="saveCollection()"><i class="fas fa-check"></i> تأكيد</button>`;
-    }
-    
-    modal.classList.add('visible');
-}
-
-function fillMachines(merchantId, selectId) {
-    const select = document.getElementById(selectId);
-    select.innerHTML = '<option value="">-- اختر مكنة --</option>';
-    if (!merchantId) return;
-    const machines = (APP_STATE.db.machines || []).filter(m => m['رقم التاجر'] === merchantId);
-    const frag = document.createDocumentFragment();
-    if (machines.length === 0) {
-        const opt = document.createElement('option');
-        opt.textContent = 'لا توجد مكنات';
-        frag.appendChild(opt);
-    } else {
-        machines.forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m['رقم المكنة'];
-            opt.textContent = m['رقم المكنة'];
-            frag.appendChild(opt);
-        });
-    }
-    select.appendChild(frag);
-}
-
-function closeModal() {
-    const modal = document.getElementById('modal');
-    modal.classList.remove('visible');
-}
-
-// ==================== SAVE FUNCTIONS ====================
-async function saveMerchant() {
-    const name = document.getElementById('mName').value.trim();
-    if (!name) { Utils.showToast('اسم التاجر مطلوب', 'warning'); return; }
-    Utils.showLoading(true); closeModal();
-    const data = { merchantName: name, businessName: document.getElementById('mBiz').value, accountNumber: document.getElementById('mAcc').value, phone: document.getElementById('mPhone').value, area: document.getElementById('mArea').value, address: document.getElementById('mAddr').value, notes: document.getElementById('mNotes').value };
-    const res = await api('addMerchant', data);
-    if (res.success) { Utils.showToast('تم الإضافة', 'success'); loadData(); } else { Utils.showToast(res.message || 'خطأ', 'error'); Utils.showLoading(false); }
-}
-
-async function saveMachine() {
-    const merchantId = document.getElementById('mcMerch').value;
-    const barcode = document.getElementById('mcBar').value.trim();
-    if (!merchantId) { Utils.showToast('اختر التاجر', 'warning'); return; }
-    if (!barcode) { Utils.showToast('الباركود مطلوب', 'warning'); return; }
-    Utils.showLoading(true); closeModal();
-    const data = { merchantId: merchantId, barcode: barcode, serialNumber: document.getElementById('mcSerial').value, monthlyTarget: document.getElementById('mcTarget').value, notes: document.getElementById('mcNotes').value };
-    const res = await api('addMachine', data);
-    if (res.success) { Utils.showToast('تم الإضافة', 'success'); loadData(); } else { Utils.showToast(res.message || 'خطأ', 'error'); Utils.showLoading(false); }
-}
-
-async function saveTransfer() {
-    const merchantId = document.getElementById('trMerch').value;
-    const amount = document.getElementById('trAmt').value;
-    if (!merchantId) { Utils.showToast('اختر التاجر', 'warning'); return; }
-    if (!amount || Number(amount) <= 0) { Utils.showToast('أدخل القيمة', 'warning'); return; }
-    Utils.showLoading(true); closeModal();
-    const data = { merchantId: merchantId, machineId: document.getElementById('trMach').value, amount: amount, notes: document.getElementById('trNotes').value };
-    const res = await api('addTransfer', data);
-    if (res.success) { Utils.showToast('تم التحويل', 'success'); loadData(); } else { Utils.showToast(res.message || 'خطأ', 'error'); Utils.showLoading(false); }
-}
-
-async function saveCollection() {
-    const merchantId = document.getElementById('colMerch').value;
-    const amount = document.getElementById('colAmt').value;
-    if (!merchantId) { Utils.showToast('اختر التاجر', 'warning'); return; }
-    if (!amount || Number(amount) <= 0) { Utils.showToast('أدخل القيمة', 'warning'); return; }
-    Utils.showLoading(true); closeModal();
-    const data = { merchantId: merchantId, machineId: document.getElementById('colMach').value, amount: amount, collectionType: document.getElementById('colType').value, notes: document.getElementById('colNotes').value };
-    const res = await api('addCollection', data);
-    if (res.success) { Utils.showToast('تم التحصيل', 'success'); loadData(); } else { Utils.showToast(res.message || 'خطأ', 'error'); Utils.showLoading(false); }
-}
-
-// ==================== LIVE UPDATES ====================
-async function fetchDashboardLive() {
-    if (APP_STATE.isPolling) return;
-    APP_STATE.isPolling = true;
-    try {
-        const res = await api('getDashboardOnly');
-        if (res.success && (res.dashboard || res.data?.dashboard)) {
-            const d = res.dashboard || res.data.dashboard;
-            setConnection('live');
+        async function login() {
+            const password = document.getElementById('passInput').value;
+            if (!password) { showToast('أدخل كلمة المرور', 'warning'); return; }
             
-            // Diff-based update for stats
-            DiffUpdate.updateStats(d);
-            
-            if (d['أعلى_المكن']) Renderer.topMachines(d['أعلى_المكن']);
-            APP_STATE.pollInterval = 5000;
-        } else {
-            throw new Error('Invalid');
+            showLoading(true);
+            try {
+                const res = await api('login', { password });
+                if (res.success) {
+                    localStorage.setItem('axentro_logged', 'true');
+                    document.getElementById('loginBox').style.display = 'none';
+                    document.getElementById('appBox').style.display = 'flex';
+                    loadData();
+                    showToast('مرحباً بك!', 'success');
+                } else {
+                    showToast(res.message || 'كلمة المرور غير صحيحة', 'error');
+                    showLoading(false);
+                }
+            } catch (e) {
+                showToast('حدث خطأ في الاتصال', 'error');
+                showLoading(false);
+            }
         }
-    } catch (e) {
-        setConnection('offline');
-        APP_STATE.pollInterval = Math.min(APP_STATE.pollInterval * 1.5, 20000);
-    } finally {
-        APP_STATE.isPolling = false;
-        setTimeout(fetchDashboardLive, APP_STATE.pollInterval);
-    }
-}
 
-// ==================== INIT ====================
-window.onload = () => {
-    checkSession();
-    setTimeout(fetchDashboardLive, 5000);
-};
+        function logout() {
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                localStorage.removeItem('axentro_logged');
+                location.reload();
+            }
+        }
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+        // ==================== API Communication ====================
+        
+        async function api(act, data = {}) {
+            try {
+                const url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`;
+                const res = await fetch(url);
+                return await res.json();
+            } catch (e) {
+                console.error('API Error:', e);
+                return { success: false, message: e.message };
+            }
+        }
 
-</script>
+        // ==================== Data Loading ====================
+        
+        async function loadData() {
+            showLoading(true);
+            try {
+                const res = await api('getAllData');
+                if (res.success && res.data) {
+                    DB = res.data;
+                    if (DB.dashboard) setCache(DB.dashboard);
+                    renderDashboard();
+                    renderMerchants();
+                    renderMachines();
+                    renderTransfers();
+                    renderCollections();
+                    renderArchive();
+                    populateStatementDropdown();
+                    setConnectionStatus('live');
+                    showToast('تم تحديث البيانات', 'success');
+                } else {
+                    setConnectionStatus('offline');
+                    showToast(res.message || 'فشل تحميل البيانات', 'error');
+                }
+            } catch (e) {
+                setConnectionStatus('offline');
+                showToast('حدث خطأ', 'error');
+            }
+            showLoading(false);
+        }
+
+        // ==================== Rendering Functions ====================
+        
+        function renderDashboard() {
+            const d = DB.dashboard;
+            if (!d) return;
+
+            const statsHtml = `
+                <div class="stat-card">
+                    <h4><i class="fas fa-users"></i> عدد التجار</h4>
+                    <div class="val" data-key="التجار">${formatNumber(d['التجار'])}</div>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fas fa-cash-register"></i> عدد المكن</h4>
+                    <div class="val" data-key="المكن">${formatNumber(d['المكن'])}</div>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fas fa-exchange-alt"></i> التحويلات (شهر)</h4>
+                    <div class="val" data-key="التحويلات_شهر">${formatNumber(d['التحويلات_شهر'])}</div>
+                </div>
+                <div class="stat-card success">
+                    <h4><i class="fas fa-hand-holding-usd"></i> التحصيلات (شهر)</h4>
+                    <div class="val" data-key="التحصيلات_شهر">${formatNumber(d['التحصيلات_شهر'])}</div>
+                </div>
+                <div class="stat-card danger">
+                    <h4><i class="fas fa-coins"></i> المتبقي (شهر)</h4>
+                    <div class="val" data-key="المتبقي_شهر">${formatNumber(d['المتبقي_شهر'])}</div>
+                </div>
+                <div class="stat-card warning">
+                    <h4><i class="fas fa-calendar-day"></i> تحويلات اليوم</h4>
+                    <div class="val" data-key="تحويلات_اليوم">${formatNumber(d['تحويلات_اليوم'])}</div>
+                </div>
+            `;
+            document.getElementById('dashStats').innerHTML = statsHtml;
+            renderTopMachines(d['أعلى_المكن'] || []);
+        }
+
+        function renderTopMachines(machines) {
+            const tbody = document.getElementById('tblTopMachines');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            if (!machines || machines.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات كافية</td></tr>`;
+                return;
+            }
+            
+            machines.forEach(m => {
+                const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${m.name || '-'}</strong></td>
+                        <td>${m.merchant || '-'}</td>
+                        <td>${formatNumber(m.achieved)}</td>
+                        <td>${formatNumber(m.target)}</td>
+                        <td>
+                            <span class="badge badge-${pctClass}">${m.percentage}%</span>
+                            <div class="progress-bar">
+                                <div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderMerchants() {
+            const tbody = document.getElementById('tblMerchants');
+            tbody.innerHTML = '';
+            const merchants = DB.merchants || [];
+            if (merchants.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد تجار</td></tr>'; return; }
+            merchants.forEach(m => {
+                const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${m['رقم التاجر'] || '-'}</strong></td>
+                        <td>${m['اسم التاجر'] || '-'}</td>
+                        <td>${m['اسم النشاط'] || '-'}</td>
+                        <td>${m['رقم الهاتف'] || '-'}</td>
+                        <td>${m['المنطقة'] || '-'}</td>
+                        <td>${m['العنوان'] || '-'}</td>
+                        <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
+                        <td><button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderMachines() {
+            const tbody = document.getElementById('tblMachines');
+            tbody.innerHTML = '';
+            const machines = DB.machines || [];
+            if (machines.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد مكن</td></tr>'; return; }
+            machines.forEach(m => {
+                const statusClass = m['الحالة'] === 'نشطة' ? 'success' : 'danger';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${m['رقم المكنة'] || '-'}</strong></td>
+                        <td>${m['اسم التاجر'] || '-'}</td>
+                        <td><code>${m['الباركود'] || '-'}</code></td>
+                        <td>${formatNumber(m['التارجت الشهري'])}</td>
+                        <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
+                        <td><button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderTransfers() {
+            const tbody = document.getElementById('tblTransfers');
+            tbody.innerHTML = '';
+            const transfers = DB.transfers || [];
+            if (transfers.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحويلات</td></tr>'; return; }
+            transfers.slice(-50).reverse().forEach(t => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${formatDate(t['التاريخ'])}</td>
+                        <td>${formatTime(t['الوقت'])}</td>
+                        <td>${t['اسم التاجر'] || '-'}</td>
+                        <td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td>
+                        <td>${t['ملاحظات'] || '-'}</td>
+                        <td><button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderCollections() {
+            const tbody = document.getElementById('tblCollections');
+            tbody.innerHTML = '';
+            const collections = DB.collections || [];
+            if (collections.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>'; return; }
+            collections.slice(-50).reverse().forEach(c => {
+                const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${formatDate(c['التاريخ'])}</td>
+                        <td>${formatTime(c['الوقت'])}</td>
+                        <td>${c['اسم التاجر'] || '-'}</td>
+                        <td><strong>${formatNumber(c['قيمة التحصيل'])}</strong></td>
+                        <td><span class="badge badge-${typeClass}">${c['نوع التحصيل'] || '-'}</span></td>
+                        <td><button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderArchive() {
+            const tbody = document.getElementById('tblArchive');
+            tbody.innerHTML = '';
+            const archives = DB.archives || [];
+            if (archives.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد أرشيف</td></tr>'; return; }
+            archives.reverse().forEach(a => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${a['الشهر'] || '-'}</strong></td>
+                        <td>${a['عدد التحويلات'] || 0}</td>
+                        <td>${formatNumber(a['إجمالي التحويلات'])}</td>
+                        <td>${a['عدد التحصيلات'] || 0}</td>
+                        <td>${formatNumber(a['إجمالي التحصيلات'])}</td>
+                        <td>${formatNumber(a['إجمالي المتبقي'])}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function populateStatementDropdown() {
+            const sel = document.getElementById('stmtMerchant');
+            sel.innerHTML = '<option value="">-- اختر تاجر --</option>';
+            (DB.merchants || []).forEach(m => sel.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`);
+        }
+
+        // ==================== Statement ====================
+        
+        async function getStatement() {
+            const mid = document.getElementById('stmtMerchant').value;
+            if (!mid) return;
+            showLoading(true);
+            try {
+                const res = await api('getStatement', { merchantId: mid });
+                if (res.success && res.data) {
+                    const data = res.data;
+                    document.getElementById('stmtT').textContent = formatNumber(data.stats.totalTransfers);
+                    document.getElementById('stmtC').textContent = formatNumber(data.stats.totalCollections);
+                    document.getElementById('stmtR').textContent = formatNumber(data.stats.remaining);
+                    const tbody = document.getElementById('tblStatement');
+                    tbody.innerHTML = '';
+                    if (data.movements.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد حركات</td></tr>'; }
+                    else {
+                        data.movements.forEach(m => {
+                            const typeClass = m.type === 'تحويل' ? 'primary' : 'success';
+                            tbody.innerHTML += `<tr><td>${formatDate(m.date)}</td><td>${formatTime(m.time)}</td><td><span class="badge badge-${typeClass}">${m.type}</span></td><td><strong>${formatNumber(m.amount)}</strong></td><td>${m.notes || '-'}</td></tr>`;
+                        });
+                    }
+                }
+            } catch (e) { showToast('حدث خطأ', 'error'); }
+            showLoading(false);
+        }
+
+        // ==================== Delete Functions ====================
+        
+        async function delMerchant(id) { if (!confirm('هل أنت متأكد من حذف هذا التاجر؟')) return; showLoading(true); await api('deleteMerchant', { id }); loadData(); }
+        async function delMachine(id) { if (!confirm('هل أنت متأكد من حذف هذه المكنة؟')) return; showLoading(true); await api('deleteMachine', { id }); loadData(); }
+        async function delTransfer(id) { if (!confirm('هل أنت متأكد من حذف هذا التحويل؟')) return; showLoading(true); await api('deleteTransfer', { id }); loadData(); }
+        async function delCollection(id) { if (!confirm('هل أنت متأكد من حذف هذا التحصيل؟')) return; showLoading(true); await api('deleteCollection', { id }); loadData(); }
+
+        // ==================== Close Month ====================
+        
+        async function confirmCloseMonth() {
+            if (!confirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد؟\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.')) return;
+            showLoading(true);
+            try {
+                const res = await api('closeMonth', { notes: 'إغلاق من النظام' });
+                if (res.success) { showToast(res.data.message, 'success'); loadData(); }
+                else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
+            } catch (e) { showToast('حدث خطأ', 'error'); showLoading(false); }
+        }
+
+        // ==================== Export Excel ====================
+        
+        function exportExcel() {
+            if (!DB.merchants || DB.merchants.length === 0) { showToast('لا توجد بيانات للتصدير', 'warning'); return; }
+            showLoading(true);
+            try {
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.merchants), "التجار");
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.machines), "المكن");
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.transfers), "التحويلات");
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.collections), "التحصيلات");
+                XLSX.writeFile(wb, `Axentro_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                showToast('تم تصدير التقرير بنجاح', 'success');
+            } catch (e) { showToast('حدث خطأ أثناء التصدير', 'error'); }
+            showLoading(false);
+        }
+
+        // ==================== Navigation ====================
+        
+        function showPage(name, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            document.getElementById('page-' + name).classList.add('active');
+            if (element) element.classList.add('active');
+        }
+
+        // ==================== Modals ====================
+        
+        function openModal(type) {
+            const body = document.getElementById('modalBody');
+            document.getElementById('modal').style.display = 'flex';
+
+            if (type === 'merchant') {
+                body.innerHTML = `
+                    <h3><i class="fas fa-user-plus"></i> إضافة تاجر جديد</h3>
+                    <div class="form-row">
+                        <div class="form-group"><label>اسم التاجر <span class="required">*</span></label><input id="mName" class="form-control" placeholder="اسم التاجر"></div>
+                        <div class="form-group"><label>اسم النشاط</label><input id="mBiz" class="form-control" placeholder="اسم النشاط"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>رقم الحساب</label><input id="mAcc" class="form-control" placeholder="رقم الحساب"></div>
+                        <div class="form-group"><label>رقم الهاتف</label><input id="mPhone" class="form-control" placeholder="رقم الهاتف"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control" placeholder="المنطقة"></div>
+                        <div class="form-group"><label>العنوان</label><input id="mAddr" class="form-control" placeholder="العنوان"></div>
+                    </div>
+                    <div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات"></div>
+                    <button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ التاجر</button>`;
+            } else if (type === 'machine') {
+                const merchants = DB.merchants || [];
+                const opts = merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
+                body.innerHTML = `
+                    <h3><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3>
+                    <div class="form-group"><label>اختر التاجر <span class="required">*</span></label><select id="mcMerch" class="form-control"><option value="">-- اختر تاجر --</option>${opts}</select></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>الباركود <span class="required">*</span></label><input id="mcBar" class="form-control" placeholder="الباركود"></div>
+                        <div class="form-group"><label>الرقم التسلسلي</label><input id="mcSerial" class="form-control" placeholder="الرقم التسلسلي"></div>
+                    </div>
+                    <div class="form-group"><label>التارجت الشهري</label><input type="number" id="mcTarget" class="form-control" placeholder="التارجت الشهري"></div>
+                    <div class="form-group"><label>ملاحظات</label><input id="mcNotes" class="form-control" placeholder="ملاحظات"></div>
+                    <button class="btn btn-primary btn-block" onclick="saveMachine()"><i class="fas fa-save"></i> حفظ المكنة</button>`;
+            } else if (type === 'transfer') {
+                const merchants = DB.merchants || [];
+                const opts = merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
+                body.innerHTML = `
+                    <h3><i class="fas fa-exchange-alt"></i> تحويل جديد</h3>
+                    <div class="form-group"><label>التاجر <span class="required">*</span></label><select id="trMerch" class="form-control" onchange="fillMachines(this.value, 'trMach')"><option value="">-- اختر تاجر --</option>${opts}</select></div>
+                    <div class="form-group"><label>المكنة</label><select id="trMach" class="form-control"><option value="">-- اختر مكنة --</option></select></div>
+                    <div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="trAmt" class="form-control" placeholder="قيمة التحويل"></div>
+                    <div class="form-group"><label>ملاحظات</label><input id="trNotes" class="form-control" placeholder="ملاحظات"></div>
+                    <button class="btn btn-success btn-block" onclick="saveTransfer()"><i class="fas fa-check"></i> تأكيد التحويل</button>`;
+            } else if (type === 'collection') {
+                const merchants = DB.merchants || [];
+                const opts = merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
+                body.innerHTML = `
+                    <h3><i class="fas fa-hand-holding-usd"></i> تحصيل جديد</h3>
+                    <div class="form-group"><label>التاجر <span class="required">*</span></label><select id="colMerch" class="form-control" onchange="fillMachines(this.value, 'colMach')"><option value="">-- اختر تاجر --</option>${opts}</select></div>
+                    <div class="form-group"><label>المكنة</label><select id="colMach" class="form-control"><option value="">-- اختر مكنة --</option></select></div>
+                    <div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="colAmt" class="form-control" placeholder="قيمة التحصيل"></div>
+                    <div class="form-group"><label>نوع التحصيل</label><select id="colType" class="form-control"><option value="كلي">كلي</option><option value="جزئي">جزئي</option></select></div>
+                    <div class="form-group"><label>ملاحظات</label><input id="colNotes" class="form-control" placeholder="ملاحظات"></div>
+                    <button class="btn btn-primary btn-block" onclick="saveCollection()"><i class="fas fa-check"></i> تأكيد التحصيل</button>`;
+            }
+        }
+
+        function fillMachines(merchantId, selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">-- اختر مكنة --</option>';
+            if (!merchantId) return;
+            const machines = DB.machines || [];
+            const filtered = machines.filter(m => m['رقم التاجر'] === merchantId);
+            if (filtered.length === 0) select.innerHTML = '<option value="">لا توجد مكنات لهذا التاجر</option>';
+            else filtered.forEach(m => select.innerHTML += `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`);
+        }
+
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        // ==================== Save Functions ====================
+        
+        async function saveMerchant() {
+            const name = document.getElementById('mName').value.trim();
+            if (!name) { showToast('اسم التاجر مطلوب', 'warning'); return; }
+            showLoading(true); closeModal();
+            const data = { merchantName: name, businessName: document.getElementById('mBiz').value, accountNumber: document.getElementById('mAcc').value, phone: document.getElementById('mPhone').value, area: document.getElementById('mArea').value, address: document.getElementById('mAddr').value, notes: document.getElementById('mNotes').value };
+            const res = await api('addMerchant', data);
+            if (res.success) { showToast('تم إضافة التاجر بنجاح', 'success'); loadData(); }
+            else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
+        }
+
+        async function saveMachine() {
+            const merchantId = document.getElementById('mcMerch').value;
+            const barcode = document.getElementById('mcBar').value.trim();
+            if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
+            if (!barcode) { showToast('الباركود مطلوب', 'warning'); return; }
+            showLoading(true); closeModal();
+            const data = { merchantId: merchantId, barcode: barcode, serialNumber: document.getElementById('mcSerial').value, monthlyTarget: document.getElementById('mcTarget').value, notes: document.getElementById('mcNotes').value };
+            const res = await api('addMachine', data);
+            if (res.success) { showToast('تم إضافة المكنة بنجاح', 'success'); loadData(); }
+            else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
+        }
+
+        async function saveTransfer() {
+            const merchantId = document.getElementById('trMerch').value;
+            const amount = document.getElementById('trAmt').value;
+            if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
+            if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحويل', 'warning'); return; }
+            showLoading(true); closeModal();
+            const data = { merchantId: merchantId, machineId: document.getElementById('trMach').value, amount: amount, notes: document.getElementById('trNotes').value };
+            const res = await api('addTransfer', data);
+            if (res.success) { showToast('تم التحويل بنجاح', 'success'); loadData(); }
+            else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
+        }
+
+        async function saveCollection() {
+            const merchantId = document.getElementById('colMerch').value;
+            const amount = document.getElementById('colAmt').value;
+            if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
+            if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحصيل', 'warning'); return; }
+            showLoading(true); closeModal();
+            const data = { merchantId: merchantId, machineId: document.getElementById('colMach').value, amount: amount, collectionType: document.getElementById('colType').value, notes: document.getElementById('colNotes').value };
+            const res = await api('addCollection', data);
+            if (res.success) { showToast('تم التحصيل بنجاح', 'success'); loadData(); }
+            else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
+        }
+
+        // ==================== Live Updates System ====================
+        
+        // Helper to safely extract dashboard from either structure
+        function extractDashboard(res) {
+            if (res.dashboard) return res.dashboard;
+            if (res.data && res.data.dashboard) return res.data.dashboard;
+            return null;
+        }
+
+        function updateDashboardUI(data) {
+            if (!data) return;
+
+            const statsContainer = document.getElementById('dashStats');
+            if (!statsContainer) return;
+
+            // Key-based mapping for Stat Cards
+            const keys = ['التجار', 'المكن', 'التحويلات_شهر', 'التحصيلات_شهر', 'المتبقي_شهر', 'تحويلات_اليوم'];
+            
+            keys.forEach(key => {
+                const el = statsContainer.querySelector(`[data-key="${key}"]`);
+                if (el) {
+                    const newValue = formatNumber(data[key]);
+                    if (el.textContent !== newValue) {
+                        el.textContent = newValue;
+                        el.classList.add('updating');
+                        setTimeout(() => el.classList.remove('updating'), 300);
+                    }
+                }
+            });
+
+            // Update Top Machines
+            if (data['أعلى_المكن']) {
+                renderTopMachines(data['أعلى_المكن']);
+            }
+        }
+
+        async function fetchDashboardLive() {
+            if (AppState.isPolling) return; // Prevent overlapping
+            AppState.isPolling = true;
+
+            try {
+                const res = await api('getDashboardOnly');
+                const dashboardData = extractDashboard(res);
+
+                if (res.success && dashboardData) {
+                    setConnectionStatus('live');
+                    updateDashboardUI(dashboardData);
+                    setCache(dashboardData);
+                    AppState.pollInterval = AppState.minInterval; // Reset interval
+                } else {
+                    throw new Error('Invalid response');
+                }
+            } catch (e) {
+                setConnectionStatus('offline');
+                // Backoff on failure
+                AppState.pollInterval = Math.min(AppState.pollInterval * 1.5, AppState.maxInterval);
+            } finally {
+                AppState.isPolling = false;
+                // Schedule next poll
+                setTimeout(fetchDashboardLive, AppState.pollInterval);
+            }
+        }
+
+        function startLiveUpdates() {
+            // Start polling loop
+            setTimeout(fetchDashboardLive, AppState.pollInterval);
+        }
+
+        // ==================== Initialize ====================
+        
+        window.onload = () => {
+            checkSession();
+            startLiveUpdates();
+        };
+
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+        document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+    </script>
 </body>
 </html>
