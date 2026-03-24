@@ -3,391 +3,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Axentro - نظام إدارة التجار والتحصيل</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Axentro System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #2563eb;
-            --secondary: #1e40af;
-            --accent: #3b82f6;
-            --bg-light: #f8fafc;
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
-            --white: #ffffff;
-            --success: #10b981;
-            --danger: #ef4444;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --radius: 0.5rem;
-        }
+        /* -- CSS Styles -- */
+        :root { --primary: #2563eb; --secondary: #1e40af; --accent: #3b82f6; --bg: #f1f5f9; --white: #fff; --text: #1e293b; --muted: #64748b; --success: #10b981; --danger: #ef4444; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-dark);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
+        /* Login */
+        #loginBox { height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .login-card { background: var(--white); padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        .login-card h2 { margin-bottom: 1.5rem; color: var(--primary); }
+        .login-card input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s; }
+        .login-card input:focus { border-color: var(--primary); outline: none; }
+        .btn { width: 100%; padding: 0.8rem; border: none; border-radius: 0.5rem; color: white; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .btn-primary { background: var(--primary); } .btn-primary:hover { background: var(--secondary); }
 
+        /* Main App */
+        .app-container { display: none; flex-direction: column; height: 100vh; }
+        
         /* Navbar */
-        .navbar {
-            background: var(--white);
-            box-shadow: var(--shadow);
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .logo { font-weight: 700; font-size: 1.5rem; color: var(--primary); }
-        .nav-actions button { margin-right: 0.5rem; }
+        .navbar { background: var(--white); padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .logo { font-weight: 700; font-size: 1.2rem; color: var(--primary); }
 
-        /* Container */
-        .container { padding: 1rem; width: 100%; max-width: 1200px; margin: 0 auto; flex: 1; }
+        /* Tabs Navigation (Mobile Friendly) */
+        .tabs-nav { display: flex; background: var(--white); border-bottom: 1px solid #e2e8f0; overflow-x: auto; position: sticky; top: 0; z-index: 100; }
+        .tab-link { flex: 1; min-width: 80px; padding: 0.8rem; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; transition: 0.2s; white-space: nowrap; }
+        .tab-link.active { color: var(--primary); border-color: var(--primary); background: #f8fafc; }
+        .tab-link:hover { background: #f8fafc; }
 
-        /* Cards & Dashboard */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .stat-card {
-            background: var(--white);
-            padding: 1.5rem;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border-right: 4px solid var(--primary);
-            transition: transform 0.2s;
-        }
-        .stat-card:hover { transform: translateY(-2px); }
-        .stat-card h3 { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-        .stat-card .value { font-size: 1.5rem; font-weight: 700; color: var(--text-dark); }
+        /* Content Area */
+        .content { padding: 1rem; flex: 1; overflow-y: auto; }
+        .page { display: none; animation: fadeIn 0.3s; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Dashboard Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem; margin-bottom: 1.5rem; }
+        .stat-card { background: var(--white); padding: 1rem; border-radius: 0.5rem; border-right: 4px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .stat-card h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.2rem; }
+        .stat-card .val { font-size: 1.2rem; font-weight: 700; }
 
         /* Tables */
-        .table-container {
-            background: var(--white);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
-        .table-header {
-            padding: 1rem;
-            background: var(--bg-light);
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th, .data-table td {
-            padding: 0.75rem 1rem;
-            text-align: right;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .data-table th { background-color: #f1f5f9; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; }
-        .data-table tr:hover { background-color: #f8fafc; }
+        .table-box { background: var(--white); border-radius: 0.5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 1rem; }
+        .table-header { padding: 0.8rem 1rem; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+        .table-header h3 { font-size: 1rem; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; } /* Scrollable on mobile */
+        th, td { padding: 0.7rem 1rem; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        th { background: #f8fafc; color: var(--muted); font-weight: 600; }
+        tr:hover { background: #f8fafc; }
+        .table-container { overflow-x: auto; }
 
-        /* Buttons */
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 600;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .btn-primary { background: var(--primary); color: var(--white); }
-        .btn-primary:hover { background: var(--secondary); }
-        .btn-success { background: var(--success); color: var(--white); }
-        .btn-danger { background: var(--danger); color: var(--white); }
-        .btn-sm { padding: 0.25rem 0.75rem; font-size: 0.85rem; }
+        /* Buttons Small */
+        .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; width: auto; margin-left: 0.2rem; }
+        .btn-danger { background: var(--danger); }
+        .btn-success { background: var(--success); }
+        .btn-icon { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; }
+
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 1rem; }
+        .modal-content { background: var(--white); padding: 1.5rem; border-radius: 0.8rem; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-close { position: absolute; top: 10px; left: 15px; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
+        .form-group { margin-bottom: 0.8rem; }
+        .form-group label { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; font-weight: 600; }
+        .form-control { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 0.3rem; }
 
         /* Footer */
-        footer {
-            background: #1e293b;
-            color: #94a3b8;
-            text-align: center;
-            padding: 2rem 1rem;
-            margin-top: auto;
-        }
-        .footer-content p { margin-bottom: 1rem; font-size: 0.9rem; }
-        .qr-section a { display: inline-block; transition: transform 0.3s; }
-        .qr-section a:hover { transform: scale(1.05); }
-        .qr-section img { width: 100px; height: 100px; border-radius: 10px; margin-bottom: 0.5rem; border: 2px solid #fff; }
-        .qr-section span { display: block; font-size: 0.8rem; color: var(--accent); }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .navbar { flex-direction: column; gap: 1rem; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-            .table-header { flex-direction: column; gap: 1rem; align-items: stretch; }
-            /* Scrollable table on mobile */
-            .table-container { overflow-x: auto; }
-            .data-table { min-width: 600px; }
-        }
-        
-        /* Loading Spinner */
-        .loading { text-align: center; padding: 3rem; color: var(--text-muted); }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Modal/Forms (Simplified for brevity) */
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; justify-content:center; align-items:center; }
-        .modal-content { background: white; padding: 2rem; border-radius: var(--radius); width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
-        .form-control { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: var(--radius); font-family: 'Cairo'; }
+        footer { text-align: center; padding: 1.5rem; background: #1e293b; color: #94a3b8; margin-top: auto; }
+        .qr-box { margin-top: 1rem; }
+        .qr-box img { width: 80px; border-radius: 8px; border: 2px solid #fff; margin-bottom: 5px; }
+        .qr-box a { color: var(--accent); text-decoration: none; font-size: 0.8rem; display: block; }
     </style>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="logo"><i class="fas fa-cash-register"></i> Axentro System</div>
-        <div class="nav-actions">
-            <button class="btn btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> تحديث</button>
-            <span id="lastUpdate" style="font-size:0.8rem; color:var(--text-muted);">آخر تحديث: --</span>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="container">
-        <!-- Login Section (Simple) -->
-        <div id="loginSection" class="stat-card" style="max-width: 400px; margin: 2rem auto; text-align: center;">
-            <h3 style="margin-bottom: 1rem;">تسجيل الدخول</h3>
-            <input type="password" id="passInput" class="form-control" placeholder="كلمة المرور" style="margin-bottom:1rem;">
-            <button class="btn btn-primary" style="width:100%;" onclick="login()">دخول</button>
-        </div>
-
-        <!-- Dashboard -->
-        <div id="dashboardSection" style="display:none;">
-            <h2 style="margin-bottom: 1rem;">لوحة التحكم</h2>
-            <div class="stats-grid" id="statsGrid">
-                <!-- Stats will be injected here -->
-            </div>
-
-            <!-- Merchants Table -->
-            <div class="table-container">
-                <div class="table-header">
-                    <h3>قائمة التجار</h3>
-                    <button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة تاجر</button>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr><th>اسم التاجر</th><th>المنطقة</th><th>الهاتف</th><th>الحالة</th><th>إجراءات</th></tr>
-                    </thead>
-                    <tbody id="merchantsTableBody">
-                        <!-- Data injected here -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Transfers Table -->
-             <div class="table-container">
-                <div class="table-header">
-                    <h3>آخر التحويلات</h3>
-                    <button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-exchange-alt"></i> تحويل جديد</button>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr><th>التاريخ</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th></tr>
-                    </thead>
-                    <tbody id="transfersTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div id="loadingSection" class="loading" style="display:none;">
-            <div class="spinner"></div>
-            <p>جاري تحميل البيانات...</p>
+    <!-- 1. Login Screen -->
+    <div id="loginBox">
+        <div class="login-card">
+            <h2><i class="fas fa-lock"></i> تسجيل الدخول</h2>
+            <input type="password" id="passInput" placeholder="كلمة المرور" onkeypress="handleEnter(event)">
+            <button class="btn btn-primary" onclick="login()">دخول</button>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
+    <!-- 2. Main App -->
+    <div class="app-container" id="appBox">
+        <nav class="navbar">
+            <div class="logo"><i class="fas fa-store"></i> Axentro</div>
+            <div style="font-size:0.8rem; color:var(--muted);"><span id="lastUpd"></span></div>
+        </nav>
+
+        <!-- Tabs -->
+        <div class="tabs-nav">
+            <div class="tab-link active" onclick="showPage('home')"><i class="fas fa-home"></i> الرئيسية</div>
+            <div class="tab-link" onclick="showPage('merchants')"><i class="fas fa-users"></i> التجار</div>
+            <div class="tab-link" onclick="showPage('machines')"><i class="fas fa-cash-register"></i> المكن</div>
+            <div class="tab-link" onclick="showPage('transfers')"><i class="fas fa-exchange-alt"></i> التحويلات</div>
+            <div class="tab-link" onclick="showPage('collections')"><i class="fas fa-hand-holding-usd"></i> التحصيلات</div>
+            <div class="tab-link" onclick="showPage('archive')"><i class="fas fa-archive"></i> الأرشيف</div>
+        </div>
+
+        <div class="content">
+            
+            <!-- HOME PAGE -->
+            <div id="page-home" class="page active">
+                <div class="stats-grid" id="dashStats"></div>
+                <div class="table-box">
+                    <div class="table-header"><h3>سريع</h3></div>
+                    <div style="padding:1rem; text-align:center;">
+                        <button class="btn btn-success" style="width:auto; padding:0.8rem 2rem;" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button>
+                        <button class="btn btn-primary" style="width:auto; padding:0.8rem 2rem;" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MERCHANTS PAGE -->
+            <div id="page-merchants" class="page">
+                <div class="table-box">
+                    <div class="table-header">
+                        <h3>قائمة التجار</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>الهاتف</th><th>الحالة</th><th>إجراء</th></tr></thead>
+                            <tbody id="tblMerchants"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MACHINES PAGE -->
+            <div id="page-machines" class="page">
+                <div class="table-box">
+                    <div class="table-header">
+                        <h3>المكن</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>رقم المكنة</th><th>التاجر</th><th>الباركود</th><th>التارجت</th><th>إجراء</th></tr></thead>
+                            <tbody id="tblMachines"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRANSFERS PAGE -->
+            <div id="page-transfers" class="page">
+                 <div class="table-box">
+                    <div class="table-header"><h3>سجل التحويلات</h3></div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>تاريخ</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th></tr></thead>
+                            <tbody id="tblTransfers"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLLECTIONS PAGE -->
+            <div id="page-collections" class="page">
+                 <div class="table-box">
+                    <div class="table-header"><h3>سجل التحصيلات</h3></div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>تاريخ</th><th>التاجر</th><th>القيمة</th><th>النوع</th></tr></thead>
+                            <tbody id="tblCollections"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ARCHIVE PAGE -->
+            <div id="page-archive" class="page">
+                <div class="table-box">
+                    <div class="table-header"><h3>الأرشيف</h3></div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>الشهر</th><th>إجمالي التحويلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th></tr></thead>
+                            <tbody id="tblArchive"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer>
             <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
-            <div class="qr-section">
+            <div class="qr-box">
                 <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
-                    <!-- تأكد من وجود الصورة بجانب الملف أو استبدال الرابط -->
-                    <img src="qr-links.png" alt="QR Code">
+                    <img src="qr-links.png" alt="QR">
                     <span>Scan Me > Click On Me</span>
                 </a>
             </div>
-        </div>
-    </footer>
+        </footer>
+    </div>
 
-    <!-- Simple Modal for Adding Data -->
+    <!-- MODALS -->
     <div id="modal" class="modal">
         <div class="modal-content">
-            <span style="position:absolute; left:10px; top:10px; cursor:pointer;" onclick="closeModal()"><i class="fas fa-times"></i></span>
+            <span class="modal-close" onclick="closeModal()">×</span>
             <div id="modalBody"></div>
         </div>
     </div>
 
     <script>
-        // Configuration
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec'; // ضع رابط الويب الخاص بك هنا
-        let isLoggedIn = false;
-        let appData = {};
+        const API = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec';
+        let DB = { merchants: [], machines: [], transfers: [], collections: [], archives: [] };
 
-        // Auto Refresh Setup
-        setInterval(() => {
-            if(isLoggedIn) refreshData();
-        }, 30000); // كل 30 ثانية
-
-        // API Helper
-        async function api(action, data = {}) {
+        // --- Core Functions ---
+        function handleEnter(e) { if (e.key === 'Enter') login(); }
+        
+        async function api(act, data={}) {
             try {
-                const response = await fetch(`${API_URL}?action=${action}&data=${encodeURIComponent(JSON.stringify(data))}`);
-                return await response.json();
-            } catch (error) {
-                console.error('Error:', error);
-                return { success: false, message: 'خطأ في الاتصال' };
-            }
+                let url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`;
+                let res = await fetch(url);
+                return await res.json();
+            } catch(e) { alert('خطأ في الاتصال'); return {success:false}; }
         }
 
-        // Login Function
         async function login() {
-            const pass = document.getElementById('passInput').value;
-            const res = await api('login', { password: pass });
+            let p = document.getElementById('passInput').value;
+            let res = await api('login', {password: p});
             if (res.success) {
-                isLoggedIn = true;
-                document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('dashboardSection').style.display = 'block';
-                refreshData();
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('appBox').style.display = 'flex';
+                loadData();
+                setInterval(loadData, 60000); // تحديث كل دقيقة
             } else {
-                alert(res.message);
+                alert('كلمة المرور خطأ');
             }
         }
 
-        // Main Data Fetcher
-        async function refreshData() {
-            document.getElementById('loadingSection').style.display = 'block';
-            const res = await api('getAllData');
+        async function loadData() {
+            let res = await api('getAllData');
             if (res.success) {
-                appData = res.data;
-                renderDashboard(res.data.dashboard);
-                renderMerchants(res.data.merchants);
-                renderTransfers(res.data.transfers);
-                document.getElementById('lastUpdate').innerText = "آخر تحديث: " + new Date().toLocaleTimeString('ar-EG');
+                DB = res.data;
+                renderDashboard();
+                renderMerchants();
+                renderMachines();
+                renderTransfers();
+                renderCollections();
+                renderArchive();
+                document.getElementById('lastUpd').innerText = new Date().toLocaleTimeString('ar');
             }
-            document.getElementById('loadingSection').style.display = 'none';
         }
 
-        // Render Functions
-        function renderDashboard(d) {
-            document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-card"><h3>التجار</h3><div class="value">${d['عدد التجار']}</div></div>
-                <div class="stat-card"><h3>التحويلات (شهر)</h3><div class="value">${d['إجمالي التحويلات']}</div></div>
-                <div class="stat-card"><h3>التحصيلات (شهر)</h3><div class="value">${d['إجمالي التحصيلات']}</div></div>
-                <div class="stat-card" style="border-color: var(--danger);"><h3>المتبقي</h3><div class="value">${d['إجمالي المتبقي']}</div></div>
+        // --- Render Functions ---
+        function renderDashboard() {
+            let d = DB.dashboard;
+            document.getElementById('dashStats').innerHTML = `
+                <div class="stat-card"><h4>التحويلات</h4><div class="val">${d['التحويلات']}</div></div>
+                <div class="stat-card"><h4>التحصيلات</h4><div class="val">${d['التحصيلات']}</div></div>
+                <div class="stat-card" style="border-color:var(--danger)"><h4>المتبقي</h4><div class="val">${d['المتبقي']}</div></div>
+                <div class="stat-card"><h4>عدد التجار</h4><div class="val">${d['التجار']}</div></div>
             `;
         }
-
-        function renderMerchants(data) {
-            const tbody = document.getElementById('merchantsTableBody');
-            tbody.innerHTML = '';
-            data.forEach(m => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${m['اسم التاجر']}</td>
-                        <td>${m['المنطقة']}</td>
-                        <td>${m['رقم الهاتف']}</td>
-                        <td><span class="btn btn-sm" style="background:${m['الحالة'] == 'نشط' ? '#dcfce7' : '#fee2e2'}; color:${m['الحالة'] == 'نشط' ? '#166534' : '#991b1b'}; cursor:default;">${m['الحالة']}</span></td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="deleteMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderTransfers(data) {
-            const tbody = document.getElementById('transfersTableBody');
-            tbody.innerHTML = '';
-            // Show last 10
-            data.slice(-10).reverse().forEach(t => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${t['التاريخ']}</td>
-                        <td>${t['اسم التاجر']}</td>
-                        <td>${t['قيمة التحويل']}</td>
-                        <td>${t['ملاحظات'] || '-'}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // Actions
-        async function deleteMerchant(id) {
-            if(confirm('هل أنت متأكد من الحذف؟')) {
-                await api('deleteMerchant', { merchantId: id });
-                refreshData();
-            }
-        }
         
-        async function addMerchant() {
-            const data = {
-                merchantName: document.getElementById('mName').value,
-                businessName: document.getElementById('mBiz').value,
-                phone: document.getElementById('mPhone').value,
-                area: document.getElementById('mArea').value
-            };
-            await api('addMerchant', data);
-            closeModal();
-            refreshData();
+        // Generic Table Renderer
+        function render(id, data, cols, delFunc) {
+            const tbody = document.getElementById(id);
+            tbody.innerHTML = '';
+            data.forEach(r => {
+                let tds = cols.map(c => `<td>${r[c] || '-'}</td>`).join('');
+                let btns = delFunc ? `<td><button class="btn btn-danger btn-sm" onclick="${delFunc}('${r[cols[0]]}')"><i class="fas fa-trash"></i></button></td>` : '';
+                tbody.innerHTML += `<tr>${tds}${btns}</tr>`;
+            });
         }
 
-        async function addTransfer() {
-            const data = {
-                merchantId: document.getElementById('tMerchant').value,
-                machineId: document.getElementById('tMachine').value,
-                amount: document.getElementById('tAmount').value
-            };
-            await api('addTransfer', data);
-            closeModal();
-            refreshData();
+        function renderMerchants() { render('tblMerchants', DB.merchants, ['رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الهاتف', 'الحالة'], 'delMerchant'); }
+        function renderMachines() { render('tblMachines', DB.machines, ['رقم المكنة', 'اسم التاجر', 'الباركود', 'التارجت الشهري'], 'delMachine'); }
+        function renderTransfers() { render('tblTransfers', DB.transfers.slice(-20).reverse(), ['التاريخ', 'اسم التاجر', 'قيمة التحويل', 'ملاحظات'], 'delTransfer'); }
+        function renderCollections() { render('tblCollections', DB.collections.slice(-20).reverse(), ['التاريخ', 'اسم التاجر', 'قيمة التحصيل', 'نوع التحصيل'], 'delCollection'); }
+        function renderArchive() { render('tblArchive', DB.archives, ['الشهر', 'إجمالي التحويلات', 'إجمالي التحصيلات', 'إجمالي المتبقي']); }
+
+        // --- Actions ---
+        async function delMerchant(id) { if(confirm('حذف؟')) { await api('deleteMerchant', {id:id}); loadData(); } }
+        async function delMachine(id) { if(confirm('حذف؟')) { await api('deleteMachine', {id:id}); loadData(); } }
+        async function delTransfer(id) { if(confirm('حذف؟')) { await api('deleteTransfer', {id:id}); loadData(); } }
+        async function delCollection(id) { if(confirm('حذف؟')) { await api('deleteCollection', {id:id}); loadData(); } }
+
+        // --- Navigation ---
+        function showPage(name) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            document.getElementById('page-'+name).classList.add('active');
+            event.target.classList.add('active');
         }
 
-        // Modal Handling
+        // --- Modals & Forms ---
         function openModal(type) {
-            const modal = document.getElementById('modal');
             const body = document.getElementById('modalBody');
-            
-            if(type === 'merchant') {
+            document.getElementById('modal').style.display = 'flex';
+
+            if (type === 'merchant') {
                 body.innerHTML = `
-                    <h3>إضافة تاجر جديد</h3>
-                    <div class="form-group"><label>الاسم</label><input id="mName" class="form-control"></div>
-                    <div class="form-group"><label>النشاط</label><input id="mBiz" class="form-control"></div>
+                    <h3>إضافة تاجر</h3>
+                    <div class="form-group"><label>اسم التاجر</label><input id="mName" class="form-control"></div>
+                    <div class="form-group"><label>اسم النشاط</label><input id="mBiz" class="form-control"></div>
+                    <div class="form-group"><label>رقم الحساب</label><input id="mAcc" class="form-control"></div>
                     <div class="form-group"><label>الهاتف</label><input id="mPhone" class="form-control"></div>
                     <div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control"></div>
-                    <button class="btn btn-primary" onclick="addMerchant()">حفظ</button>
+                    <div class="form-group"><label>العنوان</label><input id="mAddr" class="form-control"></div>
+                    <div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control"></div>
+                    <button class="btn btn-primary" onclick="saveMerchant()">حفظ</button>
+                `;
+            } else if (type === 'machine') {
+                let opts = DB.merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
+                body.innerHTML = `
+                    <h3>إضافة مكنة</h3>
+                    <div class="form-group"><label>اختر التاجر</label><select id="mcMerch" class="form-control">${opts}</select></div>
+                    <div class="form-group"><label>الباركود</label><input id="mcBar" class="form-control"></div>
+                    <div class="form-group"><label>الرقم التسلسلي</label><input id="mcSerial" class="form-control"></div>
+                    <div class="form-group"><label>التارجت الشهري</label><input id="mcTarget" class="form-control"></div>
+                    <div class="form-group"><label>ملاحظات</label><input id="mcNotes" class="form-control"></div>
+                    <button class="btn btn-primary" onclick="saveMachine()">حفظ</button>
                 `;
             } else if (type === 'transfer') {
-                // Simple selection for demo
-                let mOpts = appData.merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
-                let mcOpts = appData.machines.map(m => `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`).join('');
-                
+                let opts = DB.merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
                 body.innerHTML = `
                     <h3>تحويل جديد</h3>
-                    <div class="form-group"><label>التاجر</label><select id="tMerchant" class="form-control">${mOpts}</select></div>
-                    <div class="form-group"><label>المكنة</label><select id="tMachine" class="form-control">${mcOpts}</select></div>
-                    <div class="form-group"><label>القيمة</label><input type="number" id="tAmount" class="form-control"></div>
-                    <button class="btn btn-success" onclick="addTransfer()">تأكيد</button>
+                    <div class="form-group"><label>التاجر</label><select id="trMerch" class="form-control" onchange="fillMachines(this.value, 'trMach')">${opts}</select></div>
+                    <div class="form-group"><label>المكنة</label><select id="trMach" class="form-control"></select></div>
+                    <div class="form-group"><label>المبلغ</label><input type="number" id="trAmt" class="form-control"></div>
+                    <div class="form-group"><label>ملاحظات</label><input id="trNotes" class="form-control"></div>
+                    <button class="btn btn-success" onclick="saveTransfer()">تأكيد التحويل</button>
                 `;
+                fillMachines(DB.merchants[0]?.['رقم التاجر'], 'trMach'); // Fill first
+            } else if (type === 'collection') {
+                let opts = DB.merchants.map(m => `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('');
+                body.innerHTML = `
+                    <h3>تحصيل جديد</h3>
+                    <div class="form-group"><label>التاجر</label><select id="colMerch" class="form-control" onchange="fillMachines(this.value, 'colMach')">${opts}</select></div>
+                    <div class="form-group"><label>المكنة</label><select id="colMach" class="form-control"></select></div>
+                    <div class="form-group"><label>المبلغ</label><input type="number" id="colAmt" class="form-control"></div>
+                    <div class="form-group"><label>نوع التحصيل</label>
+                        <select id="colType" class="form-control">
+                            <option value="كلي">كلي</option>
+                            <option value="جزئي">جزئي</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>ملاحظات</label><input id="colNotes" class="form-control"></div>
+                    <button class="btn btn-primary" onclick="saveCollection()">تأكيد التحصيل</button>
+                `;
+                fillMachines(DB.merchants[0]?.['رقم التاجر'], 'colMach');
             }
-            modal.style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('modal').style.display = 'none';
+        // Helper: Filter machines by merchant in dropdown
+        function fillMachines(merchantId, selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            DB.machines.filter(m => m['رقم التاجر'] === merchantId).forEach(m => {
+                select.innerHTML += `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`;
+            });
+        }
+
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        // Save Functions
+        async function saveMerchant() {
+            let data = {
+                merchantName: document.getElementById('mName').value,
+                businessName: document.getElementById('mBiz').value,
+                accountNumber: document.getElementById('mAcc').value,
+                phone: document.getElementById('mPhone').value,
+                area: document.getElementById('mArea').value,
+                address: document.getElementById('mAddr').value,
+                notes: document.getElementById('mNotes').value
+            };
+            await api('addMerchant', data);
+            closeModal(); loadData();
+        }
+
+        async function saveMachine() {
+            let data = {
+                merchantId: document.getElementById('mcMerch').value,
+                barcode: document.getElementById('mcBar').value,
+                serialNumber: document.getElementById('mcSerial').value,
+                monthlyTarget: document.getElementById('mcTarget').value,
+                notes: document.getElementById('mcNotes').value
+            };
+            await api('addMachine', data);
+            closeModal(); loadData();
+        }
+
+        async function saveTransfer() {
+            let data = {
+                merchantId: document.getElementById('trMerch').value,
+                machineId: document.getElementById('trMach').value,
+                amount: document.getElementById('trAmt').value,
+                notes: document.getElementById('trNotes').value
+            };
+            await api('addTransfer', data);
+            closeModal(); loadData();
+        }
+
+        async function saveCollection() {
+            let data = {
+                merchantId: document.getElementById('colMerch').value,
+                machineId: document.getElementById('colMach').value,
+                amount: document.getElementById('colAmt').value,
+                collectionType: document.getElementById('colType').value,
+                notes: document.getElementById('colNotes').value
+            };
+            await api('addCollection', data);
+            closeModal(); loadData();
         }
     </script>
 </body>
