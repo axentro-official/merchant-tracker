@@ -151,3 +151,26 @@ th { background: #f7faff; font-size: 14px; color: #274067; }
   .global-search-wrap input { min-width: 0; width: 100%; }
   .main-content { padding: 16px; padding-bottom: 100px; } 
 }
+/* تأكد من وجود هذا الكود في نهاية الملف */
+
+/* في الشاشات الأصغر من 900 بكسل (الموبايل) */
+@media (max-width: 900px) {
+  /* إخفاء القائمة الجانبية على الموبايل */
+  .sidebar {
+    display: none !important;
+  }
+
+  /* إظهار شريط التنقل السفلي على الموبايل */
+  .bottom-nav {
+    display: flex !important;
+  }
+  
+  /* ضبط الحاوية الرئيسية */
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .main-content {
+    padding-bottom: 100px; /* مساحة للشريط السفلي */
+  }
+}
