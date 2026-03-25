@@ -416,7 +416,7 @@
 
     <script>
         // ==================== API Wrapper (google.script.run) ====================
-        // هذا هو الجزء الأهم للإصلاح: استخدام google.script.run بدلاً من fetch
+        // تم التعديل: استخدام google.script.run بدلاً من fetch لحل مشكلة الـ JSON
         function serverFunction(funcName, data) {
             return new Promise((resolve, reject) => {
                 google.script.run
@@ -673,7 +673,7 @@
                 <div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" value="${escapeHtml(merchant['ملاحظات'] || '')}"></div></div>
                 <button class="btn btn-primary btn-block" onclick="updateMerchant('${id}')"><i class="fas fa-save"></i> حفظ التعديلات</button>
             `;
-            openModal();
+            openModal(); // تم التعديل لاستدعاء openModal بدون معامل type
         }
         function editMachine(id) {
             if (!DB.machines || DB.machines.length === 0) { showToast('الرجاء الانتظار حتى تحميل بيانات المكن', 'warning'); return; }
@@ -699,7 +699,7 @@
                 <div class="form-group"><label>ملاحظات</label><input id="mcNotesEdit" class="form-control" value="${escapeHtml(machine['ملاحظات'] || '')}"></div>
                 <button class="btn btn-primary btn-block" onclick="updateMachine('${id}')"><i class="fas fa-save"></i> حفظ التعديلات</button>
             `;
-            openModal();
+            openModal(); // تم التعديل
         }
         function updateMachineMerchantSelect(merchantId) { document.getElementById('mcMerchIdEdit').value = merchantId; }
         function editTransfer(id) {
@@ -714,7 +714,7 @@
                 <div class="form-group"><label>ملاحظات</label><input id="trNotesEdit" class="form-control" value="${escapeHtml(transfer['ملاحظات'] || '')}"></div>
                 <button class="btn btn-primary btn-block" onclick="updateTransfer('${id}')"><i class="fas fa-save"></i> حفظ التعديلات</button>
             `;
-            openModal();
+            openModal(); // تم التعديل
         }
         function editCollection(id) {
             if (!DB.collections || DB.collections.length === 0) { showToast('الرجاء الانتظار حتى تحميل بيانات التحصيلات', 'warning'); return; }
@@ -729,7 +729,7 @@
                 <div class="form-group"><label>ملاحظات</label><input id="colNotesEdit" class="form-control" value="${escapeHtml(collection['ملاحظات'] || '')}"></div>
                 <button class="btn btn-primary btn-block" onclick="updateCollection('${id}')"><i class="fas fa-save"></i> حفظ التعديلات</button>
             `;
-            openModal();
+            openModal(); // تم التعديل
         }
 
         // ==================== Update Functions ====================
@@ -872,14 +872,16 @@
         }
 
         // ==================== Modals ====================
+        // تم تعديل هذه الدالة لتعمل بشكل صحيح مع نافذة التعديل والإضافة
         function openModal(type) {
             const body = document.getElementById('modalBody'); 
             const m = document.getElementById('modal'); 
             m.style.display = 'flex'; 
             setTimeout(() => m.classList.add('show'), 10);
             
-            if (!type) return; // إذا لم يتم تحديد نوع، فقط افتح المودال الفارغ (يستخدم عند التعديل)
+            if (!type) return; // إذا لم يتم تحديد نوع (يحدث عند التعديل)، لا تقم بتغيير محتوى الـ Modal
 
+            // أكواد الإضافة تبقى كما هي
             if (type === 'merchant') {
                 body.innerHTML = `<h3><i class="fas fa-user-plus"></i> إضافة تاجر جديد</h3><div class="form-row"><div class="form-group"><label>اسم التاجر <span class="required">*</span></label><input id="mName" class="form-control" placeholder="اسم التاجر"></div><div class="form-group"><label>اسم النشاط</label><input id="mBiz" class="form-control" placeholder="اسم النشاط"></div></div><div class="form-row"><div class="form-group"><label>رقم الحساب</label><input id="mAcc" class="form-control" placeholder="رقم الحساب"></div><div class="form-group"><label>رقم الهاتف</label><input id="mPhone" class="form-control" placeholder="رقم الهاتف"></div></div><div class="form-row"><div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control" placeholder="المنطقة"></div><div class="form-group"><label>العنوان</label><input id="mAddr" class="form-control" placeholder="العنوان"></div></div><div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات"></div><button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ التاجر</button>`;
             } else if (type === 'machine') {
