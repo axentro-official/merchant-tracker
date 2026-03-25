@@ -12,18 +12,20 @@
             --primary-dark: #1d4ed8;
             --secondary: #6366f1;
             --bg: #f8fafc;
+            --bg-dark: #0f172a;
             --white: #ffffff;
             --text: #1e293b;
             --muted: #64748b;
             --success: #10b981;
+            --success-light: #d1fae5;
             --danger: #ef4444;
             --border: #e2e8f0;
             --radius: 12px;
             --radius-sm: 8px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body { background: linear-gradient(135deg, #f0f9ff 0%, #e6f0fa 100%); color: var(--text); min-height: 100vh; padding: 1rem; }
-        .container { max-width: 800px; margin: 0 auto; }
+        body { background: linear-gradient(135deg, #f0f9ff 0%, #e6f0fa 100%); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        .container { max-width: 800px; margin: 0 auto; padding: 1rem; flex: 1; }
         .card { background: var(--white); border-radius: var(--radius); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 1.5rem; }
         .header { text-align: center; margin-bottom: 1.5rem; }
         .logo { width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
@@ -50,6 +52,7 @@
         .btn-primary:hover { transform: translateY(-2px); }
         .btn-secondary { background: #e2e8f0; color: var(--text); }
         .btn-secondary:hover { background: #cbd5e1; }
+        .btn-success { background: linear-gradient(135deg, var(--success), #059669); color: white; }
         .radio-group { display: flex; gap: 1rem; margin: 0.5rem 0; }
         .radio-group label { display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer; }
         .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
@@ -59,21 +62,28 @@
         .toast.show { transform: translateX(-50%) translateY(0); }
         .toast.success { background: var(--success); }
         .toast.error { background: var(--danger); }
-        .back-link { display: inline-block; margin-bottom: 1rem; color: var(--primary); text-decoration: none; font-weight: 600; }
-        .back-link i { margin-left: 0.5rem; }
         hr { margin: 1rem 0; border-color: var(--border); }
+        footer { background: linear-gradient(135deg, var(--bg-dark) 0%, #1e293b 100%); padding: 2rem; text-align: center; margin-top: auto; }
+        footer p { color: #94a3b8; font-size: 0.85rem; line-height: 1.8; }
+        .qr-box { margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: float 4s ease-in-out infinite; }
+        .qr-box img { width: 100px; border-radius: var(--radius-sm); border: 3px solid rgba(255,255,255,0.2); margin-bottom: 0.8rem; transition: all 0.3s; }
+        .qr-box img:hover { transform: scale(1.1); border-color: var(--primary); }
+        .qr-box a { color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; }
+        .qr-box a:hover { color: #60a5fa; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .success-icon { font-size: 4rem; color: var(--success); margin-bottom: 1rem; }
+        .success-message { text-align: center; padding: 2rem; }
         @media (max-width: 640px) {
             .info-grid { grid-template-columns: 1fr; }
-            .container { padding: 0; }
+            .container { padding: 0.5rem; }
             .card { padding: 1rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="javascript:history.back()" class="back-link"><i class="fas fa-arrow-right"></i> العودة للواجهة الرئيسية</a>
-        
-        <div class="card">
+        <!-- الصفحة الرئيسية للبوابة (نموذج الطلب) -->
+        <div id="portalForm" class="card">
             <div class="header">
                 <div class="logo"><i class="fas fa-store"></i></div>
                 <h1>بوابة التاجر</h1>
@@ -128,7 +138,30 @@
                 <button class="btn btn-primary" onclick="submitRequest()"><i class="fas fa-paper-plane"></i> إرسال الطلب</button>
             </div>
         </div>
+
+        <!-- صفحة النجاح (تظهر بعد الإرسال) -->
+        <div id="successPage" class="card" style="display: none; text-align: center;">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>تم إرسال طلبك بنجاح!</h2>
+            <p style="margin: 1rem 0; color: var(--muted);">سيتم التواصل معك قريباً لتأكيد الطلب وتنفيذه.</p>
+            <button class="btn btn-success" onclick="resetForm()">
+                <i class="fas fa-arrow-right"></i> تقديم طلب آخر
+            </button>
+        </div>
     </div>
+
+    <!-- Footer (يظهر في كلا الصفحتين) -->
+    <footer>
+        <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
+        <div class="qr-box">
+            <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
+                <img src="https://axentro-official.github.io/axentro-website/qr-links.png" alt="QR Code">
+                <span><i class="fas fa-qrcode"></i> QR Scan Me</span>
+            </a>
+        </div>
+    </footer>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
@@ -278,7 +311,6 @@
             const transfers = data.transfers;
             const remaining = data.remaining;
 
-            // معلومات التاجر
             const detailsHtml = `
                 <div class="info-item"><span class="info-label">رقم التاجر</span><div class="info-value">${merchant['رقم التاجر'] || '-'}</div></div>
                 <div class="info-item"><span class="info-label">اسم التاجر</span><div class="info-value">${merchant['اسم التاجر'] || '-'}</div></div>
@@ -287,7 +319,6 @@
             `;
             document.getElementById('merchantDetails').innerHTML = detailsHtml;
 
-            // المكن
             let machinesHtml = '';
             if (machines.length === 0) {
                 machinesHtml = '<p class="info-item">لا توجد مكنات مسجلة</p>';
@@ -303,8 +334,7 @@
             }
             document.getElementById('machinesList').innerHTML = machinesHtml;
 
-            // التحويلات
-            let transfersHtml = '<table class="transfer-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody>';
+            let transfersHtml = '<table class="transfer-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th> </tr></thead><tbody>';
             if (transfers.length === 0) {
                 transfersHtml += '<tr><td colspan="4" style="text-align:center;">لا توجد تحويلات</td></tr>';
             } else {
@@ -322,7 +352,6 @@
             transfersHtml += '</tbody></table>';
             document.getElementById('transfersList').innerHTML = transfersHtml;
 
-            // المديونية
             const remainingClass = remaining > 0 ? 'danger' : 'success';
             document.getElementById('remainingBalance').innerHTML = `<div class="info-label">المبلغ المتبقي على التاجر</div><div class="info-value" style="color: var(${remaining > 0 ? '--danger' : '--success'});">${formatNumber(remaining)} جنيه</div>`;
         }
@@ -350,9 +379,9 @@
                     notes: notes
                 });
                 if (res.success) {
-                    showToast('تم إرسال طلبك بنجاح، سيتم التواصل معك قريباً', 'success');
-                    document.getElementById('amount').value = '';
-                    document.getElementById('notes').value = '';
+                    // إخفاء النموذج وإظهار صفحة النجاح
+                    document.getElementById('portalForm').style.display = 'none';
+                    document.getElementById('successPage').style.display = 'block';
                 } else {
                     showToast(res.message || 'فشل إرسال الطلب', 'error');
                 }
@@ -363,11 +392,26 @@
             }
         }
 
+        function resetForm() {
+            // إعادة تعيين النموذج
+            document.getElementById('selectedMerchantId').value = '';
+            document.getElementById('merchantSearch').value = '';
+            document.getElementById('merchantSelect').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('merchantInfo').style.display = 'none';
+            // إخفاء صفحة النجاح وإظهار النموذج
+            document.getElementById('successPage').style.display = 'none';
+            document.getElementById('portalForm').style.display = 'block';
+            // إعادة تعيين اختيار نوع الطلب إلى الافتراضي
+            document.querySelector('input[name="requestType"][value="رصيد على المكنة"]').checked = true;
+        }
+
         // إغلاق نتائج البحث عند النقر خارجها
         document.addEventListener('click', function(e) {
             const searchBox = document.getElementById('merchantSearch');
             const results = document.getElementById('searchResults');
-            if (!searchBox.contains(e.target) && !results.contains(e.target)) {
+            if (searchBox && !searchBox.contains(e.target) && results && !results.contains(e.target)) {
                 results.style.display = 'none';
             }
         });
