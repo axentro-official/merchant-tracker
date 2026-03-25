@@ -405,10 +405,10 @@
     </div>
 
     <script>
-        const API = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec';
+        const API = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec'; // <-- UPDATE WITH YOUR DEPLOYED URL
         let DB = {};
         let merchantSearchTerm = '';
-        let isFullDataLoaded = false;
+        let loadedTables = { merchants: false, machines: false, transfers: false, collections: false, archive: false }; // NEW
 
         const AppState = { isPolling: false, pollInterval: 60000, minInterval: 30000, maxInterval: 120000, connectionStatus: 'offline' };
 
@@ -427,7 +427,7 @@
         function formatNumber(num) { if (num === null || num === undefined || isNaN(num)) return '0'; return Number(num).toLocaleString('ar-EG'); }
         function formatDate(dateStr) { if (!dateStr) return '-'; try { const d = new Date(dateStr); if (isNaN(d)) return dateStr; return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }); } catch { return dateStr; } }
         function formatTime(t) { if (!t) return '-'; return t; }
-        function escapeHtml(str) { if (!str) return ''; return str.toString().replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+        function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
         // ==================== Cache ====================
         const CACHE_KEY = 'axentro_dashboard_cache'; const CACHE_TTL = 10 * 60 * 1000;
@@ -454,7 +454,7 @@
                 document.getElementById('appBox').style.display = 'flex';
                 const cachedData = getCache();
                 if (cachedData) { DB.dashboard = cachedData; renderDashboard(); }
-                loadData();
+                loadData(); // Loads dashboard only
             } else { showLoading(false); }
         }
         async function login() {
@@ -477,7 +477,7 @@
         // ==================== API ====================
         async function api(act, data = {}) { try { const url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`; const res = await fetch(url); return await res.json(); } catch (e) { console.error('API Error:', e); return { success: false, message: e.message }; } }
 
-        // ==================== Data Loading (Optimized) ====================
+        // ==================== Data Loading (Dashboard Only) ====================
         async function loadData() {
             if (!DB.dashboard) showLoading(true);
             try {
@@ -487,7 +487,7 @@
                     setCache(DB.dashboard);
                     renderDashboard();
                     setConnectionStatus('live');
-                    if (!isFullDataLoaded) showToast('تم تحديث الإحصائيات', 'success');
+                    showToast('تم تحديث الإحصائيات', 'success');
                 } else {
                     throw new Error('فشل تحميل الداشبورد');
                 }
@@ -500,95 +500,47 @@
                     showToast('وضع عدم الاتصال (البيانات من ذاكرة التخزين)', 'warning');
                 } else {
                     showToast('فشل تحميل البيانات', 'error');
-                    showLoading(false);
-                    return;
                 }
-            }
-            showLoading(false);
-
-            if (!isFullDataLoaded) {
-                setTimeout(async () => {
-                    try {
-                        const fullRes = await api('getAllData');
-                        if (fullRes.success && fullRes.data) {
-                            DB.merchants = fullRes.data.merchants;
-                            DB.machines = fullRes.data.machines;
-                            DB.transfers = fullRes.data.transfers;
-                            DB.collections = fullRes.data.collections;
-                            DB.archives = fullRes.data.archives;
-                            isFullDataLoaded = true;
-                            renderAll();
-                            showToast('تم تحميل جميع البيانات بنجاح', 'success');
-                        } else {
-                            console.warn('فشل تحميل البيانات التفصيلية');
-                        }
-                    } catch (err) {
-                        console.error('خطأ في تحميل البيانات التفصيلية', err);
-                        showToast('فشل تحميل بعض البيانات', 'error');
-                    }
-                }, 100);
+            } finally {
+                showLoading(false);
             }
         }
 
-        // تحديث الجداول فقط (بدون إعادة تحميل كامل)
-        async function refreshDashboardAndTable(tableName) {
+        // ==================== Lazy Loading Tables ====================
+        async function loadTableData(tableName) {
+            showLoading(true);
             try {
-                const dashRes = await api('getDashboardOnly');
-                if (dashRes.success && dashRes.dashboard) {
-                    DB.dashboard = dashRes.dashboard;
-                    renderDashboard();
-                }
-                if (tableName) {
-                    const fullRes = await api('getAllData');
-                    if (fullRes.success && fullRes.data) {
-                        if (tableName === 'merchants') DB.merchants = fullRes.data.merchants;
-                        if (tableName === 'machines') DB.machines = fullRes.data.machines;
-                        if (tableName === 'transfers') DB.transfers = fullRes.data.transfers;
-                        if (tableName === 'collections') DB.collections = fullRes.data.collections;
-                        if (tableName === 'archive') DB.archives = fullRes.data.archives;
-                        renderAll();
-                    }
+                const res = await api('getTableData', { table: tableName });
+                if (res.success && res.data) {
+                    DB[tableName] = res.data;
+                    loadedTables[tableName] = true;
+                    // Render specific table
+                    if (tableName === 'merchants') renderMerchants();
+                    else if (tableName === 'machines') renderMachines();
+                    else if (tableName === 'transfers') renderTransfers();
+                    else if (tableName === 'collections') renderCollections();
+                    else if (tableName === 'archive') renderArchive();
+                    populateMerchantDropdowns();
+                } else {
+                    showToast('فشل تحميل البيانات', 'error');
                 }
             } catch (e) {
-                console.error('تحديث جزئي فشل', e);
-                loadData(); // fallback
+                showToast('خطأ في الاتصال', 'error');
+            } finally {
+                showLoading(false);
             }
         }
 
-        function renderAll() {
-            if (!isFullDataLoaded) return;
-            renderMerchants();
-            renderMachines();
-            renderTransfers();
-            renderCollections();
-            renderArchive();
-            populateMerchantDropdowns();
-        }
-
-        // ==================== Search & Dropdowns ====================
-        function debounce(func, wait) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; }
-        const searchMerchantDebounced = debounce((query, listId, hiddenId, callback) => {
-            const listEl = document.getElementById(listId); const hiddenEl = document.getElementById(hiddenId); hiddenEl.value = '';
-            if (!query) { listEl.style.display = 'none'; return; }
-            const merchants = (DB.merchants || []); const filtered = merchants.filter(m => (m['اسم التاجر'] || '').includes(query) || (m['اسم النشاط'] || '').includes(query) || (m['رقم التاجر'] || '').toString().includes(query));
-            if (filtered.length === 0) { listEl.innerHTML = '<div class="no-result">لا توجد نتائج</div>'; } else { listEl.innerHTML = filtered.map(m => `<div onclick="selectMerchant('${m['رقم التاجر']}', '${escapeHtml(m['اسم التاجر'])}', '${listId}', '${hiddenId}', ${callback ? `'${callback}'` : 'null'})">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join(''); }
-            listEl.style.display = 'block';
-        }, 300);
-        function handleMerchantSearch(query, listId, hiddenId, callback) { searchMerchantDebounced(query, listId, hiddenId, callback); }
-        function selectMerchant(id, name, listId, hiddenId, callback) {
-            const hiddenInput = document.getElementById(hiddenId); const listEl = document.getElementById(listId); const textInput = hiddenInput.previousElementSibling;
-            if(hiddenInput) hiddenInput.value = id; if(textInput && textInput.type === 'text') textInput.value = name; if(listEl) listEl.style.display = 'none';
-            const selectId = hiddenId.replace('Id', 'Select'); const selectEl = document.getElementById(selectId); if (selectEl) selectEl.value = id;
-            if (hiddenId === 'stmtMerchantId') getStatement(); if (callback && window[callback]) window[callback](id);
-        }
-        function handleDropdownSelect(id, textInputId, hiddenId, listId) {
-            const hiddenInput = document.getElementById(hiddenId); const textInput = document.getElementById(textInputId); const listEl = document.getElementById(listId);
-            if(hiddenInput) hiddenInput.value = id; if(listEl) listEl.style.display = 'none';
-            if (id) { const merchant = (DB.merchants || []).find(m => m['رقم التاجر'] == id); if(textInput) textInput.value = merchant ? merchant['اسم التاجر'] : ''; if (hiddenId === 'stmtMerchantId') getStatement(); if (hiddenId === 'trMerchId' || hiddenId === 'colMerchId') fillMachines(id); } else { if(textInput) textInput.value = ''; }
-        }
-        function populateMerchantDropdowns() {
-            const merchants = DB.merchants || []; const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect', 'mcMerchSelect'];
-            dropdownIds.forEach(dId => { const el = document.getElementById(dId); if(!el) return; const currentVal = el.value; el.innerHTML = '<option value="">-- اختر تاجر --</option>'; merchants.forEach(m => { el.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`; }); if(currentVal) el.value = currentVal; });
+        function showPage(name, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            document.getElementById('page-' + name).classList.add('active');
+            if (element) element.classList.add('active');
+            
+            // Load table data if not loaded yet
+            if (!loadedTables[name] && name !== 'home' && name !== 'statement') {
+                loadTableData(name);
+            }
         }
 
         // ==================== Rendering ====================
@@ -600,8 +552,7 @@
             keys.forEach((k, i) => { html += `<div class="stat-card ${colors[i]}"><h4><i class="fas ${icons[i]}"></i> ${labels[i]}</h4><div class="val" data-key="${k}">${formatNumber(d[k])}</div></div>`; });
             statsContainer.innerHTML = html; renderTopMachines(d['أعلى_المكن'] || []);
         }
-        function renderTopMachines(machines) { const tbody = document.getElementById('tblTopMachines'); if (!tbody) return; if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات</td></tr>'; return; } let rows = ''; machines.forEach(m => { const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger'; rows += `<tr><td><strong>${m.name || '-'}</strong></td><td>${m.merchant || '-'}</td><td>${formatNumber(m.achieved)}</td><td>${formatNumber(m.target)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td></tr>`; }); tbody.innerHTML = rows; }
-        
+        function renderTopMachines(machines) { const tbody = document.getElementById('tblTopMachines'); if (!tbody) return; if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; } let rows = ''; machines.forEach(m => { const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger'; rows += `<tr><td><strong>${m.name || '-'}</strong></td><td>${m.merchant || '-'}</td><td>${formatNumber(m.achieved)}</td><td>${formatNumber(m.target)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td></tr>`; }); tbody.innerHTML = rows; }
         function renderMerchants() {
             const tbody = document.getElementById('tblMerchants');
             let merchants = DB.merchants || [];
@@ -615,7 +566,6 @@
                 const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
                 const phone = m['رقم الهاتف'] || '';
                 const phoneLink = phone ? `<a href="tel:${phone}" style="color: var(--primary); text-decoration: none;">${phone}</a>` : '-';
-                // Fix Issue #2: Added event.stopPropagation() to ensure click registers correctly on buttons inside table
                 rows += `<tr>
                     <td><strong>${m['رقم التاجر'] || '-'}</strong></td>
                     <td>${m['اسم التاجر'] || '-'}</td>
@@ -625,8 +575,8 @@
                     <td>${m['العنوان'] || '-'}</td>
                     <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); editMerchant('${m['رقم التاجر']}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn btn-primary btn-sm" onclick="editMerchant('${m['رقم التاجر']}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>`;
             });
@@ -715,8 +665,9 @@
             tbody.innerHTML = rows;
         }
 
-        // ==================== Edit Functions ====================
+        // ==================== Edit Functions (with data check) ====================
         function editMerchant(id) {
+            if (!DB.merchants || DB.merchants.length === 0) { showToast('الرجاء الانتظار حتى تحميل بيانات التجار', 'warning'); return; }
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
             if (!merchant) { showToast('التاجر غير موجود', 'error'); return; }
             const body = document.getElementById('modalBody');
@@ -738,6 +689,7 @@
         }
 
         function editMachine(id) {
+            if (!DB.machines || DB.machines.length === 0) { showToast('الرجاء الانتظار حتى تحميل بيانات المكن', 'warning'); return; }
             const machine = DB.machines.find(m => m['رقم المكنة'] == id);
             if (!machine) { showToast('المكنة غير موجودة', 'error'); return; }
             const body = document.getElementById('modalBody');
@@ -770,6 +722,7 @@
         }
 
         function editTransfer(id) {
+            if (!DB.transfers || DB.transfers.length === 0) { showToast('الرجاء الانتظار حتى تحميل بيانات التحويلات', 'warning'); return; }
             const transfer = DB.transfers.find(t => t['رقم التحويل'] == id);
             if (!transfer) { showToast('التحويل غير موجود', 'error'); return; }
             const body = document.getElementById('modalBody');
@@ -786,6 +739,7 @@
         }
 
         function editCollection(id) {
+            if (!DB.collections || DB.collections.length === 0) { showToast('الرجاء الانتظار حتى تحميل بيانات التحصيلات', 'warning'); return; }
             const collection = DB.collections.find(c => c['رقم التحصيل'] == id);
             if (!collection) { showToast('التحصيل غير موجود', 'error'); return; }
             const body = document.getElementById('modalBody');
@@ -802,7 +756,7 @@
             setTimeout(() => modal.classList.add('show'), 10);
         }
 
-        // ==================== Update Functions ====================
+        // ==================== Update Functions (unchanged except refresh) ====================
         async function updateMerchant(id) {
             const data = {
                 id: id,
@@ -820,7 +774,11 @@
             const res = await api('updateMerchant', data);
             if (res.success) {
                 showToast('تم تحديث التاجر بنجاح', 'success');
-                refreshDashboardAndTable('merchants');
+                // refresh only merchants table
+                loadedTables.merchants = false;
+                loadTableData('merchants');
+                // also refresh dashboard because counts may change
+                loadData();
             } else {
                 showToast(res.message || 'حدث خطأ', 'error');
                 showLoading(false);
@@ -843,7 +801,9 @@
             const res = await api('updateMachine', data);
             if (res.success) {
                 showToast('تم تحديث المكنة بنجاح', 'success');
-                refreshDashboardAndTable('machines');
+                loadedTables.machines = false;
+                loadTableData('machines');
+                loadData();
             } else {
                 showToast(res.message || 'حدث خطأ', 'error');
                 showLoading(false);
@@ -863,7 +823,9 @@
             const res = await api('updateTransfer', data);
             if (res.success) {
                 showToast('تم تحديث التحويل بنجاح', 'success');
-                refreshDashboardAndTable('transfers');
+                loadedTables.transfers = false;
+                loadTableData('transfers');
+                loadData();
             } else {
                 showToast(res.message || 'حدث خطأ', 'error');
                 showLoading(false);
@@ -884,7 +846,9 @@
             const res = await api('updateCollection', data);
             if (res.success) {
                 showToast('تم تحديث التحصيل بنجاح', 'success');
-                refreshDashboardAndTable('collections');
+                loadedTables.collections = false;
+                loadTableData('collections');
+                loadData();
             } else {
                 showToast(res.message || 'حدث خطأ', 'error');
                 showLoading(false);
@@ -901,20 +865,78 @@
         function showConfirm(msg, callback, title = 'تأكيد') { document.getElementById('confirmMsg').textContent = msg; document.getElementById('confirmTitle').textContent = title; confirmCallback = callback; const m = document.getElementById('confirmModal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10); }
         function closeConfirm() { const m = document.getElementById('confirmModal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); confirmCallback = null; }
         document.getElementById('confirmBtn').onclick = () => { if (confirmCallback) confirmCallback(); closeConfirm(); };
-        async function delMerchant(id) { showConfirm('هل أنت متأكد من حذف هذا التاجر؟', async () => { showLoading(true); await api('deleteMerchant', { id }); refreshDashboardAndTable('merchants'); }); }
-        async function delMachine(id) { showConfirm('هل أنت متأكد من حذف هذه المكنة؟', async () => { showLoading(true); await api('deleteMachine', { id }); refreshDashboardAndTable('machines'); }); }
-        async function delTransfer(id) { showConfirm('هل أنت متأكد من حذف هذا التحويل؟', async () => { showLoading(true); await api('deleteTransfer', { id }); refreshDashboardAndTable('transfers'); }); }
-        async function delCollection(id) { showConfirm('هل أنت متأكد من حذف هذا التحصيل؟', async () => { showLoading(true); await api('deleteCollection', { id }); refreshDashboardAndTable('collections'); }); }
-        async function deleteArchive(id) { showConfirm('هل أنت متأكد من حذف هذا السجل من الأرشيف نهائياً؟', async () => { showLoading(true); try { const res = await api('deleteArchive', { id: id }); if (res.success) { showToast('تم حذف السجل بنجاح', 'success'); refreshDashboardAndTable('archive'); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } } catch (e) { showToast('حدث خطأ', 'error'); showLoading(false); } }, 'حذف من الأرشيف'); }
-        async function confirmCloseMonth() { showConfirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد؟\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.', async () => { showLoading(true); try { const res = await api('closeMonth', { notes: 'إغلاق من النظام' }); if (res.success) { showToast(res.data.message, 'success'); refreshDashboardAndTable('archive'); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } } catch (e) { showToast('حدث خطأ', 'error'); showLoading(false); } }, 'بدء شهر جديد'); }
+        async function delMerchant(id) { showConfirm('هل أنت متأكد من حذف هذا التاجر؟', async () => { showLoading(true); await api('deleteMerchant', { id }); loadedTables.merchants = false; loadTableData('merchants'); loadData(); }); }
+        async function delMachine(id) { showConfirm('هل أنت متأكد من حذف هذه المكنة؟', async () => { showLoading(true); await api('deleteMachine', { id }); loadedTables.machines = false; loadTableData('machines'); loadData(); }); }
+        async function delTransfer(id) { showConfirm('هل أنت متأكد من حذف هذا التحويل؟', async () => { showLoading(true); await api('deleteTransfer', { id }); loadedTables.transfers = false; loadTableData('transfers'); loadData(); }); }
+        async function delCollection(id) { showConfirm('هل أنت متأكد من حذف هذا التحصيل؟', async () => { showLoading(true); await api('deleteCollection', { id }); loadedTables.collections = false; loadTableData('collections'); loadData(); }); }
+        async function deleteArchive(id) { showConfirm('هل أنت متأكد من حذف هذا السجل من الأرشيف نهائياً؟', async () => { showLoading(true); try { const res = await api('deleteArchive', { id: id }); if (res.success) { showToast('تم حذف السجل بنجاح', 'success'); loadedTables.archive = false; loadTableData('archive'); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } } catch (e) { showToast('حدث خطأ', 'error'); showLoading(false); } }, 'حذف من الأرشيف'); }
+        async function confirmCloseMonth() { showConfirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد؟\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.', async () => { showLoading(true); try { const res = await api('closeMonth', { notes: 'إغلاق من النظام' }); if (res.success) { showToast(res.data.message, 'success'); loadedTables.archive = false; loadTableData('archive'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } } catch (e) { showToast('حدث خطأ', 'error'); showLoading(false); } }, 'بدء شهر جديد'); }
 
         // ==================== Export ====================
         function exportExcel() { if (!DB.merchants || DB.merchants.length === 0) { showToast('لا توجد بيانات للتصدير', 'warning'); return; } showLoading(true); try { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.merchants), "التجار"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.machines), "المكن"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.transfers), "التحويلات"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.collections), "التحصيلات"); XLSX.writeFile(wb, `Axentro_Report_${new Date().toISOString().slice(0, 10)}.xlsx`); showToast('تم تصدير التقرير بنجاح', 'success'); } catch (e) { showToast('حدث خطأ أثناء التصدير', 'error'); } showLoading(false); }
 
-        // ==================== Navigation ====================
-        function showPage(name, element) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active')); document.getElementById('page-' + name).classList.add('active'); if (element) element.classList.add('active'); }
+        // ==================== Search & Dropdowns ====================
+        function debounce(func, wait) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; }
+        const searchMerchantDebounced = debounce((query, listId, hiddenId, callback) => {
+            const listEl = document.getElementById(listId); const hiddenEl = document.getElementById(hiddenId); hiddenEl.value = '';
+            if (!query) { listEl.style.display = 'none'; return; }
+            const merchants = (DB.merchants || []); const filtered = merchants.filter(m => (m['اسم التاجر'] || '').includes(query) || (m['اسم النشاط'] || '').includes(query) || (m['رقم التاجر'] || '').toString().includes(query));
+            if (filtered.length === 0) { listEl.innerHTML = '<div class="no-result">لا توجد نتائج</div>'; } else { listEl.innerHTML = filtered.map(m => `<div onclick="selectMerchant('${m['رقم التاجر']}', '${m['اسم التاجر']}', '${listId}', '${hiddenId}', ${callback ? `'${callback}'` : 'null'})">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join(''); }
+            listEl.style.display = 'block';
+        }, 300);
+        function handleMerchantSearch(query, listId, hiddenId, callback) { searchMerchantDebounced(query, listId, hiddenId, callback); }
+        function selectMerchant(id, name, listId, hiddenId, callback) {
+            const hiddenInput = document.getElementById(hiddenId); const listEl = document.getElementById(listId); const textInput = hiddenInput.previousElementSibling;
+            if(hiddenInput) hiddenInput.value = id; if(textInput && textInput.type === 'text') textInput.value = name; if(listEl) listEl.style.display = 'none';
+            const selectId = hiddenId.replace('Id', 'Select'); const selectEl = document.getElementById(selectId); if (selectEl) selectEl.value = id;
+            if (hiddenId === 'stmtMerchantId') getStatement(); if (callback && window[callback]) window[callback](id);
+        }
+        function handleDropdownSelect(id, textInputId, hiddenId, listId) {
+            const hiddenInput = document.getElementById(hiddenId); const textInput = document.getElementById(textInputId); const listEl = document.getElementById(listId);
+            if(hiddenInput) hiddenInput.value = id; if(listEl) listEl.style.display = 'none';
+            if (id) { const merchant = (DB.merchants || []).find(m => m['رقم التاجر'] == id); if(textInput) textInput.value = merchant ? merchant['اسم التاجر'] : ''; if (hiddenId === 'stmtMerchantId') getStatement(); if (hiddenId === 'trMerchId' || hiddenId === 'colMerchId') fillMachines(id); } else { if(textInput) textInput.value = ''; }
+        }
+        function populateMerchantDropdowns() {
+            const merchants = DB.merchants || []; const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect', 'mcMerchSelect'];
+            dropdownIds.forEach(dId => { const el = document.getElementById(dId); if(!el) return; const currentVal = el.value; el.innerHTML = '<option value="">-- اختر تاجر --</option>'; merchants.forEach(m => { el.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${m['رقم التاجر']})</option>`; }); if(currentVal) el.value = currentVal; });
+        }
+        function fillMachines(merchantId) {
+            const trSelect = document.getElementById('trMach'); const colSelect = document.getElementById('colMach'); const targetSelect = trSelect ? trSelect : colSelect;
+            if(!targetSelect) return; targetSelect.innerHTML = '<option value="">-- اختر مكنة --</option>'; if (!merchantId) return;
+            const machines = DB.machines || []; const filtered = machines.filter(m => m['رقم التاجر'] === merchantId);
+            if (filtered.length === 0) { targetSelect.innerHTML = '<option value="">لا توجد مكنات</option>'; } else { filtered.forEach(m => targetSelect.innerHTML += `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`); if (filtered.length === 1) targetSelect.value = filtered[0]['رقم المكنة']; }
+        }
 
-        // ==================== Scanner Logic ====================
+        // ==================== Modals ====================
+        function openModal(type) {
+            const body = document.getElementById('modalBody'); const m = document.getElementById('modal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10);
+            if (type === 'merchant') {
+                body.innerHTML = `<h3><i class="fas fa-user-plus"></i> إضافة تاجر جديد</h3><div class="form-row"><div class="form-group"><label>اسم التاجر <span class="required">*</span></label><input id="mName" class="form-control" placeholder="اسم التاجر"></div><div class="form-group"><label>اسم النشاط</label><input id="mBiz" class="form-control" placeholder="اسم النشاط"></div></div><div class="form-row"><div class="form-group"><label>رقم الحساب</label><input id="mAcc" class="form-control" placeholder="رقم الحساب"></div><div class="form-group"><label>رقم الهاتف</label><input id="mPhone" class="form-control" placeholder="رقم الهاتف"></div></div><div class="form-row"><div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control" placeholder="المنطقة"></div><div class="form-group"><label>العنوان</label><input id="mAddr" class="form-control" placeholder="العنوان"></div></div><div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات"></div><button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ التاجر</button>`;
+            } else if (type === 'machine') {
+                body.innerHTML = `<h3><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="mcMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'mcMerchSearch', 'mcMerchId', 'mcMerchList')"><option value="">-- اختر --</option></select><input type="text" id="mcMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')"></div><input type="hidden" id="mcMerchId"><div id="mcMerchList" class="search-results"></div></div><div class="form-group"><label>الرقم التسلسلي <span class="required">*</span></label><div style="display: flex; gap: 0.5rem;"><input type="text" id="mcSerial" class="form-control" placeholder="ادخل الرقم التسلسلي أو امسحه بالكاميرا" style="flex:1"><button type="button" class="btn btn-primary btn-sm" onclick="openScanModal()"><i class="fas fa-camera"></i> مسح</button></div></div><div class="form-group"><label>التارجت الشهري</label><input type="number" id="mcTarget" class="form-control" placeholder="التارجت الشهري"></div><div class="form-group"><label>الحالة</label><select id="mcStatus" class="form-control"><option value="نشطة">نشطة</option><option value="متوقفة">متوقفة</option><option value="صيانة">صيانة</option></select></div><div class="form-group"><label>ملاحظات</label><input id="mcNotes" class="form-control" placeholder="ملاحظات"></div><button class="btn btn-primary btn-block" onclick="saveMachine()"><i class="fas fa-save"></i> حفظ المكنة</button>`;
+            } else if (type === 'transfer') {
+                body.innerHTML = `<h3><i class="fas fa-exchange-alt"></i> تحويل جديد</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="trMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'trMerchSearch', 'trMerchId', 'trMerchList')"><option value="">-- اختر --</option></select><input type="text" id="trMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'trMerchList', 'trMerchId', 'fillMachines')"></div><input type="hidden" id="trMerchId"><div id="trMerchList" class="search-results"></div></div><div class="form-group"><label>المكنة</label><select id="trMach" class="form-control"><option value="">-- اختر مكنة --</option></select></div><div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="trAmt" class="form-control" placeholder="قيمة التحويل"></div><div class="form-group"><label>ملاحظات</label><input id="trNotes" class="form-control" placeholder="ملاحظات"></div><button class="btn btn-success btn-block" onclick="saveTransfer()"><i class="fas fa-check"></i> تأكيد التحويل</button>`;
+            } else if (type === 'collection') {
+                body.innerHTML = `<h3><i class="fas fa-hand-holding-usd"></i> تحصيل جديد</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="colMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'colMerchSearch', 'colMerchId', 'colMerchList')"><option value="">-- اختر --</option></select><input type="text" id="colMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'colMerchList', 'colMerchId', 'fillMachines')"></div><input type="hidden" id="colMerchId"><div id="colMerchList" class="search-results"></div></div><div class="form-group"><label>المكنة</label><select id="colMach" class="form-control"><option value="">-- اختر مكنة --</option></select></div><div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="colAmt" class="form-control" placeholder="قيمة التحصيل"></div><div class="form-group"><label>نوع التحصيل</label><select id="colType" class="form-control"><option value="كلي">كلي</option><option value="جزئي">جزئي</option></select></div><div class="form-group"><label>ملاحظات</label><input id="colNotes" class="form-control" placeholder="ملاحظات"></div><button class="btn btn-primary btn-block" onclick="saveCollection()"><i class="fas fa-check"></i> تأكيد التحصيل</button>`;
+            }
+            populateMerchantDropdowns();
+        }
+
+        function closeModal() { const m = document.getElementById('modal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); }
+
+        // ==================== Save ====================
+        async function saveMerchant() { const name = document.getElementById('mName').value.trim(); if (!name) { showToast('اسم التاجر مطلوب', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantName: name, businessName: document.getElementById('mBiz').value, accountNumber: document.getElementById('mAcc').value, phone: document.getElementById('mPhone').value, area: document.getElementById('mArea').value, address: document.getElementById('mAddr').value, notes: document.getElementById('mNotes').value }; const res = await api('addMerchant', data); if (res.success) { showToast('تم إضافة التاجر بنجاح', 'success'); loadedTables.merchants = false; loadTableData('merchants'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
+        async function saveMachine() { const merchantId = document.getElementById('mcMerchId').value; const serial = document.getElementById('mcSerial').value.trim(); if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!serial) { showToast('الرقم التسلسلي مطلوب', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, serialNumber: serial, monthlyTarget: document.getElementById('mcTarget').value, status: document.getElementById('mcStatus').value, notes: document.getElementById('mcNotes').value }; const res = await api('addMachine', data); if (res.success) { showToast('تم إضافة المكنة بنجاح', 'success'); loadedTables.machines = false; loadTableData('machines'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
+        async function saveTransfer() { const merchantId = document.getElementById('trMerchId').value; const amount = document.getElementById('trAmt').value; if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحويل', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, machineId: document.getElementById('trMach').value, amount: amount, notes: document.getElementById('trNotes').value }; const res = await api('addTransfer', data); if (res.success) { showToast('تم التحويل بنجاح', 'success'); loadedTables.transfers = false; loadTableData('transfers'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
+        async function saveCollection() { const merchantId = document.getElementById('colMerchId').value; const amount = document.getElementById('colAmt').value; if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحصيل', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, machineId: document.getElementById('colMach').value, amount: amount, collectionType: document.getElementById('colType').value, notes: document.getElementById('colNotes').value }; const res = await api('addCollection', data); if (res.success) { showToast('تم التحصيل بنجاح', 'success'); loadedTables.collections = false; loadTableData('collections'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
+
+        // ==================== Live Updates ====================
+        function extractDashboard(res) { if (res.dashboard) return res.dashboard; if (res.data && res.data.dashboard) return res.data.dashboard; return null; }
+        function updateDashboardUI(data) { if (!data) return; const keys = ['التجار', 'المكن', 'التحويلات_شهر', 'التحصيلات_شهر', 'المتبقي_شهر', 'تحويلات_اليوم']; keys.forEach(key => { const el = document.querySelector(`[data-key="${key}"]`); if (el) { const newValue = formatNumber(data[key]); if (el.textContent !== newValue) { el.textContent = newValue; el.classList.add('updating'); setTimeout(() => el.classList.remove('updating'), 300); } } }); if (data['أعلى_المكن']) renderTopMachines(data['أعلى_المكن']); }
+        async function fetchDashboardLive() { if (AppState.isPolling) return; AppState.isPolling = true; try { const res = await api('getDashboardOnly'); const dashboardData = extractDashboard(res); if (res.success && dashboardData) { setConnectionStatus('live'); updateDashboardUI(dashboardData); setCache(dashboardData); AppState.pollInterval = AppState.minInterval; } else { throw new Error('Invalid'); } } catch (e) { setConnectionStatus('offline'); AppState.pollInterval = Math.min(AppState.pollInterval * 1.5, AppState.maxInterval); } finally { AppState.isPolling = false; setTimeout(fetchDashboardLive, AppState.pollInterval); } }
+        function startLiveUpdates() { setTimeout(fetchDashboardLive, AppState.pollInterval); }
+
+        // ==================== Scanner ====================
         let scanStream = null; let scanTrack = null; let torchOn = false; let scanRafId = null;
         let scanAudio = null;
         function initScanSound() { try { scanAudio = new Audio('scan.mp3'); scanAudio.preload = 'auto'; } catch(e) { console.warn('صوت غير متاح'); } }
@@ -964,4 +986,32 @@
                 torchOn = !torchOn;
                 await scanTrack.applyConstraints({ advanced: [{ torch: torchOn }] });
                 const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = torchOn ? '🔦 إيقاف' : '🔦 فلاش';
-            } catch (e) { showToast('تع
+            } catch (e) { showToast('تعذر تشغيل الفلاش', 'error'); }
+        }
+        function openScanModal() {
+            const modal = document.getElementById('scanModal');
+            if (modal) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('show'), 10); startScanCamera(); }
+        }
+        function closeScanModal() {
+            const modal = document.getElementById('scanModal');
+            if (modal) { modal.classList.remove('show'); setTimeout(() => modal.style.display = 'none', 300); stopScanCamera(); }
+        }
+
+        // ==================== Init ====================
+        window.onload = () => {
+            initScanSound();
+            const torchBtn = document.getElementById('torchBtn');
+            if (torchBtn) torchBtn.onclick = toggleTorch;
+            const searchInput = document.getElementById('merchantSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => { merchantSearchTerm = e.target.value; renderMerchants(); });
+            }
+            checkSession();
+            startLiveUpdates();
+            document.querySelectorAll('.search-results').forEach(el => { el.previousElementSibling.addEventListener('blur', () => { setTimeout(() => el.style.display = 'none', 200); }); });
+        };
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+        document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+    </script>
+</body>
+</html>
