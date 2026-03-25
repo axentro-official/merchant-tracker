@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* (كل الأنماط كما هي في النسخة السابقة - احتفظ بها) */
+        /* جميع الأنماط كما هي – لم يتم تغييرها */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1d4ed8;
@@ -83,7 +83,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- الصفحة الرئيسية للبوابة (نموذج الطلب) -->
         <div id="portalForm" class="card">
             <div class="header">
                 <div class="logo"><i class="fas fa-store"></i></div>
@@ -91,7 +90,6 @@
                 <p class="subtitle">اختر اسمك لمعرفة بياناتك وتقديم طلب</p>
             </div>
 
-            <!-- اختيار التاجر -->
             <div class="form-group">
                 <label>اختر التاجر <span class="required" style="color: var(--danger);">*</span></label>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -106,7 +104,6 @@
                 <input type="hidden" id="selectedMerchantId">
             </div>
 
-            <!-- منطقة عرض البيانات -->
             <div id="merchantInfo" style="display: none;">
                 <hr>
                 <h3><i class="fas fa-user-circle"></i> بيانات التاجر</h3>
@@ -140,20 +137,14 @@
             </div>
         </div>
 
-        <!-- صفحة النجاح (تظهر بعد الإرسال) -->
         <div id="successPage" class="card" style="display: none; text-align: center;">
-            <div class="success-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
+            <div class="success-icon"><i class="fas fa-check-circle"></i></div>
             <h2>تم إرسال طلبك بنجاح!</h2>
             <p style="margin: 1rem 0; color: var(--muted);">سيتم التواصل معك قريباً لتأكيد الطلب وتنفيذه.</p>
-            <button class="btn btn-success" onclick="resetForm()">
-                <i class="fas fa-arrow-right"></i> تقديم طلب آخر
-            </button>
+            <button class="btn btn-success" onclick="resetForm()"><i class="fas fa-arrow-right"></i> تقديم طلب آخر</button>
         </div>
     </div>
 
-    <!-- Footer (يظهر في كلا الصفحتين) -->
     <footer>
         <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
         <div class="qr-box">
@@ -164,20 +155,27 @@
         </div>
     </footer>
 
-    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
         <div class="loading-text">جاري التحميل...</div>
     </div>
 
-    <!-- Toast -->
     <div id="toast" class="toast">
         <i class="fas fa-check-circle"></i>
         <span id="toastMessage">تم بنجاح</span>
     </div>
 
     <script>
-        const API = '<?= ScriptApp.getService().getUrl() ?>';
+        // ==================== API باستخدام google.script.run ====================
+        function callServer(funcName, data) {
+            return new Promise((resolve, reject) => {
+                google.script.run
+                    .withSuccessHandler(resolve)
+                    .withFailureHandler(reject)
+                    [funcName](data);
+            });
+        }
+
         let merchants = [];
         let currentMerchantData = null;
 
@@ -208,22 +206,10 @@
             } catch { return dateStr; }
         }
 
-        // دالة API بنفس أسلوب GET المستخدم في الصفحة الرئيسية
-        async function api(act, data = {}) {
-            try {
-                const url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`;
-                const res = await fetch(url);
-                return await res.json();
-            } catch (e) {
-                console.error('API Error:', e);
-                return { success: false, message: e.message };
-            }
-        }
-
         async function loadMerchants() {
             showLoading(true);
             try {
-                const res = await api('getTableData', { table: 'merchants' });
+                const res = await callServer('getTableData', { table: 'merchants' });
                 if (res.success && res.data) {
                     merchants = res.data;
                     populateSelect();
@@ -231,7 +217,8 @@
                     showToast('فشل تحميل التجار', 'error');
                 }
             } catch (e) {
-                showToast('خطأ في الاتصال', 'error');
+                console.error(e);
+                showToast('خطأ في الاتصال بالخادم', 'error');
             } finally {
                 showLoading(false);
             }
@@ -290,7 +277,7 @@
         async function loadMerchantData(merchantId) {
             showLoading(true);
             try {
-                const res = await api('getMerchantData', { merchantId: merchantId });
+                const res = await callServer('getMerchantData', { merchantId: merchantId });
                 if (res.success && res.data) {
                     currentMerchantData = res.data;
                     renderMerchantInfo(res.data);
@@ -300,7 +287,7 @@
                     document.getElementById('merchantInfo').style.display = 'none';
                 }
             } catch (e) {
-                showToast('حدث خطأ', 'error');
+                showToast('حدث خطأ في الاتصال', 'error');
             } finally {
                 showLoading(false);
             }
@@ -353,7 +340,6 @@
             transfersHtml += '</tbody></table>';
             document.getElementById('transfersList').innerHTML = transfersHtml;
 
-            const remainingClass = remaining > 0 ? 'danger' : 'success';
             document.getElementById('remainingBalance').innerHTML = `<div class="info-label">المبلغ المتبقي على التاجر</div><div class="info-value" style="color: var(${remaining > 0 ? '--danger' : '--success'});">${formatNumber(remaining)} جنيه</div>`;
         }
 
@@ -373,7 +359,7 @@
 
             showLoading(true);
             try {
-                const res = await api('sendMerchantRequest', {
+                const res = await callServer('sendMerchantRequest', {
                     merchantId: merchantId,
                     requestType: requestType,
                     amount: amount,
@@ -386,7 +372,7 @@
                     showToast(res.message || 'فشل إرسال الطلب', 'error');
                 }
             } catch (e) {
-                showToast('حدث خطأ', 'error');
+                showToast('حدث خطأ في الاتصال', 'error');
             } finally {
                 showLoading(false);
             }
