@@ -2,11 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Axentro System - نظام إدارة التجار</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
     
     <style>
         :root {
@@ -398,7 +399,7 @@
                                 <tr>
                                     <th>رقم المكنة</th>
                                     <th>التاجر</th>
-                                    <th>الباركود</th>
+                                    <th>الرقم التسلسلي</th>
                                     <th>التارجت</th>
                                     <th>الحالة</th>
                                     <th>إجراء</th>
@@ -786,28 +787,25 @@
             searchMerchantDebounced(query, listId, hiddenId, callback);
         }
 
-        // إصلاح: وظيفة اختيار التاجر
+        // وظيفة اختيار التاجر
         function selectMerchant(id, name, listId, hiddenId, callback) {
             const hiddenInput = document.getElementById(hiddenId);
             const listEl = document.getElementById(listId);
-            // إصلاح المسار: البحث عن المدخل النصي بشكل صحيح
-            const textInput = hiddenInput.previousElementSibling; // المدخل النصي يسبق المدخل المخفي دائماً في الهيكل
+            const textInput = hiddenInput.previousElementSibling; // المدخل النصي يسبق المدخل المخفي
             
             if(hiddenInput) hiddenInput.value = id;
-            if(textInput && textInput.type === 'text') textInput.value = name; // التأكد من أنه المدخل الصحيح
+            if(textInput && textInput.type === 'text') textInput.value = name;
             if(listEl) listEl.style.display = 'none';
 
-            // تحديث القائمة المنسدلة إذا كانت موجودة
             const selectId = hiddenId.replace('Id', 'Select');
             const selectEl = document.getElementById(selectId);
             if (selectEl) selectEl.value = id;
             
-            // تنفيذ الاستدعاء
             if (hiddenId === 'stmtMerchantId') getStatement();
             if (callback && window[callback]) window[callback](id);
         }
 
-        // جديد: وظيفة اختيار التاجر من القائمة المنسدلة
+        // وظيفة اختيار التاجر من القائمة المنسدلة
         function handleDropdownSelect(id, textInputId, hiddenId, listId) {
             const hiddenInput = document.getElementById(hiddenId);
             const textInput = document.getElementById(textInputId);
@@ -822,7 +820,6 @@
                 
                 if (hiddenId === 'stmtMerchantId') getStatement();
                 
-                // ملء المكن تلقائياً إذا كان في صفحة تحويل أو تحصيل
                 if (hiddenId === 'trMerchId' || hiddenId === 'colMerchId') {
                      fillMachines(id);
                 }
@@ -831,10 +828,9 @@
             }
         }
 
-        // جديد: ملء القوائم المنسدلة بالتجار
+        // ملء القوائم المنسدلة بالتجار
         function populateMerchantDropdowns() {
             const merchants = DB.merchants || [];
-            // تمت إضافة mcMerchSelect للقائمة
             const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect', 'mcMerchSelect'];
             
             dropdownIds.forEach(dId => {
@@ -937,7 +933,7 @@
                     <tr>
                         <td><strong>${m['رقم المكنة'] || '-'}</strong></td>
                         <td>${m['اسم التاجر'] || '-'}</td>
-                        <td><code>${m['الباركود'] || '-'}</code></td>
+                        <td><code>${m['الرقم التسلسلي'] || '-'}</code></td>
                         <td>${formatNumber(m['التارجت الشهري'])}</td>
                         <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
                         <td><button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button></td>
@@ -1097,6 +1093,51 @@
             if (element) element.classList.add('active');
         }
 
+        // ==================== Scanner Variables ====================
+        let html5QrCode = null;
+        let scannerActive = false;
+
+        async function openScanner() {
+            const container = document.getElementById('scannerContainer');
+            if (!container) return;
+            container.style.display = 'block';
+            if (scannerActive) return;
+            html5QrCode = new Html5Qrcode("qr-reader");
+            try {
+                await html5QrCode.start(
+                    { facingMode: "environment" }, // الكاميرا الخلفية
+                    { fps: 10, qrbox: 250 },
+                    (decodedText) => {
+                        document.getElementById('mcSerial').value = decodedText;
+                        stopScanner();
+                    },
+                    (error) => { /* console.log(error); */ }
+                );
+                scannerActive = true;
+            } catch (err) {
+                showToast('لا يمكن الوصول إلى الكاميرا', 'error');
+            }
+        }
+
+        function stopScanner() {
+            if (html5QrCode && scannerActive) {
+                html5QrCode.stop().then(() => {
+                    const container = document.getElementById('scannerContainer');
+                    if (container) container.style.display = 'none';
+                    scannerActive = false;
+                });
+            } else {
+                const container = document.getElementById('scannerContainer');
+                if (container) container.style.display = 'none';
+            }
+        }
+
+        function toggleFlash() {
+            // وظيفة الفلاش غير مدعومة مباشرة في جميع المتصفحات
+            // نعرض رسالة توجيهية
+            showToast('تشغيل الفلاش غير مدعوم تلقائياً، يمكنك تشغيله يدوياً من إعدادات الكاميرا.', 'warning');
+        }
+
         // ==================== Modals ====================
         function openModal(type) {
             const body = document.getElementById('modalBody');
@@ -1122,7 +1163,7 @@
                     <div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات"></div>
                     <button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ التاجر</button>`;
             } else if (type === 'machine') {
-                // تم تعديل هذا الجزء لإضافة القائمة المنسدلة والبحث
+                // نموذج إضافة المكنة مع ماسح الرقم التسلسلي
                 body.innerHTML = `
                     <h3><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3>
                     <div class="form-group">
@@ -1134,9 +1175,19 @@
                         <input type="hidden" id="mcMerchId">
                         <div id="mcMerchList" class="search-results"></div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>الباركود <span class="required">*</span></label><input id="mcBar" class="form-control" placeholder="الباركود"></div>
-                        <div class="form-group"><label>الرقم التسلسلي</label><input id="mcSerial" class="form-control" placeholder="الرقم التسلسلي"></div>
+                    <div class="form-group">
+                        <label>الرقم التسلسلي <span class="required">*</span></label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="mcSerial" class="form-control" placeholder="ادخل الرقم التسلسلي أو امسحه بالكاميرا" style="flex:1">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="openScanner()"><i class="fas fa-camera"></i> مسح</button>
+                        </div>
+                    </div>
+                    <div id="scannerContainer" style="display: none; margin-top: 10px; border:1px solid #ddd; padding:5px; border-radius:8px;">
+                        <div id="qr-reader" style="width:100%; max-width:400px; margin:0 auto;"></div>
+                        <div style="text-align:center; margin-top:5px;">
+                            <button class="btn btn-secondary btn-sm" onclick="stopScanner()">إغلاق الكاميرا</button>
+                            <button class="btn btn-secondary btn-sm" onclick="toggleFlash()">فلاش</button>
+                        </div>
                     </div>
                     <div class="form-group"><label>التارجت الشهري</label><input type="number" id="mcTarget" class="form-control" placeholder="التارجت الشهري"></div>
                     <div class="form-group"><label>ملاحظات</label><input id="mcNotes" class="form-control" placeholder="ملاحظات"></div>
@@ -1175,7 +1226,6 @@
                     <div class="form-group"><label>ملاحظات</label><input id="colNotes" class="form-control" placeholder="ملاحظات"></div>
                     <button class="btn btn-primary btn-block" onclick="saveCollection()"><i class="fas fa-check"></i> تأكيد التحصيل</button>`;
             }
-            // ملء القوائم المنسدلة عند فتح المودال
             populateMerchantDropdowns();
         }
 
@@ -1201,6 +1251,8 @@
         }
 
         function closeModal() {
+            // إيقاف المسح إذا كان مفتوحاً
+            if (scannerActive) stopScanner();
             const m = document.getElementById('modal');
             m.classList.remove('show');
             setTimeout(() => m.style.display = 'none', 300);
@@ -1219,11 +1271,11 @@
 
         async function saveMachine() {
             const merchantId = document.getElementById('mcMerchId').value;
-            const barcode = document.getElementById('mcBar').value.trim();
+            const serial = document.getElementById('mcSerial').value.trim();
             if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
-            if (!barcode) { showToast('الباركود مطلوب', 'warning'); return; }
+            if (!serial) { showToast('الرقم التسلسلي مطلوب', 'warning'); return; }
             showLoading(true); closeModal();
-            const data = { merchantId: merchantId, barcode: barcode, serialNumber: document.getElementById('mcSerial').value, monthlyTarget: document.getElementById('mcTarget').value, notes: document.getElementById('mcNotes').value };
+            const data = { merchantId: merchantId, serialNumber: serial, monthlyTarget: document.getElementById('mcTarget').value, notes: document.getElementById('mcNotes').value };
             const res = await api('addMachine', data);
             if (res.success) { showToast('تم إضافة المكنة بنجاح', 'success'); loadData(); }
             else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
