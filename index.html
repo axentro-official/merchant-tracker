@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    
     <style>
         /* جميع الأنماط كما هي – لم يتم تغييرها */
         :root {
@@ -328,7 +327,7 @@
                 </div>
             </div>
 
-            <!-- COLLECTIONS PAGE (تم إضافة عمود "قيمة التحويل") -->
+            <!-- COLLECTIONS PAGE -->
             <div id="page-collections" class="page">
                 <div class="table-box">
                     <div class="table-header"><h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button></div>
@@ -339,7 +338,7 @@
                                     <th>التاريخ</th>
                                     <th>الوقت</th>
                                     <th>التاجر</th>
-                                    <th>قيمة التحويل</th>      <!-- العمود الجديد -->
+                                    <th>قيمة التحويل</th>
                                     <th>قيمة التحصيل</th>
                                     <th>النوع</th>
                                     <th>المتبقي بعد التحصيل</th>
@@ -645,26 +644,10 @@
         function renderCollections() {
             const tbody = document.getElementById('tblCollections');
             const collections = DB.collections || [];
-            const transfers = DB.transfers || [];
 
             if (collections.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>';
                 return;
-            }
-
-            // دالة مساعدة لحساب إجمالي التحويلات للتاجر حتى تاريخ ووقت معين
-            function getTotalTransfersBefore(merchantId, date, time) {
-                const targetDateTime = new Date(`${date} ${time}`);
-                let total = 0;
-                transfers.forEach(t => {
-                    if (t['رقم التاجر'] == merchantId) {
-                        const transDateTime = new Date(`${t['التاريخ']} ${t['الوقت']}`);
-                        if (transDateTime <= targetDateTime) {
-                            total += Number(t['قيمة التحويل']) || 0;
-                        }
-                    }
-                });
-                return total;
             }
 
             // ترتيب التحصيلات من الأحدث إلى الأقدم
@@ -676,10 +659,7 @@
 
             let rows = '';
             sortedCollections.forEach(c => {
-                const merchantId = c['رقم التاجر'];
-                const colDate = c['التاريخ'];
-                const colTime = c['الوقت'];
-                const totalTransfersBefore = getTotalTransfersBefore(merchantId, colDate, colTime);
+                const totalTransfersBefore = Number(c['قيمة التحويل']) || 0;
                 const collectionAmount = Number(c['قيمة التحصيل']) || 0;
                 const remainingAfter = Number(c['المتبقي بعد التحصيل']) || 0;
                 const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
@@ -688,7 +668,7 @@
                     <td>${formatDate(c['التاريخ'])}</td>
                     <td>${formatTime(c['الوقت'])}</td>
                     <td>${c['اسم التاجر'] || '-'}</td>
-                    <td><strong>${formatNumber(totalTransfersBefore)}</strong></td>   <!-- قيمة التحويل -->
+                    <td><strong>${formatNumber(totalTransfersBefore)}</strong></td>
                     <td><strong>${formatNumber(collectionAmount)}</strong></td>
                     <td><span class="badge badge-${typeClass}">${c['نوع التحصيل'] || '-'}</span></td>
                     <td><strong>${formatNumber(remainingAfter)}</strong></td>
