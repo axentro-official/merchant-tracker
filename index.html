@@ -7,9 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+    <!-- استخدام أحدث إصدار من html5-qrcode -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/dist/html5-qrcode.min.js"></script>
     
     <style>
+        /* نفس الستايل السابق (لم يتغير) - اختصاراً سأتركه كما هو لتوفير المساحة، لكنه موجود بالكامل في الملف النهائي */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1d4ed8;
@@ -343,18 +345,18 @@
                         <h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3>
                     </div>
                     <div class="table-container">
-                        <table>
+                         <table>
                             <thead>
-                                <tr>
+                                 <tr>
                                     <th>المكنة</th>
                                     <th>التاجر</th>
                                     <th>التحقيق</th>
                                     <th>التارجت</th>
                                     <th>النسبة</th>
-                                </tr>
+                                 </tr>
                             </thead>
                             <tbody id="tblTopMachines"></tbody>
-                        </table>
+                         </table>
                     </div>
                 </div>
             </div>
@@ -367,9 +369,9 @@
                         <button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button>
                     </div>
                     <div class="table-container">
-                        <table>
+                         <table>
                             <thead>
-                                <tr>
+                                 <tr>
                                     <th>رقم التاجر</th>
                                     <th>الاسم</th>
                                     <th>النشاط</th>
@@ -378,10 +380,10 @@
                                     <th>العنوان</th>
                                     <th>الحالة</th>
                                     <th>إجراء</th>
-                                </tr>
+                                 </tr>
                             </thead>
                             <tbody id="tblMerchants"></tbody>
-                        </table>
+                         </table>
                     </div>
                 </div>
             </div>
@@ -394,19 +396,19 @@
                         <button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button>
                     </div>
                     <div class="table-container">
-                        <table>
+                         <table>
                             <thead>
-                                <tr>
+                                 <tr>
                                     <th>رقم المكنة</th>
                                     <th>التاجر</th>
                                     <th>الرقم التسلسلي</th>
                                     <th>التارجت</th>
                                     <th>الحالة</th>
                                     <th>إجراء</th>
-                                </tr>
+                                 </tr>
                             </thead>
                             <tbody id="tblMachines"></tbody>
-                        </table>
+                         </table>
                     </div>
                 </div>
             </div>
@@ -419,19 +421,19 @@
                         <button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button>
                     </div>
                     <div class="table-container">
-                        <table>
+                         <table>
                             <thead>
-                                <tr>
+                                 <tr>
                                     <th>التاريخ</th>
                                     <th>الوقت</th>
                                     <th>التاجر</th>
                                     <th>القيمة</th>
                                     <th>ملاحظات</th>
                                     <th>حذف</th>
-                                </tr>
+                                 </tr>
                             </thead>
                             <tbody id="tblTransfers"></tbody>
-                        </table>
+                         </table>
                     </div>
                 </div>
             </div>
@@ -444,19 +446,19 @@
                         <button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button>
                     </div>
                     <div class="table-container">
-                        <table>
+                         <table>
                             <thead>
-                                <tr>
+                                 <tr>
                                     <th>التاريخ</th>
                                     <th>الوقت</th>
                                     <th>التاجر</th>
                                     <th>القيمة</th>
                                     <th>النوع</th>
                                     <th>حذف</th>
-                                </tr>
+                                 </tr>
                             </thead>
                             <tbody id="tblCollections"></tbody>
-                        </table>
+                         </table>
                     </div>
                 </div>
             </div>
@@ -466,8 +468,6 @@
                 <div class="table-box">
                     <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
                         <h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3>
-                        
-                        <!-- تعديل: إضافة القائمة المنسدلة والبحث -->
                         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                             <select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList')">
                                 <option value="">-- اختر تاجر --</option>
@@ -478,7 +478,6 @@
                                 <div id="stmtMerchantList" class="search-results"></div>
                             </div>
                         </div>
-                        
                     </div>
                     <div style="padding: 1rem;">
                         <div class="stats-grid">
@@ -499,16 +498,16 @@
                         <div class="table-container">
                             <table style="min-width: 500px;">
                                 <thead>
-                                    <tr>
+                                     <tr>
                                         <th>التاريخ</th>
                                         <th>الوقت</th>
                                         <th>النوع</th>
                                         <th>القيمة</th>
                                         <th>ملاحظات</th>
-                                    </tr>
+                                     </tr>
                                 </thead>
                                 <tbody id="tblStatement"></tbody>
-                            </table>
+                             </table>
                         </div>
                     </div>
                 </div>
@@ -522,19 +521,19 @@
                         <button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد</button>
                     </div>
                     <div class="table-container">
-                        <table>
+                         <table>
                             <thead>
-                                <tr>
+                                 <tr>
                                     <th>الشهر</th>
                                     <th>عدد التحويلات</th>
                                     <th>إجمالي التحويلات</th>
                                     <th>عدد التحصيلات</th>
                                     <th>إجمالي التحصيلات</th>
                                     <th>المتبقي</th>
-                                </tr>
+                                 </tr>
                             </thead>
                             <tbody id="tblArchive"></tbody>
-                        </table>
+                         </table>
                     </div>
                 </div>
             </div>
@@ -567,7 +566,7 @@
         // ==================== State Management ====================
         const AppState = {
             isPolling: false,
-            pollInterval: 60000, // 1 min default
+            pollInterval: 60000,
             minInterval: 30000,
             maxInterval: 120000,
             connectionStatus: 'offline'
@@ -746,7 +745,7 @@
             renderTransfers();
             renderCollections();
             renderArchive();
-            populateMerchantDropdowns(); // تحديث القوائم المنسدلة
+            populateMerchantDropdowns();
         }
 
         // ==================== Smart Search & Dropdowns ====================
@@ -762,7 +761,7 @@
         const searchMerchantDebounced = debounce((query, listId, hiddenId, callback) => {
             const listEl = document.getElementById(listId);
             const hiddenEl = document.getElementById(hiddenId);
-            hiddenEl.value = ''; // Reset selection
+            hiddenEl.value = '';
             
             if (!query) { listEl.style.display = 'none'; return; }
             
@@ -787,11 +786,10 @@
             searchMerchantDebounced(query, listId, hiddenId, callback);
         }
 
-        // وظيفة اختيار التاجر
         function selectMerchant(id, name, listId, hiddenId, callback) {
             const hiddenInput = document.getElementById(hiddenId);
             const listEl = document.getElementById(listId);
-            const textInput = hiddenInput.previousElementSibling; // المدخل النصي يسبق المدخل المخفي
+            const textInput = hiddenInput.previousElementSibling;
             
             if(hiddenInput) hiddenInput.value = id;
             if(textInput && textInput.type === 'text') textInput.value = name;
@@ -805,7 +803,6 @@
             if (callback && window[callback]) window[callback](id);
         }
 
-        // وظيفة اختيار التاجر من القائمة المنسدلة
         function handleDropdownSelect(id, textInputId, hiddenId, listId) {
             const hiddenInput = document.getElementById(hiddenId);
             const textInput = document.getElementById(textInputId);
@@ -819,16 +816,12 @@
                 if(textInput) textInput.value = merchant ? merchant['اسم التاجر'] : '';
                 
                 if (hiddenId === 'stmtMerchantId') getStatement();
-                
-                if (hiddenId === 'trMerchId' || hiddenId === 'colMerchId') {
-                     fillMachines(id);
-                }
+                if (hiddenId === 'trMerchId' || hiddenId === 'colMerchId') fillMachines(id);
             } else {
                 if(textInput) textInput.value = '';
             }
         }
 
-        // ملء القوائم المنسدلة بالتجار
         function populateMerchantDropdowns() {
             const merchants = DB.merchants || [];
             const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect', 'mcMerchSelect'];
@@ -836,7 +829,6 @@
             dropdownIds.forEach(dId => {
                 const el = document.getElementById(dId);
                 if(!el) return;
-                
                 const currentVal = el.value;
                 el.innerHTML = '<option value="">-- اختر تاجر --</option>';
                 merchants.forEach(m => {
@@ -1096,26 +1088,69 @@
         // ==================== Scanner Variables ====================
         let html5QrCode = null;
         let scannerActive = false;
+        let scanSound = null;
+
+        // تحميل الصوت مسبقاً
+        function initScanSound() {
+            try {
+                scanSound = new Audio('scan.mp3');
+                scanSound.preload = 'auto';
+            } catch(e) { console.warn('صوت غير متاح'); }
+        }
+
+        function playScanSound() {
+            if (scanSound) {
+                scanSound.currentTime = 0;
+                scanSound.play().catch(e => console.log('تشغيل الصوت فشل', e));
+            }
+        }
 
         async function openScanner() {
             const container = document.getElementById('scannerContainer');
-            if (!container) return;
+            if (!container) {
+                showToast('حدث خطأ في تهيئة الكاميرا', 'error');
+                return;
+            }
+            // إظهار الحاوية
             container.style.display = 'block';
-            if (scannerActive) return;
-            html5QrCode = new Html5Qrcode("qr-reader");
+            
+            // إذا كان الماسح مفتوحاً بالفعل، لا نعيد فتحه
+            if (scannerActive) {
+                showToast('الكاميرا مفتوحة بالفعل', 'info');
+                return;
+            }
+            
             try {
+                // إنشاء كائن الماسح
+                html5QrCode = new Html5Qrcode("qr-reader");
+                const constraints = { facingMode: "environment" }; // الكاميرا الخلفية
+                const config = { fps: 10, qrbox: 250 };
+                
                 await html5QrCode.start(
-                    { facingMode: "environment" }, // الكاميرا الخلفية
-                    { fps: 10, qrbox: 250 },
+                    constraints,
+                    config,
                     (decodedText) => {
-                        document.getElementById('mcSerial').value = decodedText;
-                        stopScanner();
+                        // نجاح المسح
+                        const serialInput = document.getElementById('mcSerial');
+                        if (serialInput) {
+                            serialInput.value = decodedText;
+                            playScanSound(); // تشغيل الصوت
+                            showToast('تم مسح الرقم التسلسلي بنجاح', 'success');
+                        }
+                        stopScanner(); // إيقاف الكاميرا بعد المسح
                     },
-                    (error) => { /* console.log(error); */ }
+                    (errorMessage) => {
+                        // تجاهل أخطاء المسح العادية
+                        // console.log(errorMessage);
+                    }
                 );
                 scannerActive = true;
+                showToast('الكاميرا جاهزة للمسح', 'success');
             } catch (err) {
-                showToast('لا يمكن الوصول إلى الكاميرا', 'error');
+                console.error('خطأ في فتح الكاميرا:', err);
+                showToast('لا يمكن الوصول إلى الكاميرا. تأكد من منح الإذن واستخدام HTTPS.', 'error');
+                container.style.display = 'none';
+                scannerActive = false;
             }
         }
 
@@ -1125,16 +1160,21 @@
                     const container = document.getElementById('scannerContainer');
                     if (container) container.style.display = 'none';
                     scannerActive = false;
+                    html5QrCode = null;
+                }).catch(err => {
+                    console.warn('خطأ في إيقاف الكاميرا', err);
+                    const container = document.getElementById('scannerContainer');
+                    if (container) container.style.display = 'none';
+                    scannerActive = false;
                 });
             } else {
                 const container = document.getElementById('scannerContainer');
                 if (container) container.style.display = 'none';
+                scannerActive = false;
             }
         }
 
         function toggleFlash() {
-            // وظيفة الفلاش غير مدعومة مباشرة في جميع المتصفحات
-            // نعرض رسالة توجيهية
             showToast('تشغيل الفلاش غير مدعوم تلقائياً، يمكنك تشغيله يدوياً من إعدادات الكاميرا.', 'warning');
         }
 
@@ -1163,7 +1203,6 @@
                     <div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات"></div>
                     <button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ التاجر</button>`;
             } else if (type === 'machine') {
-                // نموذج إضافة المكنة مع ماسح الرقم التسلسلي
                 body.innerHTML = `
                     <h3><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3>
                     <div class="form-group">
@@ -1251,7 +1290,6 @@
         }
 
         function closeModal() {
-            // إيقاف المسح إذا كان مفتوحاً
             if (scannerActive) stopScanner();
             const m = document.getElementById('modal');
             m.classList.remove('show');
@@ -1360,6 +1398,7 @@
 
         // ==================== Init ====================
         window.onload = () => {
+            initScanSound(); // تهيئة الصوت
             checkSession();
             startLiveUpdates();
             
