@@ -118,7 +118,7 @@
                 <div id="transfersList" style="overflow-x: auto;"></div>
 
                 <h3><i class="fas fa-coins"></i> المديونية الحالية</h3>
-                <div id="remainingBalance" class="info-item" style="text-align: center; background: var(--warning-light); color: var(--warning);"></div>
+                <div id="remainingBalance" class="info-item" style="text-align: center;"></div>
 
                 <hr>
 
@@ -157,7 +157,8 @@
         <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
         <div class="qr-box">
             <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
-                <img src="https://axentro-official.github.io/axentro-website/qr-links.png" alt="QR Code">
+                <!-- استخدام نفس مسار الصورة المستخدم في الصفحة الرئيسية -->
+                <img src="qr-links.png" alt="QR Code" onerror="this.onerror=null; this.src='https://axentro-official.github.io/axentro-website/qr-links.png';">
                 <span><i class="fas fa-qrcode"></i> QR Scan Me</span>
             </a>
         </div>
@@ -176,7 +177,7 @@
     </div>
 
     <script>
-        const API = '<?= ScriptApp.getService().getUrl() ?>'; // يملأ تلقائياً
+        const API = '<?= ScriptApp.getService().getUrl() ?>';
         let merchants = [];
         let currentMerchantData = null;
 
@@ -218,7 +219,6 @@
             }
         }
 
-        // تحميل قائمة التجار
         async function loadMerchants() {
             showLoading(true);
             try {
@@ -334,7 +334,7 @@
             }
             document.getElementById('machinesList').innerHTML = machinesHtml;
 
-            let transfersHtml = '<table class="transfer-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th> </tr></thead><tbody>';
+            let transfersHtml = '<table class="transfer-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody>';
             if (transfers.length === 0) {
                 transfersHtml += '<tr><td colspan="4" style="text-align:center;">لا توجد تحويلات</td></tr>';
             } else {
@@ -379,7 +379,6 @@
                     notes: notes
                 });
                 if (res.success) {
-                    // إخفاء النموذج وإظهار صفحة النجاح
                     document.getElementById('portalForm').style.display = 'none';
                     document.getElementById('successPage').style.display = 'block';
                 } else {
@@ -393,21 +392,17 @@
         }
 
         function resetForm() {
-            // إعادة تعيين النموذج
             document.getElementById('selectedMerchantId').value = '';
             document.getElementById('merchantSearch').value = '';
             document.getElementById('merchantSelect').value = '';
             document.getElementById('amount').value = '';
             document.getElementById('notes').value = '';
             document.getElementById('merchantInfo').style.display = 'none';
-            // إخفاء صفحة النجاح وإظهار النموذج
             document.getElementById('successPage').style.display = 'none';
             document.getElementById('portalForm').style.display = 'block';
-            // إعادة تعيين اختيار نوع الطلب إلى الافتراضي
             document.querySelector('input[name="requestType"][value="رصيد على المكنة"]').checked = true;
         }
 
-        // إغلاق نتائج البحث عند النقر خارجها
         document.addEventListener('click', function(e) {
             const searchBox = document.getElementById('merchantSearch');
             const results = document.getElementById('searchResults');
