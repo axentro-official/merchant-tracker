@@ -9,6 +9,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     
     <style>
+        /* نفس الـ style كما هو، لم يتغير */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1d4ed8;
@@ -138,7 +139,7 @@
         .toast.warning { background: var(--warning); }
         .video-wrap { background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 10px; position: relative; }
         .video-wrap video { width: 100%; display: block; }
-        #scanModal { z-index: 2100; } /* فوق أي مودال آخر */
+        #scanModal { z-index: 2100; }
         @media (max-width: 768px) {
             .navbar { padding: 0.6rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
             .navbar-actions { width: 100%; justify-content: center; margin-top: 0.5rem; }
@@ -264,7 +265,10 @@
                 <div class="table-box">
                     <div class="table-header"><h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3></div>
                     <div class="table-container">
-                        <table><thead><tr><th>المكنة</th><th>التاجر</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr></thead><tbody id="tblTopMachines"></tbody></table>
+                        <table>
+                            <thead><tr><th>المكنة</th><th>التاجر</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr></thead>
+                            <tbody id="tblTopMachines"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -280,7 +284,10 @@
                         </div>
                     </div>
                     <div class="table-container">
-                        <table><thead><tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMerchants"></tbody></table>
+                        <table>
+                            <thead><tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr></thead>
+                            <tbody id="tblMerchants"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -289,7 +296,12 @@
             <div id="page-machines" class="page">
                 <div class="table-box">
                     <div class="table-header"><h3><i class="fas fa-cash-register"></i> المكن</h3><button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button></div>
-                    <div class="table-container"><table><thead><tr><th>رقم المكنة</th><th>التاجر</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMachines"></tbody></table></div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>رقم المكنة</th><th>التاجر</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr></thead>
+                            <tbody id="tblMachines"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -297,7 +309,12 @@
             <div id="page-transfers" class="page">
                 <div class="table-box">
                     <div class="table-header"><h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3><button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button></div>
-                    <div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>حذف</th></tr></thead><tbody id="tblTransfers"></tbody></table></div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>حذف</th></tr></thead>
+                            <tbody id="tblTransfers"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -305,7 +322,12 @@
             <div id="page-collections" class="page">
                 <div class="table-box">
                     <div class="table-header"><h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button></div>
-                    <div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>حذف</th></tr></thead><tbody id="tblCollections"></tbody></table></div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>حذف</th></tr></thead>
+                            <tbody id="tblCollections"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -342,7 +364,10 @@
                 <div class="table-box">
                     <div class="table-header"><h3><i class="fas fa-archive"></i> الأرشيف</h3><button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد</button></div>
                     <div class="table-container">
-                        <table><thead><tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr></thead><tbody id="tblArchive"></tbody></table>
+                        <table>
+                            <thead><tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr></thead>
+                            <tbody id="tblArchive"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -371,6 +396,7 @@
         const API = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec';
         let DB = {};
         let merchantSearchTerm = '';
+        let isFullDataLoaded = false; // لتتبع تحميل البيانات الكاملة
 
         // ==================== State Management ====================
         const AppState = { isPolling: false, pollInterval: 60000, minInterval: 30000, maxInterval: 120000, connectionStatus: 'offline' };
@@ -416,7 +442,7 @@
                 document.getElementById('appBox').style.display = 'flex';
                 const cachedData = getCache();
                 if (cachedData) { DB.dashboard = cachedData; renderDashboard(); }
-                loadData();
+                loadData(); // سيتم تحميل الداشبورد أولاً ثم باقي البيانات
             } else { showLoading(false); }
         }
         async function login() {
@@ -439,33 +465,73 @@
         // ==================== API ====================
         async function api(act, data = {}) { try { const url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`; const res = await fetch(url); return await res.json(); } catch (e) { console.error('API Error:', e); return { success: false, message: e.message }; } }
 
-        // ==================== Data Loading ====================
+        // ==================== Data Loading (Optimized) ====================
         async function loadData() {
-            if (!DB.merchants) showLoading(true);
+            // أولاً: تحميل الداشبورد فقط (سريع)
+            if (!DB.dashboard) showLoading(true);
             try {
-                const res = await api('getAllData');
-                if (res.success && res.data) {
-                    DB = res.data;
-                    // إذا لم يكن dashboard موجوداً أو كان بعض القيم صفراً رغم وجود بيانات، نحسبه يدوياً
-                    if (!DB.dashboard || (DB.dashboard && DB.dashboard.التحويلات_شهر === 0 && DB.transfers && DB.transfers.length > 0)) {
-                        DB.dashboard = calculateDashboardFrontend(DB.transfers, DB.collections, DB.merchants, DB.machines);
-                    }
-                    if (DB.dashboard) setCache(DB.dashboard);
-                    renderAll();
+                const dashboardRes = await api('getDashboardOnly');
+                if (dashboardRes.success && dashboardRes.dashboard) {
+                    DB.dashboard = dashboardRes.dashboard;
+                    setCache(DB.dashboard);
+                    renderDashboard();
                     setConnectionStatus('live');
-                    showToast('تم تحديث البيانات', 'success');
+                    if (!isFullDataLoaded) showToast('تم تحديث الإحصائيات', 'success');
                 } else {
-                    throw new Error(res.message || 'فشل');
+                    throw new Error('فشل تحميل الداشبورد');
                 }
             } catch (e) {
                 setConnectionStatus('offline');
-                if (!DB.merchants) { const cachedDash = getCache(); if (cachedDash) { DB.dashboard = cachedDash; renderDashboard(); showToast('وضع عدم الاتصال', 'warning'); } else { showToast('فشل تحميل البيانات', 'error'); } }
-                else { showToast('تحديث فاشل، البيانات قد تكون قديمة', 'warning'); }
+                const cachedDash = getCache();
+                if (cachedDash) {
+                    DB.dashboard = cachedDash;
+                    renderDashboard();
+                    showToast('وضع عدم الاتصال (البيانات من ذاكرة التخزين)', 'warning');
+                } else {
+                    showToast('فشل تحميل البيانات', 'error');
+                    showLoading(false);
+                    return;
+                }
             }
             showLoading(false);
+
+            // ثانياً: تحميل باقي البيانات (التجار، المكن، التحويلات، التحصيلات، الأرشيف) في الخلفية
+            if (!isFullDataLoaded) {
+                setTimeout(async () => {
+                    try {
+                        const fullRes = await api('getAllData');
+                        if (fullRes.success && fullRes.data) {
+                            DB.merchants = fullRes.data.merchants;
+                            DB.machines = fullRes.data.machines;
+                            DB.transfers = fullRes.data.transfers;
+                            DB.collections = fullRes.data.collections;
+                            DB.archives = fullRes.data.archives;
+                            isFullDataLoaded = true;
+                            renderAll(); // تحديث الجداول
+                            showToast('تم تحميل جميع البيانات بنجاح', 'success');
+                        } else {
+                            console.warn('فشل تحميل البيانات التفصيلية');
+                        }
+                    } catch (err) {
+                        console.error('خطأ في تحميل البيانات التفصيلية', err);
+                        showToast('فشل تحميل بعض البيانات', 'error');
+                    }
+                }, 100);
+            }
         }
 
-        // حساب الكروت من البيانات الموجودة (حل احتياطي)
+        // دالة مساعدة لتحديث كل الجداول بعد تحميل البيانات الكاملة
+        function renderAll() {
+            if (!isFullDataLoaded) return;
+            renderMerchants();
+            renderMachines();
+            renderTransfers();
+            renderCollections();
+            renderArchive();
+            populateMerchantDropdowns();
+        }
+
+        // حساب الكروت من البيانات الموجودة (حل احتياطي - نادراً ما يُستخدم)
         function calculateDashboardFrontend(transfers, collections, merchants, machines) {
             const now = new Date();
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -498,8 +564,6 @@
                 'أعلى_المكن': topMachines.slice(0,10)
             };
         }
-
-        function renderAll() { renderDashboard(); renderMerchants(); renderMachines(); renderTransfers(); renderCollections(); renderArchive(); populateMerchantDropdowns(); }
 
         // ==================== Search & Dropdowns ====================
         function debounce(func, wait) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; }
@@ -599,10 +663,8 @@
         // ==================== Scanner Logic (BarcodeDetector) ====================
         let scanStream = null; let scanTrack = null; let torchOn = false; let scanRafId = null;
         let scanAudio = null;
-
         function initScanSound() { try { scanAudio = new Audio('scan.mp3'); scanAudio.preload = 'auto'; } catch(e) { console.warn('صوت غير متاح'); } }
         function playScanSound() { if (scanAudio) { scanAudio.currentTime = 0; scanAudio.play().catch(e => console.log('تشغيل الصوت فشل', e)); } }
-
         async function startScanCamera() {
             await stopScanCamera();
             try {
@@ -634,14 +696,12 @@
                 } else { showToast('المتصفح لا يدعم ماسح الباركود', 'error'); closeScanModal(); }
             } catch (err) { console.error('Camera error:', err); showToast('لا يمكن الوصول إلى الكاميرا. تأكد من منح الإذن.', 'error'); closeScanModal(); }
         }
-
         async function stopScanCamera() {
             if (scanRafId) { cancelAnimationFrame(scanRafId); scanRafId = null; }
             if (scanStream) { scanStream.getTracks().forEach(track => track.stop()); scanStream = null; }
             scanTrack = null; torchOn = false;
             const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = '🔦 فلاش';
         }
-
         async function toggleTorch() {
             try {
                 if (!scanTrack) return;
@@ -652,7 +712,6 @@
                 const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = torchOn ? '🔦 إيقاف' : '🔦 فلاش';
             } catch (e) { showToast('تعذر تشغيل الفلاش', 'error'); }
         }
-
         function openScanModal() {
             const modal = document.getElementById('scanModal');
             if (modal) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('show'), 10); startScanCamera(); }
@@ -703,7 +762,6 @@
             initScanSound();
             const torchBtn = document.getElementById('torchBtn');
             if (torchBtn) torchBtn.onclick = toggleTorch;
-            // ربط حقل البحث في صفحة التجار
             const searchInput = document.getElementById('merchantSearchInput');
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => { merchantSearchTerm = e.target.value; renderMerchants(); });
