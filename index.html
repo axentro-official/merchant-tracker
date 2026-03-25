@@ -7,12 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/dist/html5-qrcode.min.js"></script>
     
     <style>
-        /* جميع الستايلات كما هي (تم حذف التكرار للاختصار، لكن يجب وضعها كاملة) */
-        /* ... نفس الستايل الموجود في الملف السابق ... */
-        /* لحفظ المساحة، استخدم الستايل الموجود في الملف السابق، لم يتغير. */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1d4ed8;
@@ -34,18 +30,41 @@
             --radius: 12px;
             --radius-sm: 8px;
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body { background: linear-gradient(135deg, var(--bg) 0%, #e2e8f0 100%); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #e2e8f0 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(4px); }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(4px);
+        }
         .spinner { width: 50px; height: 50px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         .loading-text { margin-top: 1rem; color: var(--muted); font-weight: 600; }
+
+        /* Login */
         #loginBox { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; }
-        .login-card { background: var(--white); padding: 2.5rem; border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; text-align: center; animation: fadeIn 0.5s ease-out; position: relative; overflow: hidden; }
+        .login-card {
+            background: var(--white); padding: 2.5rem; border-radius: var(--radius);
+            box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; text-align: center;
+            animation: fadeIn 0.5s ease-out; position: relative; overflow: hidden;
+        }
         .login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--secondary)); }
         .login-logo { width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; animation: float 3s ease-in-out infinite; }
         .login-logo i { font-size: 2.5rem; color: white; }
@@ -53,6 +72,8 @@
         .login-card p { color: var(--muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
         .login-card input { width: 100%; padding: 1rem 1.2rem; margin-bottom: 1rem; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 1rem; transition: all 0.3s; background: var(--bg); }
         .login-card input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); background: white; }
+
+        /* Buttons */
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border: none; border-radius: var(--radius-sm); color: white; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: all 0.3s ease; }
         .btn:active { transform: scale(0.98); }
         .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4); }
@@ -64,23 +85,35 @@
         .btn-secondary { background: linear-gradient(135deg, #64748b, #475569); }
         .btn-sm { padding: 0.5rem 1rem; font-size: 0.85rem; }
         .btn-block { width: 100%; }
+
+        /* App Layout */
         .app-container { display: none; flex-direction: column; min-height: 100vh; }
+
+        /* Navbar */
         .navbar { background: var(--white); padding: 0.8rem 1.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
         .navbar .logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.3rem; color: var(--primary); }
         .navbar-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+
+        /* Connection Status */
         .conn-status { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 20px; background: var(--bg); color: var(--muted); transition: all 0.3s; }
         .conn-status.live { background: var(--success-light); color: var(--success); }
         .conn-status.offline { background: var(--danger-light); color: var(--danger); animation: pulse 2s infinite; }
         .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+        /* Tabs */
         .tabs-nav { display: flex; background: var(--white); border-bottom: 2px solid var(--border); overflow-x: auto; position: sticky; top: 60px; z-index: 90; scrollbar-width: none; }
         .tabs-nav::-webkit-scrollbar { display: none; }
         .tab-link { flex: 1; min-width: 90px; padding: 1rem 0.5rem; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; transition: all 0.3s; white-space: nowrap; font-size: 0.85rem; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
         .tab-link i { font-size: 1.2rem; }
         .tab-link:hover { color: var(--primary); background: rgba(59, 130, 246, 0.05); }
         .tab-link.active { color: var(--primary); border-color: var(--primary); background: linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%); }
+
+        /* Content */
         .content { padding: 1.5rem; flex: 1; overflow-y: auto; padding-bottom: 120px; }
         .page { display: none; animation: fadeIn 0.4s ease-out; }
         .page.active { display: block; }
+
+        /* Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
         .stat-card { background: var(--white); padding: 1.2rem; border-radius: var(--radius); box-shadow: var(--shadow); position: relative; overflow: hidden; transition: all 0.3s ease; }
         .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
@@ -91,6 +124,8 @@
         .stat-card h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; font-weight: 600; }
         .stat-card .val { font-size: 1.5rem; font-weight: 800; color: var(--text); transition: color 0.3s; }
         .stat-card .val.updating { color: var(--primary); }
+
+        /* Tables */
         .table-box { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.5rem; }
         .table-header { padding: 1rem 1.5rem; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.5rem; }
         .table-header h3 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
@@ -104,12 +139,16 @@
         .badge-success { background: var(--success-light); color: var(--success); }
         .badge-danger { background: var(--danger-light); color: var(--danger); }
         .badge-primary { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
+
+        /* Footer */
         footer { background: linear-gradient(135deg, var(--bg-dark) 0%, #1e293b 100%); padding: 2rem; text-align: center; margin-top: auto; }
         footer p { color: #94a3b8; font-size: 0.85rem; line-height: 1.8; }
         .qr-box { margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: float 4s ease-in-out infinite; }
         .qr-box img { width: 100px; border-radius: var(--radius-sm); border: 3px solid rgba(255,255,255,0.2); margin-bottom: 0.8rem; transition: all 0.3s; }
         .qr-box img:hover { transform: scale(1.1); border-color: var(--primary); }
         .qr-box a { color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; }
+
+        /* Modal */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 1rem; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s ease; }
         .modal.show { opacity: 1; }
         .modal-content { background: var(--white); padding: 2rem; border-radius: var(--radius); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; animation: scaleIn 0.3s ease-out; }
@@ -123,27 +162,51 @@
         .form-control { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; transition: all 0.3s; background: var(--bg); }
         .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); background: white; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .search-results { position: absolute; top: 100%; right: 0; left: 0; background: var(--white); border: 1px solid var(--border); border-radius: 0 0 var(--radius-sm) var(--radius-sm); max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: var(--shadow-lg); display: none; }
+
+        /* Search Results Dropdown */
+        .search-results { 
+            position: absolute; top: 100%; right: 0; left: 0; 
+            background: var(--white); border: 1px solid var(--border); 
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm); 
+            max-height: 250px; overflow-y: auto; z-index: 1000; 
+            box-shadow: var(--shadow-lg); display: none;
+        }
         .search-results div { padding: 0.8rem 1rem; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s; }
         .search-results div:last-child { border-bottom: none; }
         .search-results div:hover { background: var(--primary); color: white; }
         .search-results .no-result { color: var(--muted); cursor: default; }
         .search-results .no-result:hover { background: transparent; color: var(--muted); }
+
+        /* Progress Bar */
         .progress-bar { height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 0.5rem; }
         .progress-bar .fill { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
         .progress-bar .fill.success { background: var(--success); }
         .progress-bar .fill.warning { background: var(--warning); }
         .progress-bar .fill.danger { background: var(--danger); }
+
+        /* Quick Actions */
         .quick-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; padding: 1.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%); border-radius: var(--radius); }
+
+        /* Toast */
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--bg-dark); color: white; padding: 1rem 2rem; border-radius: var(--radius); box-shadow: var(--shadow-lg); z-index: 9999; transition: transform 0.3s ease; display: flex; align-items: center; gap: 0.5rem; }
         .toast.show { transform: translateX(-50%) translateY(0); }
         .toast.success { background: var(--success); }
         .toast.error { background: var(--danger); }
         .toast.warning { background: var(--warning); }
+
+        /* Video for scanner */
+        .video-wrap video {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
             .navbar { padding: 0.6rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
             .navbar-actions { width: 100%; justify-content: center; margin-top: 0.5rem; }
-            .tabs-nav { top: 100px; }
+            .tabs-nav { top: 100px; } 
             .tab-link { padding: 0.7rem 0.3rem; font-size: 0.75rem; }
             .content { padding: 1rem; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -178,6 +241,24 @@
         </div>
     </div>
 
+    <!-- Scanner Modal -->
+    <div id="scanModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="modal-close" onclick="closeScanModal()">&times;</span>
+            <h3><i class="fas fa-camera"></i> ماسح الرقم التسلسلي</h3>
+            <div class="video-wrap" style="background:#000; border-radius:12px; overflow:hidden; margin-bottom:10px;">
+                <video id="video" playsinline style="width:100%; display:block;"></video>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                <button class="btn btn-secondary btn-sm" id="torchBtn">🔦 فلاش</button>
+                <button class="btn btn-secondary btn-sm" onclick="closeScanModal()">إغلاق</button>
+            </div>
+            <div class="scan-hint" style="margin-top: 10px; font-size: 12px; color: var(--muted); text-align: center;">
+                وجه الكاميرا نحو الرقم التسلسلي (باركود) الموجود على المكنة.
+            </div>
+        </div>
+    </div>
+
     <!-- Login Screen -->
     <div id="loginBox">
         <div class="login-card">
@@ -205,6 +286,7 @@
 
     <!-- Main App -->
     <div class="app-container" id="appBox">
+        <!-- Navbar -->
         <nav class="navbar">
             <div class="logo">
                 <i class="fas fa-store"></i>
@@ -221,6 +303,7 @@
             </div>
         </nav>
 
+        <!-- Tabs -->
         <div class="tabs-nav">
             <div class="tab-link active" onclick="showPage('home', this)"><i class="fas fa-home"></i> الرئيسية</div>
             <div class="tab-link" onclick="showPage('merchants', this)"><i class="fas fa-users"></i> التجار</div>
@@ -231,7 +314,9 @@
             <div class="tab-link" onclick="showPage('archive', this)"><i class="fas fa-archive"></i> الأرشيف</div>
         </div>
 
+        <!-- Content -->
         <div class="content">
+            
             <!-- HOME PAGE -->
             <div id="page-home" class="page active">
                 <div class="stats-grid" id="dashStats"></div>
@@ -280,7 +365,7 @@
             <div id="page-collections" class="page">
                 <div class="table-box">
                     <div class="table-header"><h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button></div>
-                    <div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>حذف</th></tr></thead><tbody id="tblCollections"></tbody></table></div>
+                    <div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>حذف</th></tr></thead><tbody id="tblCollections"></tbody></table></div>
                 </div>
             </div>
 
@@ -306,7 +391,10 @@
                         </div>
                         <h4 style="margin: 1rem 0; color: var(--muted);"><i class="fas fa-history"></i> الحركات</h4>
                         <div class="table-container">
-                            <table style="min-width: 500px;"><thead><tr><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th></tr></thead><tbody id="tblStatement"></tbody></table>
+                            <table style="min-width: 600px;">
+                                <thead><tr><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th><th>المتبقي بعد الحركة</th><th>ملاحظات</th></tr></thead>
+                                <tbody id="tblStatement"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -317,13 +405,11 @@
                 <div class="table-box">
                     <div class="table-header"><h3><i class="fas fa-archive"></i> الأرشيف</h3><button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد</button></div>
                     <div class="table-container">
-                        <table>
-                            <thead><tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr></thead>
-                            <tbody id="tblArchive"></tbody>
-                        </table>
+                        <table><thead><tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr></thead><tbody id="tblArchive"></tbody></table>
                     </div>
                 </div>
             </div>
+
         </div>
 
         <footer>
@@ -467,17 +553,28 @@
             keys.forEach((k, i) => { html += `<div class="stat-card ${colors[i]}"><h4><i class="fas ${icons[i]}"></i> ${labels[i]}</h4><div class="val" data-key="${k}">${formatNumber(d[k])}</div></div>`; });
             statsContainer.innerHTML = html; renderTopMachines(d['أعلى_المكن'] || []);
         }
-        function renderTopMachines(machines) { const tbody = document.getElementById('tblTopMachines'); if (!tbody) return; if (!machines || machines.length === 0) { tbody.innerHTML = '.<td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td>'; return; } let rows = ''; machines.forEach(m => { const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger'; rows += `<tr><td><strong>${m.name || '-'}</strong></td><td>${m.merchant || '-'}</td><td>${formatNumber(m.achieved)}</td><td>${formatNumber(m.target)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td></tr>`; }); tbody.innerHTML = rows; }
-        function renderMerchants() { const tbody = document.getElementById('tblMerchants'); const merchants = DB.merchants || []; if (merchants.length === 0) { tbody.innerHTML = '.<td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد تجار</td>'; return; } let rows = ''; merchants.forEach(m => { const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger'; rows += `<tr><td><strong>${m['رقم التاجر'] || '-'}</strong></td><td>${m['اسم التاجر'] || '-'}</td><td>${m['اسم النشاط'] || '-'}</td><td>${m['رقم الهاتف'] || '-'}</td><td>${m['المنطقة'] || '-'}</td><td>${m['العنوان'] || '-'}</td><td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td><td><button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
-        function renderMachines() { const tbody = document.getElementById('tblMachines'); const machines = DB.machines || []; if (machines.length === 0) { tbody.innerHTML = '.<td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد مكن</td>'; return; } let rows = ''; machines.forEach(m => { const statusClass = m['الحالة'] === 'نشطة' ? 'success' : 'danger'; rows += `<tr><td><strong>${m['رقم المكنة'] || '-'}</strong></td><td>${m['اسم التاجر'] || '-'}</td><td><code>${m['الرقم التسلسلي'] || '-'}</code></td><td>${formatNumber(m['التارجت الشهري'])}</td><td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td><td><button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
-        function renderTransfers() { const tbody = document.getElementById('tblTransfers'); const transfers = DB.transfers || []; if (transfers.length === 0) { tbody.innerHTML = '.<td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحويلات</td>'; return; } let rows = ''; transfers.slice(-50).reverse().forEach(t => { rows += `<tr><td>${formatDate(t['التاريخ'])}</td><td>${formatTime(t['الوقت'])}</td><td>${t['اسم التاجر'] || '-'}</td><td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td><td>${t['ملاحظات'] || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
-        function renderCollections() { const tbody = document.getElementById('tblCollections'); const collections = DB.collections || []; if (collections.length === 0) { tbody.innerHTML = '.<td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td>'; return; } let rows = ''; collections.slice(-50).reverse().forEach(c => { const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning'; rows += `<tr><td>${formatDate(c['التاريخ'])}</td><td>${formatTime(c['الوقت'])}</td><td>${c['اسم التاجر'] || '-'}</td><td><strong>${formatNumber(c['قيمة التحصيل'])}</strong></td><td><span class="badge badge-${typeClass}">${c['نوع التحصيل'] || '-'}</span></td><td><button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
-        function renderArchive() { const tbody = document.getElementById('tblArchive'); const archives = DB.archives || []; if (archives.length === 0) { tbody.innerHTML = '.<td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد أرشيف</td>'; return; } let rows = ''; archives.reverse().forEach(a => { rows += `<tr><td><strong>${a['الشهر'] || '-'}</strong></td><td>${a['عدد التحويلات'] || 0}</td><td>${formatNumber(a['إجمالي التحويلات'])}</td><td>${a['عدد التحصيلات'] || 0}</td><td>${formatNumber(a['إجمالي التحصيلات'])}</td><td>${formatNumber(a['إجمالي المتبقي'])}</td><td><button class="btn btn-danger btn-sm" onclick="deleteArchive('${a['رقم الأرشيف']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
+        function renderTopMachines(machines) { const tbody = document.getElementById('tblTopMachines'); if (!tbody) return; if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; } let rows = ''; machines.forEach(m => { const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger'; rows += `<tr><td><strong>${m.name || '-'}</strong></td><td>${m.merchant || '-'}</td><td>${formatNumber(m.achieved)}</td><td>${formatNumber(m.target)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td></tr>`; }); tbody.innerHTML = rows; }
+        function renderMerchants() { const tbody = document.getElementById('tblMerchants'); const merchants = DB.merchants || []; if (merchants.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد تجار</td></tr>'; return; } let rows = ''; merchants.forEach(m => { const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger'; rows += `<tr><td><strong>${m['رقم التاجر'] || '-'}</strong></td><td>${m['اسم التاجر'] || '-'}</td><td>${m['اسم النشاط'] || '-'}</td><td>${m['رقم الهاتف'] || '-'}</td><td>${m['المنطقة'] || '-'}</td><td>${m['العنوان'] || '-'}</td><td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td><td><button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
+        function renderMachines() { const tbody = document.getElementById('tblMachines'); const machines = DB.machines || []; if (machines.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد مكن</td></tr>'; return; } let rows = ''; machines.forEach(m => { const statusClass = m['الحالة'] === 'نشطة' ? 'success' : 'danger'; rows += `<tr><td><strong>${m['رقم المكنة'] || '-'}</strong></td><td>${m['اسم التاجر'] || '-'}</td><td><code>${m['الرقم التسلسلي'] || '-'}</code></td><td>${formatNumber(m['التارجت الشهري'])}</td><td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td><td><button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
+        function renderTransfers() { const tbody = document.getElementById('tblTransfers'); const transfers = DB.transfers || []; if (transfers.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحويلات</td></tr>'; return; } let rows = ''; transfers.slice(-50).reverse().forEach(t => { rows += `<tr><td>${formatDate(t['التاريخ'])}</td><td>${formatTime(t['الوقت'])}</td><td>${t['اسم التاجر'] || '-'}</td><td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td><td>${t['ملاحظات'] || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
+        function renderCollections() {
+            const tbody = document.getElementById('tblCollections');
+            const collections = DB.collections || [];
+            if (collections.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>'; return; }
+            let rows = '';
+            collections.slice(-50).reverse().forEach(c => {
+                const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
+                const remaining = c['المتبقي بعد التحصيل'] !== undefined ? c['المتبقي بعد التحصيل'] : 0;
+                rows += `<tr><td>${formatDate(c['التاريخ'])}</td><td>${formatTime(c['الوقت'])}</td><td>${c['اسم التاجر'] || '-'}</td><td><strong>${formatNumber(c['قيمة التحصيل'])}</strong></td><td><span class="badge badge-${typeClass}">${c['نوع التحصيل'] || '-'}</span></td><td><strong>${formatNumber(remaining)}</strong></td><td><button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button></td></tr>`;
+            });
+            tbody.innerHTML = rows;
+        }
+        function renderArchive() { const tbody = document.getElementById('tblArchive'); const archives = DB.archives || []; if (archives.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد أرشيف</td></tr>'; return; } let rows = ''; archives.reverse().forEach(a => { rows += `<tr><td><strong>${a['الشهر'] || '-'}</strong></td><td>${a['عدد التحويلات'] || 0}</td><td>${formatNumber(a['إجمالي التحويلات'])}</td><td>${a['عدد التحصيلات'] || 0}</td><td>${formatNumber(a['إجمالي التحصيلات'])}</td><td>${formatNumber(a['إجمالي المتبقي'])}</td><td><button class="btn btn-danger btn-sm" onclick="deleteArchive('${a['رقم الأرشيف']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
 
         // ==================== Statement ====================
         async function getStatement() {
             const mid = document.getElementById('stmtMerchantId').value; if (!mid) return; showLoading(true);
-            try { const res = await api('getStatement', { merchantId: mid }); if (res.success && res.data) { const data = res.data; document.getElementById('stmtT').textContent = formatNumber(data.stats.totalTransfers); document.getElementById('stmtC').textContent = formatNumber(data.stats.totalCollections); document.getElementById('stmtR').textContent = formatNumber(data.stats.remaining); const tbody = document.getElementById('tblStatement'); if (data.movements.length === 0) { tbody.innerHTML = '.<td colspan="5" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد حركات</td>'; } else { let rows = ''; data.movements.forEach(m => { const typeClass = m.type === 'تحويل' ? 'primary' : 'success'; rows += `<tr><td>${formatDate(m.date)}</td><td>${formatTime(m.time)}</td><td><span class="badge badge-${typeClass}">${m.type}</span></td><td><strong>${formatNumber(m.amount)}</strong></td><td>${m.notes || '-'}</td></tr>`; }); tbody.innerHTML = rows; } } } catch (e) { showToast('حدث خطأ', 'error'); } showLoading(false); }
+            try { const res = await api('getStatement', { merchantId: mid }); if (res.success && res.data) { const data = res.data; document.getElementById('stmtT').textContent = formatNumber(data.stats.totalTransfers); document.getElementById('stmtC').textContent = formatNumber(data.stats.totalCollections); document.getElementById('stmtR').textContent = formatNumber(data.stats.remaining); const tbody = document.getElementById('tblStatement'); if (data.movements.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد حركات</td></tr>'; } else { let rows = ''; data.movements.forEach(m => { const typeClass = m.type === 'تحويل' ? 'primary' : 'success'; rows += `<tr><td>${formatDate(m.date)}</td><td>${formatTime(m.time)}</td><td><span class="badge badge-${typeClass}">${m.type}</span></td><td><strong>${formatNumber(m.amount)}</strong></td><td><strong>${formatNumber(m.balanceAfter)}</strong></td><td>${m.notes || '-'}</td></tr>`; }); tbody.innerHTML = rows; } } } catch (e) { showToast('حدث خطأ', 'error'); } showLoading(false); }
 
         // ==================== Confirm & Delete ====================
         let confirmCallback = null;
@@ -497,27 +594,74 @@
         // ==================== Navigation ====================
         function showPage(name, element) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active')); document.getElementById('page-' + name).classList.add('active'); if (element) element.classList.add('active'); }
 
-        // ==================== Scanner ====================
-        let html5QrCode = null; let scannerActive = false; let scanSound = null;
-        function initScanSound() { try { scanSound = new Audio('scan.mp3'); scanSound.preload = 'auto'; } catch(e) { console.warn('صوت غير متاح'); } }
-        function playScanSound() { if (scanSound) { scanSound.currentTime = 0; scanSound.play().catch(e => console.log('تشغيل الصوت فشل', e)); } }
-        async function openScanner() {
-            const container = document.getElementById('scannerContainer'); if (!container) { showToast('حدث خطأ في تهيئة الكاميرا', 'error'); return; }
-            container.style.display = 'block';
-            if (scannerActive) { showToast('الكاميرا مفتوحة بالفعل', 'info'); return; }
-            try {
-                html5QrCode = new Html5Qrcode("qr-reader");
-                const constraints = { facingMode: "environment" };
-                const config = { fps: 10, qrbox: 250 };
-                await html5QrCode.start(constraints, config, (decodedText) => {
-                    const serialInput = document.getElementById('mcSerial'); if (serialInput) { serialInput.value = decodedText; playScanSound(); showToast('تم مسح الرقم التسلسلي بنجاح', 'success'); }
-                    stopScanner();
-                }, (errorMessage) => {});
-                scannerActive = true; showToast('الكاميرا جاهزة للمسح', 'success');
-            } catch (err) { console.error('خطأ في فتح الكاميرا:', err); showToast('لا يمكن الوصول إلى الكاميرا. تأكد من منح الإذن واستخدام HTTPS.', 'error'); container.style.display = 'none'; scannerActive = false; }
+        // ==================== Scanner Logic ====================
+        let scanStream = null; let scanTrack = null; let torchOn = false; let scanRafId = null; let scanModal = null;
+        function initScannerModal() {
+            scanModal = document.getElementById('scanModal');
+            if (!scanModal) return;
+            const closeBtn = scanModal.querySelector('.modal-close');
+            if (closeBtn) closeBtn.onclick = closeScanModal;
+            const torchBtn = document.getElementById('torchBtn');
+            if (torchBtn) torchBtn.onclick = toggleTorch;
         }
-        function stopScanner() { if (html5QrCode && scannerActive) { html5QrCode.stop().then(() => { const container = document.getElementById('scannerContainer'); if (container) container.style.display = 'none'; scannerActive = false; html5QrCode = null; }).catch(err => { const container = document.getElementById('scannerContainer'); if (container) container.style.display = 'none'; scannerActive = false; }); } else { const container = document.getElementById('scannerContainer'); if (container) container.style.display = 'none'; scannerActive = false; } }
-        function toggleFlash() { showToast('تشغيل الفلاش غير مدعوم تلقائياً، يمكنك تشغيله يدوياً من إعدادات الكاميرا.', 'warning'); }
+        async function startScanCamera() {
+            await stopScanCamera();
+            try {
+                const constraints = { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } };
+                scanStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('video');
+                if (video) { video.srcObject = scanStream; await video.play(); }
+                scanTrack = scanStream.getVideoTracks()[0] || null;
+                if ('BarcodeDetector' in window) {
+                    const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code", "upc_a", "upc_e", "itf", "codabar"] });
+                    const tick = async () => {
+                        try {
+                            if (!video || video.paused || video.ended) return;
+                            const codes = await detector.detect(video);
+                            if (codes && codes.length) {
+                                const raw = (codes[0].rawValue || "").trim();
+                                if (raw) {
+                                    const serialInput = document.getElementById('mcSerial');
+                                    if (serialInput) { serialInput.value = raw; playScanSound(); showToast('تم مسح الرقم التسلسلي بنجاح', 'success'); }
+                                    await stopScanCamera(); closeScanModal();
+                                    return;
+                                }
+                            }
+                        } catch (e) { }
+                        scanRafId = requestAnimationFrame(tick);
+                    };
+                    scanRafId = requestAnimationFrame(tick);
+                } else { showToast('المتصفح لا يدعم ماسح الباركود', 'error'); closeScanModal(); }
+            } catch (err) { console.error('Camera error:', err); showToast('لا يمكن الوصول إلى الكاميرا. تأكد من منح الإذن.', 'error'); closeScanModal(); }
+        }
+        async function stopScanCamera() {
+            if (scanRafId) { cancelAnimationFrame(scanRafId); scanRafId = null; }
+            if (scanStream) { scanStream.getTracks().forEach(track => track.stop()); scanStream = null; }
+            scanTrack = null; torchOn = false;
+            const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = '🔦 فلاش';
+        }
+        async function toggleTorch() {
+            try {
+                if (!scanTrack) return;
+                const caps = scanTrack.getCapabilities ? scanTrack.getCapabilities() : {};
+                if (!caps.torch) { showToast('الفلاش غير مدعوم على هذا الجهاز', 'warning'); return; }
+                torchOn = !torchOn;
+                await scanTrack.applyConstraints({ advanced: [{ torch: torchOn }] });
+                const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = torchOn ? '🔦 إيقاف' : '🔦 فلاش';
+            } catch (e) { showToast('تعذر تشغيل الفلاش', 'error'); }
+        }
+        function openScanModal() {
+            const modal = document.getElementById('scanModal');
+            if (modal) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('show'), 10); startScanCamera(); }
+        }
+        function closeScanModal() {
+            const modal = document.getElementById('scanModal');
+            if (modal) { modal.classList.remove('show'); setTimeout(() => modal.style.display = 'none', 300); stopScanCamera(); }
+        }
+        // ==================== Scan Sound ====================
+        let scanAudio = null;
+        function initScanSound() { try { scanAudio = new Audio('scan.mp3'); scanAudio.preload = 'auto'; } catch(e) { console.warn('صوت غير متاح'); } }
+        function playScanSound() { if (scanAudio) { scanAudio.currentTime = 0; scanAudio.play().catch(e => console.log('تشغيل الصوت فشل', e)); } }
 
         // ==================== Modals ====================
         function openModal(type) {
@@ -525,7 +669,7 @@
             if (type === 'merchant') {
                 body.innerHTML = `<h3><i class="fas fa-user-plus"></i> إضافة تاجر جديد</h3><div class="form-row"><div class="form-group"><label>اسم التاجر <span class="required">*</span></label><input id="mName" class="form-control" placeholder="اسم التاجر"></div><div class="form-group"><label>اسم النشاط</label><input id="mBiz" class="form-control" placeholder="اسم النشاط"></div></div><div class="form-row"><div class="form-group"><label>رقم الحساب</label><input id="mAcc" class="form-control" placeholder="رقم الحساب"></div><div class="form-group"><label>رقم الهاتف</label><input id="mPhone" class="form-control" placeholder="رقم الهاتف"></div></div><div class="form-row"><div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control" placeholder="المنطقة"></div><div class="form-group"><label>العنوان</label><input id="mAddr" class="form-control" placeholder="العنوان"></div></div><div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات"></div><button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ التاجر</button>`;
             } else if (type === 'machine') {
-                body.innerHTML = `<h3><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="mcMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'mcMerchSearch', 'mcMerchId', 'mcMerchList')"><option value="">-- اختر --</option></select><input type="text" id="mcMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')"></div><input type="hidden" id="mcMerchId"><div id="mcMerchList" class="search-results"></div></div><div class="form-group"><label>الرقم التسلسلي <span class="required">*</span></label><div style="display: flex; gap: 0.5rem;"><input type="text" id="mcSerial" class="form-control" placeholder="ادخل الرقم التسلسلي أو امسحه بالكاميرا" style="flex:1"><button type="button" class="btn btn-primary btn-sm" onclick="openScanner()"><i class="fas fa-camera"></i> مسح</button></div></div><div id="scannerContainer" style="display: none; margin-top: 10px; border:1px solid #ddd; padding:5px; border-radius:8px;"><div id="qr-reader" style="width:100%; max-width:400px; margin:0 auto;"></div><div style="text-align:center; margin-top:5px;"><button class="btn btn-secondary btn-sm" onclick="stopScanner()">إغلاق الكاميرا</button><button class="btn btn-secondary btn-sm" onclick="toggleFlash()">فلاش</button></div></div><div class="form-group"><label>التارجت الشهري</label><input type="number" id="mcTarget" class="form-control" placeholder="التارجت الشهري"></div><div class="form-group"><label>ملاحظات</label><input id="mcNotes" class="form-control" placeholder="ملاحظات"></div><button class="btn btn-primary btn-block" onclick="saveMachine()"><i class="fas fa-save"></i> حفظ المكنة</button>`;
+                body.innerHTML = `<h3><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="mcMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'mcMerchSearch', 'mcMerchId', 'mcMerchList')"><option value="">-- اختر --</option></select><input type="text" id="mcMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')"></div><input type="hidden" id="mcMerchId"><div id="mcMerchList" class="search-results"></div></div><div class="form-group"><label>الرقم التسلسلي <span class="required">*</span></label><div style="display: flex; gap: 0.5rem;"><input type="text" id="mcSerial" class="form-control" placeholder="ادخل الرقم التسلسلي أو امسحه بالكاميرا" style="flex:1"><button type="button" class="btn btn-primary btn-sm" onclick="openScanModal()"><i class="fas fa-camera"></i> مسح</button></div></div><div class="form-group"><label>التارجت الشهري</label><input type="number" id="mcTarget" class="form-control" placeholder="التارجت الشهري"></div><div class="form-group"><label>ملاحظات</label><input id="mcNotes" class="form-control" placeholder="ملاحظات"></div><button class="btn btn-primary btn-block" onclick="saveMachine()"><i class="fas fa-save"></i> حفظ المكنة</button>`;
             } else if (type === 'transfer') {
                 body.innerHTML = `<h3><i class="fas fa-exchange-alt"></i> تحويل جديد</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="trMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'trMerchSearch', 'trMerchId', 'trMerchList')"><option value="">-- اختر --</option></select><input type="text" id="trMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'trMerchList', 'trMerchId', 'fillMachines')"></div><input type="hidden" id="trMerchId"><div id="trMerchList" class="search-results"></div></div><div class="form-group"><label>المكنة</label><select id="trMach" class="form-control"><option value="">-- اختر مكنة --</option></select></div><div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="trAmt" class="form-control" placeholder="قيمة التحويل"></div><div class="form-group"><label>ملاحظات</label><input id="trNotes" class="form-control" placeholder="ملاحظات"></div><button class="btn btn-success btn-block" onclick="saveTransfer()"><i class="fas fa-check"></i> تأكيد التحويل</button>`;
             } else if (type === 'collection') {
@@ -541,7 +685,9 @@
             if (filtered.length === 0) { targetSelect.innerHTML = '<option value="">لا توجد مكنات</option>'; } else { filtered.forEach(m => targetSelect.innerHTML += `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`); if (filtered.length === 1) targetSelect.value = filtered[0]['رقم المكنة']; }
         }
 
-        function closeModal() { if (scannerActive) stopScanner(); const m = document.getElementById('modal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); }
+        function closeModal() {
+            const m = document.getElementById('modal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300);
+        }
 
         // ==================== Save ====================
         async function saveMerchant() { const name = document.getElementById('mName').value.trim(); if (!name) { showToast('اسم التاجر مطلوب', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantName: name, businessName: document.getElementById('mBiz').value, accountNumber: document.getElementById('mAcc').value, phone: document.getElementById('mPhone').value, area: document.getElementById('mArea').value, address: document.getElementById('mAddr').value, notes: document.getElementById('mNotes').value }; const res = await api('addMerchant', data); if (res.success) { showToast('تم إضافة التاجر بنجاح', 'success'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
@@ -556,8 +702,15 @@
         function startLiveUpdates() { setTimeout(fetchDashboardLive, AppState.pollInterval); }
 
         // ==================== Init ====================
-        window.onload = () => { initScanSound(); checkSession(); startLiveUpdates(); document.querySelectorAll('.search-results').forEach(el => { el.previousElementSibling.addEventListener('blur', () => { setTimeout(() => el.style.display = 'none', 200); }); }); };
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); }); document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+        window.onload = () => {
+            initScanSound();
+            initScannerModal();
+            checkSession();
+            startLiveUpdates();
+            document.querySelectorAll('.search-results').forEach(el => { el.previousElementSibling.addEventListener('blur', () => { setTimeout(() => el.style.display = 'none', 200); }); });
+        };
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+        document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
     </script>
 </body>
 </html>
