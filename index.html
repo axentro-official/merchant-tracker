@@ -971,4 +971,86 @@
 
         // ==================== Live Updates ====================
         function extractDashboard(res) { if (res.dashboard) return res.dashboard; if (res.data && res.data.dashboard) return res.data.dashboard; return null; }
-        function updateDashboardUI(data) { if (!data) return; const keys = ['التجار', 'المكن', 'التحويلات_شهر', 'التحصيلات_شهر', 'المتبقي_شهر', 'تحويلات_اليوم']; keys.forEach(key => { const el = document.querySelector(`[data-key="${key}"]`); if (el) { const newValue = formatNumber(data[key]); if (el.textContent !== newValue) { el.textContent = newValue; el.classList.add('updating'); setTimeout(() => el.classList.remove('updating'), 300); } } }); if (data['أعلى_المكن']) renderTopMachines(data['أعلى_
+        function updateDashboardUI(data) { if (!data) return; const keys = ['التجار', 'المكن', 'التحويلات_شهر', 'التحصيلات_شهر', 'المتبقي_شهر', 'تحويلات_اليوم']; keys.forEach(key => { const el = document.querySelector(`[data-key="${key}"]`); if (el) { const newValue = formatNumber(data[key]); if (el.textContent !== newValue) { el.textContent = newValue; el.classList.add('updating'); setTimeout(() => el.classList.remove('updating'), 300); } } }); if (data['أعلى_المكن']) renderTopMachines(data['أعلى_المكن']); }
+        async function fetchDashboardLive() { if (AppState.isPolling) return; AppState.isPolling = true; try { const res = await api('getDashboardOnly'); const dashboardData = extractDashboard(res); if (res.success && dashboardData) { setConnectionStatus('live'); updateDashboardUI(dashboardData); setCache(dashboardData); AppState.pollInterval = AppState.minInterval; } else { throw new Error('Invalid'); } } catch (e) { setConnectionStatus('offline'); AppState.pollInterval = Math.min(AppState.pollInterval * 1.5, AppState.maxInterval); } finally { AppState.isPolling = false; setTimeout(fetchDashboardLive, AppState.pollInterval); } }
+        function startLiveUpdates() { setTimeout(fetchDashboardLive, AppState.pollInterval); }
+
+        // ==================== Scanner ====================
+        let scanStream = null; let scanTrack = null; let torchOn = false; let scanRafId = null;
+        let scanAudio = null;
+        function initScanSound() { try { scanAudio = new Audio('scan.mp3'); scanAudio.preload = 'auto'; } catch(e) { console.warn('صوت غير متاح'); } }
+        function playScanSound() { if (scanAudio) { scanAudio.currentTime = 0; scanAudio.play().catch(e => console.log('تشغيل الصوت فشل', e)); } }
+        async function startScanCamera() {
+            await stopScanCamera();
+            try {
+                const constraints = { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } };
+                scanStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('video');
+                if (video) { video.srcObject = scanStream; await video.play(); }
+                scanTrack = scanStream.getVideoTracks()[0] || null;
+                if ('BarcodeDetector' in window) {
+                    const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code", "upc_a", "upc_e", "itf", "codabar"] });
+                    const tick = async () => {
+                        try {
+                            const videoEl = document.getElementById('video');
+                            if (!videoEl || videoEl.paused || videoEl.ended) return;
+                            const codes = await detector.detect(videoEl);
+                            if (codes && codes.length) {
+                                const raw = (codes[0].rawValue || "").trim();
+                                if (raw) {
+                                    const serialInput = document.getElementById('mcSerial');
+                                    if (serialInput) { serialInput.value = raw; playScanSound(); showToast('تم مسح الرقم التسلسلي بنجاح', 'success'); }
+                                    await stopScanCamera(); closeScanModal();
+                                    return;
+                                }
+                            }
+                        } catch (e) { }
+                        scanRafId = requestAnimationFrame(tick);
+                    };
+                    scanRafId = requestAnimationFrame(tick);
+                } else { showToast('المتصفح لا يدعم ماسح الباركود', 'error'); closeScanModal(); }
+            } catch (err) { console.error('Camera error:', err); showToast('لا يمكن الوصول إلى الكاميرا. تأكد من منح الإذن.', 'error'); closeScanModal(); }
+        }
+        async function stopScanCamera() {
+            if (scanRafId) { cancelAnimationFrame(scanRafId); scanRafId = null; }
+            if (scanStream) { scanStream.getTracks().forEach(track => track.stop()); scanStream = null; }
+            scanTrack = null; torchOn = false;
+            const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = '🔦 فلاش';
+        }
+        async function toggleTorch() {
+            try {
+                if (!scanTrack) return;
+                const caps = scanTrack.getCapabilities ? scanTrack.getCapabilities() : {};
+                if (!caps.torch) { showToast('الفلاش غير مدعوم على هذا الجهاز', 'warning'); return; }
+                torchOn = !torchOn;
+                await scanTrack.applyConstraints({ advanced: [{ torch: torchOn }] });
+                const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = torchOn ? '🔦 إيقاف' : '🔦 فلاش';
+            } catch (e) { showToast('تعذر تشغيل الفلاش', 'error'); }
+        }
+        function openScanModal() {
+            const modal = document.getElementById('scanModal');
+            if (modal) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('show'), 10); startScanCamera(); }
+        }
+        function closeScanModal() {
+            const modal = document.getElementById('scanModal');
+            if (modal) { modal.classList.remove('show'); setTimeout(() => modal.style.display = 'none', 300); stopScanCamera(); }
+        }
+
+        // ==================== Init ====================
+        window.onload = () => {
+            initScanSound();
+            const torchBtn = document.getElementById('torchBtn');
+            if (torchBtn) torchBtn.onclick = toggleTorch;
+            const searchInput = document.getElementById('merchantSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => { merchantSearchTerm = e.target.value; renderMerchants(); });
+            }
+            checkSession();
+            startLiveUpdates();
+            document.querySelectorAll('.search-results').forEach(el => { el.previousElementSibling.addEventListener('blur', () => { setTimeout(() => el.style.display = 'none', 200); }); });
+        };
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+        document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+    </script>
+</body>
+</html>
