@@ -228,7 +228,7 @@
                 Axentro
             </div>
             <div class="navbar-actions">
-                <div id="connIndicator" class="conn-status">
+                <div id="connIndicator" class="conn-status live">
                     <div class="conn-dot"></div>
                     <span>متصل</span>
                 </div>
@@ -415,12 +415,20 @@
     </div>
 
     <script>
-        const API = '<?= ScriptApp.getService().getUrl() ?>';
+        // ==================== API Wrapper (google.script.run) ====================
+        // هذا هو الجزء الأهم للإصلاح: استخدام google.script.run بدلاً من fetch
+        function serverFunction(funcName, data) {
+            return new Promise((resolve, reject) => {
+                google.script.run
+                    .withSuccessHandler(resolve)
+                    .withFailureHandler(reject)
+                    [funcName](data);
+            });
+        }
+
         let DB = {};
         let merchantSearchTerm = '';
         let loadedTables = { merchants: false, machines: false, transfers: false, collections: false, archive: false };
-
-        const AppState = { isPolling: false, pollInterval: 60000, minInterval: 30000, maxInterval: 120000, connectionStatus: 'offline' };
 
         // ==================== Utilities ====================
         function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
@@ -439,22 +447,6 @@
         function formatTime(t) { if (!t) return '-'; return t; }
         function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
-        // ==================== Cache ====================
-        const CACHE_KEY = 'axentro_dashboard_cache'; const CACHE_TTL = 10 * 60 * 1000;
-        function setCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: data })); } catch (e) {} }
-        function getCache() { try { const cached = localStorage.getItem(CACHE_KEY); if (!cached) return null; const parsed = JSON.parse(cached); if (Date.now() - parsed.timestamp > CACHE_TTL) { localStorage.removeItem(CACHE_KEY); return null; } return parsed.data; } catch (e) { return null; } }
-
-        // ==================== Connection ====================
-        function setConnectionStatus(status) {
-            const prevStatus = AppState.connectionStatus;
-            AppState.connectionStatus = status;
-            const indicator = document.getElementById('connIndicator');
-            if (!indicator) return;
-            if (status === 'live') { indicator.className = 'conn-status live'; indicator.querySelector('span').textContent = 'متصل'; }
-            else { indicator.className = 'conn-status offline'; indicator.querySelector('span').textContent = 'غير متصل'; }
-            if (prevStatus !== status) { if (status === 'offline') showToast('فقدان الاتصال...', 'error'); else if (prevStatus === 'offline' && status === 'live') showToast('تم استعادة الاتصال', 'success'); }
-        }
-
         // ==================== Session ====================
         function handleEnter(e) { if (e.key === 'Enter') login(); }
         function checkSession() {
@@ -462,9 +454,7 @@
             if (localStorage.getItem('axentro_logged') === 'true') {
                 document.getElementById('loginBox').style.display = 'none';
                 document.getElementById('appBox').style.display = 'flex';
-                const cachedData = getCache();
-                if (cachedData) { DB.dashboard = cachedData; renderDashboard(); }
-                loadData(); // Loads dashboard only
+                loadData();
             } else { showLoading(false); }
         }
         async function login() {
@@ -472,7 +462,7 @@
             if (!password) { showToast('أدخل كلمة المرور', 'warning'); return; }
             showLoading(true);
             try {
-                const res = await api('login', { password });
+                const res = await serverFunction('login', { password: password });
                 if (res.success) {
                     localStorage.setItem('axentro_logged', 'true');
                     document.getElementById('loginBox').style.display = 'none';
@@ -484,52 +474,28 @@
         }
         function logout() { showConfirm('هل تريد تسجيل الخروج؟', () => { localStorage.removeItem('axentro_logged'); location.reload(); }); }
 
-        // ==================== API (GET) ====================
-        async function api(act, data = {}) {
-            try {
-                const url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`;
-                const res = await fetch(url);
-                return await res.json();
-            } catch (e) {
-                console.error('API Error:', e);
-                return { success: false, message: e.message };
-            }
-        }
-
-        // ==================== Data Loading (Dashboard Only) ====================
+        // ==================== Data Loading ====================
         async function loadData() {
-            if (!DB.dashboard) showLoading(true);
+            showLoading(true);
             try {
-                const dashboardRes = await api('getDashboardOnly');
+                const dashboardRes = await serverFunction('getDashboardOnly', {});
                 if (dashboardRes.success && dashboardRes.dashboard) {
                     DB.dashboard = dashboardRes.dashboard;
-                    setCache(DB.dashboard);
                     renderDashboard();
-                    setConnectionStatus('live');
-                    showToast('تم تحديث الإحصائيات', 'success');
                 } else {
                     throw new Error('فشل تحميل الداشبورد');
                 }
             } catch (e) {
-                setConnectionStatus('offline');
-                const cachedDash = getCache();
-                if (cachedDash) {
-                    DB.dashboard = cachedDash;
-                    renderDashboard();
-                    showToast('وضع عدم الاتصال (البيانات من ذاكرة التخزين)', 'warning');
-                } else {
-                    showToast('فشل تحميل البيانات', 'error');
-                }
+                showToast('فشل تحميل البيانات', 'error');
             } finally {
                 showLoading(false);
             }
         }
 
-        // ==================== Lazy Loading Tables ====================
         async function loadTableData(tableName) {
             showLoading(true);
             try {
-                const res = await api('getTableData', { table: tableName });
+                const res = await serverFunction('getTableData', { table: tableName });
                 if (res.success && res.data) {
                     DB[tableName] = res.data;
                     loadedTables[tableName] = true;
@@ -568,7 +534,7 @@
             keys.forEach((k, i) => { html += `<div class="stat-card ${colors[i]}"><h4><i class="fas ${icons[i]}"></i> ${labels[i]}</h4><div class="val" data-key="${k}">${formatNumber(d[k])}</div></div>`; });
             statsContainer.innerHTML = html; renderTopMachines(d['أعلى_المكن'] || []);
         }
-        function renderTopMachines(machines) { const tbody = document.getElementById('tblTopMachines'); if (!tbody) return; if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; } let rows = ''; machines.forEach(m => { const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger'; rows += `<tr><td><strong>${m.name || '-'}</strong></td><td>${m.merchant || '-'}</td><td>${formatNumber(m.achieved)}</td><td>${formatNumber(m.target)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td></tr>`; }); tbody.innerHTML = rows; }
+        function renderTopMachines(machines) { const tbody = document.getElementById('tblTopMachines'); if (!tbody) return; if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات</td></tr>'; return; } let rows = ''; machines.forEach(m => { const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger'; rows += `<tr><td><strong>${m.name || '-'}</strong></td><td>${m.merchant || '-'}</td><td>${formatNumber(m.achieved)}</td><td>${formatNumber(m.target)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td></tr>`; }); tbody.innerHTML = rows; }
         function renderMerchants() {
             const tbody = document.getElementById('tblMerchants');
             let merchants = DB.merchants || [];
@@ -639,31 +605,21 @@
             });
             tbody.innerHTML = rows;
         }
-
-        // ** الدالة المعدلة لعرض التحصيلات مع عمود "قيمة التحويل" **
         function renderCollections() {
             const tbody = document.getElementById('tblCollections');
             const collections = DB.collections || [];
-
-            if (collections.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>';
-                return;
-            }
-
-            // ترتيب التحصيلات من الأحدث إلى الأقدم
+            if (collections.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>'; return; }
             const sortedCollections = [...collections].sort((a, b) => {
                 const dateA = new Date(`${a['التاريخ']} ${a['الوقت']}`);
                 const dateB = new Date(`${b['التاريخ']} ${b['الوقت']}`);
                 return dateB - dateA;
             });
-
             let rows = '';
             sortedCollections.forEach(c => {
                 const totalTransfersBefore = Number(c['قيمة التحويل']) || 0;
                 const collectionAmount = Number(c['قيمة التحصيل']) || 0;
                 const remainingAfter = Number(c['المتبقي بعد التحصيل']) || 0;
                 const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
-
                 rows += `<tr>
                     <td>${formatDate(c['التاريخ'])}</td>
                     <td>${formatTime(c['الوقت'])}</td>
@@ -680,7 +636,6 @@
             });
             tbody.innerHTML = rows;
         }
-
         function renderArchive() {
             const tbody = document.getElementById('tblArchive');
             const archives = DB.archives || [];
@@ -700,7 +655,7 @@
             tbody.innerHTML = rows;
         }
 
-        // ==================== Edit Functions (with data check) ====================
+        // ==================== Edit Functions ====================
         function editMerchant(id) {
             if (!DB.merchants || DB.merchants.length === 0) { showToast('الرجاء الانتظار حتى تحميل بيانات التجار', 'warning'); return; }
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
@@ -718,9 +673,7 @@
                 <div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" value="${escapeHtml(merchant['ملاحظات'] || '')}"></div></div>
                 <button class="btn btn-primary btn-block" onclick="updateMerchant('${id}')"><i class="fas fa-save"></i> حفظ التعديلات</button>
             `;
-            const modal = document.getElementById('modal');
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('show'), 10);
+            openModal();
         }
         function editMachine(id) {
             if (!DB.machines || DB.machines.length === 0) { showToast('الرجاء الانتظار حتى تحميل بيانات المكن', 'warning'); return; }
@@ -746,9 +699,7 @@
                 <div class="form-group"><label>ملاحظات</label><input id="mcNotesEdit" class="form-control" value="${escapeHtml(machine['ملاحظات'] || '')}"></div>
                 <button class="btn btn-primary btn-block" onclick="updateMachine('${id}')"><i class="fas fa-save"></i> حفظ التعديلات</button>
             `;
-            const modal = document.getElementById('modal');
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('show'), 10);
+            openModal();
         }
         function updateMachineMerchantSelect(merchantId) { document.getElementById('mcMerchIdEdit').value = merchantId; }
         function editTransfer(id) {
@@ -763,9 +714,7 @@
                 <div class="form-group"><label>ملاحظات</label><input id="trNotesEdit" class="form-control" value="${escapeHtml(transfer['ملاحظات'] || '')}"></div>
                 <button class="btn btn-primary btn-block" onclick="updateTransfer('${id}')"><i class="fas fa-save"></i> حفظ التعديلات</button>
             `;
-            const modal = document.getElementById('modal');
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('show'), 10);
+            openModal();
         }
         function editCollection(id) {
             if (!DB.collections || DB.collections.length === 0) { showToast('الرجاء الانتظار حتى تحميل بيانات التحصيلات', 'warning'); return; }
@@ -780,9 +729,7 @@
                 <div class="form-group"><label>ملاحظات</label><input id="colNotesEdit" class="form-control" value="${escapeHtml(collection['ملاحظات'] || '')}"></div>
                 <button class="btn btn-primary btn-block" onclick="updateCollection('${id}')"><i class="fas fa-save"></i> حفظ التعديلات</button>
             `;
-            const modal = document.getElementById('modal');
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('show'), 10);
+            openModal();
         }
 
         // ==================== Update Functions ====================
@@ -798,18 +745,12 @@
                 status: document.getElementById('mStatus').value,
                 notes: document.getElementById('mNotes').value
             };
-            showLoading(true);
-            closeModal();
-            const res = await api('updateMerchant', data);
+            showLoading(true); closeModal();
+            const res = await serverFunction('updateMerchant', data);
             if (res.success) {
                 showToast('تم تحديث التاجر بنجاح', 'success');
-                loadedTables.merchants = false;
-                loadTableData('merchants');
-                loadData();
-            } else {
-                showToast(res.message || 'حدث خطأ', 'error');
-                showLoading(false);
-            }
+                loadedTables.merchants = false; loadTableData('merchants'); loadData();
+            } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
         async function updateMachine(id) {
             const data = {
@@ -822,35 +763,23 @@
             };
             if (!data.merchantId) { showToast('يجب اختيار تاجر', 'warning'); return; }
             if (!data.serialNumber) { showToast('الرقم التسلسلي مطلوب', 'warning'); return; }
-            showLoading(true);
-            closeModal();
-            const res = await api('updateMachine', data);
+            showLoading(true); closeModal();
+            const res = await serverFunction('updateMachine', data);
             if (res.success) {
                 showToast('تم تحديث المكنة بنجاح', 'success');
-                loadedTables.machines = false;
-                loadTableData('machines');
-                loadData();
-            } else {
-                showToast(res.message || 'حدث خطأ', 'error');
-                showLoading(false);
-            }
+                loadedTables.machines = false; loadTableData('machines'); loadData();
+            } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
         async function updateTransfer(id) {
             const amount = document.getElementById('trAmtEdit').value;
             if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة صحيحة', 'warning'); return; }
             const data = { id: id, amount: amount, notes: document.getElementById('trNotesEdit').value };
-            showLoading(true);
-            closeModal();
-            const res = await api('updateTransfer', data);
+            showLoading(true); closeModal();
+            const res = await serverFunction('updateTransfer', data);
             if (res.success) {
                 showToast('تم تحديث التحويل بنجاح', 'success');
-                loadedTables.transfers = false;
-                loadTableData('transfers');
-                loadData();
-            } else {
-                showToast(res.message || 'حدث خطأ', 'error');
-                showLoading(false);
-            }
+                loadedTables.transfers = false; loadTableData('transfers'); loadData();
+            } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
         async function updateCollection(id) {
             const amount = document.getElementById('colAmtEdit').value;
@@ -861,36 +790,51 @@
                 collectionType: document.getElementById('colTypeEdit').value,
                 notes: document.getElementById('colNotesEdit').value
             };
-            showLoading(true);
-            closeModal();
-            const res = await api('updateCollection', data);
+            showLoading(true); closeModal();
+            const res = await serverFunction('updateCollection', data);
             if (res.success) {
                 showToast('تم تحديث التحصيل بنجاح', 'success');
-                loadedTables.collections = false;
-                loadTableData('collections');
-                loadData();
-            } else {
-                showToast(res.message || 'حدث خطأ', 'error');
-                showLoading(false);
-            }
+                loadedTables.collections = false; loadTableData('collections'); loadData();
+            } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
 
         // ==================== Statement ====================
         async function getStatement() {
             const mid = document.getElementById('stmtMerchantId').value; if (!mid) return; showLoading(true);
-            try { const res = await api('getStatement', { merchantId: mid }); if (res.success && res.data) { const data = res.data; document.getElementById('stmtT').textContent = formatNumber(data.stats.totalTransfers); document.getElementById('stmtC').textContent = formatNumber(data.stats.totalCollections); document.getElementById('stmtR').textContent = formatNumber(data.stats.remaining); const tbody = document.getElementById('tblStatement'); if (data.movements.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد حركات</td></tr>'; } else { let rows = ''; data.movements.forEach(m => { const typeClass = m.type === 'تحويل' ? 'primary' : 'success'; rows += `<tr><td>${formatDate(m.date)}</td><td>${formatTime(m.time)}</td><td><span class="badge badge-${typeClass}">${m.type}</span></td><td><strong>${formatNumber(m.amount)}</strong></td><td><strong>${formatNumber(m.balanceAfter)}</strong></td><td>${m.notes || '-'}</td></tr>`; }); tbody.innerHTML = rows; } } } catch (e) { showToast('حدث خطأ', 'error'); } showLoading(false); }
+            try {
+                const res = await serverFunction('getStatement', { merchantId: mid });
+                if (res.success && res.data) {
+                    const data = res.data;
+                    document.getElementById('stmtT').textContent = formatNumber(data.stats.totalTransfers);
+                    document.getElementById('stmtC').textContent = formatNumber(data.stats.totalCollections);
+                    document.getElementById('stmtR').textContent = formatNumber(data.stats.remaining);
+                    const tbody = document.getElementById('tblStatement');
+                    if (data.movements.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد حركات</td></tr>';
+                    } else {
+                        let rows = '';
+                        data.movements.forEach(m => {
+                            const typeClass = m.type === 'تحويل' ? 'primary' : 'success';
+                            rows += `<tr><td>${formatDate(m.date)}</td><td>${formatTime(m.time)}</td><td><span class="badge badge-${typeClass}">${m.type}</span></td><td><strong>${formatNumber(m.amount)}</strong></td><td><strong>${formatNumber(m.balanceAfter)}</strong></td><td>${m.notes || '-'}</td></tr>`;
+                        });
+                        tbody.innerHTML = rows;
+                    }
+                }
+            } catch (e) { showToast('حدث خطأ', 'error'); } showLoading(false);
+        }
 
         // ==================== Confirm & Delete ====================
         let confirmCallback = null;
         function showConfirm(msg, callback, title = 'تأكيد') { document.getElementById('confirmMsg').textContent = msg; document.getElementById('confirmTitle').textContent = title; confirmCallback = callback; const m = document.getElementById('confirmModal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10); }
         function closeConfirm() { const m = document.getElementById('confirmModal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); confirmCallback = null; }
         document.getElementById('confirmBtn').onclick = () => { if (confirmCallback) confirmCallback(); closeConfirm(); };
-        async function delMerchant(id) { showConfirm('هل أنت متأكد من حذف هذا التاجر؟', async () => { showLoading(true); await api('deleteMerchant', { id }); loadedTables.merchants = false; loadTableData('merchants'); loadData(); }); }
-        async function delMachine(id) { showConfirm('هل أنت متأكد من حذف هذه المكنة؟', async () => { showLoading(true); await api('deleteMachine', { id }); loadedTables.machines = false; loadTableData('machines'); loadData(); }); }
-        async function delTransfer(id) { showConfirm('هل أنت متأكد من حذف هذا التحويل؟', async () => { showLoading(true); await api('deleteTransfer', { id }); loadedTables.transfers = false; loadTableData('transfers'); loadData(); }); }
-        async function delCollection(id) { showConfirm('هل أنت متأكد من حذف هذا التحصيل؟', async () => { showLoading(true); await api('deleteCollection', { id }); loadedTables.collections = false; loadTableData('collections'); loadData(); }); }
-        async function deleteArchive(id) { showConfirm('هل أنت متأكد من حذف هذا السجل من الأرشيف نهائياً؟', async () => { showLoading(true); try { const res = await api('deleteArchive', { id: id }); if (res.success) { showToast('تم حذف السجل بنجاح', 'success'); loadedTables.archive = false; loadTableData('archive'); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } } catch (e) { showToast('حدث خطأ', 'error'); showLoading(false); } }, 'حذف من الأرشيف'); }
-        async function confirmCloseMonth() { showConfirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد؟\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.', async () => { showLoading(true); try { const res = await api('closeMonth', { notes: 'إغلاق من النظام' }); if (res.success) { showToast(res.data.message, 'success'); loadedTables.archive = false; loadTableData('archive'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } } catch (e) { showToast('حدث خطأ', 'error'); showLoading(false); } }, 'بدء شهر جديد'); }
+        
+        async function delMerchant(id) { showConfirm('هل أنت متأكد من حذف هذا التاجر؟', async () => { showLoading(true); await serverFunction('deleteMerchant', { id }); loadedTables.merchants = false; loadTableData('merchants'); loadData(); }); }
+        async function delMachine(id) { showConfirm('هل أنت متأكد من حذف هذه المكنة؟', async () => { showLoading(true); await serverFunction('deleteMachine', { id }); loadedTables.machines = false; loadTableData('machines'); loadData(); }); }
+        async function delTransfer(id) { showConfirm('هل أنت متأكد من حذف هذا التحويل؟', async () => { showLoading(true); await serverFunction('deleteTransfer', { id }); loadedTables.transfers = false; loadTableData('transfers'); loadData(); }); }
+        async function delCollection(id) { showConfirm('هل أنت متأكد من حذف هذا التحصيل؟', async () => { showLoading(true); await serverFunction('deleteCollection', { id }); loadedTables.collections = false; loadTableData('collections'); loadData(); }); }
+        async function deleteArchive(id) { showConfirm('هل أنت متأكد من حذف هذا السجل من الأرشيف نهائياً؟', async () => { showLoading(true); try { const res = await serverFunction('deleteArchive', { id: id }); if (res.success) { showToast('تم حذف السجل بنجاح', 'success'); loadedTables.archive = false; loadTableData('archive'); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } } catch (e) { showToast('حدث خطأ', 'error'); showLoading(false); } }, 'حذف من الأرشيف'); }
+        async function confirmCloseMonth() { showConfirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد؟\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.', async () => { showLoading(true); try { const res = await serverFunction('closeMonth', { notes: 'إغلاق من النظام' }); if (res.success) { showToast(res.data.message, 'success'); loadedTables.archive = false; loadTableData('archive'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } } catch (e) { showToast('حدث خطأ', 'error'); showLoading(false); } }, 'بدء شهر جديد'); }
 
         // ==================== Export ====================
         function exportExcel() { if (!DB.merchants || DB.merchants.length === 0) { showToast('لا توجد بيانات للتصدير', 'warning'); return; } showLoading(true); try { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.merchants), "التجار"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.machines), "المكن"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.transfers), "التحويلات"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.collections), "التحصيلات"); XLSX.writeFile(wb, `Axentro_Report_${new Date().toISOString().slice(0, 10)}.xlsx`); showToast('تم تصدير التقرير بنجاح', 'success'); } catch (e) { showToast('حدث خطأ أثناء التصدير', 'error'); } showLoading(false); }
@@ -929,7 +873,13 @@
 
         // ==================== Modals ====================
         function openModal(type) {
-            const body = document.getElementById('modalBody'); const m = document.getElementById('modal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10);
+            const body = document.getElementById('modalBody'); 
+            const m = document.getElementById('modal'); 
+            m.style.display = 'flex'; 
+            setTimeout(() => m.classList.add('show'), 10);
+            
+            if (!type) return; // إذا لم يتم تحديد نوع، فقط افتح المودال الفارغ (يستخدم عند التعديل)
+
             if (type === 'merchant') {
                 body.innerHTML = `<h3><i class="fas fa-user-plus"></i> إضافة تاجر جديد</h3><div class="form-row"><div class="form-group"><label>اسم التاجر <span class="required">*</span></label><input id="mName" class="form-control" placeholder="اسم التاجر"></div><div class="form-group"><label>اسم النشاط</label><input id="mBiz" class="form-control" placeholder="اسم النشاط"></div></div><div class="form-row"><div class="form-group"><label>رقم الحساب</label><input id="mAcc" class="form-control" placeholder="رقم الحساب"></div><div class="form-group"><label>رقم الهاتف</label><input id="mPhone" class="form-control" placeholder="رقم الهاتف"></div></div><div class="form-row"><div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control" placeholder="المنطقة"></div><div class="form-group"><label>العنوان</label><input id="mAddr" class="form-control" placeholder="العنوان"></div></div><div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات"></div><button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ التاجر</button>`;
             } else if (type === 'machine') {
@@ -944,16 +894,10 @@
         function closeModal() { const m = document.getElementById('modal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); }
 
         // ==================== Save ====================
-        async function saveMerchant() { const name = document.getElementById('mName').value.trim(); if (!name) { showToast('اسم التاجر مطلوب', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantName: name, businessName: document.getElementById('mBiz').value, accountNumber: document.getElementById('mAcc').value, phone: document.getElementById('mPhone').value, area: document.getElementById('mArea').value, address: document.getElementById('mAddr').value, notes: document.getElementById('mNotes').value }; const res = await api('addMerchant', data); if (res.success) { showToast('تم إضافة التاجر بنجاح', 'success'); loadedTables.merchants = false; loadTableData('merchants'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
-        async function saveMachine() { const merchantId = document.getElementById('mcMerchId').value; const serial = document.getElementById('mcSerial').value.trim(); if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!serial) { showToast('الرقم التسلسلي مطلوب', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, serialNumber: serial, monthlyTarget: document.getElementById('mcTarget').value, status: document.getElementById('mcStatus').value, notes: document.getElementById('mcNotes').value }; const res = await api('addMachine', data); if (res.success) { showToast('تم إضافة المكنة بنجاح', 'success'); loadedTables.machines = false; loadTableData('machines'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
-        async function saveTransfer() { const merchantId = document.getElementById('trMerchId').value; const amount = document.getElementById('trAmt').value; if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحويل', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, machineId: document.getElementById('trMach').value, amount: amount, notes: document.getElementById('trNotes').value }; const res = await api('addTransfer', data); if (res.success) { showToast('تم التحويل بنجاح', 'success'); loadedTables.transfers = false; loadTableData('transfers'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
-        async function saveCollection() { const merchantId = document.getElementById('colMerchId').value; const amount = document.getElementById('colAmt').value; if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحصيل', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, machineId: document.getElementById('colMach').value, amount: amount, collectionType: document.getElementById('colType').value, notes: document.getElementById('colNotes').value }; const res = await api('addCollection', data); if (res.success) { showToast('تم التحصيل بنجاح', 'success'); loadedTables.collections = false; loadTableData('collections'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
-
-        // ==================== Live Updates ====================
-        function extractDashboard(res) { if (res.dashboard) return res.dashboard; if (res.data && res.data.dashboard) return res.data.dashboard; return null; }
-        function updateDashboardUI(data) { if (!data) return; const keys = ['التجار', 'المكن', 'التحويلات_شهر', 'التحصيلات_شهر', 'المتبقي_شهر', 'تحويلات_اليوم']; keys.forEach(key => { const el = document.querySelector(`[data-key="${key}"]`); if (el) { const newValue = formatNumber(data[key]); if (el.textContent !== newValue) { el.textContent = newValue; el.classList.add('updating'); setTimeout(() => el.classList.remove('updating'), 300); } } }); if (data['أعلى_المكن']) renderTopMachines(data['أعلى_المكن']); }
-        async function fetchDashboardLive() { if (AppState.isPolling) return; AppState.isPolling = true; try { const res = await api('getDashboardOnly'); const dashboardData = extractDashboard(res); if (res.success && dashboardData) { setConnectionStatus('live'); updateDashboardUI(dashboardData); setCache(dashboardData); AppState.pollInterval = AppState.minInterval; } else { throw new Error('Invalid'); } } catch (e) { setConnectionStatus('offline'); AppState.pollInterval = Math.min(AppState.pollInterval * 1.5, AppState.maxInterval); } finally { AppState.isPolling = false; setTimeout(fetchDashboardLive, AppState.pollInterval); } }
-        function startLiveUpdates() { setTimeout(fetchDashboardLive, AppState.pollInterval); }
+        async function saveMerchant() { const name = document.getElementById('mName').value.trim(); if (!name) { showToast('اسم التاجر مطلوب', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantName: name, businessName: document.getElementById('mBiz').value, accountNumber: document.getElementById('mAcc').value, phone: document.getElementById('mPhone').value, area: document.getElementById('mArea').value, address: document.getElementById('mAddr').value, notes: document.getElementById('mNotes').value }; const res = await serverFunction('addMerchant', data); if (res.success) { showToast('تم إضافة التاجر بنجاح', 'success'); loadedTables.merchants = false; loadTableData('merchants'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
+        async function saveMachine() { const merchantId = document.getElementById('mcMerchId').value; const serial = document.getElementById('mcSerial').value.trim(); if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!serial) { showToast('الرقم التسلسلي مطلوب', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, serialNumber: serial, monthlyTarget: document.getElementById('mcTarget').value, status: document.getElementById('mcStatus').value, notes: document.getElementById('mcNotes').value }; const res = await serverFunction('addMachine', data); if (res.success) { showToast('تم إضافة المكنة بنجاح', 'success'); loadedTables.machines = false; loadTableData('machines'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
+        async function saveTransfer() { const merchantId = document.getElementById('trMerchId').value; const amount = document.getElementById('trAmt').value; if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحويل', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, machineId: document.getElementById('trMach').value, amount: amount, notes: document.getElementById('trNotes').value }; const res = await serverFunction('addTransfer', data); if (res.success) { showToast('تم التحويل بنجاح', 'success'); loadedTables.transfers = false; loadTableData('transfers'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
+        async function saveCollection() { const merchantId = document.getElementById('colMerchId').value; const amount = document.getElementById('colAmt').value; if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحصيل', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, machineId: document.getElementById('colMach').value, amount: amount, collectionType: document.getElementById('colType').value, notes: document.getElementById('colNotes').value }; const res = await serverFunction('addCollection', data); if (res.success) { showToast('تم التحصيل بنجاح', 'success'); loadedTables.collections = false; loadTableData('collections'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
 
         // ==================== Scanner ====================
         let scanStream = null; let scanTrack = null; let torchOn = false; let scanRafId = null;
@@ -969,7 +913,7 @@
                 if (video) { video.srcObject = scanStream; await video.play(); }
                 scanTrack = scanStream.getVideoTracks()[0] || null;
                 if ('BarcodeDetector' in window) {
-                    const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code", "upc_a", "upc_e", "itf", "codabar"] });
+                    const detector = new BarcodeDetector({formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code", "upc_a", "upc_e", "itf", "codabar"]});
                     const tick = async () => {
                         try {
                             const videoEl = document.getElementById('video');
@@ -1026,7 +970,6 @@
                 searchInput.addEventListener('input', (e) => { merchantSearchTerm = e.target.value; renderMerchants(); });
             }
             checkSession();
-            startLiveUpdates();
             document.querySelectorAll('.search-results').forEach(el => { el.previousElementSibling.addEventListener('blur', () => { setTimeout(() => el.style.display = 'none', 200); }); });
         };
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
