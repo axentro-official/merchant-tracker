@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* جميع الأنماط الأصلية – لم يتم تغييرها */
+        /* نفس الأنماط الأصلية (لم تتغير) */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1d4ed8;
@@ -166,24 +166,45 @@
     </div>
 
     <script>
-        // ======================== LOCAL STORAGE KEYS ========================
-        const STORAGE_KEYS = {
-            merchants: 'axentro_merchants',
-            machines: 'axentro_machines',
-            transfers: 'axentro_transfers',
-            collections: 'axentro_collections',
-            requests: 'axentro_merchant_requests'
-        };
+        // ======================== API CONFIGURATION ========================
+        const API_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
 
-        function getData(key) {
-            const raw = localStorage.getItem(key);
-            return raw ? JSON.parse(raw) : [];
+        // Helper: GET request
+        async function fetchFromAPI(action) {
+            try {
+                const response = await fetch(`${API_URL}?action=${action}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('API GET error:', error);
+                showToast('فشل الاتصال بالخادم', 'error');
+                return [];
+            }
         }
 
-        function saveData(key, data) {
-            localStorage.setItem(key, JSON.stringify(data));
+        // Helper: POST request (no-cors – operation will be performed)
+        async function postToAPI(action, payload = {}, id = null) {
+            const body = {
+                action: action,
+                data: payload
+            };
+            if (id !== null) body.id = id;
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                return { success: true };
+            } catch (error) {
+                console.error('API POST error:', error);
+                showToast('فشل الحفظ', 'error');
+                return { success: false };
+            }
         }
 
+        // ======================== GLOBAL VARIABLES ========================
         let merchants = [];
         let currentMerchantData = null;
 
@@ -214,10 +235,10 @@
             } catch { return dateStr; }
         }
 
-        function loadMerchants() {
+        async function loadMerchants() {
             showLoading(true);
             try {
-                merchants = getData(STORAGE_KEYS.merchants);
+                merchants = await fetchFromAPI('getMerchants');
                 populateSelect();
             } catch (e) {
                 console.error(e);
@@ -277,14 +298,21 @@
             loadMerchantData(id);
         }
 
-        function loadMerchantData(merchantId) {
+        async function loadMerchantData(merchantId) {
             showLoading(true);
             try {
                 const merchant = merchants.find(m => m['رقم التاجر'] == merchantId);
                 if (!merchant) throw new Error('تاجر غير موجود');
-                const machines = getData(STORAGE_KEYS.machines).filter(m => m['اسم التاجر'] === merchant['اسم التاجر']);
-                const transfers = getData(STORAGE_KEYS.transfers).filter(t => t['اسم التاجر'] === merchant['اسم التاجر']);
-                const collections = getData(STORAGE_KEYS.collections).filter(c => c['اسم التاجر'] === merchant['اسم التاجر']);
+                
+                // جلب البيانات الكاملة من الـ API
+                const allMachines = await fetchFromAPI('getMachines');
+                const allTransfers = await fetchFromAPI('getTransfers');
+                const allCollections = await fetchFromAPI('getCollections');
+                
+                const machines = allMachines.filter(m => m['اسم التاجر'] === merchant['اسم التاجر']);
+                const transfers = allTransfers.filter(t => t['اسم التاجر'] === merchant['اسم التاجر']);
+                const collections = allCollections.filter(c => c['اسم التاجر'] === merchant['اسم التاجر']);
+                
                 const totalTransfers = transfers.reduce((sum, t) => sum + (Number(t['قيمة التحويل']) || 0), 0);
                 const totalCollections = collections.reduce((sum, c) => sum + (Number(c['قيمة التحصيل']) || 0), 0);
                 const remaining = totalTransfers - totalCollections;
@@ -355,7 +383,7 @@
             document.getElementById('remainingBalance').innerHTML = `<div class="info-label">المبلغ المتبقي على التاجر</div><div class="info-value" style="color: var(${remaining > 0 ? '--danger' : '--success'});">${formatNumber(remaining)} جنيه</div>`;
         }
 
-        function submitRequest() {
+        async function submitRequest() {
             const merchantId = document.getElementById('selectedMerchantId').value;
             if (!merchantId) {
                 showToast('الرجاء اختيار التاجر أولاً', 'warning');
@@ -368,29 +396,24 @@
             }
             const requestType = document.querySelector('input[name="requestType"]:checked').value;
             const notes = document.getElementById('notes').value;
+            const merchant = merchants.find(m => m['رقم التاجر'] == merchantId);
 
             showLoading(true);
-            try {
-                const requests = getData(STORAGE_KEYS.requests);
-                const newRequest = {
-                    id: Date.now().toString(),
-                    merchantId: merchantId,
-                    merchantName: merchants.find(m => m['رقم التاجر'] == merchantId)['اسم التاجر'],
-                    requestType: requestType,
-                    amount: Number(amount),
-                    notes: notes,
-                    timestamp: new Date().toISOString(),
-                    status: 'pending'
-                };
-                requests.push(newRequest);
-                saveData(STORAGE_KEYS.requests, requests);
+            const result = await postToAPI('addMerchantRequest', {
+                merchantId: merchantId,
+                merchantName: merchant['اسم التاجر'],
+                requestType: requestType,
+                amount: Number(amount),
+                notes: notes
+            });
+            showLoading(false);
+            
+            if (result.success) {
                 document.getElementById('portalForm').style.display = 'none';
                 document.getElementById('successPage').style.display = 'block';
                 showToast('تم إرسال الطلب بنجاح', 'success');
-            } catch (e) {
-                showToast('حدث خطأ في حفظ الطلب', 'error');
-            } finally {
-                showLoading(false);
+            } else {
+                showToast('حدث خطأ في إرسال الطلب', 'error');
             }
         }
 
