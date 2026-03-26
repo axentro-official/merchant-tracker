@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Axentro System - نظام إدارة التجار</title>
+    <title>Axentro System - Super Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    
     <style>
         :root {
             --primary: #3b82f6;
@@ -24,8 +25,8 @@
             --warning: #f59e0b;
             --warning-light: #fef3c7;
             --border: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --radius: 12px;
             --radius-sm: 8px;
         }
@@ -93,6 +94,7 @@
         .stat-card.warning::before { background: var(--warning); }
         .stat-card h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; font-weight: 600; }
         .stat-card .val { font-size: 1.5rem; font-weight: 800; color: var(--text); transition: color 0.3s; }
+        .stat-card .val.updating { color: var(--primary); }
         
         .table-box { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.5rem; }
         .table-header { padding: 1rem 1.5rem; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.5rem; }
@@ -113,12 +115,10 @@
         footer p { color: #94a3b8; font-size: 0.85rem; line-height: 1.8; }
         .qr-box { margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: float 4s ease-in-out infinite; }
         .qr-box img { width: 100px; border-radius: var(--radius-sm); border: 3px solid rgba(255,255,255,0.2); margin-bottom: 0.8rem; transition: all 0.3s; }
-        .qr-box img:hover { transform: scale(1.1); border-color: var(--primary); }
-        .qr-box a { color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; }
         
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 1rem; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s ease; }
-        .modal.show { opacity: 1; display: flex; }
-        .modal-content { background: var(--white); padding: 2rem; border-radius: var(--radius); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; animation: scaleIn 0.3s ease-out; }
+        .modal.show { opacity: 1; }
+        .modal-content { background: var(--white); padding: 2rem; border-radius: var(--radius); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; animation: scaleIn 0.3s ease-out; }
         .modal-content h3 { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
         .modal-content h3 i { color: var(--primary); }
         .modal-close { position: absolute; top: 15px; left: 15px; font-size: 1.8rem; cursor: pointer; color: var(--muted); transition: all 0.3s; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
@@ -135,6 +135,8 @@
         .search-results div { padding: 0.8rem 1rem; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s; }
         .search-results div:last-child { border-bottom: none; }
         .search-results div:hover { background: var(--primary); color: white; }
+        .search-results .no-result { color: var(--muted); cursor: default; }
+        .search-results .no-result:hover { background: transparent; color: var(--muted); }
         
         .progress-bar { height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 0.5rem; }
         .progress-bar .fill { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
@@ -143,19 +145,16 @@
         .progress-bar .fill.danger { background: var(--danger); }
         
         .quick-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; padding: 1.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%); border-radius: var(--radius); }
-        
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--bg-dark); color: white; padding: 1rem 2rem; border-radius: var(--radius); box-shadow: var(--shadow-lg); z-index: 9999; transition: transform 0.3s ease; display: flex; align-items: center; gap: 0.5rem; }
         .toast.show { transform: translateX(-50%) translateY(0); }
         .toast.success { background: var(--success); }
         .toast.error { background: var(--danger); }
         .toast.warning { background: var(--warning); }
         
-        .action-btns { display: flex; gap: 0.3rem; }
-        .action-btn { padding: 0.4rem; border-radius: 4px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); background: var(--white); }
-        .action-btn:hover { background: var(--bg); }
-        .action-btn.edit:hover { color: var(--primary); border-color: var(--primary); }
-        .action-btn.delete:hover { color: var(--danger); border-color: var(--danger); }
-
+        .video-wrap { background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 10px; position: relative; }
+        .video-wrap video { width: 100%; display: block; }
+        #scanModal { z-index: 2100; }
+        
         @media (max-width: 768px) {
             .navbar { padding: 0.6rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
             .navbar-actions { width: 100%; justify-content: center; margin-top: 0.5rem; }
@@ -169,586 +168,272 @@
 </head>
 <body>
 
-<div id="loadingOverlay" class="loading-overlay"><div class="spinner"></div><div class="loading-text">جاري التحميل...</div></div>
-<div id="toast" class="toast"><i class="fas fa-check-circle"></i><span id="toastMessage">تم بنجاح</span></div>
-<div id="confirmModal" class="modal"><div class="modal-content" style="max-width: 400px; text-align: center;"><i class="fas fa-question-circle" style="font-size: 3rem; color: var(--warning); margin-bottom: 1rem;"></i><h3 id="confirmTitle" style="border:none;">تأكيد</h3><p id="confirmMsg" style="margin-bottom: 1.5rem; color: var(--muted);"></p><div style="display: flex; gap: 1rem; justify-content: center;"><button class="btn btn-secondary" onclick="closeConfirm()">إلغاء</button><button id="confirmBtn" class="btn btn-danger">تأكيد</button></div></div></div>
+    <div id="loadingOverlay" class="loading-overlay"><div class="spinner"></div><div class="loading-text">جاري التحميل...</div></div>
+    <div id="toast" class="toast"><i class="fas fa-check-circle"></i><span id="toastMessage">تم بنجاح</span></div>
+    
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="modal"><div class="modal-content" style="max-width: 400px; text-align: center;"><i class="fas fa-question-circle" style="font-size: 3rem; color: var(--warning); margin-bottom: 1rem;"></i><h3 id="confirmTitle" style="border:none;">تأكيد</h3><p id="confirmMsg" style="margin-bottom: 1.5rem; color: var(--muted);"></p><div style="display: flex; gap: 1rem; justify-content: center;"><button class="btn btn-secondary" onclick="closeConfirm()">إلغاء</button><button id="confirmBtn" class="btn btn-danger">تأكيد</button></div></div></div>
 
-<div id="loginBox"><div class="login-card"><div class="login-logo"><i class="fas fa-store"></i></div><h2>Axentro System</h2><p>نظام إدارة التجار والمكن</p><input type="password" id="passInput" placeholder="كلمة المرور" onkeypress="handleEnter(event)"><button class="btn btn-primary btn-block" onclick="login()"><i class="fas fa-sign-in-alt"></i> دخول</button></div><footer style="margin-top: 2rem; background: transparent; color: #64748b;"><p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p><div class="qr-box"><a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank"><img src="qr-links.png" alt="QR Code"><span><i class="fas fa-qrcode"></i> QR Scan Me</span></a></div></footer></div>
+    <!-- Scanner Modal -->
+    <div id="scanModal" class="modal"><div class="modal-content" style="max-width: 600px;"><span class="modal-close" onclick="closeScanModal()">&times;</span><h3><i class="fas fa-camera"></i> ماسح الرقم التسلسلي</h3><div class="video-wrap"><video id="video" playsinline autoplay></video></div><div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;"><button class="btn btn-secondary btn-sm" id="torchBtn">🔦 فلاش</button><button class="btn btn-secondary btn-sm" onclick="closeScanModal()">إغلاق</button></div></div></div>
 
-<div class="app-container" id="appBox">
-    <nav class="navbar">
-        <div class="logo"><i class="fas fa-store"></i> Axentro</div>
-        <div class="navbar-actions">
-            <div id="connIndicator" class="conn-status live"><div class="conn-dot"></div><span>متصل</span></div>
-            <button class="btn btn-primary btn-sm" onclick="loadData()"><i class="fas fa-sync-alt"></i> تحديث</button>
-            <button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="fas fa-file-excel"></i> تصدير</button>
-            <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+    <!-- Login Box -->
+    <div id="loginBox"><div class="login-card"><div class="login-logo"><i class="fas fa-store"></i></div><h2>Axentro System</h2><p>نظام إدارة التجار والمكن</p><input type="password" id="passInput" placeholder="كلمة المرور" onkeypress="handleEnter(event)"><button class="btn btn-primary btn-block" onclick="login()"><i class="fas fa-sign-in-alt"></i> دخول</button></div><footer style="margin-top: 2rem; background: transparent; color: #64748b;"><p>© 2024 Axentro – All Rights Reserved</p></footer></div>
+
+    <!-- App Container -->
+    <div class="app-container" id="appBox">
+        <nav class="navbar"><div class="logo"><i class="fas fa-store"></i> Axentro</div><div class="navbar-actions"><div id="connIndicator" class="conn-status"><div class="conn-dot"></div><span>متصل</span></div><button class="btn btn-primary btn-sm" onclick="loadData()"><i class="fas fa-sync-alt"></i> تحديث</button><button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="fas fa-file-excel"></i> تصدير</button><button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button></div></nav>
+
+        <div class="tabs-nav">
+            <div class="tab-link active" onclick="showPage('home', this)"><i class="fas fa-home"></i> الرئيسية</div>
+            <div class="tab-link" onclick="showPage('merchants', this)"><i class="fas fa-users"></i> التجار</div>
+            <div class="tab-link" onclick="showPage('machines', this)"><i class="fas fa-cash-register"></i> المكن</div>
+            <div class="tab-link" onclick="showPage('transfers', this)"><i class="fas fa-exchange-alt"></i> التحويلات</div>
+            <div class="tab-link" onclick="showPage('collections', this)"><i class="fas fa-hand-holding-usd"></i> التحصيلات</div>
+            <div class="tab-link" onclick="showPage('statement', this)"><i class="fas fa-file-invoice-dollar"></i> كشف حساب</div>
+            <div class="tab-link" onclick="showPage('archive', this)"><i class="fas fa-archive"></i> الأرشيف</div>
         </div>
-    </nav>
-    <div class="tabs-nav">
-        <div class="tab-link active" onclick="showPage('home', this)"><i class="fas fa-home"></i> الرئيسية</div>
-        <div class="tab-link" onclick="showPage('merchants', this)"><i class="fas fa-users"></i> التجار</div>
-        <div class="tab-link" onclick="showPage('machines', this)"><i class="fas fa-cash-register"></i> المكن</div>
-        <div class="tab-link" onclick="showPage('transfers', this)"><i class="fas fa-exchange-alt"></i> التحويلات</div>
-        <div class="tab-link" onclick="showPage('collections', this)"><i class="fas fa-hand-holding-usd"></i> التحصيلات</div>
-        <div class="tab-link" onclick="showPage('statement', this)"><i class="fas fa-file-invoice-dollar"></i> كشف حساب</div>
-        <div class="tab-link" onclick="showPage('archive', this)"><i class="fas fa-archive"></i> الأرشيف</div>
+
+        <div class="content">
+            <!-- HOME PAGE -->
+            <div id="page-home" class="page active">
+                <div class="stats-grid" id="dashStats"></div>
+                <div class="table-box"><div class="table-header"><h3><i class="fas fa-bolt"></i> إجراءات سريعة</h3></div><div class="quick-actions"><button class="btn btn-success" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button><button class="btn btn-primary" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button><button class="btn btn-secondary" onclick="openModal('merchant')"><i class="fas fa-user-plus"></i> تاجر جديد</button><button class="btn btn-secondary" onclick="openModal('machine')"><i class="fas fa-plus"></i> مكنة جديدة</button></div></div>
+                <div class="table-box"><div class="table-header"><h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3></div><div class="table-container"><table><thead><tr><th>المكنة</th><th>التاجر</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr></thead><tbody id="tblTopMachines"></tbody></table></div></div>
+            </div>
+
+            <!-- MERCHANTS PAGE -->
+            <div id="page-merchants" class="page">
+                <div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-users"></i> قائمة التجار</h3><div style="display: flex; gap: 0.5rem; align-items: center;"><input type="text" id="merchantSearchInput" class="form-control" placeholder="بحث بالاسم..." style="width: 220px;"><button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button></div></div><div class="table-container"><table><thead><tr><th>#</th><th>الاسم</th><th>النشاط</th><th>الهاتف</th><th>المنطقة</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMerchants"></tbody></table></div></div>
+            </div>
+
+            <!-- MACHINES PAGE -->
+            <div id="page-machines" class="page">
+                <div class="table-box"><div class="table-header"><h3><i class="fas fa-cash-register"></i> المكن</h3><button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button></div><div class="table-container"><table><thead><tr><th>#</th><th>التاجر</th><th>السيريال</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMachines"></tbody></table></div></div>
+            </div>
+
+            <!-- TRANSFERS PAGE -->
+            <div id="page-transfers" class="page">
+                <div class="table-box"><div class="table-header"><h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3><button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>حذف</th></tr></thead><tbody id="tblTransfers"></tbody></table></div></div>
+            </div>
+
+            <!-- COLLECTIONS PAGE -->
+            <div id="page-collections" class="page">
+                <div class="table-box"><div class="table-header"><h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>حذف</th></tr></thead><tbody id="tblCollections"></tbody></table></div></div>
+            </div>
+
+            <!-- STATEMENT PAGE -->
+            <div id="page-statement" class="page">
+                 <div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3><div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;"><select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList')"><option value="">-- اختر تاجر --</option></select><div style="position: relative; width: 200px;"><input type="text" id="stmtMerchantSearch" class="form-control" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'stmtMerchantList', 'stmtMerchantId', 'getStatement')"><input type="hidden" id="stmtMerchantId"><div id="stmtMerchantList" class="search-results"></div></div></div></div><div style="padding: 1rem;"><div class="stats-grid"><div class="stat-card"><h4>إجمالي تحويلاته</h4><div class="val" id="stmtT">0</div></div><div class="stat-card success"><h4>إجمالي تحصيلاته</h4><div class="val" id="stmtC">0</div></div><div class="stat-card danger"><h4>المتبقي عليه</h4><div class="val" id="stmtR">0</div></div></div><h4 style="margin: 1rem 0; color: var(--muted);"><i class="fas fa-history"></i> الحركات</h4><div class="table-container"><table><thead><tr><th>التاريخ</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th></tr></thead><tbody id="tblStatement"></tbody></table></div></div></div>
+            </div>
+
+            <!-- ARCHIVE PAGE -->
+            <div id="page-archive" class="page">
+                <div class="table-box"><div class="table-header"><h3><i class="fas fa-archive"></i> الأرشيف</h3><button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد</button></div><div class="table-container"><table><thead><tr><th>الشهر</th><th>تحويلات</th><th>تحصيلات</th><th>المتبقي</th><th>حذف</th></tr></thead><tbody id="tblArchive"></tbody></table></div></div>
+            </div>
+        </div>
+        <footer><p>© 2024 Axentro – All Rights Reserved</p></footer>
     </div>
-    
-    <div class="content">
-        <!-- Home Page -->
-        <div id="page-home" class="page active">
-            <div class="stats-grid" id="dashStats"></div>
-            <div class="table-box">
-                <div class="table-header"><h3><i class="fas fa-bolt"></i> إجراءات سريعة</h3></div>
-                <div class="quick-actions">
-                    <button class="btn btn-success" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button>
-                    <button class="btn btn-primary" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button>
-                    <button class="btn btn-secondary" onclick="openModal('merchant')"><i class="fas fa-user-plus"></i> تاجر جديد</button>
-                    <button class="btn btn-secondary" onclick="openModal('machine')"><i class="fas fa-plus"></i> مكنة جديدة</button>
-                </div>
-            </div>
-            <div class="table-box">
-                <div class="table-header"><h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3></div>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>المكنة</th><th>التاجر</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr></thead>
-                        <tbody id="tblTopMachines"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
 
-        <!-- Merchants Page -->
-        <div id="page-merchants" class="page">
-            <div class="table-box">
-                <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
-                    <h3><i class="fas fa-users"></i> قائمة التجار</h3>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <input type="text" id="merchantSearchInput" class="form-control" placeholder="بحث بالاسم..." style="width: 220px;" oninput="renderMerchants(this.value)">
-                        <button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>الهاتف</th><th>المنطقة</th><th>الحالة</th><th>إجراء</th></tr></thead>
-                        <tbody id="tblMerchants"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    <!-- Main Modal -->
+    <div id="modal" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal()">×</span><div id="modalBody"></div></div></div>
 
-        <!-- Machines Page -->
-        <div id="page-machines" class="page">
-            <div class="table-box">
-                <div class="table-header">
-                    <h3><i class="fas fa-cash-register"></i> المكن</h3>
-                    <button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>رقم المكنة</th><th>التاجر</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr></thead>
-                        <tbody id="tblMachines"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    <script>
+        const API = 'https://script.google.com/macros/s/AKfycbyjqBufHSA2rybb82-B1ua5-h4GAsL4Qt42KcOxlL6S2Bin0CE0rlFWsG1KpXuZRNw7/exec';
+        let DB = {};
+        let merchantSearchTerm = '';
+        const AppState = { isPolling: false, pollInterval: 60000, minInterval: 30000, maxInterval: 120000, connectionStatus: 'offline' };
 
-        <!-- Transfers Page -->
-        <div id="page-transfers" class="page">
-            <div class="table-box">
-                <div class="table-header">
-                    <h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3>
-                    <button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr></thead>
-                        <tbody id="tblTransfers"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Collections Page -->
-        <div id="page-collections" class="page">
-            <div class="table-box">
-                <div class="table-header">
-                    <h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3>
-                    <button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>قيمة التحويل</th><th>قيمة التحصيل</th><th>النوع</th><th>إجراء</th></tr></thead>
-                        <tbody id="tblCollections"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Statement Page -->
-        <div id="page-statement" class="page">
-             <div class="table-box">
-                <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
-                    <h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="loadStatement(this.value)">
-                            <option value="">-- اختر تاجر --</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="padding: 1rem;">
-                    <div class="stats-grid">
-                        <div class="stat-card"><h4>إجمالي تحويلاته</h4><div class="val" id="stmtT">0</div></div>
-                        <div class="stat-card success"><h4>إجمالي تحصيلاته</h4><div class="val" id="stmtC">0</div></div>
-                        <div class="stat-card danger"><h4>المتبقي عليه</h4><div class="val" id="stmtR">0</div></div>
-                    </div>
-                    <h4 style="margin: 1rem 0; color: var(--muted);"><i class="fas fa-history"></i> الحركات</h4>
-                    <div class="table-container">
-                        <table>
-                            <thead><tr><th>التاريخ</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th></tr></thead>
-                            <tbody id="tblStatement"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Archive Page -->
-        <div id="page-archive" class="page">
-            <div class="table-box">
-                <div class="table-header">
-                    <h3><i class="fas fa-archive"></i> الأرشيف</h3>
-                    <button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th></tr></thead>
-                        <tbody id="tblArchive"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <footer><p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p><div class="qr-box"><a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank"><img src="qr-links.png" alt="QR Code"><span><i class="fas fa-qrcode"></i> QR Scan Me</span></a></div></footer>
-</div>
-
-<div id="modal" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal()">×</span><div id="modalBody"></div></div></div>
-
-<script>
-    // ======================== API CONFIGURATION ========================
-    const API_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
-
-    async function fetchFromAPI(action, timeoutMs = 10000) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-        try {
-            const response = await fetch(`${API_URL}?action=${action}`, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            clearTimeout(timeoutId);
-            if (error.name === 'AbortError') showToast('انتهت مهلة الاتصال', 'error');
-            else showToast('فشل الاتصال', 'error');
-            return [];
+        // Utilities
+        function showLoading(show = true) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast'); const toastMessage = document.getElementById('toastMessage');
+            toast.className = `toast ${type}`; toastMessage.textContent = message;
+            const icon = toast.querySelector('i'); icon.className = type === 'success' ? 'fas fa-check-circle' : type === 'error' ? 'fas fa-times-circle' : 'fas fa-exclamation-triangle';
+            toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000);
         }
-    }
+        function formatNumber(num) { if (num === null || num === undefined || isNaN(num)) return '0'; return Number(num).toLocaleString('ar-EG'); }
+        function formatDate(dateStr) { if (!dateStr) return '-'; try { const d = new Date(dateStr); if (isNaN(d)) return dateStr; return d.toLocaleDateString('ar-EG'); } catch { return dateStr; } }
 
-    async function postToAPI(action, payload = {}, id = null) {
-        const body = { action: action, data: payload };
-        if (id !== null) body.id = id;
-        try {
-            await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-            return { success: true };
-        } catch (error) {
-            showToast('فشل الحفظ', 'error');
-            return { success: false };
+        // Cache & Connection
+        const CACHE_KEY = 'axentro_dashboard_cache'; const CACHE_TTL = 10 * 60 * 1000;
+        function setCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: data })); } catch (e) {} }
+        function getCache() { try { const cached = localStorage.getItem(CACHE_KEY); if (!cached) return null; const parsed = JSON.parse(cached); if (Date.now() - parsed.timestamp > CACHE_TTL) { localStorage.removeItem(CACHE_KEY); return null; } return parsed.data; } catch (e) { return null; } }
+        function setConnectionStatus(status) { const prevStatus = AppState.connectionStatus; AppState.connectionStatus = status; const indicator = document.getElementById('connIndicator'); if (!indicator) return; if (status === 'live') { indicator.className = 'conn-status live'; indicator.querySelector('span').textContent = 'متصل'; } else { indicator.className = 'conn-status offline'; indicator.querySelector('span').textContent = 'غير متصل'; } if (prevStatus !== status) { if (status === 'offline') showToast('فقدان الاتصال...', 'error'); else if (prevStatus === 'offline' && status === 'live') showToast('تم استعادة الاتصال', 'success'); } }
+
+        // Session
+        function handleEnter(e) { if (e.key === 'Enter') login(); }
+        function checkSession() {
+            showLoading(true);
+            if (localStorage.getItem('axentro_logged') === 'true') { document.getElementById('loginBox').style.display = 'none'; document.getElementById('appBox').style.display = 'flex'; const cachedData = getCache(); if (cachedData) { DB.dashboard = cachedData; renderDashboard(); } loadData(); }
+            else { showLoading(false); }
         }
-    }
-
-    // ======================== GLOBAL VARIABLES ========================
-    let DB = { merchants: [], machines: [], transfers: [], collections: [], archive: [] };
-    let isLoadingData = false;
-
-    // ======================== UTILITIES ========================
-    const showLoading = (show) => document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
-    
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        document.getElementById('toastMessage').textContent = message;
-        toast.className = `toast ${type} show`;
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-    
-    const formatNumber = (num) => (num === null || isNaN(num)) ? '0' : Number(num).toLocaleString('ar-EG');
-    const formatDate = (d) => d ? new Date(d).toLocaleDateString('ar-EG') : '-';
-    const formatTime = (t) => t || '-';
-    const escapeHtml = (str) => (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
-
-    // ======================== LOGIN / LOGOUT ========================
-    window.handleEnter = (e) => { if (e.key === 'Enter') login(); };
-    window.login = () => {
-        const pass = document.getElementById('passInput').value;
-        if (pass === '1407') {
-            localStorage.setItem('axentro_logged', 'true');
-            document.getElementById('loginBox').style.display = 'none';
-            document.getElementById('appBox').style.display = 'flex';
-            loadData();
-            showToast('مرحباً بك!');
-        } else showToast('كلمة المرور غير صحيحة', 'error');
-    };
-    window.logout = () => showConfirm('تسجيل الخروج؟', () => { localStorage.removeItem('axentro_logged'); location.reload(); });
-
-    // ======================== DATA LOADING ========================
-    async function loadData() {
-        if (isLoadingData) return;
-        isLoadingData = true;
-        showLoading(true);
-        
-        const [merchants, machines, transfers, collections, archive] = await Promise.all([
-            fetchFromAPI('getMerchants'),
-            fetchFromAPI('getMachines'),
-            fetchFromAPI('getTransfers'),
-            fetchFromAPI('getCollections'),
-            fetchFromAPI('getArchives')
-        ]);
-        
-        DB.merchants = merchants;
-        DB.machines = machines;
-        DB.transfers = transfers;
-        DB.collections = collections;
-        DB.archive = archive;
-        
-        showLoading(false);
-        isLoadingData = false;
-        
-        renderDashboard();
-        renderMerchants();
-        renderMachines();
-        renderTransfers();
-        renderCollections();
-        renderArchive();
-        populateMerchantDropdowns();
-    }
-
-    // ======================== NAVIGATION ========================
-    window.showPage = (name, element) => {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-        document.getElementById('page-' + name).classList.add('active');
-        if (element) element.classList.add('active');
-    };
-
-    // ======================== RENDER FUNCTIONS ========================
-    function renderDashboard() {
-        const totalTransfers = DB.transfers.reduce((sum, t) => sum + Number(t.amount || 0), 0);
-        const totalCollections = DB.collections.reduce((sum, c) => sum + Number(c.collectAmount || 0), 0);
-        const remainder = totalTransfers - totalCollections;
-        
-        document.getElementById('dashStats').innerHTML = `
-            <div class="stat-card"><h4>عدد التجار</h4><div class="val">${DB.merchants.length}</div></div>
-            <div class="stat-card success"><h4>عدد المكن</h4><div class="val">${DB.machines.length}</div></div>
-            <div class="stat-card danger"><h4>إجمالي المتبقي</h4><div class="val">${formatNumber(remainder)}</div></div>
-            <div class="stat-card warning"><h4>تحويلات اليوم</h4><div class="val">${DB.transfers.filter(t => new Date(t.date).toDateString() === new Date().toDateString()).length}</div></div>
-        `;
-        
-        // Top Machines logic (simplified)
-        let topHtml = '<tr><td colspan="5" style="text-align:center">لا توجد بيانات كافية</td></tr>';
-        // Basic calculation logic would go here if machine targets existed
-        document.getElementById('tblTopMachines').innerHTML = topHtml;
-    }
-
-    function renderMerchants(search = '') {
-        const filtered = DB.merchants.filter(m => m.name && normalizeArabic(m.name).includes(normalizeArabic(search)));
-        document.getElementById('tblMerchants').innerHTML = filtered.map(m => `
-            <tr>
-                <td>${m.id}</td>
-                <td>${escapeHtml(m.name)}</td>
-                <td>${escapeHtml(m.activity)}</td>
-                <td>${escapeHtml(m.phone)}</td>
-                <td>${escapeHtml(m.region)}</td>
-                <td><span class="badge badge-${m.status === 'نشط' ? 'success' : 'danger'}">${m.status}</span></td>
-                <td>
-                    <div class="action-btns">
-                        <button class="action-btn edit" onclick='openModal("merchant", ${JSON.stringify(m)})'><i class="fas fa-edit"></i></button>
-                        <button class="action-btn delete" onclick="deleteItem('merchant', ${m.id})"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>
-        `).join('') || '<tr><td colspan="7" style="text-align:center">لا توجد بيانات</td></tr>';
-    }
-
-    function renderMachines() {
-        document.getElementById('tblMachines').innerHTML = DB.machines.map(m => {
-            const merchant = DB.merchants.find(mer => mer.id == m.merchantId);
-            return `
-            <tr>
-                <td>${m.id}</td>
-                <td>${merchant ? escapeHtml(merchant.name) : 'غير معروف'}</td>
-                <td>${escapeHtml(m.serial)}</td>
-                <td>${formatNumber(m.target)}</td>
-                <td><span class="badge badge-${m.status === 'نشط' ? 'success' : 'danger'}">${m.status}</span></td>
-                <td>
-                    <div class="action-btns">
-                        <button class="action-btn edit" onclick='openModal("machine", ${JSON.stringify(m)})'><i class="fas fa-edit"></i></button>
-                        <button class="action-btn delete" onclick="deleteItem('machine', ${m.id})"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>
-        `}).join('') || '<tr><td colspan="6" style="text-align:center">لا توجد بيانات</td></tr>';
-    }
-
-    function renderTransfers() {
-        document.getElementById('tblTransfers').innerHTML = DB.transfers.map(t => {
-            const merchant = DB.merchants.find(m => m.id == t.merchantId);
-            return `
-            <tr>
-                <td>${formatDate(t.date)}</td>
-                <td>${formatTime(t.time)}</td>
-                <td>${merchant ? escapeHtml(merchant.name) : 'غير معروف'}</td>
-                <td>${formatNumber(t.amount)}</td>
-                <td>${escapeHtml(t.notes)}</td>
-                <td>
-                     <div class="action-btns">
-                        <button class="action-btn delete" onclick="deleteItem('transfer', ${t.id})"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>
-        `}).join('') || '<tr><td colspan="6" style="text-align:center">لا توجد بيانات</td></tr>';
-    }
-
-    function renderCollections() {
-        document.getElementById('tblCollections').innerHTML = DB.collections.map(c => {
-            const merchant = DB.merchants.find(m => m.id == c.merchantId);
-            return `
-            <tr>
-                <td>${formatDate(c.date)}</td>
-                <td>${formatTime(c.time)}</td>
-                <td>${merchant ? escapeHtml(merchant.name) : 'غير معروف'}</td>
-                <td>${formatNumber(c.transferAmount)}</td>
-                <td>${formatNumber(c.collectAmount)}</td>
-                <td>${escapeHtml(c.type)}</td>
-                <td>
-                     <div class="action-btns">
-                        <button class="action-btn delete" onclick="deleteItem('collection', ${c.id})"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>
-        `}).join('') || '<tr><td colspan="7" style="text-align:center">لا توجد بيانات</td></tr>';
-    }
-
-    function renderArchive() {
-        document.getElementById('tblArchive').innerHTML = DB.archive.map(a => `
-            <tr>
-                <td>${escapeHtml(a.month)}</td>
-                <td>${a.transferCount}</td>
-                <td>${formatNumber(a.totalTransfer)}</td>
-                <td>${a.collectionCount}</td>
-                <td>${formatNumber(a.totalCollection)}</td>
-            </tr>
-        `).join('') || '<tr><td colspan="5" style="text-align:center">لا يوجد أرشيف</td></tr>';
-    }
-
-    function populateMerchantDropdowns() {
-        const opts = DB.merchants.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
-        document.getElementById('stmtMerchantSelect').innerHTML = '<option value="">-- اختر تاجر --</option>' + opts;
-    }
-
-    window.loadStatement = (id) => {
-        if (!id) return;
-        const transfers = DB.transfers.filter(t => t.merchantId == id);
-        const collections = DB.collections.filter(c => c.merchantId == id);
-        
-        const tTotal = transfers.reduce((s, t) => s + Number(t.amount || 0), 0);
-        const cTotal = collections.reduce((s, c) => s + Number(c.collectAmount || 0), 0);
-        const rem = tTotal - cTotal;
-
-        document.getElementById('stmtT').textContent = formatNumber(tTotal);
-        document.getElementById('stmtC').textContent = formatNumber(cTotal);
-        document.getElementById('stmtR').textContent = formatNumber(rem);
-
-        let rows = '';
-        transfers.forEach(t => { rows += `<tr><td>${formatDate(t.date)}</td><td>تحويل</td><td>${formatNumber(t.amount)}</td><td>${escapeHtml(t.notes)}</td></tr>`; });
-        collections.forEach(c => { rows += `<tr><td>${formatDate(c.date)}</td><td>تحصيل</td><td>${formatNumber(c.collectAmount)}</td><td></td></tr>`; });
-        
-        document.getElementById('tblStatement').innerHTML = rows || '<tr><td colspan="4">لا توجد حركات</td></tr>';
-    };
-
-    // ======================== MODAL & FORM HANDLING ========================
-    window.openModal = (type, data = null) => {
-        const body = document.getElementById('modalBody');
-        const isEdit = data !== null;
-        
-        if (type === 'merchant') {
-            body.innerHTML = `
-                <h3><i class="fas fa-user"></i> ${isEdit ? 'تعديل تاجر' : 'تاجر جديد'}</h3>
-                <input type="hidden" id="mId" value="${isEdit ? data.id : ''}">
-                <div class="form-group"><label>الاسم</label><input type="text" id="mName" class="form-control" value="${isEdit ? data.name : ''}"></div>
-                <div class="form-group"><label>النشاط</label><input type="text" id="mActivity" class="form-control" value="${isEdit ? data.activity : ''}"></div>
-                <div class="form-row">
-                    <div class="form-group"><label>الهاتف</label><input type="text" id="mPhone" class="form-control" value="${isEdit ? data.phone : ''}"></div>
-                    <div class="form-group"><label>المنطقة</label><input type="text" id="mRegion" class="form-control" value="${isEdit ? data.region : ''}"></div>
-                </div>
-                <div class="form-group"><label>الحالة</label><select id="mStatus" class="form-control"><option value="نشط" ${isEdit && data.status==='نشط'?'selected':''}>نشط</option><option value="متوقف" ${isEdit && data.status==='متوقف'?'selected':''}>متوقف</option></select></div>
-                <button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ</button>
-            `;
-        } else if (type === 'machine') {
-            const merchOpts = DB.merchants.map(m => `<option value="${m.id}" ${isEdit && data.merchantId==m.id?'selected':''}>${m.name}</option>`).join('');
-            body.innerHTML = `
-                <h3><i class="fas fa-cash-register"></i> ${isEdit ? 'تعديل مكنة' : 'مكنة جديدة'}</h3>
-                <input type="hidden" id="mcId" value="${isEdit ? data.id : ''}">
-                <div class="form-group"><label>التاجر</label><select id="mcMerchantId" class="form-control">${merchOpts}</select></div>
-                <div class="form-group"><label>الرقم التسلسلي</label><input type="text" id="mcSerial" class="form-control" value="${isEdit ? data.serial : ''}"></div>
-                <div class="form-row">
-                    <div class="form-group"><label>التارجت</label><input type="number" id="mcTarget" class="form-control" value="${isEdit ? data.target : ''}"></div>
-                    <div class="form-group"><label>الحالة</label><select id="mcStatus" class="form-control"><option value="نشط" ${isEdit && data.status==='نشط'?'selected':''}>نشط</option><option value="معطل" ${isEdit && data.status==='معطل'?'selected':''}>معطل</option></select></div>
-                </div>
-                <button class="btn btn-primary btn-block" onclick="saveMachine()"><i class="fas fa-save"></i> حفظ</button>
-            `;
-        } else if (type === 'transfer') {
-            const merchOpts = DB.merchants.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-            const now = new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
-            body.innerHTML = `
-                <h3><i class="fas fa-exchange-alt"></i> تحويل جديد</h3>
-                <div class="form-group"><label>التاجر</label><select id="tMerchantId" class="form-control">${merchOpts}</select></div>
-                <div class="form-row">
-                    <div class="form-group"><label>القيمة</label><input type="number" id="tAmount" class="form-control"></div>
-                    <div class="form-group"><label>التاريخ</label><input type="date" id="tDate" class="form-control" value="${new Date().toISOString().split('T')[0]}"></div>
-                </div>
-                <div class="form-group"><label>ملاحظات</label><textarea id="tNotes" class="form-control"></textarea></div>
-                <input type="hidden" id="tTime" value="${now}">
-                <button class="btn btn-success btn-block" onclick="saveTransfer()"><i class="fas fa-check"></i> تأكيد التحويل</button>
-            `;
-        } else if (type === 'collection') {
-            const merchOpts = DB.merchants.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-            body.innerHTML = `
-                <h3><i class="fas fa-hand-holding-usd"></i> تحصيل جديد</h3>
-                <div class="form-group"><label>التاجر</label><select id="cMerchantId" class="form-control">${merchOpts}</select></div>
-                <div class="form-row">
-                    <div class="form-group"><label>قيمة التحويل (المستند)</label><input type="number" id="cTransAmount" class="form-control"></div>
-                    <div class="form-group"><label>قيمة التحصيل</label><input type="number" id="cCollAmount" class="form-control"></div>
-                </div>
-                <div class="form-row">
-                     <div class="form-group"><label>التاريخ</label><input type="date" id="cDate" class="form-control" value="${new Date().toISOString().split('T')[0]}"></div>
-                     <div class="form-group"><label>النوع</label><select id="cType" class="form-control"><option>كاش</option><option>تحويل</option><option>شيك</option></select></div>
-                </div>
-                <button class="btn btn-primary btn-block" onclick="saveCollection()"><i class="fas fa-check"></i> حفظ التحصيل</button>
-            `;
+        async function login() {
+            const password = document.getElementById('passInput').value; if (!password) { showToast('أدخل كلمة المرور', 'warning'); return; } showLoading(true);
+            try { const res = await api('login', { password }); if (res.success) { localStorage.setItem('axentro_logged', 'true'); document.getElementById('loginBox').style.display = 'none'; document.getElementById('appBox').style.display = 'flex'; loadData(); showToast('مرحباً بك!', 'success'); } else { showToast(res.message || 'كلمة المرور غير صحيحة', 'error'); showLoading(false); } } catch (e) { showToast('حدث خطأ في الاتصال', 'error'); showLoading(false); }
         }
+        function logout() { showConfirm('هل تريد تسجيل الخروج؟', () => { localStorage.removeItem('axentro_logged'); location.reload(); }); }
+
+        // API
+        async function api(act, data = {}) { try { const url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`; const res = await fetch(url); return await res.json(); } catch (e) { console.error('API Error:', e); return { success: false, message: e.message }; } }
+
+        // Data Loading
+        async function loadData() {
+            if (!DB.merchants) showLoading(true);
+            try {
+                const res = await api('getAllData');
+                if (res.success && res.data) {
+                    DB = res.data;
+                    if (!DB.dashboard || (DB.dashboard && DB.dashboard.التحويلات_شهر === 0 && DB.transfers && DB.transfers.length > 0)) { DB.dashboard = calculateDashboardFrontend(DB.transfers, DB.collections, DB.merchants, DB.machines); }
+                    if (DB.dashboard) setCache(DB.dashboard);
+                    renderAll(); setConnectionStatus('live'); showToast('تم تحديث البيانات', 'success');
+                } else { throw new Error(res.message || 'فشل'); }
+            } catch (e) { setConnectionStatus('offline'); if (!DB.merchants) { const cachedDash = getCache(); if (cachedDash) { DB.dashboard = cachedDash; renderDashboard(); showToast('وضع عدم الاتصال', 'warning'); } else { showToast('فشل تحميل البيانات', 'error'); } } else { showToast('تحديث فاشل', 'warning'); } }
+            showLoading(false);
+        }
+
+        function calculateDashboardFrontend(transfers, collections, merchants, machines) {
+            const now = new Date(); const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; const today = now.toISOString().slice(0,10);
+            const monthTransfers = (transfers || []).filter(t => t['الشهر'] === currentMonth);
+            const monthCollections = (collections || []).filter(c => c['الشهر'] === currentMonth);
+            const totalTransfers = monthTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+            const totalCollections = monthCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+            const remaining = totalTransfers - totalCollections;
+            const topMachines = [];
+            (machines || []).forEach(m => { const machineId = m['رقم المكنة']; const target = Number(m['التارجت الشهري']) || 0; const achieved = monthTransfers.filter(t => t['رقم المكنة'] == machineId).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0); if (target > 0) { topMachines.push({ name: machineId, merchant: m['اسم التاجر'] || getMerchantName(m['رقم التاجر']), achieved, target, percentage: Math.floor((achieved / target) * 100) }); } });
+            topMachines.sort((a,b) => b.percentage - a.percentage);
+            return { 'التجار': (merchants || []).length, 'المكن': (machines || []).length, 'التحويلات_شهر': totalTransfers, 'التحصيلات_شهر': totalCollections, 'المتبقي_شهر': remaining, 'تحويلات_اليوم': (transfers || []).filter(t => t['التاريخ'] === today).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0), 'أعلى_المكن': topMachines.slice(0,10) };
+        }
+
+        function renderAll() { renderDashboard(); renderMerchants(); renderMachines(); renderTransfers(); renderCollections(); renderArchive(); populateMerchantDropdowns(); }
         
-        document.getElementById('modal').classList.add('show');
-    };
+        // Search Logic
+        function debounce(func, wait) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; }
+        const searchMerchantDebounced = debounce((query, listId, hiddenId, callback) => {
+            const listEl = document.getElementById(listId); const hiddenEl = document.getElementById(hiddenId); hiddenEl.value = '';
+            if (!query) { listEl.style.display = 'none'; return; }
+            const merchants = (DB.merchants || []); const filtered = merchants.filter(m => (m['اسم التاجر'] || '').includes(query) || (m['اسم النشاط'] || '').includes(query) || (m['رقم التاجر'] || '').toString().includes(query));
+            if (filtered.length === 0) { listEl.innerHTML = '<div class="no-result">لا توجد نتائج</div>'; } else { listEl.innerHTML = filtered.map(m => `<div onclick="selectMerchant('${m['رقم التاجر']}', '${m['اسم التاجر']}', '${listId}', '${hiddenId}', ${callback ? `'${callback}'` : 'null'})">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join(''); }
+            listEl.style.display = 'block';
+        }, 300);
+        function handleMerchantSearch(query, listId, hiddenId, callback) { searchMerchantDebounced(query, listId, hiddenId, callback); }
+        function selectMerchant(id, name, listId, hiddenId, callback) {
+            const hiddenInput = document.getElementById(hiddenId); const listEl = document.getElementById(listId); const textInput = hiddenInput.previousElementSibling;
+            if(hiddenInput) hiddenInput.value = id; if(listEl) listEl.style.display = 'none';
+            const selectId = hiddenId.replace('Id', 'Select'); const selectEl = document.getElementById(selectId); if (selectEl) selectEl.value = id;
+            if(textInput && textInput.type === 'text') textInput.value = name; // Update text input if exists
+            if (hiddenId === 'stmtMerchantId') getStatement(); if (callback && window[callback]) window[callback](id);
+        }
+        function handleDropdownSelect(id, textInputId, hiddenId, listId) {
+            const hiddenInput = document.getElementById(hiddenId); const textInput = document.getElementById(textInputId); const listEl = document.getElementById(listId);
+            if(hiddenInput) hiddenInput.value = id; if(listEl) listEl.style.display = 'none';
+            if (id) { const merchant = (DB.merchants || []).find(m => m['رقم التاجر'] == id); if(textInput) textInput.value = merchant ? merchant['اسم التاجر'] : ''; if (hiddenId === 'stmtMerchantId') getStatement(); if (hiddenId === 'trMerchId' || hiddenId === 'colMerchId') fillMachines(id); } else { if(textInput) textInput.value = ''; }
+        }
+        function populateMerchantDropdowns() { const merchants = DB.merchants || []; const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect', 'mcMerchSelect']; dropdownIds.forEach(dId => { const el = document.getElementById(dId); if(!el) return; const currentVal = el.value; el.innerHTML = '<option value="">-- اختر تاجر --</option>'; merchants.forEach(m => { el.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`; }); if(currentVal) el.value = currentVal; }); }
 
-    window.closeModal = () => document.getElementById('modal').classList.remove('show');
+        // Rendering
+        function renderDashboard() { const d = DB.dashboard; if (!d) return; const keys = ['التجار', 'المكن', 'التحويلات_شهر', 'التحصيلات_شهر', 'المتبقي_شهر', 'تحويلات_اليوم']; const statsContainer = document.getElementById('dashStats'); let html = ''; const labels = ['عدد التجار', 'عدد المكن', 'التحويلات (شهر)', 'التحصيلات (شهر)', 'المتبقي (شهر)', 'تحويلات اليوم']; const icons = ['fa-users', 'fa-cash-register', 'fa-exchange-alt', 'fa-hand-holding-usd', 'fa-coins', 'fa-calendar-day']; const colors = ['', '', '', 'success', 'danger', 'warning']; keys.forEach((k, i) => { html += `<div class="stat-card ${colors[i]}"><h4><i class="fas ${icons[i]}"></i> ${labels[i]}</h4><div class="val" data-key="${k}">${formatNumber(d[k])}</div></div>`; }); statsContainer.innerHTML = html; renderTopMachines(d['أعلى_المكن'] || []); }
+        function renderTopMachines(machines) { const tbody = document.getElementById('tblTopMachines'); if (!tbody) return; if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات</td></tr>'; return; } let rows = ''; machines.forEach(m => { const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger'; rows += `<tr><td><strong>${m.name || '-'}</strong></td><td>${m.merchant || '-'}</td><td>${formatNumber(m.achieved)}</td><td>${formatNumber(m.target)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td></tr>`; }); tbody.innerHTML = rows; }
+        
+        function renderMerchants() {
+            const tbody = document.getElementById('tblMerchants'); let merchants = DB.merchants || []; const term = merchantSearchTerm.toLowerCase();
+            if (term) merchants = merchants.filter(m => (m['اسم التاجر'] || '').toLowerCase().includes(term) || (m['رقم التاجر'] || '').toString().includes(term));
+            if (merchants.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد تجار</td></tr>'; return; }
+            let rows = ''; merchants.forEach(m => { const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger'; rows += `<tr><td><strong>${m['رقم التاجر'] || '-'}</strong></td><td>${m['اسم التاجر'] || '-'}</td><td>${m['اسم النشاط'] || '-'}</td><td>${m['رقم الهاتف'] || '-'}</td><td>${m['المنطقة'] || '-'}</td><td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td><td><button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button></td></tr>`; });
+            tbody.innerHTML = rows;
+        }
+        function renderMachines() { const tbody = document.getElementById('tblMachines'); const machines = DB.machines || []; if (machines.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد مكن</td></tr>'; return; } let rows = ''; machines.forEach(m => { const statusClass = m['الحالة'] === 'نشطة' ? 'success' : 'danger'; rows += `<tr><td><strong>${m['رقم المكنة'] || '-'}</strong></td><td>${m['اسم التاجر'] || '-'}</td><td><code>${m['الرقم التسلسلي'] || '-'}</code></td><td>${formatNumber(m['التارجت الشهري'])}</td><td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td><td><button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
+        function renderTransfers() { const tbody = document.getElementById('tblTransfers'); const transfers = DB.transfers || []; if (transfers.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحويلات</td></tr>'; return; } let rows = ''; transfers.slice(-50).reverse().forEach(t => { rows += `<tr><td>${formatDate(t['التاريخ'])}</td><td>${t['اسم التاجر'] || '-'}</td><td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td><td>${t['ملاحظات'] || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
+        function renderCollections() { const tbody = document.getElementById('tblCollections'); const collections = DB.collections || []; if (collections.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>'; return; } let rows = ''; collections.slice(-50).reverse().forEach(c => { rows += `<tr><td>${formatDate(c['التاريخ'])}</td><td>${c['اسم التاجر'] || '-'}</td><td><strong>${formatNumber(c['قيمة التحصيل'])}</strong></td><td><span class="badge badge-success">${c['نوع التحصيل'] || '-'}</span></td><td><button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
+        function renderArchive() { const tbody = document.getElementById('tblArchive'); const archives = DB.archives || []; if (archives.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد أرشيف</td></tr>'; return; } let rows = ''; archives.reverse().forEach(a => { rows += `<tr><td><strong>${a['الشهر'] || '-'}</strong></td><td>${formatNumber(a['إجمالي التحويلات'])}</td><td>${formatNumber(a['إجمالي التحصيلات'])}</td><td>${formatNumber(a['إجمالي المتبقي'])}</td><td><button class="btn btn-danger btn-sm" onclick="deleteArchive('${a['رقم الأرشيف']}')"><i class="fas fa-trash"></i></button></td></tr>`; }); tbody.innerHTML = rows; }
 
-    // ======================== SAVE FUNCTIONS ========================
-    async function saveMerchant() {
-        const payload = {
-            name: document.getElementById('mName').value,
-            activity: document.getElementById('mActivity').value,
-            phone: document.getElementById('mPhone').value,
-            region: document.getElementById('mRegion').value,
-            status: document.getElementById('mStatus').value
+        // Statement
+        async function getStatement() { const mid = document.getElementById('stmtMerchantId').value; if (!mid) return; showLoading(true); try { const res = await api('getStatement', { merchantId: mid }); if (res.success && res.data) { const data = res.data; document.getElementById('stmtT').textContent = formatNumber(data.stats.totalTransfers); document.getElementById('stmtC').textContent = formatNumber(data.stats.totalCollections); document.getElementById('stmtR').textContent = formatNumber(data.stats.remaining); const tbody = document.getElementById('tblStatement'); if (data.movements.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد حركات</td></tr>'; } else { let rows = ''; data.movements.forEach(m => { rows += `<tr><td>${formatDate(m.date)}</td><td><span class="badge badge-${m.type === 'تحويل' ? 'primary' : 'success'}">${m.type}</span></td><td><strong>${formatNumber(m.amount)}</strong></td><td>${m.notes || '-'}</td></tr>`; }); tbody.innerHTML = rows; } } } catch (e) { showToast('حدث خطأ', 'error'); } showLoading(false); }
+
+        // Confirm & Delete
+        let confirmCallback = null;
+        function showConfirm(msg, callback, title = 'تأكيد') { document.getElementById('confirmMsg').textContent = msg; document.getElementById('confirmTitle').textContent = title; confirmCallback = callback; const m = document.getElementById('confirmModal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10); }
+        function closeConfirm() { const m = document.getElementById('confirmModal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); confirmCallback = null; }
+        document.getElementById('confirmBtn').onclick = () => { if (confirmCallback) confirmCallback(); closeConfirm(); };
+        async function delMerchant(id) { showConfirm('هل أنت متأكد من حذف هذا التاجر؟', async () => { showLoading(true); await api('deleteMerchant', { id }); loadData(); }); }
+        async function delMachine(id) { showConfirm('هل أنت متأكد من حذف هذه المكنة؟', async () => { showLoading(true); await api('deleteMachine', { id }); loadData(); }); }
+        async function delTransfer(id) { showConfirm('هل أنت متأكد من حذف هذا التحويل؟', async () => { showLoading(true); await api('deleteTransfer', { id }); loadData(); }); }
+        async function delCollection(id) { showConfirm('هل أنت متأكد من حذف هذا التحصيل؟', async () => { showLoading(true); await api('deleteCollection', { id }); loadData(); }); }
+        async function deleteArchive(id) { showConfirm('هل أنت متأكد من حذف هذا السجل من الأرشيف نهائياً؟', async () => { showLoading(true); await api('deleteArchive', { id }); loadData(); }, 'حذف أرشيف'); }
+        async function confirmCloseMonth() { showConfirm('⚠️ تحذير!\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.', async () => { showLoading(true); await api('closeMonth', {}); loadData(); }, 'بدء شهر جديد'); }
+
+        // Export
+        function exportExcel() { if (!DB.merchants || DB.merchants.length === 0) { showToast('لا توجد بيانات للتصدير', 'warning'); return; } showLoading(true); try { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.merchants), "التجار"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.machines), "المكن"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.transfers), "التحويلات"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.collections), "التحصيلات"); XLSX.writeFile(wb, `Axentro_Report.xlsx`); showToast('تم التصدير بنجاح', 'success'); } catch (e) { showToast('حدث خطأ', 'error'); } showLoading(false); }
+
+        // Navigation
+        function showPage(name, element) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active')); document.getElementById('page-' + name).classList.add('active'); if (element) element.classList.add('active'); }
+
+        // Scanner
+        let scanStream = null; let scanTrack = null; let torchOn = false; let scanRafId = null;
+        async function startScanCamera() {
+            await stopScanCamera();
+            try {
+                const constraints = { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } };
+                scanStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('video');
+                if (video) { video.srcObject = scanStream; await video.play(); }
+                scanTrack = scanStream.getVideoTracks()[0] || null;
+                if ('BarcodeDetector' in window) {
+                    const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code"] });
+                    const tick = async () => {
+                        try {
+                            const videoEl = document.getElementById('video'); if (!videoEl || videoEl.paused || videoEl.ended) return;
+                            const codes = await detector.detect(videoEl);
+                            if (codes && codes.length) {
+                                const raw = (codes[0].rawValue || "").trim();
+                                if (raw) { const serialInput = document.getElementById('mcSerial'); if (serialInput) { serialInput.value = raw; showToast('تم مسح الرقم التسلسلي', 'success'); } await stopScanCamera(); closeScanModal(); return; }
+                            }
+                        } catch (e) { }
+                        scanRafId = requestAnimationFrame(tick);
+                    };
+                    scanRafId = requestAnimationFrame(tick);
+                } else { showToast('المتصفح لا يدعم ماسح الباركود', 'error'); closeScanModal(); }
+            } catch (err) { showToast('لا يمكن الوصول إلى الكاميرا', 'error'); closeScanModal(); }
+        }
+        async function stopScanCamera() { if (scanRafId) { cancelAnimationFrame(scanRafId); scanRafId = null; } if (scanStream) { scanStream.getTracks().forEach(track => track.stop()); scanStream = null; } scanTrack = null; torchOn = false; const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = '🔦 فلاش'; }
+        async function toggleTorch() { try { if (!scanTrack) return; const caps = scanTrack.getCapabilities ? scanTrack.getCapabilities() : {}; if (!caps.torch) { showToast('الفلاش غير مدعوم', 'warning'); return; } torchOn = !torchOn; await scanTrack.applyConstraints({ advanced: [{ torch: torchOn }] }); const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = torchOn ? '🔦 إيقاف' : '🔦 فلاش'; } catch (e) { showToast('تعذر تشغيل الفلاش', 'error'); } }
+        function openScanModal() { const modal = document.getElementById('scanModal'); if (modal) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('show'), 10); startScanCamera(); } }
+        function closeScanModal() { const modal = document.getElementById('scanModal'); if (modal) { modal.classList.remove('show'); setTimeout(() => modal.style.display = 'none', 300); stopScanCamera(); } }
+
+        // Modals Logic (Enhanced Forms)
+        function openModal(type) {
+            const body = document.getElementById('modalBody'); const m = document.getElementById('modal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10);
+            if (type === 'merchant') {
+                body.innerHTML = `<h3><i class="fas fa-user-plus"></i> إضافة تاجر جديد</h3><div class="form-row"><div class="form-group"><label>اسم التاجر <span class="required">*</span></label><input id="mName" class="form-control" placeholder="الاسم"></div><div class="form-group"><label>اسم النشاط</label><input id="mBiz" class="form-control" placeholder="النشاط"></div></div><div class="form-row"><div class="form-group"><label>رقم الهاتف</label><input id="mPhone" class="form-control" placeholder="الهاتف"></div><div class="form-group"><label>الرقم القومي</label><input id="mNationalId" class="form-control" placeholder="الرقم القومي"></div></div><div class="form-row"><div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control" placeholder="المنطقة"></div><div class="form-group"><label>العنوان</label><input id="mAddr" class="form-control" placeholder="العنوان"></div></div><div class="form-group"><label>ملاحظات</label><textarea id="mNotes" class="form-control" style="height:60px"></textarea></div><button class="btn btn-primary btn-block" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ</button>`;
+            } else if (type === 'machine') {
+                body.innerHTML = `<h3><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="mcMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'mcMerchSearch', 'mcMerchId', 'mcMerchList')"><option value="">-- اختر --</option></select><input type="text" id="mcMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')"></div><input type="hidden" id="mcMerchId"><div id="mcMerchList" class="search-results"></div></div><div class="form-group"><label>الرقم التسلسلي <span class="required">*</span></label><div style="display: flex; gap: 0.5rem;"><input type="text" id="mcSerial" class="form-control" placeholder="ادخل الرقم أو امسح" style="flex:1"><button type="button" class="btn btn-secondary btn-sm" onclick="openScanModal()"><i class="fas fa-camera"></i></button></div></div><div class="form-row"><div class="form-group"><label>الموديل</label><input id="mcModel" class="form-control" placeholder="الموديل"></div><div class="form-group"><label>تاريخ التركيب</label><input type="date" id="mcInstallDate" class="form-control"></div></div><div class="form-row"><div class="form-group"><label>التارجت الشهري</label><input type="number" id="mcTarget" class="form-control" placeholder="التارجت"></div><div class="form-group"><label>الحالة</label><select id="mcStatus" class="form-control"><option value="نشطة">نشطة</option><option value="معطلة">معطلة</option></select></div></div><div class="form-group"><label>ملاحظات</label><textarea id="mcNotes" class="form-control" style="height:60px"></textarea></div><button class="btn btn-primary btn-block" onclick="saveMachine()"><i class="fas fa-save"></i> حفظ</button>`;
+            } else if (type === 'transfer') {
+                body.innerHTML = `<h3><i class="fas fa-exchange-alt"></i> تحويل جديد</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="trMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'trMerchSearch', 'trMerchId', 'trMerchList')"><option value="">-- اختر --</option></select><input type="text" id="trMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'trMerchList', 'trMerchId', 'fillMachines')"></div><input type="hidden" id="trMerchId"><div id="trMerchList" class="search-results"></div></div><div class="form-group"><label>المكنة</label><select id="trMach" class="form-control"><option value="">-- اختر مكنة --</option></select></div><div class="form-row"><div class="form-group"><label>القيمة <span class="required">*</span></label><input type="number" id="trAmt" class="form-control" oninput="calcNet()"></div><div class="form-group"><label>الخصم</label><input type="number" id="trDeduction" class="form-control" value="0" oninput="calcNet()"></div></div><div class="form-group"><label>صافي القيمة</label><input type="number" id="trNet" class="form-control" readonly style="background:#f1f5f9"></div><div class="form-row"><div class="form-group"><label>رقم العملية</label><input id="trRef" class="form-control"></div><div class="form-group"><label>التاريخ</label><input type="date" id="trDate" class="form-control" value="${new Date().toISOString().split('T')[0]}"></div></div><div class="form-group"><label>ملاحظات</label><textarea id="trNotes" class="form-control" style="height:60px"></textarea></div><button class="btn btn-success btn-block" onclick="saveTransfer()"><i class="fas fa-check"></i> تأكيد التحويل</button>`;
+            } else if (type === 'collection') {
+                body.innerHTML = `<h3><i class="fas fa-hand-holding-usd"></i> تحصيل جديد</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="colMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'colMerchSearch', 'colMerchId', 'colMerchList')"><option value="">-- اختر --</option></select><input type="text" id="colMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'colMerchList', 'colMerchId', 'fillMachines')"></div><input type="hidden" id="colMerchId"><div id="colMerchList" class="search-results"></div></div><div class="form-row"><div class="form-group"><label>قيمة التحويل</label><input type="number" id="colTransAmt" class="form-control"></div><div class="form-group"><label>قيمة التحصيل <span class="required">*</span></label><input type="number" id="colAmt" class="form-control"></div></div><div class="form-row"><div class="form-group"><label>رقم الإيصال</label><input id="cReceipt" class="form-control"></div><div class="form-group"><label>المحصل</label><input id="cCollector" class="form-control"></div></div><div class="form-row"><div class="form-group"><label>التاريخ</label><input type="date" id="colDate" class="form-control" value="${new Date().toISOString().split('T')[0]}"></div><div class="form-group"><label>النوع</label><select id="colType" class="form-control"><option value="كلي">كلي</option><option value="جزئي">جزئي</option></select></div></div><div class="form-group"><label>ملاحظات</label><textarea id="colNotes" class="form-control" style="height:60px"></textarea></div><button class="btn btn-primary btn-block" onclick="saveCollection()"><i class="fas fa-check"></i> تأكيد التحصيل</button>`;
+            }
+            populateMerchantDropdowns();
+        }
+
+        function calcNet() { const amt = Number(document.getElementById('trAmt').value) || 0; const ded = Number(document.getElementById('trDeduction').value) || 0; document.getElementById('trNet').value = amt - ded; }
+        function fillMachines(merchantId) { const trSelect = document.getElementById('trMach'); const colSelect = document.getElementById('colMach'); const targetSelect = trSelect ? trSelect : colSelect; if(!targetSelect) return; targetSelect.innerHTML = '<option value="">-- اختر مكنة --</option>'; if (!merchantId) return; const machines = DB.machines || []; const filtered = machines.filter(m => m['رقم التاجر'] === merchantId); if (filtered.length === 0) { targetSelect.innerHTML = '<option value="">لا توجد مكنات</option>'; } else { filtered.forEach(m => targetSelect.innerHTML += `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`); if (filtered.length === 1) targetSelect.value = filtered[0]['رقم المكنة']; } }
+        function closeModal() { const m = document.getElementById('modal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); }
+
+        // Save Functions (Merged Old Logic + New Fields)
+        async function saveMerchant() { const name = document.getElementById('mName').value.trim(); if (!name) { showToast('اسم التاجر مطلوب', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantName: name, businessName: document.getElementById('mBiz').value, phone: document.getElementById('mPhone').value, nationalId: document.getElementById('mNationalId').value, area: document.getElementById('mArea').value, address: document.getElementById('mAddr').value, notes: document.getElementById('mNotes').value }; const res = await api('addMerchant', data); if (res.success) { showToast('تم الإضافة بنجاح', 'success'); loadData(); } else { showToast(res.message || 'خطأ', 'error'); showLoading(false); } }
+        async function saveMachine() { const merchantId = document.getElementById('mcMerchId').value; const serial = document.getElementById('mcSerial').value.trim(); if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!serial) { showToast('الرقم التسلسلي مطلوب', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, serialNumber: serial, model: document.getElementById('mcModel').value, installDate: document.getElementById('mcInstallDate').value, monthlyTarget: document.getElementById('mcTarget').value, status: document.getElementById('mcStatus').value, notes: document.getElementById('mcNotes').value }; const res = await api('addMachine', data); if (res.success) { showToast('تم الإضافة بنجاح', 'success'); loadData(); } else { showToast(res.message || 'خطأ', 'error'); showLoading(false); } }
+        async function saveTransfer() { const merchantId = document.getElementById('trMerchId').value; const amount = document.getElementById('trAmt').value; if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحويل', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, machineId: document.getElementById('trMach').value, amount: amount, deduction: document.getElementById('trDeduction').value, netAmount: document.getElementById('trNet').value, reference: document.getElementById('trRef').value, date: document.getElementById('trDate').value, notes: document.getElementById('trNotes').value }; const res = await api('addTransfer', data); if (res.success) { showToast('تم التحويل بنجاح', 'success'); loadData(); } else { showToast(res.message || 'خطأ', 'error'); showLoading(false); } }
+        async function saveCollection() { const merchantId = document.getElementById('colMerchId').value; const amount = document.getElementById('colAmt').value; if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحصيل', 'warning'); return; } showLoading(true); closeModal(); const data = { merchantId: merchantId, machineId: document.getElementById('colMach').value, transferAmount: document.getElementById('colTransAmt').value, amount: amount, receiptNo: document.getElementById('cReceipt').value, collectorName: document.getElementById('cCollector').value, date: document.getElementById('colDate').value, collectionType: document.getElementById('colType').value, notes: document.getElementById('colNotes').value }; const res = await api('addCollection', data); if (res.success) { showToast('تم التحصيل بنجاح', 'success'); loadData(); } else { showToast(res.message || 'خطأ', 'error'); showLoading(false); } }
+
+        // Init
+        window.onload = () => {
+            const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.onclick = toggleTorch;
+            const searchInput = document.getElementById('merchantSearchInput'); if (searchInput) { searchInput.addEventListener('input', (e) => { merchantSearchTerm = e.target.value; renderMerchants(); }); }
+            checkSession();
+            document.querySelectorAll('.search-results').forEach(el => { el.previousElementSibling.addEventListener('blur', () => { setTimeout(() => el.style.display = 'none', 200); }); });
         };
-        const id = document.getElementById('mId').value || null;
-        await postToAPI(id ? 'updateMerchant' : 'addMerchant', payload, id);
-        showToast('تم حفظ التاجر');
-        closeModal();
-        loadData();
-    }
-
-    async function saveMachine() {
-        const payload = {
-            merchantId: document.getElementById('mcMerchantId').value,
-            serial: document.getElementById('mcSerial').value,
-            target: document.getElementById('mcTarget').value,
-            status: document.getElementById('mcStatus').value
-        };
-        const id = document.getElementById('mcId').value || null;
-        await postToAPI(id ? 'updateMachine' : 'addMachine', payload, id);
-        showToast('تم حفظ المكنة');
-        closeModal();
-        loadData();
-    }
-
-    async function saveTransfer() {
-        const payload = {
-            merchantId: document.getElementById('tMerchantId').value,
-            amount: document.getElementById('tAmount').value,
-            date: document.getElementById('tDate').value,
-            time: document.getElementById('tTime').value,
-            notes: document.getElementById('tNotes').value
-        };
-        await postToAPI('addTransfer', payload);
-        showToast('تمت عملية التحويل');
-        closeModal();
-        loadData();
-    }
-
-    async function saveCollection() {
-        const payload = {
-            merchantId: document.getElementById('cMerchantId').value,
-            transferAmount: document.getElementById('cTransAmount').value,
-            collectAmount: document.getElementById('cCollAmount').value,
-            date: document.getElementById('cDate').value,
-            type: document.getElementById('cType').value
-        };
-        await postToAPI('addCollection', payload);
-        showToast('تم حفظ التحصيل');
-        closeModal();
-        loadData();
-    }
-
-    // ======================== DELETE & EXPORT ========================
-    window.deleteItem = (type, id) => {
-        showConfirm('هل أنت متأكد من الحذف؟', async () => {
-            await postToAPI(`delete${type.charAt(0).toUpperCase() + type.slice(1)}`, {}, id);
-            showToast('تم الحذف');
-            loadData();
-        });
-    };
-
-    window.exportExcel = () => {
-        if (!DB.merchants.length) return showToast('لا توجد بيانات للتصدير', 'warning');
-        const ws = XLSX.utils.json_to_sheet(DB.merchants);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Merchants");
-        XLSX.writeFile(wb, "Axentro_Data.xlsx");
-        showToast('تم التصدير بنجاح');
-    };
-
-    window.confirmCloseMonth = () => {
-        showConfirm('هل تريد أرشفة الشهر الحالي وبدء شهر جديد؟', async () => {
-            await postToAPI('archiveMonth', {});
-            showToast('تم أرشفة الشهر');
-            loadData();
-        });
-    };
-
-    // ======================== HELPERS ========================
-    function normalizeArabic(text) {
-        if (!text) return '';
-        return text.toString().toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
-    }
-
-    function showConfirm(msg, callback) {
-        document.getElementById('confirmMsg').textContent = msg;
-        document.getElementById('confirmModal').classList.add('show');
-        document.getElementById('confirmBtn').onclick = () => {
-            closeConfirm();
-            callback();
-        };
-    }
-    window.closeConfirm = () => document.getElementById('confirmModal').classList.remove('show');
-
-    // Start App
-    if (localStorage.getItem('axentro_logged') === 'true') {
-        document.getElementById('loginBox').style.display = 'none';
-        document.getElementById('appBox').style.display = 'flex';
-        loadData();
-    }
-</script>
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+        document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+    </script>
 </body>
 </html>
