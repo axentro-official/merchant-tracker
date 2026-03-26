@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
-        /* جميع الأنماط الأصلية كما هي - محذوفة للاختصار لكنها موجودة في الملف النهائي */
+        /* ========== الأنماط الأصلية (محفوظة بالكامل) ========== */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1d4ed8;
@@ -157,703 +157,648 @@
 <div id="modal" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal()">×</span><div id="modalBody"></div></div></div>
 
 <script>
-    // ======================== LOCAL STORAGE MANAGEMENT ========================
-    const STORAGE_KEYS = {
-        merchants: 'axentro_merchants',
-        machines: 'axentro_machines',
-        transfers: 'axentro_transfers',
-        collections: 'axentro_collections',
-        archive: 'axentro_archive',
-        requests: 'axentro_merchant_requests'
-    };
-
-    function initLocalStorage() {
-        if (!localStorage.getItem(STORAGE_KEYS.merchants)) {
-            const sampleMerchants = [
-                { 'رقم التاجر': '1001', 'اسم التاجر': 'محمد علي', 'اسم النشاط': 'مواد غذائية', 'رقم الهاتف': '01001234567', 'المنطقة': 'وسط البلد', 'العنوان': 'شارع النيل', 'الحالة': 'نشط', 'رقم الحساب': '123456' },
-                { 'رقم التاجر': '1002', 'اسم التاجر': 'أحمد حسن', 'اسم النشاط': 'إلكترونيات', 'رقم الهاتف': '01007654321', 'المنطقة': 'المعادي', 'العنوان': 'شارع 9', 'الحالة': 'نشط', 'رقم الحساب': '789012' }
-            ];
-            localStorage.setItem(STORAGE_KEYS.merchants, JSON.stringify(sampleMerchants));
-        }
-        if (!localStorage.getItem(STORAGE_KEYS.machines)) {
-            const sampleMachines = [
-                { 'رقم المكنة': 'M001', 'اسم التاجر': 'محمد علي', 'الرقم التسلسلي': 'SN123456', 'التارجت الشهري': 50000, 'الحالة': 'نشطة' },
-                { 'رقم المكنة': 'M002', 'اسم التاجر': 'أحمد حسن', 'الرقم التسلسلي': 'SN789012', 'التارجت الشهري': 30000, 'الحالة': 'نشطة' }
-            ];
-            localStorage.setItem(STORAGE_KEYS.machines, JSON.stringify(sampleMachines));
-        }
-        if (!localStorage.getItem(STORAGE_KEYS.transfers)) localStorage.setItem(STORAGE_KEYS.transfers, JSON.stringify([]));
-        if (!localStorage.getItem(STORAGE_KEYS.collections)) localStorage.setItem(STORAGE_KEYS.collections, JSON.stringify([]));
-        if (!localStorage.getItem(STORAGE_KEYS.archive)) localStorage.setItem(STORAGE_KEYS.archive, JSON.stringify([]));
-        if (!localStorage.getItem(STORAGE_KEYS.requests)) localStorage.setItem(STORAGE_KEYS.requests, JSON.stringify([]));
-    }
-
-    function getData(key) { return JSON.parse(localStorage.getItem(key) || '[]'); }
-    function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
-
-    // ======================== GLOBAL VARIABLES ========================
-    let DB = { merchants: [], machines: [], transfers: [], collections: [], archive: [] };
-    let loadedTables = { merchants: false, machines: false, transfers: false, collections: false, archive: false };
-    let merchantSearchTerm = '';
-    let confirmCallback = null;
-
-    // ======================== UTILITIES ========================
-    function showLoading(show) { 
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) overlay.style.display = show ? 'flex' : 'none';
-    }
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toastMessage');
-        if (!toast) return;
-        toast.className = `toast ${type}`;
-        toastMessage.textContent = message;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-    function formatNumber(num) { return (num === null || isNaN(num)) ? '0' : Number(num).toLocaleString('ar-EG'); }
-    function formatDate(dateStr) {
-        if (!dateStr) return '-';
-        try {
-            const d = new Date(dateStr);
-            return isNaN(d) ? dateStr : d.toLocaleDateString('ar-EG');
-        } catch { return dateStr; }
-    }
-    function formatTime(t) { return t || '-'; }
-    function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
-    function normalizeArabic(text) {
-        if (!text) return '';
-        return text.toString().toLowerCase()
-            .replace(/[أإآ]/g, 'ا')
-            .replace(/ة/g, 'ه')
-            .replace(/ى/g, 'ي')
-            .replace(/[ئؤ]/g, 'ي');
-    }
-
-    // ======================== LOGIN / LOGOUT ========================
-    function handleEnter(e) { if (e.key === 'Enter') login(); }
-    function login() {
-        const pass = document.getElementById('passInput').value;
-        if (pass === '1407') {
-            localStorage.setItem('axentro_logged', 'true');
-            document.getElementById('loginBox').style.display = 'none';
-            document.getElementById('appBox').style.display = 'flex';
-            loadData();
-            showToast('مرحباً بك!', 'success');
-        } else {
-            showToast('كلمة المرور غير صحيحة', 'error');
-        }
-    }
-    function logout() { showConfirm('هل تريد تسجيل الخروج؟', () => { localStorage.removeItem('axentro_logged'); location.reload(); }); }
-
-    // ======================== DATA LOADING ========================
-    function loadData() {
-        showLoading(true);
-        DB.merchants = getData(STORAGE_KEYS.merchants);
-        DB.machines = getData(STORAGE_KEYS.machines);
-        DB.transfers = getData(STORAGE_KEYS.transfers);
-        DB.collections = getData(STORAGE_KEYS.collections);
-        DB.archive = getData(STORAGE_KEYS.archive);
-        renderDashboard();
-        showLoading(false);
-    }
-    function loadTableData(tableName) {
-        showLoading(true);
-        DB[tableName] = getData(STORAGE_KEYS[tableName]);
-        loadedTables[tableName] = true;
-        if (tableName === 'merchants') renderMerchants();
-        else if (tableName === 'machines') renderMachines();
-        else if (tableName === 'transfers') renderTransfers();
-        else if (tableName === 'collections') renderCollections();
-        else if (tableName === 'archive') renderArchive();
-        populateMerchantDropdowns();
-        showLoading(false);
-    }
-    function showPage(name, element) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-        const page = document.getElementById('page-' + name);
-        if (page) page.classList.add('active');
-        if (element) element.classList.add('active');
-        if (!loadedTables[name] && name !== 'home' && name !== 'statement') loadTableData(name);
-    }
-
-    // ======================== DASHBOARD ========================
-    function renderDashboard() {
-        const now = new Date();
-        const currentMonth = now.getMonth(), currentYear = now.getFullYear();
-        const monthlyTransfers = DB.transfers.filter(t => new Date(t['التاريخ']).getMonth() === currentMonth && new Date(t['التاريخ']).getFullYear() === currentYear);
-        const monthlyCollections = DB.collections.filter(c => new Date(c['التاريخ']).getMonth() === currentMonth && new Date(c['التاريخ']).getFullYear() === currentYear);
-        const totalTransfersMonth = monthlyTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-        const totalCollectionsMonth = monthlyCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
-        const todayStr = now.toISOString().slice(0,10);
-        const todayTransfers = DB.transfers.filter(t => t['التاريخ'] === todayStr).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-        const topMachines = computeTopMachines();
-
-        const stats = {
-            'التجار': DB.merchants.length,
-            'المكن': DB.machines.length,
-            'التحويلات_شهر': totalTransfersMonth,
-            'التحصيلات_شهر': totalCollectionsMonth,
-            'المتبقي_شهر': totalTransfersMonth - totalCollectionsMonth,
-            'تحويلات_اليوم': todayTransfers
+    (function() {
+        // ======================== LOCAL STORAGE MANAGEMENT ========================
+        const STORAGE_KEYS = {
+            merchants: 'axentro_merchants',
+            machines: 'axentro_machines',
+            transfers: 'axentro_transfers',
+            collections: 'axentro_collections',
+            archive: 'axentro_archive',
+            requests: 'axentro_merchant_requests'
         };
-        const labels = ['عدد التجار', 'عدد المكن', 'التحويلات (شهر)', 'التحصيلات (شهر)', 'المتبقي (شهر)', 'تحويلات اليوم'];
-        const icons = ['fa-users', 'fa-cash-register', 'fa-exchange-alt', 'fa-hand-holding-usd', 'fa-coins', 'fa-calendar-day'];
-        const colors = ['', '', '', 'success', 'danger', 'warning'];
-        let html = '';
-        Object.keys(stats).forEach((k, i) => {
-            html += `<div class="stat-card ${colors[i]}"><h4><i class="fas ${icons[i]}"></i> ${labels[i]}</h4><div class="val">${formatNumber(stats[k])}</div></div>`;
-        });
-        document.getElementById('dashStats').innerHTML = html;
-        renderTopMachines(topMachines);
-    }
-    function computeTopMachines() {
-        const now = new Date();
-        const monthlyTransfers = DB.transfers.filter(t => new Date(t['التاريخ']).getMonth() === now.getMonth() && new Date(t['التاريخ']).getFullYear() === now.getFullYear());
-        const achievements = {};
-        monthlyTransfers.forEach(t => { if (t['رقم المكنة']) achievements[t['رقم المكنة']] = (achievements[t['رقم المكنة']] || 0) + (Number(t['قيمة التحويل']) || 0); });
-        return DB.machines.map(m => {
-            const achieved = achievements[m['رقم المكنة']] || 0;
-            const target = Number(m['التارجت الشهري']) || 0;
-            const percentage = target ? Math.round((achieved / target) * 100) : 0;
-            return { name: m['رقم المكنة'], merchant: m['اسم التاجر'], achieved, target, percentage };
-        }).sort((a,b) => b.achieved - a.achieved).slice(0,5);
-    }
-    function renderTopMachines(machines) {
-        const tbody = document.getElementById('tblTopMachines');
-        if (!tbody) return;
-        if (!machines.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد بيانات</td></tr>'; return; }
-        let rows = '';
-        machines.forEach(m => {
-            const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
-            rows += `<tr><td><strong>${m.name}</strong></td><td>${m.merchant}</td><td>${formatNumber(m.achieved)}</td><td>${formatNumber(m.target)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage,100)}%"></div></div></td></tr>`;
-        });
-        tbody.innerHTML = rows;
-    }
 
-    // ======================== RENDER FUNCTIONS ========================
-    function renderMerchants() {
-        let merchants = DB.merchants;
-        if (merchantSearchTerm) {
-            const term = normalizeArabic(merchantSearchTerm);
-            merchants = merchants.filter(m => normalizeArabic(m['اسم التاجر']).includes(term) || normalizeArabic(m['رقم التاجر']).includes(term));
-        }
-        const tbody = document.getElementById('tblMerchants');
-        if (!tbody) return;
-        if (!merchants.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">لا يوجد تجار</td></tr>'; return; }
-        let rows = '';
-        merchants.forEach(m => {
-            const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
-            rows += `<tr>
-                <td>${m['رقم التاجر']}</td>
-                <td>${m['اسم التاجر']}</td>
-                <td>${m['اسم النشاط'] || '-'}</td>
-                <td>${m['رقم الهاتف'] ? `<a href="tel:${m['رقم الهاتف']}">${m['رقم الهاتف']}</a>` : '-'}</td>
-                <td>${m['المنطقة'] || '-'}</td>
-                <td>${m['العنوان'] || '-'}</td>
-                <td><span class="badge badge-${statusClass}">${m['الحالة']}</span></td>
-                <td><button class="btn btn-primary btn-sm" onclick="editMerchant('${m['رقم التاجر']}')"><i class="fas fa-edit"></i></button> <button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button></td>
-            </tr>`;
-        });
-        tbody.innerHTML = rows;
-    }
-    function renderMachines() {
-        const machines = DB.machines;
-        const tbody = document.getElementById('tblMachines');
-        if (!tbody) return;
-        if (!machines.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد مكن</td></tr>'; return; }
-        let rows = '';
-        machines.forEach(m => {
-            const statusClass = m['الحالة'] === 'نشطة' ? 'success' : (m['الحالة'] === 'متوقفة' ? 'danger' : 'warning');
-            rows += `<tr>
-                <td>${m['رقم المكنة']}</td>
-                <td>${m['اسم التاجر']}</td>
-                <td>${m['الرقم التسلسلي'] || '-'}</td>
-                <td>${formatNumber(m['التارجت الشهري'])}</td>
-                <td><span class="badge badge-${statusClass}">${m['الحالة']}</span></td>
-                <td><button class="btn btn-primary btn-sm" onclick="editMachine('${m['رقم المكنة']}')"><i class="fas fa-edit"></i></button> <button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button></td>
-            </tr>`;
-        });
-        tbody.innerHTML = rows;
-    }
-    function renderTransfers() {
-        const transfers = [...DB.transfers].reverse().slice(0,50);
-        const tbody = document.getElementById('tblTransfers');
-        if (!tbody) return;
-        if (!transfers.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد تحويلات</td></tr>'; return; }
-        let rows = '';
-        transfers.forEach(t => {
-            rows += `<tr>
-                <td>${formatDate(t['التاريخ'])}</td>
-                <td>${formatTime(t['الوقت'])}</td>
-                <td>${t['اسم التاجر']}</td>
-                <td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td>
-                <td>${t['ملاحظات'] || '-'}</td>
-                <td><button class="btn btn-primary btn-sm" onclick="editTransfer('${t['رقم التحويل']}')"><i class="fas fa-edit"></i></button> <button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')"><i class="fas fa-trash"></i></button></td>
-            </tr>`;
-        });
-        tbody.innerHTML = rows;
-    }
-    function renderCollections() {
-        const collections = [...DB.collections].sort((a,b) => new Date(`${b['التاريخ']} ${b['الوقت']}`) - new Date(`${a['التاريخ']} ${a['الوقت']}`));
-        const tbody = document.getElementById('tblCollections');
-        if (!tbody) return;
-        if (!collections.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">لا توجد تحصيلات</td></tr>'; return; }
-        let rows = '';
-        collections.forEach(c => {
-            const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
-            rows += `<tr>
-                <td>${formatDate(c['التاريخ'])}</td>
-                <td>${formatTime(c['الوقت'])}</td>
-                <td>${c['اسم التاجر']}</td>
-                <td>${formatNumber(c['قيمة التحويل'])}</td>
-                <td>${formatNumber(c['قيمة التحصيل'])}</td>
-                <td><span class="badge badge-${typeClass}">${c['نوع التحصيل']}</span></td>
-                <td>${formatNumber(c['المتبقي بعد التحصيل'])}</td>
-                <td><button class="btn btn-primary btn-sm" onclick="editCollection('${c['رقم التحصيل']}')"><i class="fas fa-edit"></i></button> <button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button></td>
-            </tr>`;
-        });
-        tbody.innerHTML = rows;
-    }
-    function renderArchive() {
-        const archives = [...DB.archive].reverse();
-        const tbody = document.getElementById('tblArchive');
-        if (!tbody) return;
-        if (!archives.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">لا يوجد أرشيف</td></tr>'; return; }
-        let rows = '';
-        archives.forEach(a => {
-            rows += `<tr>
-                <td>${a['الشهر']}</td>
-                <td>${a['عدد التحويلات']}</td>
-                <td>${formatNumber(a['إجمالي التحويلات'])}</td>
-                <td>${a['عدد التحصيلات']}</td>
-                <td>${formatNumber(a['إجمالي التحصيلات'])}</td>
-                <td>${formatNumber(a['إجمالي المتبقي'])}</td>
-                <td><button class="btn btn-danger btn-sm" onclick="deleteArchive('${a['رقم الأرشيف']}')"><i class="fas fa-trash"></i></button></td>
-            </tr>`;
-        });
-        tbody.innerHTML = rows;
-    }
-
-    // ======================== DROPDOWNS ========================
-    function populateMerchantDropdowns() {
-        const select = document.getElementById('stmtMerchantSelect');
-        if (select) {
-            let html = '<option value="">-- اختر تاجر --</option>';
-            DB.merchants.forEach(m => { html += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</option>`; });
-            select.innerHTML = html;
-        }
-    }
-
-    // ======================== GLOBAL HELPER FUNCTIONS FOR MODALS ========================
-    window.updateTransferMerchant = function() {
-        const sel = document.getElementById('transferMachine');
-        if (!sel) return;
-        const merchant = sel.options[sel.selectedIndex]?.getAttribute('data-merchant') || '';
-        const merchantField = document.getElementById('transferMerchant');
-        if (merchantField) merchantField.value = merchant;
-    };
-
-    window.updateCollectionInfo = function(idToExclude = null) {
-        const merchantName = document.getElementById('collectionMerchant')?.value;
-        if (!merchantName) return;
-        let transfers = DB.transfers.filter(t => t['اسم التاجر'] === merchantName);
-        let collections = DB.collections.filter(c => c['اسم التاجر'] === merchantName && c['رقم التحصيل'] != idToExclude);
-        const totalTransfers = transfers.reduce((s,t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-        const totalCollections = collections.reduce((s,c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
-        const remaining = totalTransfers - totalCollections;
-        const totalTransfersField = document.getElementById('collectionTotalTransfers');
-        const totalPreviousField = document.getElementById('collectionTotalPrevious');
-        const remainingBeforeField = document.getElementById('collectionRemainingBefore');
-        if (totalTransfersField) totalTransfersField.value = formatNumber(totalTransfers);
-        if (totalPreviousField) totalPreviousField.value = formatNumber(totalCollections);
-        if (remainingBeforeField) remainingBeforeField.value = formatNumber(remaining);
-        window.updateCollectionRemaining();
-    };
-
-    window.updateCollectionRemaining = function() {
-        const remainingBeforeField = document.getElementById('collectionRemainingBefore');
-        const amountField = document.getElementById('collectionAmount');
-        const remainingAfterField = document.getElementById('collectionRemainingAfter');
-        if (!remainingBeforeField || !amountField || !remainingAfterField) return;
-        const remainingBefore = parseFloat(remainingBeforeField.value.replace(/[^0-9.-]/g, '')) || 0;
-        const amount = parseFloat(amountField.value) || 0;
-        const remainingAfter = Math.max(0, remainingBefore - amount);
-        remainingAfterField.value = formatNumber(remainingAfter);
-    };
-
-    // ======================== MODAL HANDLING ========================
-    function openModal(type, id = null) {
-        const modal = document.getElementById('modal');
-        const modalBody = document.getElementById('modalBody');
-        let html = '';
-        const now = new Date();
-        const dateStr = now.toISOString().slice(0,10);
-        const timeStr = now.toLocaleTimeString('ar-EG');
-        
-        try {
-            if (type === 'merchant') {
-                html = `<h3><i class="fas fa-user-plus"></i> ${id ? 'تعديل تاجر' : 'إضافة تاجر جديد'}</h3>
-                        <form id="modalForm">
-                            <div class="form-group"><label>رقم التاجر <span class="required">*</span></label><input type="text" id="merchantId" class="form-control" required ${id ? `value="${id}" readonly` : ''}></div>
-                            <div class="form-group"><label>اسم التاجر <span class="required">*</span></label><input type="text" id="merchantName" class="form-control" required></div>
-                            <div class="form-group"><label>اسم النشاط</label><input type="text" id="merchantActivity" class="form-control"></div>
-                            <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="merchantPhone" class="form-control"></div>
-                            <div class="form-group"><label>المنطقة</label><input type="text" id="merchantArea" class="form-control"></div>
-                            <div class="form-group"><label>العنوان</label><input type="text" id="merchantAddress" class="form-control"></div>
-                            <div class="form-group"><label>الحالة</label><select id="merchantStatus" class="form-control"><option value="نشط">نشط</option><option value="غير نشط">غير نشط</option></select></div>
-                            <div class="form-group"><label>رقم الحساب</label><input type="text" id="merchantAccount" class="form-control"></div>
-                            <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
-                        </form>`;
-                modalBody.innerHTML = html;
-                if (id) {
-                    const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
-                    if (merchant) {
-                        document.getElementById('merchantName').value = merchant['اسم التاجر'] || '';
-                        document.getElementById('merchantActivity').value = merchant['اسم النشاط'] || '';
-                        document.getElementById('merchantPhone').value = merchant['رقم الهاتف'] || '';
-                        document.getElementById('merchantArea').value = merchant['المنطقة'] || '';
-                        document.getElementById('merchantAddress').value = merchant['العنوان'] || '';
-                        document.getElementById('merchantStatus').value = merchant['الحالة'] || 'نشط';
-                        document.getElementById('merchantAccount').value = merchant['رقم الحساب'] || '';
-                    }
-                }
-                document.getElementById('modalForm').onsubmit = (e) => {
-                    e.preventDefault();
-                    const merchant = {
-                        'رقم التاجر': document.getElementById('merchantId').value,
-                        'اسم التاجر': document.getElementById('merchantName').value,
-                        'اسم النشاط': document.getElementById('merchantActivity').value,
-                        'رقم الهاتف': document.getElementById('merchantPhone').value,
-                        'المنطقة': document.getElementById('merchantArea').value,
-                        'العنوان': document.getElementById('merchantAddress').value,
-                        'الحالة': document.getElementById('merchantStatus').value,
-                        'رقم الحساب': document.getElementById('merchantAccount').value
-                    };
-                    if (id) {
-                        const idx = DB.merchants.findIndex(m => m['رقم التاجر'] == id);
-                        if (idx !== -1) DB.merchants[idx] = merchant;
-                    } else {
-                        DB.merchants.push(merchant);
-                    }
-                    saveData(STORAGE_KEYS.merchants, DB.merchants);
-                    loadTableData('merchants');
-                    closeModal();
-                    showToast(id ? 'تم تعديل التاجر' : 'تم إضافة التاجر');
-                };
+        function initLocalStorage() {
+            if (!localStorage.getItem(STORAGE_KEYS.merchants)) {
+                const sampleMerchants = [
+                    { 'رقم التاجر': '1001', 'اسم التاجر': 'محمد علي', 'اسم النشاط': 'مواد غذائية', 'رقم الهاتف': '01001234567', 'المنطقة': 'وسط البلد', 'العنوان': 'شارع النيل', 'الحالة': 'نشط', 'رقم الحساب': '123456' },
+                    { 'رقم التاجر': '1002', 'اسم التاجر': 'أحمد حسن', 'اسم النشاط': 'إلكترونيات', 'رقم الهاتف': '01007654321', 'المنطقة': 'المعادي', 'العنوان': 'شارع 9', 'الحالة': 'نشط', 'رقم الحساب': '789012' }
+                ];
+                localStorage.setItem(STORAGE_KEYS.merchants, JSON.stringify(sampleMerchants));
             }
-            else if (type === 'machine') {
-                html = `<h3><i class="fas fa-plus"></i> ${id ? 'تعديل مكنة' : 'إضافة مكنة جديدة'}</h3>
-                        <form id="modalForm">
-                            <div class="form-group"><label>رقم المكنة <span class="required">*</span></label><input type="text" id="machineId" class="form-control" required ${id ? `value="${id}" readonly` : ''}></div>
-                            <div class="form-group"><label>التاجر <span class="required">*</span></label><select id="machineMerchant" class="form-control" required>${DB.merchants.map(m => `<option value="${m['اسم التاجر']}">${m['اسم التاجر']}</option>`).join('')}</select></div>
-                            <div class="form-group"><label>الرقم التسلسلي</label><input type="text" id="machineSerial" class="form-control"></div>
-                            <div class="form-group"><label>التارجت الشهري</label><input type="number" id="machineTarget" class="form-control" step="any"></div>
-                            <div class="form-group"><label>الحالة</label><select id="machineStatus" class="form-control"><option value="نشطة">نشطة</option><option value="متوقفة">متوقفة</option><option value="صيانة">صيانة</option></select></div>
-                            <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
-                        </form>`;
-                modalBody.innerHTML = html;
-                if (id) {
-                    const machine = DB.machines.find(m => m['رقم المكنة'] == id);
-                    if (machine) {
-                        document.getElementById('machineMerchant').value = machine['اسم التاجر'] || '';
-                        document.getElementById('machineSerial').value = machine['الرقم التسلسلي'] || '';
-                        document.getElementById('machineTarget').value = machine['التارجت الشهري'] || '';
-                        document.getElementById('machineStatus').value = machine['الحالة'] || 'نشطة';
-                    }
-                }
-                document.getElementById('modalForm').onsubmit = (e) => {
-                    e.preventDefault();
-                    const machine = {
-                        'رقم المكنة': document.getElementById('machineId').value,
-                        'اسم التاجر': document.getElementById('machineMerchant').value,
-                        'الرقم التسلسلي': document.getElementById('machineSerial').value,
-                        'التارجت الشهري': Number(document.getElementById('machineTarget').value) || 0,
-                        'الحالة': document.getElementById('machineStatus').value
-                    };
-                    if (id) {
-                        const idx = DB.machines.findIndex(m => m['رقم المكنة'] == id);
-                        if (idx !== -1) DB.machines[idx] = machine;
-                    } else {
-                        DB.machines.push(machine);
-                    }
-                    saveData(STORAGE_KEYS.machines, DB.machines);
-                    loadTableData('machines');
-                    closeModal();
-                    showToast(id ? 'تم تعديل المكنة' : 'تم إضافة المكنة');
-                };
+            if (!localStorage.getItem(STORAGE_KEYS.machines)) {
+                const sampleMachines = [
+                    { 'رقم المكنة': 'M001', 'اسم التاجر': 'محمد علي', 'الرقم التسلسلي': 'SN123456', 'التارجت الشهري': 50000, 'الحالة': 'نشطة' },
+                    { 'رقم المكنة': 'M002', 'اسم التاجر': 'أحمد حسن', 'الرقم التسلسلي': 'SN789012', 'التارجت الشهري': 30000, 'الحالة': 'نشطة' }
+                ];
+                localStorage.setItem(STORAGE_KEYS.machines, JSON.stringify(sampleMachines));
             }
-            else if (type === 'transfer') {
-                html = `<h3><i class="fas fa-exchange-alt"></i> ${id ? 'تعديل تحويل' : 'تحويل جديد'}</h3>
-                        <form id="modalForm">
-                            <div class="form-group"><label>المكنة <span class="required">*</span></label><select id="transferMachine" class="form-control" required onchange="updateTransferMerchant()"><option value="">-- اختر مكنة --</option>${DB.machines.map(m => `<option value="${m['رقم المكنة']}" data-merchant="${m['اسم التاجر']}">${m['رقم المكنة']} - ${m['اسم التاجر']}</option>`).join('')}</select></div>
-                            <div class="form-group"><label>التاجر</label><input type="text" id="transferMerchant" class="form-control" readonly></div>
-                            <div class="form-group"><label>قيمة التحويل <span class="required">*</span></label><input type="number" id="transferAmount" class="form-control" step="any" required></div>
-                            <div class="form-group"><label>ملاحظات</label><input type="text" id="transferNotes" class="form-control"></div>
-                            <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
-                        </form>`;
-                modalBody.innerHTML = html;
-                if (id) {
-                    const tr = DB.transfers.find(t => t['رقم التحويل'] == id);
-                    if (tr) {
-                        setTimeout(() => {
-                            document.getElementById('transferMachine').value = tr['رقم المكنة'];
-                            updateTransferMerchant();
-                            document.getElementById('transferAmount').value = tr['قيمة التحويل'];
-                            document.getElementById('transferNotes').value = tr['ملاحظات'] || '';
-                        }, 50);
-                    }
-                }
-                document.getElementById('modalForm').onsubmit = (e) => {
-                    e.preventDefault();
-                    const transferData = {
-                        'رقم المكنة': document.getElementById('transferMachine').value,
-                        'اسم التاجر': document.getElementById('transferMerchant').value,
-                        'قيمة التحويل': Number(document.getElementById('transferAmount').value),
-                        'ملاحظات': document.getElementById('transferNotes').value,
-                    };
-                    if (id) {
-                        const idx = DB.transfers.findIndex(t => t['رقم التحويل'] == id);
-                        if (idx !== -1) {
-                            transferData['رقم التحويل'] = id;
-                            transferData['التاريخ'] = DB.transfers[idx]['التاريخ'];
-                            transferData['الوقت'] = DB.transfers[idx]['الوقت'];
-                            DB.transfers[idx] = transferData;
-                        }
-                    } else {
-                        transferData['رقم التحويل'] = Date.now().toString();
-                        transferData['التاريخ'] = dateStr;
-                        transferData['الوقت'] = timeStr;
-                        DB.transfers.push(transferData);
-                    }
-                    saveData(STORAGE_KEYS.transfers, DB.transfers);
-                    loadTableData('transfers');
-                    closeModal();
-                    showToast(id ? 'تم تعديل التحويل' : 'تم إضافة التحويل');
-                    renderDashboard();
-                };
-            }
-            else if (type === 'collection') {
-                html = `<h3><i class="fas fa-hand-holding-usd"></i> ${id ? 'تعديل تحصيل' : 'تحصيل جديد'}</h3>
-                        <form id="modalForm">
-                            <div class="form-group"><label>التاجر <span class="required">*</span></label><select id="collectionMerchant" class="form-control" required onchange="updateCollectionInfo()"><option value="">-- اختر تاجر --</option>${DB.merchants.map(m => `<option value="${m['اسم التاجر']}" data-id="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('')}</select></div>
-                            <div class="form-group"><label>إجمالي التحويلات</label><input type="text" id="collectionTotalTransfers" class="form-control" readonly></div>
-                            <div class="form-group"><label>إجمالي التحصيلات السابقة</label><input type="text" id="collectionTotalPrevious" class="form-control" readonly></div>
-                            <div class="form-group"><label>المتبقي قبل التحصيل</label><input type="text" id="collectionRemainingBefore" class="form-control" readonly></div>
-                            <div class="form-group"><label>قيمة التحصيل <span class="required">*</span></label><input type="number" id="collectionAmount" class="form-control" step="any" required oninput="updateCollectionRemaining()"></div>
-                            <div class="form-group"><label>نوع التحصيل</label><select id="collectionType" class="form-control"><option value="جزئي">جزئي</option><option value="كلي">كلي</option></select></div>
-                            <div class="form-group"><label>المتبقي بعد التحصيل</label><input type="text" id="collectionRemainingAfter" class="form-control" readonly></div>
-                            <div class="form-group"><label>ملاحظات</label><input type="text" id="collectionNotes" class="form-control"></div>
-                            <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
-                        </form>`;
-                modalBody.innerHTML = html;
-                if (id) {
-                    const col = DB.collections.find(c => c['رقم التحصيل'] == id);
-                    if (col) {
-                        setTimeout(() => {
-                            document.getElementById('collectionMerchant').value = col['اسم التاجر'];
-                            window.updateCollectionInfo(id);
-                            document.getElementById('collectionAmount').value = col['قيمة التحصيل'];
-                            document.getElementById('collectionType').value = col['نوع التحصيل'];
-                            document.getElementById('collectionRemainingAfter').value = formatNumber(col['المتبقي بعد التحصيل']);
-                            document.getElementById('collectionNotes').value = col['ملاحظات'] || '';
-                        }, 50);
-                    }
-                }
-                document.getElementById('modalForm').onsubmit = (e) => {
-                    e.preventDefault();
-                    const merchantName = document.getElementById('collectionMerchant').value;
-                    const amount = Number(document.getElementById('collectionAmount').value);
-                    const remainingAfter = Number(document.getElementById('collectionRemainingAfter').value.replace(/[^0-9.-]/g, '')) || 0;
-                    const collectionData = {
-                        'اسم التاجر': merchantName,
-                        'قيمة التحويل': parseFloat(document.getElementById('collectionTotalTransfers').value.replace(/[^0-9.-]/g, '')) || 0,
-                        'قيمة التحصيل': amount,
-                        'نوع التحصيل': document.getElementById('collectionType').value,
-                        'المتبقي بعد التحصيل': remainingAfter,
-                        'ملاحظات': document.getElementById('collectionNotes').value,
-                    };
-                    if (id) {
-                        const idx = DB.collections.findIndex(c => c['رقم التحصيل'] == id);
-                        if (idx !== -1) {
-                            collectionData['رقم التحصيل'] = id;
-                            collectionData['التاريخ'] = DB.collections[idx]['التاريخ'];
-                            collectionData['الوقت'] = DB.collections[idx]['الوقت'];
-                            DB.collections[idx] = collectionData;
-                        }
-                    } else {
-                        collectionData['رقم التحصيل'] = Date.now().toString();
-                        collectionData['التاريخ'] = dateStr;
-                        collectionData['الوقت'] = timeStr;
-                        DB.collections.push(collectionData);
-                    }
-                    saveData(STORAGE_KEYS.collections, DB.collections);
-                    loadTableData('collections');
-                    closeModal();
-                    showToast(id ? 'تم تعديل التحصيل' : 'تم إضافة التحصيل');
-                    renderDashboard();
-                };
-            }
-            modal.classList.add('show');
-        } catch (err) {
-            console.error('Error in openModal:', err);
-            showToast('حدث خطأ تقني، راجع وحدة التحكم', 'error');
+            if (!localStorage.getItem(STORAGE_KEYS.transfers)) localStorage.setItem(STORAGE_KEYS.transfers, JSON.stringify([]));
+            if (!localStorage.getItem(STORAGE_KEYS.collections)) localStorage.setItem(STORAGE_KEYS.collections, JSON.stringify([]));
+            if (!localStorage.getItem(STORAGE_KEYS.archive)) localStorage.setItem(STORAGE_KEYS.archive, JSON.stringify([]));
+            if (!localStorage.getItem(STORAGE_KEYS.requests)) localStorage.setItem(STORAGE_KEYS.requests, JSON.stringify([]));
         }
-    }
-    function closeModal() { document.getElementById('modal').classList.remove('show'); }
-    function showConfirm(msg, callback) {
-        document.getElementById('confirmMsg').innerText = msg;
-        confirmCallback = callback;
-        document.getElementById('confirmModal').classList.add('show');
-        document.getElementById('confirmBtn').onclick = () => { if (confirmCallback) confirmCallback(); closeConfirm(); };
-    }
-    function closeConfirm() { document.getElementById('confirmModal').classList.remove('show'); }
 
-    // ======================== EDIT/DELETE FUNCTIONS ========================
-    function editMerchant(id) { openModal('merchant', id); }
-    function delMerchant(id) { showConfirm('هل تريد حذف هذا التاجر؟', () => { DB.merchants = DB.merchants.filter(m => m['رقم التاجر'] != id); saveData(STORAGE_KEYS.merchants, DB.merchants); loadTableData('merchants'); showToast('تم حذف التاجر'); }); }
-    function editMachine(id) { openModal('machine', id); }
-    function delMachine(id) { showConfirm('هل تريد حذف هذه المكنة؟', () => { DB.machines = DB.machines.filter(m => m['رقم المكنة'] != id); saveData(STORAGE_KEYS.machines, DB.machines); loadTableData('machines'); showToast('تم حذف المكنة'); }); }
-    function editTransfer(id) { openModal('transfer', id); }
-    function delTransfer(id) { showConfirm('حذف التحويل؟', () => { DB.transfers = DB.transfers.filter(t => t['رقم التحويل'] != id); saveData(STORAGE_KEYS.transfers, DB.transfers); loadTableData('transfers'); renderDashboard(); showToast('تم حذف التحويل'); }); }
-    function editCollection(id) { openModal('collection', id); }
-    function delCollection(id) { showConfirm('حذف التحصيل؟', () => { DB.collections = DB.collections.filter(c => c['رقم التحصيل'] != id); saveData(STORAGE_KEYS.collections, DB.collections); loadTableData('collections'); renderDashboard(); showToast('تم حذف التحصيل'); }); }
-    function deleteArchive(id) { showConfirm('حذف الأرشيف؟', () => { DB.archive = DB.archive.filter(a => a['رقم الأرشيف'] != id); saveData(STORAGE_KEYS.archive, DB.archive); renderArchive(); showToast('تم حذف الأرشيف'); }); }
+        function getData(key) { return JSON.parse(localStorage.getItem(key) || '[]'); }
+        function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
 
-    // ======================== STATEMENT ========================
-    function handleMerchantSearch(query) {
-        const list = document.getElementById('stmtMerchantList');
-        if (!query) { list.style.display = 'none'; return; }
-        const normQuery = normalizeArabic(query);
-        const filtered = DB.merchants.filter(m => normalizeArabic(m['اسم التاجر']).includes(normQuery) || normalizeArabic(m['رقم التاجر']).includes(normQuery));
-        if (!filtered.length) { list.innerHTML = '<div class="no-result" style="padding:10px; color:#999;">لا توجد نتائج</div>'; }
-        else { list.innerHTML = filtered.map(m => `<div onclick="selectMerchantForStatement('${m['رقم التاجر']}', '${m['اسم التاجر']}')">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join(''); }
-        list.style.display = 'block';
-    }
-    function selectMerchantForStatement(id, name) {
-        document.getElementById('stmtMerchantId').value = id;
-        document.getElementById('stmtMerchantSearch').value = name;
-        document.getElementById('stmtMerchantSelect').value = id;
-        document.getElementById('stmtMerchantList').style.display = 'none';
-        getStatement(id);
-    }
-    function handleDropdownSelect(value) {
-        if (value) {
-            document.getElementById('stmtMerchantId').value = value;
-            const merchant = DB.merchants.find(m => m['رقم التاجر'] == value);
-            document.getElementById('stmtMerchantSearch').value = merchant ? merchant['اسم التاجر'] : '';
-            getStatement(value);
-        } else {
-            document.getElementById('stmtMerchantId').value = '';
-            document.getElementById('stmtMerchantSearch').value = '';
-            document.getElementById('stmtT').innerText = '0';
-            document.getElementById('stmtC').innerText = '0';
-            document.getElementById('stmtR').innerText = '0';
-            document.getElementById('tblStatement').innerHTML = '<tr><td colspan="6">اختر تاجراً لعرض كشف الحساب</td></tr>';
+        // ======================== GLOBAL VARIABLES ========================
+        let DB = { merchants: [], machines: [], transfers: [], collections: [], archive: [] };
+        let loadedTables = { merchants: false, machines: false, transfers: false, collections: false, archive: false };
+        let merchantSearchTerm = '';
+        let confirmCallback = null;
+
+        // ======================== UTILITIES ========================
+        function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toast.className = `toast ${type}`;
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
-    }
-    function getStatement(merchantId) {
-        const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
-        if (!merchant) return;
-        const merchantName = merchant['اسم التاجر'];
-        const transfers = DB.transfers.filter(t => t['اسم التاجر'] === merchantName);
-        const collections = DB.collections.filter(c => c['اسم التاجر'] === merchantName);
-        const totalTransfers = transfers.reduce((s,t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-        const totalCollections = collections.reduce((s,c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
-        const remaining = totalTransfers - totalCollections;
-        document.getElementById('stmtT').innerText = formatNumber(totalTransfers);
-        document.getElementById('stmtC').innerText = formatNumber(totalCollections);
-        document.getElementById('stmtR').innerText = formatNumber(remaining);
-        const allMovements = [...transfers.map(t => ({ ...t, type: 'تحويل' })), ...collections.map(c => ({ ...c, type: 'تحصيل' }))];
-        allMovements.sort((a,b) => new Date(`${b['التاريخ']} ${b['الوقت']}`) - new Date(`${a['التاريخ']} ${a['الوقت']}`));
-        let rows = '';
-        let runningBalance = 0;
-        allMovements.forEach(m => {
-            if (m.type === 'تحويل') runningBalance += Number(m['قيمة التحويل']) || 0;
-            else runningBalance -= Number(m['قيمة التحصيل']) || 0;
-            rows += `<tr>
-                <td>${formatDate(m['التاريخ'])}</td>
-                <td>${formatTime(m['الوقت'])}</td>
-                <td><span class="badge badge-primary">${m.type}</span></td>
-                <td>${formatNumber(m.type === 'تحويل' ? m['قيمة التحويل'] : m['قيمة التحصيل'])}</td>
-                <td>${formatNumber(runningBalance)}</td>
-                <td>${m['ملاحظات'] || '-'}</td>
-            </tr>`;
-        });
-        document.getElementById('tblStatement').innerHTML = rows || '<tr><td colspan="6">لا توجد حركات</td></tr>';
-    }
+        function formatNumber(num) { return (num === null || isNaN(num)) ? '0' : Number(num).toLocaleString('ar-EG'); }
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            try {
+                const d = new Date(dateStr);
+                return isNaN(d) ? dateStr : d.toLocaleDateString('ar-EG');
+            } catch { return dateStr; }
+        }
+        function formatTime(t) { return t || '-'; }
+        function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+        function normalizeArabic(text) {
+            if (!text) return '';
+            return text.toString().toLowerCase()
+                .replace(/[أإآ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[ئؤ]/g, 'ي');
+        }
 
-    // ======================== ARCHIVE MONTH ========================
-    function confirmCloseMonth() {
-        showConfirm('هل تريد إغلاق الشهر الحالي ونقل البيانات إلى الأرشيف؟', () => {
+        // ======================== LOGIN / LOGOUT ========================
+        window.handleEnter = function(e) { if (e.key === 'Enter') login(); };
+        window.login = function() {
+            const pass = document.getElementById('passInput').value;
+            if (pass === '1407') {
+                localStorage.setItem('axentro_logged', 'true');
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('appBox').style.display = 'flex';
+                loadData();
+                showToast('مرحباً بك!', 'success');
+            } else {
+                showToast('كلمة المرور غير صحيحة', 'error');
+            }
+        };
+        window.logout = function() { showConfirm('هل تريد تسجيل الخروج؟', () => { localStorage.removeItem('axentro_logged'); location.reload(); }); };
+
+        // ======================== DATA LOADING ========================
+        function loadData() {
+            showLoading(true);
+            DB.merchants = getData(STORAGE_KEYS.merchants);
+            DB.machines = getData(STORAGE_KEYS.machines);
+            DB.transfers = getData(STORAGE_KEYS.transfers);
+            DB.collections = getData(STORAGE_KEYS.collections);
+            DB.archive = getData(STORAGE_KEYS.archive);
+            renderDashboard();
+            showLoading(false);
+        }
+        function loadTableData(tableName) {
+            showLoading(true);
+            DB[tableName] = getData(STORAGE_KEYS[tableName]);
+            loadedTables[tableName] = true;
+            if (tableName === 'merchants') renderMerchants();
+            else if (tableName === 'machines') renderMachines();
+            else if (tableName === 'transfers') renderTransfers();
+            else if (tableName === 'collections') renderCollections();
+            else if (tableName === 'archive') renderArchive();
+            populateMerchantDropdowns();
+            showLoading(false);
+        }
+        window.showPage = function(name, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            document.getElementById('page-' + name).classList.add('active');
+            if (element) element.classList.add('active');
+            if (!loadedTables[name] && name !== 'home' && name !== 'statement') loadTableData(name);
+        };
+
+        // ======================== DASHBOARD ========================
+        function renderDashboard() {
             const now = new Date();
-            const monthName = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
             const currentMonth = now.getMonth(), currentYear = now.getFullYear();
             const monthlyTransfers = DB.transfers.filter(t => new Date(t['التاريخ']).getMonth() === currentMonth && new Date(t['التاريخ']).getFullYear() === currentYear);
             const monthlyCollections = DB.collections.filter(c => new Date(c['التاريخ']).getMonth() === currentMonth && new Date(c['التاريخ']).getFullYear() === currentYear);
-            const totalTransfers = monthlyTransfers.reduce((s,t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-            const totalCollections = monthlyCollections.reduce((s,c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
-            const archiveEntry = {
-                'رقم الأرشيف': Date.now().toString(),
-                'الشهر': monthName,
-                'عدد التحويلات': monthlyTransfers.length,
-                'إجمالي التحويلات': totalTransfers,
-                'عدد التحصيلات': monthlyCollections.length,
-                'إجمالي التحصيلات': totalCollections,
-                'إجمالي المتبقي': totalTransfers - totalCollections
+            const totalTransfersMonth = monthlyTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+            const totalCollectionsMonth = monthlyCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+            const todayStr = now.toISOString().slice(0,10);
+            const todayTransfers = DB.transfers.filter(t => t['التاريخ'] === todayStr).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+            const topMachines = computeTopMachines();
+
+            const stats = {
+                'التجار': DB.merchants.length,
+                'المكن': DB.machines.length,
+                'التحويلات_شهر': totalTransfersMonth,
+                'التحصيلات_شهر': totalCollectionsMonth,
+                'المتبقي_شهر': totalTransfersMonth - totalCollectionsMonth,
+                'تحويلات_اليوم': todayTransfers
             };
-            DB.archive.push(archiveEntry);
-            saveData(STORAGE_KEYS.archive, DB.archive);
-            renderArchive();
-            showToast('تم إغلاق الشهر بنجاح');
-        });
-    }
-
-    // ======================== EXPORT EXCEL ========================
-    function exportExcel() {
-        const wb = XLSX.utils.book_new();
-        const wsMerchants = XLSX.utils.json_to_sheet(DB.merchants);
-        const wsMachines = XLSX.utils.json_to_sheet(DB.machines);
-        const wsTransfers = XLSX.utils.json_to_sheet(DB.transfers);
-        const wsCollections = XLSX.utils.json_to_sheet(DB.collections);
-        const wsArchive = XLSX.utils.json_to_sheet(DB.archive);
-        XLSX.utils.book_append_sheet(wb, wsMerchants, 'التجار');
-        XLSX.utils.book_append_sheet(wb, wsMachines, 'المكن');
-        XLSX.utils.book_append_sheet(wb, wsTransfers, 'التحويلات');
-        XLSX.utils.book_append_sheet(wb, wsCollections, 'التحصيلات');
-        XLSX.utils.book_append_sheet(wb, wsArchive, 'الأرشيف');
-        XLSX.writeFile(wb, `Axentro_Data_${new Date().toISOString().slice(0,10)}.xlsx`);
-        showToast('تم تصدير البيانات بنجاح');
-    }
-
-    // ======================== INIT ========================
-    window.onload = () => {
-        initLocalStorage();
-        const logged = localStorage.getItem('axentro_logged') === 'true';
-        if (logged) {
-            document.getElementById('loginBox').style.display = 'none';
-            document.getElementById('appBox').style.display = 'flex';
-            loadData();
-        } else {
-            document.getElementById('loginBox').style.display = 'flex';
-            document.getElementById('appBox').style.display = 'none';
-        }
-        const searchInput = document.getElementById('merchantSearchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                merchantSearchTerm = e.target.value;
-                renderMerchants();
+            const labels = ['عدد التجار', 'عدد المكن', 'التحويلات (شهر)', 'التحصيلات (شهر)', 'المتبقي (شهر)', 'تحويلات اليوم'];
+            const icons = ['fa-users', 'fa-cash-register', 'fa-exchange-alt', 'fa-hand-holding-usd', 'fa-coins', 'fa-calendar-day'];
+            const colors = ['', '', '', 'success', 'danger', 'warning'];
+            let html = '';
+            Object.keys(stats).forEach((k, i) => {
+                html += `<div class="stat-card ${colors[i]}"><h4><i class="fas ${icons[i]}"></i> ${labels[i]}</h4><div class="val">${formatNumber(stats[k])}</div></div>`;
             });
+            document.getElementById('dashStats').innerHTML = html;
+            renderTopMachines(topMachines);
         }
-        document.addEventListener('click', (e) => {
+        function computeTopMachines() {
+            const now = new Date();
+            const monthlyTransfers = DB.transfers.filter(t => new Date(t['التاريخ']).getMonth() === now.getMonth() && new Date(t['التاريخ']).getFullYear() === now.getFullYear());
+            const achievements = {};
+            monthlyTransfers.forEach(t => { if (t['رقم المكنة']) achievements[t['رقم المكنة']] = (achievements[t['رقم المكنة']] || 0) + (Number(t['قيمة التحويل']) || 0); });
+            return DB.machines.map(m => {
+                const achieved = achievements[m['رقم المكنة']] || 0;
+                const target = Number(m['التارجت الشهري']) || 0;
+                const percentage = target ? Math.round((achieved / target) * 100) : 0;
+                return { name: m['رقم المكنة'], merchant: m['اسم التاجر'], achieved, target, percentage };
+            }).sort((a,b) => b.achieved - a.achieved).slice(0,5);
+        }
+        function renderTopMachines(machines) {
+            const tbody = document.getElementById('tblTopMachines');
+            if (!machines.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد بيانات</td></tr>'; return; }
+            let rows = '';
+            machines.forEach(m => {
+                const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
+                rows += `<tr><td><strong>${m.name}</strong></td><td>${m.merchant}</td><td>${formatNumber(m.achieved)}</td><td>${formatNumber(m.target)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage,100)}%"></div></div></td></tr>`;
+            });
+            tbody.innerHTML = rows;
+        }
+
+        // ======================== RENDER FUNCTIONS ========================
+        function renderMerchants() {
+            let merchants = DB.merchants;
+            if (merchantSearchTerm) {
+                const term = normalizeArabic(merchantSearchTerm);
+                merchants = merchants.filter(m => normalizeArabic(m['اسم التاجر']).includes(term) || normalizeArabic(m['رقم التاجر']).includes(term));
+            }
+            const tbody = document.getElementById('tblMerchants');
+            if (!merchants.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">لا يوجد تجار</td></tr>'; return; }
+            let rows = '';
+            merchants.forEach(m => {
+                const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
+                rows += `<tr><td>${m['رقم التاجر']}</td><td>${m['اسم التاجر']}</td><td>${m['اسم النشاط'] || '-'}</td><td>${m['رقم الهاتف'] ? `<a href="tel:${m['رقم الهاتف']}">${m['رقم الهاتف']}</a>` : '-'}</td><td>${m['المنطقة'] || '-'}</td><td>${m['العنوان'] || '-'}</td><td><span class="badge badge-${statusClass}">${m['الحالة']}</span></td><td><button class="btn btn-primary btn-sm" onclick="editMerchant('${m['رقم التاجر']}')"><i class="fas fa-edit"></i></button> <button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button></td></tr>`;
+            });
+            tbody.innerHTML = rows;
+        }
+        function renderMachines() {
+            const machines = DB.machines;
+            const tbody = document.getElementById('tblMachines');
+            if (!machines.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد مكن</td></tr>'; return; }
+            let rows = '';
+            machines.forEach(m => {
+                const statusClass = m['الحالة'] === 'نشطة' ? 'success' : (m['الحالة'] === 'متوقفة' ? 'danger' : 'warning');
+                rows += `<tr><td>${m['رقم المكنة']}</td><td>${m['اسم التاجر']}</td><td>${m['الرقم التسلسلي'] || '-'}</td><td>${formatNumber(m['التارجت الشهري'])}</td><td><span class="badge badge-${statusClass}">${m['الحالة']}</span></td><td><button class="btn btn-primary btn-sm" onclick="editMachine('${m['رقم المكنة']}')"><i class="fas fa-edit"></i></button> <button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button></td></tr>`;
+            });
+            tbody.innerHTML = rows;
+        }
+        function renderTransfers() {
+            const transfers = [...DB.transfers].reverse().slice(0,50);
+            const tbody = document.getElementById('tblTransfers');
+            if (!transfers.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد تحويلات</td></tr>'; return; }
+            let rows = '';
+            transfers.forEach(t => {
+                rows += `<tr><td>${formatDate(t['التاريخ'])}</td><td>${formatTime(t['الوقت'])}</td><td>${t['اسم التاجر']}</td><td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td><td>${t['ملاحظات'] || '-'}</td><td><button class="btn btn-primary btn-sm" onclick="editTransfer('${t['رقم التحويل']}')"><i class="fas fa-edit"></i></button> <button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')"><i class="fas fa-trash"></i></button></td></tr>`;
+            });
+            tbody.innerHTML = rows;
+        }
+        function renderCollections() {
+            const collections = [...DB.collections].sort((a,b) => new Date(`${b['التاريخ']} ${b['الوقت']}`) - new Date(`${a['التاريخ']} ${a['الوقت']}`));
+            const tbody = document.getElementById('tblCollections');
+            if (!collections.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">لا توجد تحصيلات</td></tr>'; return; }
+            let rows = '';
+            collections.forEach(c => {
+                const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
+                rows += `<tr><td>${formatDate(c['التاريخ'])}</td><td>${formatTime(c['الوقت'])}</td><td>${c['اسم التاجر']}</td><td>${formatNumber(c['قيمة التحويل'])}</td><td>${formatNumber(c['قيمة التحصيل'])}</td><td><span class="badge badge-${typeClass}">${c['نوع التحصيل']}</span></td><td>${formatNumber(c['المتبقي بعد التحصيل'])}</td><td><button class="btn btn-primary btn-sm" onclick="editCollection('${c['رقم التحصيل']}')"><i class="fas fa-edit"></i></button> <button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button></td></tr>`;
+            });
+            tbody.innerHTML = rows;
+        }
+        function renderArchive() {
+            const archives = [...DB.archive].reverse();
+            const tbody = document.getElementById('tblArchive');
+            if (!archives.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">لا يوجد أرشيف</td></tr>'; return; }
+            let rows = '';
+            archives.forEach(a => {
+                rows += `<tr><td>${a['الشهر']}</td><td>${a['عدد التحويلات']}</td><td>${formatNumber(a['إجمالي التحويلات'])}</td><td>${a['عدد التحصيلات']}</td><td>${formatNumber(a['إجمالي التحصيلات'])}</td><td>${formatNumber(a['إجمالي المتبقي'])}</td><td><button class="btn btn-danger btn-sm" onclick="deleteArchive('${a['رقم الأرشيف']}')"><i class="fas fa-trash"></i></button></td></tr>`;
+            });
+            tbody.innerHTML = rows;
+        }
+
+        // ======================== DROPDOWNS ========================
+        function populateMerchantDropdowns() {
+            const select = document.getElementById('stmtMerchantSelect');
+            if (select) {
+                let html = '<option value="">-- اختر تاجر --</option>';
+                DB.merchants.forEach(m => { html += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</option>`; });
+                select.innerHTML = html;
+            }
+        }
+
+        // ======================== GLOBAL HELPER FUNCTIONS FOR MODALS ========================
+        window.updateTransferMerchant = function() {
+            const sel = document.getElementById('transferMachine');
+            if (!sel) return;
+            const merchant = sel.options[sel.selectedIndex]?.getAttribute('data-merchant') || '';
+            const merchantField = document.getElementById('transferMerchant');
+            if (merchantField) merchantField.value = merchant;
+        };
+
+        window.updateCollectionInfo = function(idToExclude = null) {
+            const merchantName = document.getElementById('collectionMerchant')?.value;
+            if (!merchantName) return;
+            let transfers = DB.transfers.filter(t => t['اسم التاجر'] === merchantName);
+            let collections = DB.collections.filter(c => c['اسم التاجر'] === merchantName && c['رقم التحصيل'] != idToExclude);
+            const totalTransfers = transfers.reduce((s,t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+            const totalCollections = collections.reduce((s,c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+            const remaining = totalTransfers - totalCollections;
+            const totalTransfersField = document.getElementById('collectionTotalTransfers');
+            const totalPreviousField = document.getElementById('collectionTotalPrevious');
+            const remainingBeforeField = document.getElementById('collectionRemainingBefore');
+            if (totalTransfersField) totalTransfersField.value = formatNumber(totalTransfers);
+            if (totalPreviousField) totalPreviousField.value = formatNumber(totalCollections);
+            if (remainingBeforeField) remainingBeforeField.value = formatNumber(remaining);
+            window.updateCollectionRemaining();
+        };
+
+        window.updateCollectionRemaining = function() {
+            const remainingBeforeField = document.getElementById('collectionRemainingBefore');
+            const amountField = document.getElementById('collectionAmount');
+            const remainingAfterField = document.getElementById('collectionRemainingAfter');
+            if (!remainingBeforeField || !amountField || !remainingAfterField) return;
+            const remainingBefore = parseFloat(remainingBeforeField.value.replace(/[^0-9.-]/g, '')) || 0;
+            const amount = parseFloat(amountField.value) || 0;
+            const remainingAfter = Math.max(0, remainingBefore - amount);
+            remainingAfterField.value = formatNumber(remainingAfter);
+        };
+
+        // ======================== MODAL HANDLING ========================
+        window.openModal = function(type, id = null) {
+            const modal = document.getElementById('modal');
+            const modalBody = document.getElementById('modalBody');
+            let html = '';
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0,10);
+            const timeStr = now.toLocaleTimeString('ar-EG');
+            
+            try {
+                if (type === 'merchant') {
+                    html = `<h3><i class="fas fa-user-plus"></i> ${id ? 'تعديل تاجر' : 'إضافة تاجر جديد'}</h3>
+                            <form id="modalForm">
+                                <div class="form-group"><label>رقم التاجر <span class="required">*</span></label><input type="text" id="merchantId" class="form-control" required ${id ? `value="${id}" readonly` : ''}></div>
+                                <div class="form-group"><label>اسم التاجر <span class="required">*</span></label><input type="text" id="merchantName" class="form-control" required></div>
+                                <div class="form-group"><label>اسم النشاط</label><input type="text" id="merchantActivity" class="form-control"></div>
+                                <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="merchantPhone" class="form-control"></div>
+                                <div class="form-group"><label>المنطقة</label><input type="text" id="merchantArea" class="form-control"></div>
+                                <div class="form-group"><label>العنوان</label><input type="text" id="merchantAddress" class="form-control"></div>
+                                <div class="form-group"><label>الحالة</label><select id="merchantStatus" class="form-control"><option value="نشط">نشط</option><option value="غير نشط">غير نشط</option></select></div>
+                                <div class="form-group"><label>رقم الحساب</label><input type="text" id="merchantAccount" class="form-control"></div>
+                                <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
+                            </form>`;
+                    modalBody.innerHTML = html;
+                    if (id) {
+                        const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
+                        if (merchant) {
+                            document.getElementById('merchantName').value = merchant['اسم التاجر'] || '';
+                            document.getElementById('merchantActivity').value = merchant['اسم النشاط'] || '';
+                            document.getElementById('merchantPhone').value = merchant['رقم الهاتف'] || '';
+                            document.getElementById('merchantArea').value = merchant['المنطقة'] || '';
+                            document.getElementById('merchantAddress').value = merchant['العنوان'] || '';
+                            document.getElementById('merchantStatus').value = merchant['الحالة'] || 'نشط';
+                            document.getElementById('merchantAccount').value = merchant['رقم الحساب'] || '';
+                        }
+                    }
+                    document.getElementById('modalForm').onsubmit = (e) => {
+                        e.preventDefault();
+                        const merchant = {
+                            'رقم التاجر': document.getElementById('merchantId').value,
+                            'اسم التاجر': document.getElementById('merchantName').value,
+                            'اسم النشاط': document.getElementById('merchantActivity').value,
+                            'رقم الهاتف': document.getElementById('merchantPhone').value,
+                            'المنطقة': document.getElementById('merchantArea').value,
+                            'العنوان': document.getElementById('merchantAddress').value,
+                            'الحالة': document.getElementById('merchantStatus').value,
+                            'رقم الحساب': document.getElementById('merchantAccount').value
+                        };
+                        if (id) {
+                            const idx = DB.merchants.findIndex(m => m['رقم التاجر'] == id);
+                            if (idx !== -1) DB.merchants[idx] = merchant;
+                        } else {
+                            DB.merchants.push(merchant);
+                        }
+                        saveData(STORAGE_KEYS.merchants, DB.merchants);
+                        loadTableData('merchants');
+                        closeModal();
+                        showToast(id ? 'تم تعديل التاجر' : 'تم إضافة التاجر');
+                    };
+                }
+                else if (type === 'machine') {
+                    html = `<h3><i class="fas fa-plus"></i> ${id ? 'تعديل مكنة' : 'إضافة مكنة جديدة'}</h3>
+                            <form id="modalForm">
+                                <div class="form-group"><label>رقم المكنة <span class="required">*</span></label><input type="text" id="machineId" class="form-control" required ${id ? `value="${id}" readonly` : ''}></div>
+                                <div class="form-group"><label>التاجر <span class="required">*</span></label><select id="machineMerchant" class="form-control" required>${DB.merchants.map(m => `<option value="${m['اسم التاجر']}">${m['اسم التاجر']}</option>`).join('')}</select></div>
+                                <div class="form-group"><label>الرقم التسلسلي</label><input type="text" id="machineSerial" class="form-control"></div>
+                                <div class="form-group"><label>التارجت الشهري</label><input type="number" id="machineTarget" class="form-control" step="any"></div>
+                                <div class="form-group"><label>الحالة</label><select id="machineStatus" class="form-control"><option value="نشطة">نشطة</option><option value="متوقفة">متوقفة</option><option value="صيانة">صيانة</option></select></div>
+                                <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
+                            </form>`;
+                    modalBody.innerHTML = html;
+                    if (id) {
+                        const machine = DB.machines.find(m => m['رقم المكنة'] == id);
+                        if (machine) {
+                            document.getElementById('machineMerchant').value = machine['اسم التاجر'] || '';
+                            document.getElementById('machineSerial').value = machine['الرقم التسلسلي'] || '';
+                            document.getElementById('machineTarget').value = machine['التارجت الشهري'] || '';
+                            document.getElementById('machineStatus').value = machine['الحالة'] || 'نشطة';
+                        }
+                    }
+                    document.getElementById('modalForm').onsubmit = (e) => {
+                        e.preventDefault();
+                        const machine = {
+                            'رقم المكنة': document.getElementById('machineId').value,
+                            'اسم التاجر': document.getElementById('machineMerchant').value,
+                            'الرقم التسلسلي': document.getElementById('machineSerial').value,
+                            'التارجت الشهري': Number(document.getElementById('machineTarget').value) || 0,
+                            'الحالة': document.getElementById('machineStatus').value
+                        };
+                        if (id) {
+                            const idx = DB.machines.findIndex(m => m['رقم المكنة'] == id);
+                            if (idx !== -1) DB.machines[idx] = machine;
+                        } else {
+                            DB.machines.push(machine);
+                        }
+                        saveData(STORAGE_KEYS.machines, DB.machines);
+                        loadTableData('machines');
+                        closeModal();
+                        showToast(id ? 'تم تعديل المكنة' : 'تم إضافة المكنة');
+                    };
+                }
+                else if (type === 'transfer') {
+                    html = `<h3><i class="fas fa-exchange-alt"></i> ${id ? 'تعديل تحويل' : 'تحويل جديد'}</h3>
+                            <form id="modalForm">
+                                <div class="form-group"><label>المكنة <span class="required">*</span></label><select id="transferMachine" class="form-control" required onchange="updateTransferMerchant()"><option value="">-- اختر مكنة --</option>${DB.machines.map(m => `<option value="${m['رقم المكنة']}" data-merchant="${m['اسم التاجر']}">${m['رقم المكنة']} - ${m['اسم التاجر']}</option>`).join('')}</select></div>
+                                <div class="form-group"><label>التاجر</label><input type="text" id="transferMerchant" class="form-control" readonly></div>
+                                <div class="form-group"><label>قيمة التحويل <span class="required">*</span></label><input type="number" id="transferAmount" class="form-control" step="any" required></div>
+                                <div class="form-group"><label>ملاحظات</label><input type="text" id="transferNotes" class="form-control"></div>
+                                <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
+                            </form>`;
+                    modalBody.innerHTML = html;
+                    if (id) {
+                        const tr = DB.transfers.find(t => t['رقم التحويل'] == id);
+                        if (tr) {
+                            setTimeout(() => {
+                                document.getElementById('transferMachine').value = tr['رقم المكنة'];
+                                updateTransferMerchant();
+                                document.getElementById('transferAmount').value = tr['قيمة التحويل'];
+                                document.getElementById('transferNotes').value = tr['ملاحظات'] || '';
+                            }, 50);
+                        }
+                    }
+                    document.getElementById('modalForm').onsubmit = (e) => {
+                        e.preventDefault();
+                        const transferData = {
+                            'رقم المكنة': document.getElementById('transferMachine').value,
+                            'اسم التاجر': document.getElementById('transferMerchant').value,
+                            'قيمة التحويل': Number(document.getElementById('transferAmount').value),
+                            'ملاحظات': document.getElementById('transferNotes').value,
+                        };
+                        if (id) {
+                            const idx = DB.transfers.findIndex(t => t['رقم التحويل'] == id);
+                            if (idx !== -1) {
+                                transferData['رقم التحويل'] = id;
+                                transferData['التاريخ'] = DB.transfers[idx]['التاريخ'];
+                                transferData['الوقت'] = DB.transfers[idx]['الوقت'];
+                                DB.transfers[idx] = transferData;
+                            }
+                        } else {
+                            transferData['رقم التحويل'] = Date.now().toString();
+                            transferData['التاريخ'] = dateStr;
+                            transferData['الوقت'] = timeStr;
+                            DB.transfers.push(transferData);
+                        }
+                        saveData(STORAGE_KEYS.transfers, DB.transfers);
+                        loadTableData('transfers');
+                        closeModal();
+                        showToast(id ? 'تم تعديل التحويل' : 'تم إضافة التحويل');
+                        renderDashboard();
+                    };
+                }
+                else if (type === 'collection') {
+                    html = `<h3><i class="fas fa-hand-holding-usd"></i> ${id ? 'تعديل تحصيل' : 'تحصيل جديد'}</h3>
+                            <form id="modalForm">
+                                <div class="form-group"><label>التاجر <span class="required">*</span></label><select id="collectionMerchant" class="form-control" required onchange="updateCollectionInfo()"><option value="">-- اختر تاجر --</option>${DB.merchants.map(m => `<option value="${m['اسم التاجر']}" data-id="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('')}</select></div>
+                                <div class="form-group"><label>إجمالي التحويلات</label><input type="text" id="collectionTotalTransfers" class="form-control" readonly></div>
+                                <div class="form-group"><label>إجمالي التحصيلات السابقة</label><input type="text" id="collectionTotalPrevious" class="form-control" readonly></div>
+                                <div class="form-group"><label>المتبقي قبل التحصيل</label><input type="text" id="collectionRemainingBefore" class="form-control" readonly></div>
+                                <div class="form-group"><label>قيمة التحصيل <span class="required">*</span></label><input type="number" id="collectionAmount" class="form-control" step="any" required oninput="updateCollectionRemaining()"></div>
+                                <div class="form-group"><label>نوع التحصيل</label><select id="collectionType" class="form-control"><option value="جزئي">جزئي</option><option value="كلي">كلي</option></select></div>
+                                <div class="form-group"><label>المتبقي بعد التحصيل</label><input type="text" id="collectionRemainingAfter" class="form-control" readonly></div>
+                                <div class="form-group"><label>ملاحظات</label><input type="text" id="collectionNotes" class="form-control"></div>
+                                <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
+                            </form>`;
+                    modalBody.innerHTML = html;
+                    if (id) {
+                        const col = DB.collections.find(c => c['رقم التحصيل'] == id);
+                        if (col) {
+                            setTimeout(() => {
+                                document.getElementById('collectionMerchant').value = col['اسم التاجر'];
+                                window.updateCollectionInfo(id);
+                                document.getElementById('collectionAmount').value = col['قيمة التحصيل'];
+                                document.getElementById('collectionType').value = col['نوع التحصيل'];
+                                document.getElementById('collectionRemainingAfter').value = formatNumber(col['المتبقي بعد التحصيل']);
+                                document.getElementById('collectionNotes').value = col['ملاحظات'] || '';
+                            }, 50);
+                        }
+                    }
+                    document.getElementById('modalForm').onsubmit = (e) => {
+                        e.preventDefault();
+                        const merchantName = document.getElementById('collectionMerchant').value;
+                        const amount = Number(document.getElementById('collectionAmount').value);
+                        const remainingAfter = Number(document.getElementById('collectionRemainingAfter').value.replace(/[^0-9.-]/g, '')) || 0;
+                        const collectionData = {
+                            'اسم التاجر': merchantName,
+                            'قيمة التحويل': parseFloat(document.getElementById('collectionTotalTransfers').value.replace(/[^0-9.-]/g, '')) || 0,
+                            'قيمة التحصيل': amount,
+                            'نوع التحصيل': document.getElementById('collectionType').value,
+                            'المتبقي بعد التحصيل': remainingAfter,
+                            'ملاحظات': document.getElementById('collectionNotes').value,
+                        };
+                        if (id) {
+                            const idx = DB.collections.findIndex(c => c['رقم التحصيل'] == id);
+                            if (idx !== -1) {
+                                collectionData['رقم التحصيل'] = id;
+                                collectionData['التاريخ'] = DB.collections[idx]['التاريخ'];
+                                collectionData['الوقت'] = DB.collections[idx]['الوقت'];
+                                DB.collections[idx] = collectionData;
+                            }
+                        } else {
+                            collectionData['رقم التحصيل'] = Date.now().toString();
+                            collectionData['التاريخ'] = dateStr;
+                            collectionData['الوقت'] = timeStr;
+                            DB.collections.push(collectionData);
+                        }
+                        saveData(STORAGE_KEYS.collections, DB.collections);
+                        loadTableData('collections');
+                        closeModal();
+                        showToast(id ? 'تم تعديل التحصيل' : 'تم إضافة التحصيل');
+                        renderDashboard();
+                    };
+                }
+                modal.classList.add('show');
+            } catch (err) {
+                console.error('Error in openModal:', err);
+                showToast('حدث خطأ تقني، راجع وحدة التحكم', 'error');
+            }
+        };
+        window.closeModal = function() { document.getElementById('modal').classList.remove('show'); };
+        window.showConfirm = function(msg, callback) {
+            document.getElementById('confirmMsg').innerText = msg;
+            confirmCallback = callback;
+            document.getElementById('confirmModal').classList.add('show');
+            document.getElementById('confirmBtn').onclick = () => { if (confirmCallback) confirmCallback(); closeConfirm(); };
+        };
+        window.closeConfirm = function() { document.getElementById('confirmModal').classList.remove('show'); };
+
+        // ======================== EDIT/DELETE FUNCTIONS ========================
+        window.editMerchant = function(id) { openModal('merchant', id); };
+        window.delMerchant = function(id) { showConfirm('هل تريد حذف هذا التاجر؟', () => { DB.merchants = DB.merchants.filter(m => m['رقم التاجر'] != id); saveData(STORAGE_KEYS.merchants, DB.merchants); loadTableData('merchants'); showToast('تم حذف التاجر'); }); };
+        window.editMachine = function(id) { openModal('machine', id); };
+        window.delMachine = function(id) { showConfirm('هل تريد حذف هذه المكنة؟', () => { DB.machines = DB.machines.filter(m => m['رقم المكنة'] != id); saveData(STORAGE_KEYS.machines, DB.machines); loadTableData('machines'); showToast('تم حذف المكنة'); }); };
+        window.editTransfer = function(id) { openModal('transfer', id); };
+        window.delTransfer = function(id) { showConfirm('حذف التحويل؟', () => { DB.transfers = DB.transfers.filter(t => t['رقم التحويل'] != id); saveData(STORAGE_KEYS.transfers, DB.transfers); loadTableData('transfers'); renderDashboard(); showToast('تم حذف التحويل'); }); };
+        window.editCollection = function(id) { openModal('collection', id); };
+        window.delCollection = function(id) { showConfirm('حذف التحصيل؟', () => { DB.collections = DB.collections.filter(c => c['رقم التحصيل'] != id); saveData(STORAGE_KEYS.collections, DB.collections); loadTableData('collections'); renderDashboard(); showToast('تم حذف التحصيل'); }); };
+        window.deleteArchive = function(id) { showConfirm('حذف الأرشيف؟', () => { DB.archive = DB.archive.filter(a => a['رقم الأرشيف'] != id); saveData(STORAGE_KEYS.archive, DB.archive); renderArchive(); showToast('تم حذف الأرشيف'); }); };
+
+        // ======================== STATEMENT ========================
+        window.handleMerchantSearch = function(query) {
             const list = document.getElementById('stmtMerchantList');
-            const searchField = document.getElementById('stmtMerchantSearch');
-            if (list && searchField && !searchField.contains(e.target) && !list.contains(e.target)) list.style.display = 'none';
-        });
-        // تأكيد أن جميع الدوال موجودة في النطاق العام
-        console.log('All functions loaded:', { editMerchant, editMachine, openModal, exportExcel, logout, loadData });
-    };
+            if (!query) { list.style.display = 'none'; return; }
+            const normQuery = normalizeArabic(query);
+            const filtered = DB.merchants.filter(m => normalizeArabic(m['اسم التاجر']).includes(normQuery) || normalizeArabic(m['رقم التاجر']).includes(normQuery));
+            if (!filtered.length) { list.innerHTML = '<div class="no-result" style="padding:10px; color:#999;">لا توجد نتائج</div>'; }
+            else { list.innerHTML = filtered.map(m => `<div onclick="selectMerchantForStatement('${m['رقم التاجر']}', '${m['اسم التاجر']}')">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join(''); }
+            list.style.display = 'block';
+        };
+        window.selectMerchantForStatement = function(id, name) {
+            document.getElementById('stmtMerchantId').value = id;
+            document.getElementById('stmtMerchantSearch').value = name;
+            document.getElementById('stmtMerchantSelect').value = id;
+            document.getElementById('stmtMerchantList').style.display = 'none';
+            getStatement(id);
+        };
+        window.handleDropdownSelect = function(value) {
+            if (value) {
+                document.getElementById('stmtMerchantId').value = value;
+                const merchant = DB.merchants.find(m => m['رقم التاجر'] == value);
+                document.getElementById('stmtMerchantSearch').value = merchant ? merchant['اسم التاجر'] : '';
+                getStatement(value);
+            } else {
+                document.getElementById('stmtMerchantId').value = '';
+                document.getElementById('stmtMerchantSearch').value = '';
+                document.getElementById('stmtT').innerText = '0';
+                document.getElementById('stmtC').innerText = '0';
+                document.getElementById('stmtR').innerText = '0';
+                document.getElementById('tblStatement').innerHTML = '<tr><td colspan="6">اختر تاجراً لعرض كشف الحساب</td></tr>';
+            }
+        };
+        function getStatement(merchantId) {
+            const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
+            if (!merchant) return;
+            const merchantName = merchant['اسم التاجر'];
+            const transfers = DB.transfers.filter(t => t['اسم التاجر'] === merchantName);
+            const collections = DB.collections.filter(c => c['اسم التاجر'] === merchantName);
+            const totalTransfers = transfers.reduce((s,t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+            const totalCollections = collections.reduce((s,c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+            const remaining = totalTransfers - totalCollections;
+            document.getElementById('stmtT').innerText = formatNumber(totalTransfers);
+            document.getElementById('stmtC').innerText = formatNumber(totalCollections);
+            document.getElementById('stmtR').innerText = formatNumber(remaining);
+            const allMovements = [...transfers.map(t => ({ ...t, type: 'تحويل' })), ...collections.map(c => ({ ...c, type: 'تحصيل' }))];
+            allMovements.sort((a,b) => new Date(`${b['التاريخ']} ${b['الوقت']}`) - new Date(`${a['التاريخ']} ${a['الوقت']}`));
+            let rows = '';
+            let runningBalance = 0;
+            allMovements.forEach(m => {
+                if (m.type === 'تحويل') runningBalance += Number(m['قيمة التحويل']) || 0;
+                else runningBalance -= Number(m['قيمة التحصيل']) || 0;
+                rows += `<tr><td>${formatDate(m['التاريخ'])}</td><td>${formatTime(m['الوقت'])}</td><td><span class="badge badge-primary">${m.type}</span></td><td>${formatNumber(m.type === 'تحويل' ? m['قيمة التحويل'] : m['قيمة التحصيل'])}</td><td>${formatNumber(runningBalance)}</td><td>${m['ملاحظات'] || '-'}</td></tr>`;
+            });
+            document.getElementById('tblStatement').innerHTML = rows || '<tr><td colspan="6">لا توجد حركات</td></tr>';
+        }
+
+        // ======================== ARCHIVE MONTH ========================
+        window.confirmCloseMonth = function() {
+            showConfirm('هل تريد إغلاق الشهر الحالي ونقل البيانات إلى الأرشيف؟', () => {
+                const now = new Date();
+                const monthName = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
+                const currentMonth = now.getMonth(), currentYear = now.getFullYear();
+                const monthlyTransfers = DB.transfers.filter(t => new Date(t['التاريخ']).getMonth() === currentMonth && new Date(t['التاريخ']).getFullYear() === currentYear);
+                const monthlyCollections = DB.collections.filter(c => new Date(c['التاريخ']).getMonth() === currentMonth && new Date(c['التاريخ']).getFullYear() === currentYear);
+                const totalTransfers = monthlyTransfers.reduce((s,t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+                const totalCollections = monthlyCollections.reduce((s,c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+                const archiveEntry = {
+                    'رقم الأرشيف': Date.now().toString(),
+                    'الشهر': monthName,
+                    'عدد التحويلات': monthlyTransfers.length,
+                    'إجمالي التحويلات': totalTransfers,
+                    'عدد التحصيلات': monthlyCollections.length,
+                    'إجمالي التحصيلات': totalCollections,
+                    'إجمالي المتبقي': totalTransfers - totalCollections
+                };
+                DB.archive.push(archiveEntry);
+                saveData(STORAGE_KEYS.archive, DB.archive);
+                renderArchive();
+                showToast('تم إغلاق الشهر بنجاح');
+            });
+        };
+
+        // ======================== EXPORT EXCEL ========================
+        window.exportExcel = function() {
+            const wb = XLSX.utils.book_new();
+            const wsMerchants = XLSX.utils.json_to_sheet(DB.merchants);
+            const wsMachines = XLSX.utils.json_to_sheet(DB.machines);
+            const wsTransfers = XLSX.utils.json_to_sheet(DB.transfers);
+            const wsCollections = XLSX.utils.json_to_sheet(DB.collections);
+            const wsArchive = XLSX.utils.json_to_sheet(DB.archive);
+            XLSX.utils.book_append_sheet(wb, wsMerchants, 'التجار');
+            XLSX.utils.book_append_sheet(wb, wsMachines, 'المكن');
+            XLSX.utils.book_append_sheet(wb, wsTransfers, 'التحويلات');
+            XLSX.utils.book_append_sheet(wb, wsCollections, 'التحصيلات');
+            XLSX.utils.book_append_sheet(wb, wsArchive, 'الأرشيف');
+            XLSX.writeFile(wb, `Axentro_Data_${new Date().toISOString().slice(0,10)}.xlsx`);
+            showToast('تم تصدير البيانات بنجاح');
+        };
+
+        // ======================== INIT ========================
+        window.loadData = loadData; // expose for update button
+
+        window.onload = () => {
+            initLocalStorage();
+            const logged = localStorage.getItem('axentro_logged') === 'true';
+            if (logged) {
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('appBox').style.display = 'flex';
+                loadData();
+            } else {
+                document.getElementById('loginBox').style.display = 'flex';
+                document.getElementById('appBox').style.display = 'none';
+            }
+            const searchInput = document.getElementById('merchantSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    merchantSearchTerm = e.target.value;
+                    renderMerchants();
+                });
+            }
+            document.addEventListener('click', (e) => {
+                const list = document.getElementById('stmtMerchantList');
+                const searchField = document.getElementById('stmtMerchantSearch');
+                if (list && searchField && !searchField.contains(e.target) && !list.contains(e.target)) list.style.display = 'none';
+            });
+            console.log('Axentro System: Initialized successfully. All functions are global.');
+        };
+    })();
 </script>
 </body>
 </html>
