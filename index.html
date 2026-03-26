@@ -226,6 +226,16 @@
     function formatTime(t) { return t || '-'; }
     function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 
+    // دالة توحيد الحروف للبحث الذكي
+    function normalizeArabic(text) {
+        if (!text) return '';
+        return text.toString().toLowerCase()
+            .replace(/[أإآ]/g, 'ا')
+            .replace(/ة/g, 'ه')
+            .replace(/ى/g, 'ي')
+            .replace(/[ئؤ]/g, 'ي'); // تبسيط للبحث
+    }
+
     // ======================== LOGIN / LOGOUT ========================
     function handleEnter(e) { if (e.key === 'Enter') login(); }
     function login() {
@@ -330,8 +340,8 @@
     function renderMerchants() {
         let merchants = DB.merchants;
         if (merchantSearchTerm) {
-            const term = merchantSearchTerm.toLowerCase();
-            merchants = merchants.filter(m => (m['اسم التاجر'] || '').toLowerCase().includes(term) || (m['رقم التاجر'] || '').toString().includes(term));
+            const term = normalizeArabic(merchantSearchTerm);
+            merchants = merchants.filter(m => normalizeArabic(m['اسم التاجر']).includes(term) || normalizeArabic(m['رقم التاجر']).includes(term));
         }
         const tbody = document.getElementById('tblMerchants');
         if (!merchants.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">لا يوجد تجار</td></tr>'; return; }
@@ -403,6 +413,7 @@
         const now = new Date();
         const dateStr = now.toISOString().slice(0,10);
         const timeStr = now.toLocaleTimeString('ar-EG');
+        
         if (type === 'merchant') {
             html = `<h3><i class="fas fa-user-plus"></i> ${id ? 'تعديل تاجر' : 'إضافة تاجر جديد'}</h3>
                     <form id="modalForm">
@@ -495,7 +506,7 @@
             };
         }
         else if (type === 'transfer') {
-            html = `<h3><i class="fas fa-exchange-alt"></i> تحويل جديد</h3>
+            html = `<h3><i class="fas fa-exchange-alt"></i> ${id ? 'تعديل تحويل' : 'تحويل جديد'}</h3>
                     <form id="modalForm">
                         <div class="form-group"><label>المكنة <span class="required">*</span></label><select id="transferMachine" class="form-control" required onchange="updateTransferMerchant()"><option value="">-- اختر مكنة --</option>${DB.machines.map(m => `<option value="${m['رقم المكنة']}" data-merchant="${m['اسم التاجر']}">${m['رقم المكنة']} - ${m['اسم التاجر']}</option>`).join('')}</select></div>
                         <div class="form-group"><label>التاجر</label><input type="text" id="transferMerchant" class="form-control" readonly></div>
@@ -504,32 +515,64 @@
                         <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
                     </form>`;
             modalBody.innerHTML = html;
+            
+            // دالة تحديث التاجر بناءً على المكنة
             window.updateTransferMerchant = () => {
                 const sel = document.getElementById('transferMachine');
                 const merchant = sel.options[sel.selectedIndex]?.getAttribute('data-merchant') || '';
                 document.getElementById('transferMerchant').value = merchant;
             };
+
+            // تعبئة البيانات في حالة التعديل
+            if (id) {
+                const tr = DB.transfers.find(t => t['رقم التحويل'] == id);
+                if (tr) {
+                    // تأخير التعبئة قليلاً لضمان وجود العناصر
+                    setTimeout(() => {
+                        document.getElementById('transferMachine').value = tr['رقم المكنة'];
+                        updateTransferMerchant();
+                        document.getElementById('transferAmount').value = tr['قيمة التحويل'];
+                        document.getElementById('transferNotes').value = tr['ملاحظات'] || '';
+                    }, 50);
+                }
+            }
+
             document.getElementById('modalForm').onsubmit = (e) => {
                 e.preventDefault();
-                const transfer = {
-                    'رقم التحويل': Date.now().toString(),
+                const transferData = {
                     'رقم المكنة': document.getElementById('transferMachine').value,
                     'اسم التاجر': document.getElementById('transferMerchant').value,
                     'قيمة التحويل': Number(document.getElementById('transferAmount').value),
                     'ملاحظات': document.getElementById('transferNotes').value,
-                    'التاريخ': dateStr,
-                    'الوقت': timeStr
                 };
-                DB.transfers.push(transfer);
+
+                if (id) {
+                    // تعديل
+                    const idx = DB.transfers.findIndex(t => t['رقم التحويل'] == id);
+                    if (idx !== -1) {
+                        // الحفاظ على التاريخ والوقت الأصليين أو تحديثهم حسب الرغبة، هنا سنحافظ عليهم
+                        transferData['رقم التحويل'] = id;
+                        transferData['التاريخ'] = DB.transfers[idx]['التاريخ'];
+                        transferData['الوقت'] = DB.transfers[idx]['الوقت'];
+                        DB.transfers[idx] = transferData;
+                    }
+                } else {
+                    // إضافة
+                    transferData['رقم التحويل'] = Date.now().toString();
+                    transferData['التاريخ'] = dateStr;
+                    transferData['الوقت'] = timeStr;
+                    DB.transfers.push(transferData);
+                }
+                
                 saveData(STORAGE_KEYS.transfers, DB.transfers);
                 loadTableData('transfers');
                 closeModal();
-                showToast('تم إضافة التحويل');
-                renderDashboard(); // تحديث الداشبورد
+                showToast(id ? 'تم تعديل التحويل' : 'تم إضافة التحويل');
+                renderDashboard();
             };
         }
         else if (type === 'collection') {
-            html = `<h3><i class="fas fa-hand-holding-usd"></i> تحصيل جديد</h3>
+            html = `<h3><i class="fas fa-hand-holding-usd"></i> ${id ? 'تعديل تحصيل' : 'تحصيل جديد'}</h3>
                     <form id="modalForm">
                         <div class="form-group"><label>التاجر <span class="required">*</span></label><select id="collectionMerchant" class="form-control" required onchange="updateCollectionInfo()"><option value="">-- اختر تاجر --</option>${DB.merchants.map(m => `<option value="${m['اسم التاجر']}" data-id="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`).join('')}</select></div>
                         <div class="form-group"><label>إجمالي التحويلات</label><input type="text" id="collectionTotalTransfers" class="form-control" readonly></div>
@@ -542,14 +585,18 @@
                         <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
                     </form>`;
             modalBody.innerHTML = html;
+            
             window.updateCollectionInfo = () => {
                 const merchantName = document.getElementById('collectionMerchant').value;
                 if (!merchantName) return;
-                const transfers = DB.transfers.filter(t => t['اسم التاجر'] === merchantName);
+                // فلترة التحويلات والتحصيلات السابقة (استبعاد التحصيل الحالي في حالة التعديل)
+                let transfers = DB.transfers.filter(t => t['اسم التاجر'] === merchantName);
+                let collections = DB.collections.filter(c => c['اسم التاجر'] === merchantName && c['رقم التحصيل'] != id);
+                
                 const totalTransfers = transfers.reduce((s,t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-                const collections = DB.collections.filter(c => c['اسم التاجر'] === merchantName);
                 const totalCollections = collections.reduce((s,c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
                 const remaining = totalTransfers - totalCollections;
+                
                 document.getElementById('collectionTotalTransfers').value = formatNumber(totalTransfers);
                 document.getElementById('collectionTotalPrevious').value = formatNumber(totalCollections);
                 document.getElementById('collectionRemainingBefore').value = formatNumber(remaining);
@@ -561,27 +608,57 @@
                 const remainingAfter = Math.max(0, remainingBefore - amount);
                 document.getElementById('collectionRemainingAfter').value = formatNumber(remainingAfter);
             };
+
+            if (id) {
+                const col = DB.collections.find(c => c['رقم التحصيل'] == id);
+                if (col) {
+                    setTimeout(() => {
+                        document.getElementById('collectionMerchant').value = col['اسم التاجر'];
+                        updateCollectionInfo(); // تحميل الحسابات
+                        document.getElementById('collectionAmount').value = col['قيمة التحصيل'];
+                        document.getElementById('collectionType').value = col['نوع التحصيل'];
+                        document.getElementById('collectionRemainingAfter').value = formatNumber(col['المتبقي بعد التحصيل']);
+                        document.getElementById('collectionNotes').value = col['ملاحظات'] || '';
+                        // تعديل حقل المتبقي قبل التحصيل ليظهر الرقم الصحيح (بدون طرح قيمة التحصيل الحالية من نفسها)
+                        // تم معالجته في updateCollectionInfo عبر تصفية الـ id
+                    }, 50);
+                }
+            }
+
             document.getElementById('modalForm').onsubmit = (e) => {
                 e.preventDefault();
                 const merchantName = document.getElementById('collectionMerchant').value;
                 const amount = Number(document.getElementById('collectionAmount').value);
                 const remainingAfter = Number(document.getElementById('collectionRemainingAfter').value.replace(/[^0-9.-]/g, '')) || 0;
-                const collection = {
-                    'رقم التحصيل': Date.now().toString(),
+                
+                const collectionData = {
                     'اسم التاجر': merchantName,
                     'قيمة التحويل': parseFloat(document.getElementById('collectionTotalTransfers').value.replace(/[^0-9.-]/g, '')) || 0,
                     'قيمة التحصيل': amount,
                     'نوع التحصيل': document.getElementById('collectionType').value,
                     'المتبقي بعد التحصيل': remainingAfter,
                     'ملاحظات': document.getElementById('collectionNotes').value,
-                    'التاريخ': dateStr,
-                    'الوقت': timeStr
                 };
-                DB.collections.push(collection);
+
+                if (id) {
+                    const idx = DB.collections.findIndex(c => c['رقم التحصيل'] == id);
+                    if (idx !== -1) {
+                        collectionData['رقم التحصيل'] = id;
+                        collectionData['التاريخ'] = DB.collections[idx]['التاريخ'];
+                        collectionData['الوقت'] = DB.collections[idx]['الوقت'];
+                        DB.collections[idx] = collectionData;
+                    }
+                } else {
+                    collectionData['رقم التحصيل'] = Date.now().toString();
+                    collectionData['التاريخ'] = dateStr;
+                    collectionData['الوقت'] = timeStr;
+                    DB.collections.push(collectionData);
+                }
+                
                 saveData(STORAGE_KEYS.collections, DB.collections);
                 loadTableData('collections');
                 closeModal();
-                showToast('تم إضافة التحصيل');
+                showToast(id ? 'تم تعديل التحصيل' : 'تم إضافة التحصيل');
                 renderDashboard();
             };
         }
@@ -601,18 +678,28 @@
     function delMerchant(id) { showConfirm('هل تريد حذف هذا التاجر؟', () => { DB.merchants = DB.merchants.filter(m => m['رقم التاجر'] != id); saveData(STORAGE_KEYS.merchants, DB.merchants); loadTableData('merchants'); showToast('تم حذف التاجر'); }); }
     function editMachine(id) { openModal('machine', id); }
     function delMachine(id) { showConfirm('هل تريد حذف هذه المكنة؟', () => { DB.machines = DB.machines.filter(m => m['رقم المكنة'] != id); saveData(STORAGE_KEYS.machines, DB.machines); loadTableData('machines'); showToast('تم حذف المكنة'); }); }
-    function editTransfer(id) { /* مشابه */ showToast('تعديل التحويلات سيأتي لاحقاً', 'warning'); }
+    
+    // تم تفعيل تعديل التحويلات والتحصيلات
+    function editTransfer(id) { openModal('transfer', id); }
     function delTransfer(id) { showConfirm('حذف التحويل؟', () => { DB.transfers = DB.transfers.filter(t => t['رقم التحويل'] != id); saveData(STORAGE_KEYS.transfers, DB.transfers); loadTableData('transfers'); renderDashboard(); showToast('تم حذف التحويل'); }); }
-    function editCollection(id) { showToast('تعديل التحصيلات سيأتي لاحقاً', 'warning'); }
+    
+    function editCollection(id) { openModal('collection', id); }
     function delCollection(id) { showConfirm('حذف التحصيل؟', () => { DB.collections = DB.collections.filter(c => c['رقم التحصيل'] != id); saveData(STORAGE_KEYS.collections, DB.collections); loadTableData('collections'); renderDashboard(); showToast('تم حذف التحصيل'); }); }
+    
     function deleteArchive(id) { showConfirm('حذف الأرشيف؟', () => { DB.archive = DB.archive.filter(a => a['رقم الأرشيف'] != id); saveData(STORAGE_KEYS.archive, DB.archive); renderArchive(); showToast('تم حذف الأرشيف'); }); }
 
     // ======================== STATEMENT ========================
     function handleMerchantSearch(query) {
         const list = document.getElementById('stmtMerchantList');
         if (!query) { list.style.display = 'none'; return; }
-        const filtered = DB.merchants.filter(m => (m['اسم التاجر'] || '').includes(query) || (m['رقم التاجر'] || '').toString().includes(query));
-        if (!filtered.length) { list.innerHTML = '<div class="no-result">لا توجد نتائج</div>'; }
+        const normQuery = normalizeArabic(query);
+        
+        const filtered = DB.merchants.filter(m => 
+            normalizeArabic(m['اسم التاجر']).includes(normQuery) || 
+            normalizeArabic(m['رقم التاجر']).includes(normQuery)
+        );
+        
+        if (!filtered.length) { list.innerHTML = '<div class="no-result" style="padding:10px; color:#999;">لا توجد نتائج</div>'; }
         else { list.innerHTML = filtered.map(m => `<div onclick="selectMerchantForStatement('${m['رقم التاجر']}', '${m['اسم التاجر']}')">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join(''); }
         list.style.display = 'block';
     }
