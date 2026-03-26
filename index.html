@@ -152,7 +152,7 @@
 
 <div id="loginBox"><div class="login-card"><div class="login-logo"><i class="fas fa-store"></i></div><h2>Axentro System</h2><p>نظام إدارة التجار والمكن</p><input type="password" id="passInput" placeholder="كلمة المرور" onkeypress="handleEnter(event)"><button class="btn btn-primary btn-block" onclick="login()"><i class="fas fa-sign-in-alt"></i> دخول</button></div><footer style="margin-top: 2rem; background: transparent; color: #64748b;"><p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p><div class="qr-box"><a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank"><img src="qr-links.png" alt="QR Code"><span><i class="fas fa-qrcode"></i> QR Scan Me</span></a></div></footer></div>
 
-<div class="app-container" id="appBox"><nav class="navbar"><div class="logo"><i class="fas fa-store"></i> Axentro</div><div class="navbar-actions"><div id="connIndicator" class="conn-status live"><div class="conn-dot"></div><span>متصل</span></div><button class="btn btn-primary btn-sm" onclick="loadData()"><i class="fas fa-sync-alt"></i> تحديث</button><button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="fas fa-file-excel"></i> تصدير</button><button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button></div></nav><div class="tabs-nav"><div class="tab-link active" onclick="showPage('home', this)"><i class="fas fa-home"></i> الرئيسية</div><div class="tab-link" onclick="showPage('merchants', this)"><i class="fas fa-users"></i> التجار</div><div class="tab-link" onclick="showPage('machines', this)"><i class="fas fa-cash-register"></i> المكن</div><div class="tab-link" onclick="showPage('transfers', this)"><i class="fas fa-exchange-alt"></i> التحويلات</div><div class="tab-link" onclick="showPage('collections', this)"><i class="fas fa-hand-holding-usd"></i> التحصيلات</div><div class="tab-link" onclick="showPage('statement', this)"><i class="fas fa-file-invoice-dollar"></i> كشف حساب</div><div class="tab-link" onclick="showPage('archive', this)"><i class="fas fa-archive"></i> الأرشيف</div></div><div class="content"><div id="page-home" class="page active"><div class="stats-grid" id="dashStats"></div><div class="table-box"><div class="table-header"><h3><i class="fas fa-bolt"></i> إجراءات سريعة</h3></div><div class="quick-actions"><button class="btn btn-success" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button><button class="btn btn-primary" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button><button class="btn btn-secondary" onclick="openModal('merchant')"><i class="fas fa-user-plus"></i> تاجر جديد</button><button class="btn btn-secondary" onclick="openModal('machine')"><i class="fas fa-plus"></i> مكنة جديدة</button></div></div><div class="table-box"><div class="table-header"><h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3></div><div class="table-container"><table><thead><tr><th>المكنة</th><th>التاجر</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr></thead><tbody id="tblTopMachines"></tbody></table></div></div></div><div id="page-merchants" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-users"></i> قائمة التجار</h3><div style="display: flex; gap: 0.5rem; align-items: center;"><input type="text" id="merchantSearchInput" class="form-control" placeholder="بحث بالاسم أو رقم التاجر..." style="width: 220px;"><button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button></div></div><div class="table-container"><table><thead><tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMerchants"></tbody></table></div></div></div><div id="page-machines" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-cash-register"></i> المكن</h3><button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button></div><div class="table-container"><table><thead><tr><th>رقم المكنة</th><th>التاجر</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMachines"></tbody></table></div></div></div><div id="page-transfers" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3><button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="tblTransfers"></tbody></table></div></div></div><div id="page-collections" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>قيمة التحويل</th><th>قيمة التحصيل</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>إجراء</th></tr></thead><tbody id="tblCollections"></tbody></table></div></div></div><div id="page-statement" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3><div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;"><select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value)"><option value="">-- اختر تاجر --</option></select><div style="position: relative; width: 200px;"><input type="text" id="stmtMerchantSearch" class="form-control" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value)"><input type="hidden" id="stmtMerchantId"><div id="stmtMerchantList" class="search-results"></div></div></div></div><div style="padding: 1rem;"><div class="stats-grid"><div class="stat-card"><h4>إجمالي تحويلاته</h4><div class="val" id="stmtT">0</div></div><div class="stat-card success"><h4>إجمالي تحصيلاته</h4><div class="val" id="stmtC">0</div></div><div class="stat-card danger"><h4>المتبقي عليه</h4><div class="val" id="stmtR">0</div></div></div><h4 style="margin: 1rem 0; color: var(--muted);"><i class="fas fa-history"></i> الحركات</h4><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th><th>المتبقي بعد الحركة</th><th>ملاحظات</th></tr></thead><tbody id="tblStatement"></tbody></table></div></div></div></div><div id="page-archive" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-archive"></i> الأرشيف</h3><button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد</button></div><div class="table-container"><table><thead><tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr></thead><tbody id="tblArchive"></tbody></table></div></div></div></div><footer><p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p><div class="qr-box"><a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank"><img src="qr-links.png" alt="QR Code"><span><i class="fas fa-qrcode"></i> QR Scan Me</span></a></div></footer></div>
+<div class="app-container" id="appBox"><nav class="navbar"><div class="logo"><i class="fas fa-store"></i> Axentro</div><div class="navbar-actions"><div id="connIndicator" class="conn-status live"><div class="conn-dot"></div><span>متصل</span></div><button class="btn btn-primary btn-sm" onclick="loadData()"><i class="fas fa-sync-alt"></i> تحديث</button><button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="fas fa-file-excel"></i> تصدير</button><button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button></div></nav><div class="tabs-nav"><div class="tab-link active" onclick="showPage('home', this)"><i class="fas fa-home"></i> الرئيسية</div><div class="tab-link" onclick="showPage('merchants', this)"><i class="fas fa-users"></i> التجار</div><div class="tab-link" onclick="showPage('machines', this)"><i class="fas fa-cash-register"></i> المكن</div><div class="tab-link" onclick="showPage('transfers', this)"><i class="fas fa-exchange-alt"></i> التحويلات</div><div class="tab-link" onclick="showPage('collections', this)"><i class="fas fa-hand-holding-usd"></i> التحصيلات</div><div class="tab-link" onclick="showPage('statement', this)"><i class="fas fa-file-invoice-dollar"></i> كشف حساب</div><div class="tab-link" onclick="showPage('archive', this)"><i class="fas fa-archive"></i> الأرشيف</div></div><div class="content"><div id="page-home" class="page active"><div class="stats-grid" id="dashStats"></div><div class="table-box"><div class="table-header"><h3><i class="fas fa-bolt"></i> إجراءات سريعة</h3></div><div class="quick-actions"><button class="btn btn-success" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button><button class="btn btn-primary" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button><button class="btn btn-secondary" onclick="openModal('merchant')"><i class="fas fa-user-plus"></i> تاجر جديد</button><button class="btn btn-secondary" onclick="openModal('machine')"><i class="fas fa-plus"></i> مكنة جديدة</button></div></div><div class="table-box"><div class="table-header"><h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3></div><div class="table-container">\n<table>\n<thead>\n<tr><th>المكنة</th><th>التاجر</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr>\n</thead>\n<tbody id="tblTopMachines"></tbody>\n</table>\n</div></div></div><div id="page-merchants" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-users"></i> قائمة التجار</h3><div style="display: flex; gap: 0.5rem; align-items: center;"><input type="text" id="merchantSearchInput" class="form-control" placeholder="بحث بالاسم أو رقم التاجر..." style="width: 220px;"><button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button></div></div><div class="table-container">\n<table>\n<thead>\n<tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr>\n</thead>\n<tbody id="tblMerchants"></tbody>\n</table>\n</div></div></div><div id="page-machines" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-cash-register"></i> المكن</h3><button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button></div><div class="table-container">\n<table>\n<thead>\n<tr><th>رقم المكنة</th><th>التاجر</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr>\n</thead>\n<tbody id="tblMachines"></tbody>\n</table>\n</div></div></div><div id="page-transfers" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3><button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button></div><div class="table-container">\n<table>\n<thead>\n<tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr>\n</thead>\n<tbody id="tblTransfers"></tbody>\n</table>\n</div></div></div><div id="page-collections" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button></div><div class="table-container">\n<table>\n<thead>\n<tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>قيمة التحويل</th><th>قيمة التحصيل</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>إجراء</th></tr>\n</thead>\n<tbody id="tblCollections"></tbody>\n</table>\n</div></div></div><div id="page-statement" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3><div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;"><select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value)"><option value="">-- اختر تاجر --</option></select><div style="position: relative; width: 200px;"><input type="text" id="stmtMerchantSearch" class="form-control" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value)"><input type="hidden" id="stmtMerchantId"><div id="stmtMerchantList" class="search-results"></div></div></div></div><div style="padding: 1rem;"><div class="stats-grid"><div class="stat-card"><h4>إجمالي تحويلاته</h4><div class="val" id="stmtT">0</div></div><div class="stat-card success"><h4>إجمالي تحصيلاته</h4><div class="val" id="stmtC">0</div></div><div class="stat-card danger"><h4>المتبقي عليه</h4><div class="val" id="stmtR">0</div></div></div><h4 style="margin: 1rem 0; color: var(--muted);"><i class="fas fa-history"></i> الحركات</h4><div class="table-container">\n<table>\n<thead>\n<tr><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th><th>المتبقي بعد الحركة</th><th>ملاحظات</th></tr>\n</thead>\n<tbody id="tblStatement"></tbody>\n</table>\n</div></div></div></div><div id="page-archive" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-archive"></i> الأرشيف</h3><button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد</button></div><div class="table-container">\n<table>\n<thead>\n<tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr>\n</thead>\n<tbody id="tblArchive"></tbody>\n</table>\n</div></div></div></div><footer><p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p><div class="qr-box"><a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank"><img src="qr-links.png" alt="QR Code"><span><i class="fas fa-qrcode"></i> QR Scan Me</span></a></div></footer></div>
 
 <div id="modal" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal()">×</span><div id="modalBody"></div></div></div>
 
@@ -182,18 +182,10 @@
             ];
             localStorage.setItem(STORAGE_KEYS.machines, JSON.stringify(sampleMachines));
         }
-        if (!localStorage.getItem(STORAGE_KEYS.transfers)) {
-            localStorage.setItem(STORAGE_KEYS.transfers, JSON.stringify([]));
-        }
-        if (!localStorage.getItem(STORAGE_KEYS.collections)) {
-            localStorage.setItem(STORAGE_KEYS.collections, JSON.stringify([]));
-        }
-        if (!localStorage.getItem(STORAGE_KEYS.archive)) {
-            localStorage.setItem(STORAGE_KEYS.archive, JSON.stringify([]));
-        }
-        if (!localStorage.getItem(STORAGE_KEYS.requests)) {
-            localStorage.setItem(STORAGE_KEYS.requests, JSON.stringify([]));
-        }
+        if (!localStorage.getItem(STORAGE_KEYS.transfers)) localStorage.setItem(STORAGE_KEYS.transfers, JSON.stringify([]));
+        if (!localStorage.getItem(STORAGE_KEYS.collections)) localStorage.setItem(STORAGE_KEYS.collections, JSON.stringify([]));
+        if (!localStorage.getItem(STORAGE_KEYS.archive)) localStorage.setItem(STORAGE_KEYS.archive, JSON.stringify([]));
+        if (!localStorage.getItem(STORAGE_KEYS.requests)) localStorage.setItem(STORAGE_KEYS.requests, JSON.stringify([]));
     }
 
     function getData(key) { return JSON.parse(localStorage.getItem(key) || '[]'); }
@@ -225,15 +217,13 @@
     }
     function formatTime(t) { return t || '-'; }
     function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
-
-    // دالة توحيد الحروف للبحث الذكي
     function normalizeArabic(text) {
         if (!text) return '';
         return text.toString().toLowerCase()
             .replace(/[أإآ]/g, 'ا')
             .replace(/ة/g, 'ه')
             .replace(/ى/g, 'ي')
-            .replace(/[ئؤ]/g, 'ي'); // تبسيط للبحث
+            .replace(/[ئؤ]/g, 'ي');
     }
 
     // ======================== LOGIN / LOGOUT ========================
@@ -516,18 +506,15 @@
                     </form>`;
             modalBody.innerHTML = html;
             
-            // دالة تحديث التاجر بناءً على المكنة
             window.updateTransferMerchant = () => {
                 const sel = document.getElementById('transferMachine');
                 const merchant = sel.options[sel.selectedIndex]?.getAttribute('data-merchant') || '';
                 document.getElementById('transferMerchant').value = merchant;
             };
 
-            // تعبئة البيانات في حالة التعديل
             if (id) {
                 const tr = DB.transfers.find(t => t['رقم التحويل'] == id);
                 if (tr) {
-                    // تأخير التعبئة قليلاً لضمان وجود العناصر
                     setTimeout(() => {
                         document.getElementById('transferMachine').value = tr['رقم المكنة'];
                         updateTransferMerchant();
@@ -545,25 +532,20 @@
                     'قيمة التحويل': Number(document.getElementById('transferAmount').value),
                     'ملاحظات': document.getElementById('transferNotes').value,
                 };
-
                 if (id) {
-                    // تعديل
                     const idx = DB.transfers.findIndex(t => t['رقم التحويل'] == id);
                     if (idx !== -1) {
-                        // الحفاظ على التاريخ والوقت الأصليين أو تحديثهم حسب الرغبة، هنا سنحافظ عليهم
                         transferData['رقم التحويل'] = id;
                         transferData['التاريخ'] = DB.transfers[idx]['التاريخ'];
                         transferData['الوقت'] = DB.transfers[idx]['الوقت'];
                         DB.transfers[idx] = transferData;
                     }
                 } else {
-                    // إضافة
                     transferData['رقم التحويل'] = Date.now().toString();
                     transferData['التاريخ'] = dateStr;
                     transferData['الوقت'] = timeStr;
                     DB.transfers.push(transferData);
                 }
-                
                 saveData(STORAGE_KEYS.transfers, DB.transfers);
                 loadTableData('transfers');
                 closeModal();
@@ -589,14 +571,11 @@
             window.updateCollectionInfo = () => {
                 const merchantName = document.getElementById('collectionMerchant').value;
                 if (!merchantName) return;
-                // فلترة التحويلات والتحصيلات السابقة (استبعاد التحصيل الحالي في حالة التعديل)
                 let transfers = DB.transfers.filter(t => t['اسم التاجر'] === merchantName);
                 let collections = DB.collections.filter(c => c['اسم التاجر'] === merchantName && c['رقم التحصيل'] != id);
-                
                 const totalTransfers = transfers.reduce((s,t) => s + (Number(t['قيمة التحويل']) || 0), 0);
                 const totalCollections = collections.reduce((s,c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
                 const remaining = totalTransfers - totalCollections;
-                
                 document.getElementById('collectionTotalTransfers').value = formatNumber(totalTransfers);
                 document.getElementById('collectionTotalPrevious').value = formatNumber(totalCollections);
                 document.getElementById('collectionRemainingBefore').value = formatNumber(remaining);
@@ -614,13 +593,11 @@
                 if (col) {
                     setTimeout(() => {
                         document.getElementById('collectionMerchant').value = col['اسم التاجر'];
-                        updateCollectionInfo(); // تحميل الحسابات
+                        updateCollectionInfo();
                         document.getElementById('collectionAmount').value = col['قيمة التحصيل'];
                         document.getElementById('collectionType').value = col['نوع التحصيل'];
                         document.getElementById('collectionRemainingAfter').value = formatNumber(col['المتبقي بعد التحصيل']);
                         document.getElementById('collectionNotes').value = col['ملاحظات'] || '';
-                        // تعديل حقل المتبقي قبل التحصيل ليظهر الرقم الصحيح (بدون طرح قيمة التحصيل الحالية من نفسها)
-                        // تم معالجته في updateCollectionInfo عبر تصفية الـ id
                     }, 50);
                 }
             }
@@ -630,7 +607,6 @@
                 const merchantName = document.getElementById('collectionMerchant').value;
                 const amount = Number(document.getElementById('collectionAmount').value);
                 const remainingAfter = Number(document.getElementById('collectionRemainingAfter').value.replace(/[^0-9.-]/g, '')) || 0;
-                
                 const collectionData = {
                     'اسم التاجر': merchantName,
                     'قيمة التحويل': parseFloat(document.getElementById('collectionTotalTransfers').value.replace(/[^0-9.-]/g, '')) || 0,
@@ -639,7 +615,6 @@
                     'المتبقي بعد التحصيل': remainingAfter,
                     'ملاحظات': document.getElementById('collectionNotes').value,
                 };
-
                 if (id) {
                     const idx = DB.collections.findIndex(c => c['رقم التحصيل'] == id);
                     if (idx !== -1) {
@@ -654,7 +629,6 @@
                     collectionData['الوقت'] = timeStr;
                     DB.collections.push(collectionData);
                 }
-                
                 saveData(STORAGE_KEYS.collections, DB.collections);
                 loadTableData('collections');
                 closeModal();
@@ -678,14 +652,10 @@
     function delMerchant(id) { showConfirm('هل تريد حذف هذا التاجر؟', () => { DB.merchants = DB.merchants.filter(m => m['رقم التاجر'] != id); saveData(STORAGE_KEYS.merchants, DB.merchants); loadTableData('merchants'); showToast('تم حذف التاجر'); }); }
     function editMachine(id) { openModal('machine', id); }
     function delMachine(id) { showConfirm('هل تريد حذف هذه المكنة؟', () => { DB.machines = DB.machines.filter(m => m['رقم المكنة'] != id); saveData(STORAGE_KEYS.machines, DB.machines); loadTableData('machines'); showToast('تم حذف المكنة'); }); }
-    
-    // تم تفعيل تعديل التحويلات والتحصيلات
     function editTransfer(id) { openModal('transfer', id); }
     function delTransfer(id) { showConfirm('حذف التحويل؟', () => { DB.transfers = DB.transfers.filter(t => t['رقم التحويل'] != id); saveData(STORAGE_KEYS.transfers, DB.transfers); loadTableData('transfers'); renderDashboard(); showToast('تم حذف التحويل'); }); }
-    
     function editCollection(id) { openModal('collection', id); }
     function delCollection(id) { showConfirm('حذف التحصيل؟', () => { DB.collections = DB.collections.filter(c => c['رقم التحصيل'] != id); saveData(STORAGE_KEYS.collections, DB.collections); loadTableData('collections'); renderDashboard(); showToast('تم حذف التحصيل'); }); }
-    
     function deleteArchive(id) { showConfirm('حذف الأرشيف؟', () => { DB.archive = DB.archive.filter(a => a['رقم الأرشيف'] != id); saveData(STORAGE_KEYS.archive, DB.archive); renderArchive(); showToast('تم حذف الأرشيف'); }); }
 
     // ======================== STATEMENT ========================
@@ -693,12 +663,7 @@
         const list = document.getElementById('stmtMerchantList');
         if (!query) { list.style.display = 'none'; return; }
         const normQuery = normalizeArabic(query);
-        
-        const filtered = DB.merchants.filter(m => 
-            normalizeArabic(m['اسم التاجر']).includes(normQuery) || 
-            normalizeArabic(m['رقم التاجر']).includes(normQuery)
-        );
-        
+        const filtered = DB.merchants.filter(m => normalizeArabic(m['اسم التاجر']).includes(normQuery) || normalizeArabic(m['رقم التاجر']).includes(normQuery));
         if (!filtered.length) { list.innerHTML = '<div class="no-result" style="padding:10px; color:#999;">لا توجد نتائج</div>'; }
         else { list.innerHTML = filtered.map(m => `<div onclick="selectMerchantForStatement('${m['رقم التاجر']}', '${m['اسم التاجر']}')">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join(''); }
         list.style.display = 'block';
@@ -770,7 +735,6 @@
             };
             DB.archive.push(archiveEntry);
             saveData(STORAGE_KEYS.archive, DB.archive);
-            // لا نقوم بحذف البيانات الأصلية لأننا نحتفظ بها للشهر الحالي، فقط نضيف الأرشيف.
             renderArchive();
             showToast('تم إغلاق الشهر بنجاح');
         });
@@ -805,7 +769,6 @@
             document.getElementById('loginBox').style.display = 'flex';
             document.getElementById('appBox').style.display = 'none';
         }
-        // ربط البحث الفوري في التجار
         const searchInput = document.getElementById('merchantSearchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
@@ -813,7 +776,6 @@
                 renderMerchants();
             });
         }
-        // إغلاق قائمة البحث عند النقر خارجها
         document.addEventListener('click', (e) => {
             const list = document.getElementById('stmtMerchantList');
             const searchField = document.getElementById('stmtMerchantSearch');
