@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* جميع الأنماط كما هي – لم يتم تغييرها */
+        /* جميع الأنماط الأصلية – لم يتم تغييرها */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1d4ed8;
@@ -283,7 +283,7 @@
                 const merchant = merchants.find(m => m['رقم التاجر'] == merchantId);
                 if (!merchant) throw new Error('تاجر غير موجود');
                 const machines = getData(STORAGE_KEYS.machines).filter(m => m['اسم التاجر'] === merchant['اسم التاجر']);
-                const transfers = getData(STORAGE_KEYS.transfers).filter(t => t['اسم التاجر'] === merchant['اسم التاجr']);
+                const transfers = getData(STORAGE_KEYS.transfers).filter(t => t['اسم التاجر'] === merchant['اسم التاجر']);
                 const collections = getData(STORAGE_KEYS.collections).filter(c => c['اسم التاجر'] === merchant['اسم التاجر']);
                 const totalTransfers = transfers.reduce((sum, t) => sum + (Number(t['قيمة التحويل']) || 0), 0);
                 const totalCollections = collections.reduce((sum, c) => sum + (Number(c['قيمة التحصيل']) || 0), 0);
