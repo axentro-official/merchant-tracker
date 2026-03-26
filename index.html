@@ -395,6 +395,43 @@
         }
     }
 
+    // ======================== GLOBAL HELPER FUNCTIONS FOR MODALS ========================
+    window.updateTransferMerchant = function() {
+        const sel = document.getElementById('transferMachine');
+        if (!sel) return;
+        const merchant = sel.options[sel.selectedIndex]?.getAttribute('data-merchant') || '';
+        const merchantField = document.getElementById('transferMerchant');
+        if (merchantField) merchantField.value = merchant;
+    };
+
+    window.updateCollectionInfo = function(idToExclude = null) {
+        const merchantName = document.getElementById('collectionMerchant')?.value;
+        if (!merchantName) return;
+        let transfers = DB.transfers.filter(t => t['اسم التاجر'] === merchantName);
+        let collections = DB.collections.filter(c => c['اسم التاجر'] === merchantName && c['رقم التحصيل'] != idToExclude);
+        const totalTransfers = transfers.reduce((s,t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+        const totalCollections = collections.reduce((s,c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+        const remaining = totalTransfers - totalCollections;
+        const totalTransfersField = document.getElementById('collectionTotalTransfers');
+        const totalPreviousField = document.getElementById('collectionTotalPrevious');
+        const remainingBeforeField = document.getElementById('collectionRemainingBefore');
+        if (totalTransfersField) totalTransfersField.value = formatNumber(totalTransfers);
+        if (totalPreviousField) totalPreviousField.value = formatNumber(totalCollections);
+        if (remainingBeforeField) remainingBeforeField.value = formatNumber(remaining);
+        window.updateCollectionRemaining();
+    };
+
+    window.updateCollectionRemaining = function() {
+        const remainingBeforeField = document.getElementById('collectionRemainingBefore');
+        const amountField = document.getElementById('collectionAmount');
+        const remainingAfterField = document.getElementById('collectionRemainingAfter');
+        if (!remainingBeforeField || !amountField || !remainingAfterField) return;
+        const remainingBefore = parseFloat(remainingBeforeField.value.replace(/[^0-9.-]/g, '')) || 0;
+        const amount = parseFloat(amountField.value) || 0;
+        const remainingAfter = Math.max(0, remainingBefore - amount);
+        remainingAfterField.value = formatNumber(remainingAfter);
+    };
+
     // ======================== MODAL HANDLING ========================
     function openModal(type, id = null) {
         const modal = document.getElementById('modal');
@@ -505,13 +542,6 @@
                         <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
                     </form>`;
             modalBody.innerHTML = html;
-            
-            window.updateTransferMerchant = () => {
-                const sel = document.getElementById('transferMachine');
-                const merchant = sel.options[sel.selectedIndex]?.getAttribute('data-merchant') || '';
-                document.getElementById('transferMerchant').value = merchant;
-            };
-
             if (id) {
                 const tr = DB.transfers.find(t => t['رقم التحويل'] == id);
                 if (tr) {
@@ -523,7 +553,6 @@
                     }, 50);
                 }
             }
-
             document.getElementById('modalForm').onsubmit = (e) => {
                 e.preventDefault();
                 const transferData = {
@@ -567,33 +596,12 @@
                         <div class="form-group"><button type="submit" class="btn btn-primary btn-block">حفظ</button></div>
                     </form>`;
             modalBody.innerHTML = html;
-            
-            window.updateCollectionInfo = () => {
-                const merchantName = document.getElementById('collectionMerchant').value;
-                if (!merchantName) return;
-                let transfers = DB.transfers.filter(t => t['اسم التاجر'] === merchantName);
-                let collections = DB.collections.filter(c => c['اسم التاجر'] === merchantName && c['رقم التحصيل'] != id);
-                const totalTransfers = transfers.reduce((s,t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-                const totalCollections = collections.reduce((s,c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
-                const remaining = totalTransfers - totalCollections;
-                document.getElementById('collectionTotalTransfers').value = formatNumber(totalTransfers);
-                document.getElementById('collectionTotalPrevious').value = formatNumber(totalCollections);
-                document.getElementById('collectionRemainingBefore').value = formatNumber(remaining);
-                updateCollectionRemaining();
-            };
-            window.updateCollectionRemaining = () => {
-                const remainingBefore = parseFloat(document.getElementById('collectionRemainingBefore').value.replace(/[^0-9.-]/g, '')) || 0;
-                const amount = parseFloat(document.getElementById('collectionAmount').value) || 0;
-                const remainingAfter = Math.max(0, remainingBefore - amount);
-                document.getElementById('collectionRemainingAfter').value = formatNumber(remainingAfter);
-            };
-
             if (id) {
                 const col = DB.collections.find(c => c['رقم التحصيل'] == id);
                 if (col) {
                     setTimeout(() => {
                         document.getElementById('collectionMerchant').value = col['اسم التاجر'];
-                        updateCollectionInfo();
+                        window.updateCollectionInfo(id);
                         document.getElementById('collectionAmount').value = col['قيمة التحصيل'];
                         document.getElementById('collectionType').value = col['نوع التحصيل'];
                         document.getElementById('collectionRemainingAfter').value = formatNumber(col['المتبقي بعد التحصيل']);
@@ -601,7 +609,6 @@
                     }, 50);
                 }
             }
-
             document.getElementById('modalForm').onsubmit = (e) => {
                 e.preventDefault();
                 const merchantName = document.getElementById('collectionMerchant').value;
