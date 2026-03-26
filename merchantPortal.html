@@ -166,14 +166,18 @@
     </div>
 
     <script>
-        // ==================== API باستخدام google.script.run ====================
-        function callServer(funcName, data) {
-            return new Promise((resolve, reject) => {
-                google.script.run
-                    .withSuccessHandler(resolve)
-                    .withFailureHandler(reject)
-                    [funcName](data);
-            });
+        // رابط Web App الجديد – يمكنك تغييره إذا تغير الرابط لاحقاً
+        const API = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
+
+        async function api(act, data = {}) {
+            try {
+                const url = `${API}?action=${act}&data=${encodeURIComponent(JSON.stringify(data))}`;
+                const res = await fetch(url);
+                return await res.json();
+            } catch (e) {
+                console.error('API Error:', e);
+                return { success: false, message: e.message };
+            }
         }
 
         let merchants = [];
@@ -209,7 +213,7 @@
         async function loadMerchants() {
             showLoading(true);
             try {
-                const res = await callServer('getTableData', { table: 'merchants' });
+                const res = await api('getTableData', { table: 'merchants' });
                 if (res.success && res.data) {
                     merchants = res.data;
                     populateSelect();
@@ -277,7 +281,7 @@
         async function loadMerchantData(merchantId) {
             showLoading(true);
             try {
-                const res = await callServer('getMerchantData', { merchantId: merchantId });
+                const res = await api('getMerchantData', { merchantId: merchantId });
                 if (res.success && res.data) {
                     currentMerchantData = res.data;
                     renderMerchantInfo(res.data);
@@ -322,9 +326,9 @@
             }
             document.getElementById('machinesList').innerHTML = machinesHtml;
 
-            let transfersHtml = '<table class="transfer-table"><thead> <tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th></tr> </thead><tbody>';
+            let transfersHtml = '<table class="transfer-table"><thead> <tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th> </thead><tbody>';
             if (transfers.length === 0) {
-                transfersHtml += '<tr><td colspan="4" style="text-align:center;">لا توجد تحويلات</td></tr>';
+                transfersHtml += '发展<td colspan="4" style="text-align:center;">لا توجد تحويلات</td> </tr>';
             } else {
                 transfers.forEach(t => {
                     transfersHtml += `
@@ -359,7 +363,7 @@
 
             showLoading(true);
             try {
-                const res = await callServer('sendMerchantRequest', {
+                const res = await api('sendMerchantRequest', {
                     merchantId: merchantId,
                     requestType: requestType,
                     amount: amount,
