@@ -280,7 +280,9 @@
                 document.getElementById('merchantSearch').value = '';
                 return;
             }
+            // تحديث الحقل المخفي والقائمة المنسدلة وحقل البحث
             document.getElementById('selectedMerchantId').value = merchantId;
+            document.getElementById('merchantSelect').value = merchantId;
             const merchant = merchants.find(m => m['رقم التاجر'] == merchantId);
             if (merchant) {
                 document.getElementById('merchantSearch').value = merchant['اسم التاجر'];
@@ -308,14 +310,14 @@
         }
 
         function selectMerchant(id, name) {
+            // تحديث جميع العناصر المرتبطة بالتاجر
             document.getElementById('selectedMerchantId').value = id;
-            document.getElementById('merchantSearch').value = name;
             document.getElementById('merchantSelect').value = id;
+            document.getElementById('merchantSearch').value = name;
             document.getElementById('searchResults').style.display = 'none';
             loadMerchantData(id);
         }
 
-        // =========== التعديل الأساسي: التصفية باستخدام رقم التاجر بدلاً من الاسم ===========
         async function loadMerchantData(merchantId) {
             showLoading(true);
             try {
@@ -328,7 +330,6 @@
                     fetchFromAPI('getCollections')
                 ]);
                 
-                // تصفية باستخدام رقم التاجر
                 const machines = allMachines.filter(m => m['رقم التاجر'] == merchantId);
                 const transfers = allTransfers.filter(t => t['رقم التاجر'] == merchantId);
                 const collections = allCollections.filter(c => c['رقم التاجر'] == merchantId);
@@ -352,7 +353,6 @@
                 showLoading(false);
             }
         }
-        // ==================================================================================
 
         function renderMerchantInfo(data) {
             const merchant = data.merchant;
@@ -383,7 +383,7 @@
             }
             document.getElementById('machinesList').innerHTML = machinesHtml;
 
-            let transfersHtml = '<table class="transfer-table"><thead> <tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody>';
+            let transfersHtml = '<table class="transfer-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody>';
             if (transfers.length === 0) {
                 transfersHtml += '<tr><td colspan="4" style="text-align:center;">لا توجد تحويلات</td></tr>';
             } else {
@@ -405,7 +405,11 @@
         }
 
         async function submitRequest() {
-            const merchantId = document.getElementById('selectedMerchantId').value;
+            // احصل على رقم التاجر من الحقل المخفي أو من القائمة المنسدلة كاحتياط
+            let merchantId = document.getElementById('selectedMerchantId').value;
+            if (!merchantId) {
+                merchantId = document.getElementById('merchantSelect').value;
+            }
             if (!merchantId) {
                 showToast('الرجاء اختيار التاجر أولاً', 'warning');
                 return;
@@ -422,7 +426,7 @@
             showLoading(true);
             const result = await postToAPI('addMerchantRequest', {
                 merchantId: merchantId,
-                merchantName: merchant['اسم التاجر'],
+                merchantName: merchant ? merchant['اسم التاجر'] : 'غير معروف',
                 requestType: requestType,
                 amount: Number(amount),
                 notes: notes
