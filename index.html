@@ -10,7 +10,6 @@
     
     <style>
         /* جميع الأنماط الأصلية (لم تتغير) – تم تضمينها بالكامل في الملف الأصلي */
-        /* لضمان عدم حذفها، نحتفظ بها كما هي. هنا نعطي مثالاً، لكن في الملف النهائي ستكون موجودة بالكامل. */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1d4ed8;
@@ -354,9 +353,9 @@
                     <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
                         <h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3>
                         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                            <select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList')"><option value="">-- اختر تاجر --</option></select>
+                            <select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList', 'statement')"><option value="">-- اختر تاجر --</option></select>
                             <div style="position: relative; width: 200px;">
-                                <input type="text" id="stmtMerchantSearch" class="form-control" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'stmtMerchantList', 'stmtMerchantId', 'getStatement')">
+                                <input type="text" id="stmtMerchantSearch" class="form-control" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'stmtMerchantList', 'stmtMerchantId', 'statement')">
                                 <input type="hidden" id="stmtMerchantId">
                                 <div id="stmtMerchantList" class="search-results"></div>
                             </div>
@@ -461,7 +460,7 @@
         // ==================== Global State ====================
         let DB = { merchants: [], machines: [], transfers: [], collections: [], archives: [], dashboard: null };
         let merchantSearchTerm = '';
-        let machineSearchTerm = '';   // متغير البحث في صفحة المكن
+        let machineSearchTerm = '';
         let confirmCallback = null;
 
         // Polling for live updates
@@ -527,7 +526,6 @@
                 if (res && res.merchants) {
                     DB = res;
                     if (!DB.dashboard) {
-                        // fallback calculation
                         const transfers = DB.transfers || [];
                         const collections = DB.collections || [];
                         const merchants = DB.merchants || [];
@@ -616,7 +614,7 @@
         function renderTopMachines(machines) {
             const tbody = document.getElementById('tblTopMachines');
             if (!tbody) return;
-            if (!machines || machines.length === 0) { tbody.innerHTML = '<td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
+            if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
             let rows = '';
             machines.forEach(m => {
                 const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
@@ -810,10 +808,16 @@
             const selectId = hiddenId.replace('Id', 'Select');
             const selectEl = document.getElementById(selectId);
             if (selectEl) selectEl.value = id;
-            if (hiddenId === 'stmtMerchantId') getStatement();
+            // Fill merchant data (account and machine) based on the hiddenId's prefix
+            let prefix = '';
+            if (hiddenId === 'trMerchId') prefix = 'tr';
+            else if (hiddenId === 'colMerchId') prefix = 'col';
+            else if (hiddenId === 'mcMerchId') prefix = 'mc';
+            else if (hiddenId === 'stmtMerchantId') prefix = 'stmt';
+            if (prefix && prefix !== 'stmt') fillMerchantData(id, prefix);
             if (callback && window[callback]) window[callback](id);
         }
-        function handleDropdownSelect(id, textInputId, hiddenId, listId) {
+        function handleDropdownSelect(id, textInputId, hiddenId, listId, callback) {
             const hiddenInput = document.getElementById(hiddenId);
             const textInput = document.getElementById(textInputId);
             const listEl = document.getElementById(listId);
@@ -822,17 +826,28 @@
             if (id) {
                 const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
                 if(textInput) textInput.value = merchant ? merchant['اسم التاجر'] : '';
-                if (hiddenId === 'stmtMerchantId') getStatement();
-                if (hiddenId === 'mcMerchId') fillMachineMerchant(id);
+                // Fill merchant data based on hiddenId prefix
+                let prefix = '';
+                if (hiddenId === 'trMerchId') prefix = 'tr';
+                else if (hiddenId === 'colMerchId') prefix = 'col';
+                else if (hiddenId === 'mcMerchId') prefix = 'mc';
+                else if (hiddenId === 'stmtMerchantId') prefix = 'stmt';
+                if (prefix && prefix !== 'stmt') fillMerchantData(id, prefix);
+                if (callback && window[callback]) window[callback](id);
             } else {
                 if(textInput) textInput.value = '';
             }
         }
-        function fillMachineMerchant(merchantId) {
+        function fillMerchantData(merchantId, prefix) {
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
-            if (merchant) {
-                const accField = document.getElementById('mcAccount');
-                if (accField) accField.value = merchant['رقم الحساب'] || '';
+            if (!merchant) return;
+            const accountField = document.getElementById(`${prefix}Account`);
+            const machineField = document.getElementById(`${prefix}Machine`);
+            if (accountField) accountField.value = merchant['رقم الحساب'] || '';
+            if (machineField) {
+                // Find the machine associated with this merchant (one machine per merchant)
+                const machine = DB.machines.find(m => m['رقم التاجر'] == merchantId);
+                machineField.value = machine ? machine['رقم المكنة'] || '' : '';
             }
         }
         function populateMerchantDropdowns() {
@@ -843,11 +858,12 @@
                 if(!el) return;
                 const currentVal = el.value;
                 el.innerHTML = '<option value="">-- اختر تاجر --</option>';
-                merchants.forEach(m => { el.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']}</option>`; });
+                merchants.forEach(m => { el.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</option>`; });
                 if(currentVal && merchants.some(m => m['رقم التاجر'] == currentVal)) el.value = currentVal;
             });
         }
-                // ==================== Modals ====================
+
+        // ==================== Modals ====================
         function openModal(type, data = null) {
             const body = document.getElementById('modalBody');
             const m = document.getElementById('modal');
@@ -905,11 +921,11 @@
                     if (merchant) {
                         document.getElementById('mcMerchSearch').value = merchant['اسم التاجر'];
                         document.getElementById('mcMerchSelect').value = merchantId;
-                        fillMachineMerchant(merchantId);
+                        fillMerchantData(merchantId, 'mc');
                     }
                 } else {
                     const selId = document.getElementById('mcMerchId').value;
-                    if (selId) fillMachineMerchant(selId);
+                    if (selId) fillMerchantData(selId, 'mc');
                 }
             } else if (type === 'transfer') {
                 body.innerHTML = `
@@ -922,22 +938,23 @@
                         <input type="hidden" id="trMerchId">
                         <div id="trMerchList" class="search-results"></div>
                     </div>
-                    <div class="form-group"><label>المكنة</label>
-                        <select id="trMach" class="form-control"><option value="">-- اختر مكنة --</option></select>
-                    </div>
+                    <div class="form-group"><label>رقم الحساب</label><input id="trAccount" class="form-control" readonly></div>
+                    <div class="form-group"><label>المكنة</label><input id="trMachine" class="form-control" readonly></div>
                     <div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="trAmt" class="form-control" placeholder="قيمة التحويل" value="${isEdit ? (data['قيمة التحويل'] || '') : ''}"></div>
                     <div class="form-group"><label>ملاحظات</label><input id="trNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}"></div>
                     <button class="btn btn-success btn-block" onclick="saveTransfer(${isEdit ? `'${data['رقم التحويل']}'` : ''})"><i class="fas fa-check"></i> تأكيد التحويل</button>
                 `;
                 if (isEdit) {
-                    document.getElementById('trMerchId').value = data['رقم التاجر'];
+                    const merchantId = data['رقم التاجر'];
+                    document.getElementById('trMerchId').value = merchantId;
                     document.getElementById('trMerchSearch').value = data['اسم التاجر'];
-                    document.getElementById('trMerchSelect').value = data['رقم التاجر'];
-                    fillMachines(data['رقم التاجر']);
-                    document.getElementById('trMach').value = data['رقم المكنة'] || '';
+                    document.getElementById('trMerchSelect').value = merchantId;
+                    fillMerchantData(merchantId, 'tr');
+                    document.getElementById('trAmt').value = data['قيمة التحويل'] || '';
+                    document.getElementById('trNotes').value = data['ملاحظات'] || '';
                 } else {
                     const merchId = document.getElementById('trMerchId').value;
-                    if (merchId) fillMachines(merchId);
+                    if (merchId) fillMerchantData(merchId, 'tr');
                 }
             } else if (type === 'collection') {
                 body.innerHTML = `
@@ -950,9 +967,8 @@
                         <input type="hidden" id="colMerchId">
                         <div id="colMerchList" class="search-results"></div>
                     </div>
-                    <div class="form-group"><label>المكنة</label>
-                        <select id="colMach" class="form-control"><option value="">-- اختر مكنة --</option></select>
-                    </div>
+                    <div class="form-group"><label>رقم الحساب</label><input id="colAccount" class="form-control" readonly></div>
+                    <div class="form-group"><label>المكنة</label><input id="colMachine" class="form-control" readonly></div>
                     <div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="colAmt" class="form-control" placeholder="قيمة التحصيل" value="${isEdit ? (data['قيمة التحصيل'] || '') : ''}"></div>
                     <div class="form-group"><label>نوع التحصيل</label>
                         <select id="colType" class="form-control"><option value="كلي" ${isEdit && data['نوع التحصيل'] === 'كلي' ? 'selected' : ''}>كلي</option><option value="جزئي" ${isEdit && data['نوع التحصيل'] === 'جزئي' ? 'selected' : ''}>جزئي</option></select>
@@ -961,41 +977,24 @@
                     <button class="btn btn-primary btn-block" onclick="saveCollection(${isEdit ? `'${data['رقم التحصيل']}'` : ''})"><i class="fas fa-check"></i> تأكيد التحصيل</button>
                 `;
                 if (isEdit) {
-                    document.getElementById('colMerchId').value = data['رقم التاجر'];
+                    const merchantId = data['رقم التاجر'];
+                    document.getElementById('colMerchId').value = merchantId;
                     document.getElementById('colMerchSearch').value = data['اسم التاجر'];
-                    document.getElementById('colMerchSelect').value = data['رقم التاجر'];
-                    fillMachines(data['رقم التاجر']);
-                    document.getElementById('colMach').value = data['رقم المكنة'] || '';
+                    document.getElementById('colMerchSelect').value = merchantId;
+                    fillMerchantData(merchantId, 'col');
+                    document.getElementById('colAmt').value = data['قيمة التحصيل'] || '';
+                    document.getElementById('colType').value = data['نوع التحصيل'] || 'كلي';
+                    document.getElementById('colNotes').value = data['ملاحظات'] || '';
                 } else {
                     const merchId = document.getElementById('colMerchId').value;
-                    if (merchId) fillMachines(merchId);
+                    if (merchId) fillMerchantData(merchId, 'col');
                 }
             }
             populateMerchantDropdowns();
-            if (type === 'transfer' || type === 'collection') {
-                const merchId = document.getElementById(type === 'transfer' ? 'trMerchId' : 'colMerchId').value;
-                if (merchId) fillMachines(merchId);
-            }
-        }
-        function fillMachines(merchantId) {
-            const trSelect = document.getElementById('trMach');
-            const colSelect = document.getElementById('colMach');
-            const targetSelect = trSelect ? trSelect : colSelect;
-            if (!targetSelect) return;
-            targetSelect.innerHTML = '<option value="">-- اختر مكنة --</option>';
-            if (!merchantId) return;
-            const machines = DB.machines || [];
-            const filtered = machines.filter(m => m['رقم التاجر'] == merchantId);
-            if (filtered.length === 0) {
-                targetSelect.innerHTML = '<option value="">لا توجد مكنات</option>';
-            } else {
-                filtered.forEach(m => targetSelect.innerHTML += `<option value="${m['رقم المكنة']}">${m['رقم المكنة']}</option>`);
-                if (filtered.length === 1) targetSelect.value = filtered[0]['رقم المكنة'];
-            }
         }
         function closeModal() { const m = document.getElementById('modal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); }
 
-        // ==================== Save Operations (with optional id for edit) ====================
+        // ==================== Save Operations ====================
         async function saveMerchant(id = null) {
             const name = document.getElementById('mName').value.trim();
             if (!name) { showToast('اسم التاجر مطلوب', 'warning'); return; }
@@ -1038,7 +1037,7 @@
             showLoading(true);
             const data = {
                 'رقم التاجر': merchantId,
-                'رقم المكنة': document.getElementById('trMach').value,
+                'رقم المكنة': document.getElementById('trMachine').value,
                 'قيمة التحويل': Number(amount),
                 'ملاحظات': document.getElementById('trNotes').value
             };
@@ -1053,7 +1052,7 @@
             showLoading(true);
             const data = {
                 'رقم التاجر': merchantId,
-                'رقم المكنة': document.getElementById('colMach').value,
+                'رقم المكنة': document.getElementById('colMachine').value,
                 'قيمة التحصيل': Number(amount),
                 'نوع التحصيل': document.getElementById('colType').value,
                 'ملاحظات': document.getElementById('colNotes').value
