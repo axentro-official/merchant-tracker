@@ -370,8 +370,49 @@
 
     <script>
         // ==================== API CONFIGURATION ====================
-      const API_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
-        // Note: Replace with your actual web app URL if different.
+        const API_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
+
+        // Helper: GET request with timeout (10 seconds) – مأخوذ من merchantPortal.html
+        async function fetchFromAPI(action, timeoutMs = 10000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const response = await fetch(`${API_URL}?action=${action}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    console.error('Request timeout:', action);
+                    showToast('انتهت مهلة الاتصال بالخادم', 'error');
+                } else {
+                    console.error('API GET error:', error);
+                    showToast('فشل الاتصال بالخادم', 'error');
+                }
+                return null; // إرجاع null بدلاً من [] لتمييز الفشل
+            }
+        }
+
+        // Helper: POST request (no-cors – we trust the operation)
+        async function postToAPI(action, payload = {}, id = null) {
+            const body = { action, data: payload };
+            if (id !== null) body.id = id;
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                return { success: true };
+            } catch (error) {
+                console.error('API POST error:', error);
+                showToast('فشل الحفظ', 'error');
+                return { success: false };
+            }
+        }
 
         // ==================== Global State ====================
         let DB = { merchants: [], machines: [], transfers: [], collections: [], archives: [], dashboard: null };
@@ -413,32 +454,13 @@
             if (prev !== status) { if (status === 'offline') showToast('فقدان الاتصال...', 'error'); else if (prev === 'offline' && status === 'live') showToast('تم استعادة الاتصال', 'success'); }
         }
 
-        // ==================== API Calls ====================
-        async function apiGet(action, params = {}) {
-            const url = new URL(API_URL);
-            url.searchParams.append('action', action);
-            Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
-            const response = await fetch(url);
-            return await response.json();
-        }
-        async function apiPost(action, data = {}, id = null) {
-            const body = { action, data };
-            if (id !== null) body.id = id;
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            return await response.json();
-        }
-
         // ==================== Login / Logout ====================
         function handleEnter(e) { if (e.key === 'Enter') login(); }
         async function login() {
             const password = document.getElementById('passInput').value;
             if (!password) { showToast('أدخل كلمة المرور', 'warning'); return; }
             showLoading(true);
-            const res = await apiPost('login', { password });
+            const res = await postToAPI('login', { password });
             if (res.success) {
                 localStorage.setItem('axentro_logged', 'true');
                 document.getElementById('loginBox').style.display = 'none';
@@ -456,11 +478,11 @@
         async function loadData() {
             showLoading(true);
             try {
-                const res = await apiGet('getAllData');
+                const res = await fetchFromAPI('getAllData');
                 if (res && res.merchants) {
                     DB = res;
                     if (!DB.dashboard) {
-                        // calculate dashboard if not present (fallback)
+                        // fallback calculation
                         const transfers = DB.transfers || [];
                         const collections = DB.collections || [];
                         const merchants = DB.merchants || [];
@@ -482,12 +504,13 @@
                     renderDashboard();
                     showToast('وضع عدم الاتصال (بيانات مخزنة)', 'warning');
                 } else if (!DB.merchants) {
-                    showToast('فشل تحميل البيانات', 'error');
+                    showToast('فشل تحميل البيانات، تأكد من اتصال الإنترنت', 'error');
                 } else {
                     showToast('تحديث فاشل، البيانات قد تكون قديمة', 'warning');
                 }
+            } finally {
+                showLoading(false);
             }
-            showLoading(false);
         }
 
         function calculateDashboardFrontend(transfers, collections, merchants, machines) {
@@ -548,7 +571,7 @@
         function renderTopMachines(machines) {
             const tbody = document.getElementById('tblTopMachines');
             if (!tbody) return;
-            if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
+            if (!machines || machines.length === 0) { tbody.innerHTML = '欧洲<td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
             let rows = '';
             machines.forEach(m => {
                 const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
@@ -623,7 +646,7 @@
             if (!mid) return;
             showLoading(true);
             try {
-                const res = await apiGet('getStatement', { merchantId: mid });
+                const res = await fetchFromAPI('getStatement', { merchantId: mid });
                 if (res && res.stats) {
                     document.getElementById('stmtT').textContent = formatNumber(res.stats.totalTransfers);
                     document.getElementById('stmtC').textContent = formatNumber(res.stats.totalCollections);
@@ -691,10 +714,8 @@
             }
         }
         function fillMachineMerchant(merchantId) {
-            // عندما يتم اختيار تاجر في نموذج المكنة، نقوم بملء بعض الحقول تلقائياً
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
             if (merchant) {
-                // يمكن ملء رقم الحساب إذا كان موجوداً في نموذج المكنة
                 const accField = document.getElementById('mcAccount');
                 if (accField) accField.value = merchant['رقم الحساب'] || '';
             }
@@ -762,7 +783,6 @@
                     <div class="form-group"><label>ملاحظات</label><input id="mcNotes" class="form-control" placeholder="ملاحظات"></div>
                     <button class="btn btn-primary btn-block" onclick="saveMachine()"><i class="fas fa-save"></i> حفظ المكنة</button>
                 `;
-                // Fill account if merchant already selected
                 const selId = document.getElementById('mcMerchId').value;
                 if (selId) fillMachineMerchant(selId);
             } else if (type === 'transfer') {
@@ -806,7 +826,6 @@
                 `;
             }
             populateMerchantDropdowns();
-            // Fill machines if merchant already selected in the form
             if (type === 'transfer' || type === 'collection') {
                 const merchId = document.getElementById(type === 'transfer' ? 'trMerchId' : 'colMerchId').value;
                 if (merchId) fillMachines(merchId);
@@ -845,7 +864,7 @@
                 'الحالة': document.getElementById('mStatus').value,
                 'ملاحظات': document.getElementById('mNotes').value
             };
-            const res = await apiPost('addMerchant', data);
+            const res = await postToAPI('addMerchant', data);
             if (res.success) { showToast('تم إضافة التاجر بنجاح', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
         async function saveMachine() {
@@ -862,7 +881,7 @@
                 'الحالة': document.getElementById('mcStatus').value,
                 'ملاحظات': document.getElementById('mcNotes').value
             };
-            const res = await apiPost('addMachine', data);
+            const res = await postToAPI('addMachine', data);
             if (res.success) { showToast('تم إضافة المكنة بنجاح', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
         async function saveTransfer() {
@@ -877,7 +896,7 @@
                 'قيمة التحويل': Number(amount),
                 'ملاحظات': document.getElementById('trNotes').value
             };
-            const res = await apiPost('addTransfer', data);
+            const res = await postToAPI('addTransfer', data);
             if (res.success) { showToast('تم التحويل بنجاح', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
         async function saveCollection() {
@@ -893,7 +912,7 @@
                 'نوع التحصيل': document.getElementById('colType').value,
                 'ملاحظات': document.getElementById('colNotes').value
             };
-            const res = await apiPost('addCollection', data);
+            const res = await postToAPI('addCollection', data);
             if (res.success) { showToast('تم التحصيل بنجاح', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
 
@@ -901,12 +920,12 @@
         function showConfirm(msg, callback, title = 'تأكيد') { document.getElementById('confirmMsg').textContent = msg; document.getElementById('confirmTitle').textContent = title; confirmCallback = callback; const m = document.getElementById('confirmModal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10); }
         function closeConfirm() { const m = document.getElementById('confirmModal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); confirmCallback = null; }
         document.getElementById('confirmBtn').onclick = () => { if (confirmCallback) confirmCallback(); closeConfirm(); };
-        async function delMerchant(id) { showConfirm('هل أنت متأكد من حذف هذا التاجر؟', async () => { showLoading(true); await apiPost('deleteMerchant', {}, id); loadData(); }); }
-        async function delMachine(id) { showConfirm('هل أنت متأكد من حذف هذه المكنة؟', async () => { showLoading(true); await apiPost('deleteMachine', {}, id); loadData(); }); }
-        async function delTransfer(id) { showConfirm('هل أنت متأكد من حذف هذا التحويل؟', async () => { showLoading(true); await apiPost('deleteTransfer', {}, id); loadData(); }); }
-        async function delCollection(id) { showConfirm('هل أنت متأكد من حذف هذا التحصيل؟', async () => { showLoading(true); await apiPost('deleteCollection', {}, id); loadData(); }); }
-        async function deleteArchive(id) { showConfirm('هل أنت متأكد من حذف هذا السجل من الأرشيف نهائياً؟', async () => { showLoading(true); await apiPost('deleteArchive', {}, id); loadData(); }); }
-        async function confirmCloseMonth() { showConfirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد؟\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.', async () => { showLoading(true); const res = await apiPost('closeMonth'); if (res.success) { showToast('تم بدء شهر جديد بنجاح', 'success'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }, 'بدء شهر جديد'); }
+        async function delMerchant(id) { showConfirm('هل أنت متأكد من حذف هذا التاجر؟', async () => { showLoading(true); await postToAPI('deleteMerchant', {}, id); loadData(); }); }
+        async function delMachine(id) { showConfirm('هل أنت متأكد من حذف هذه المكنة؟', async () => { showLoading(true); await postToAPI('deleteMachine', {}, id); loadData(); }); }
+        async function delTransfer(id) { showConfirm('هل أنت متأكد من حذف هذا التحويل؟', async () => { showLoading(true); await postToAPI('deleteTransfer', {}, id); loadData(); }); }
+        async function delCollection(id) { showConfirm('هل أنت متأكد من حذف هذا التحصيل؟', async () => { showLoading(true); await postToAPI('deleteCollection', {}, id); loadData(); }); }
+        async function deleteArchive(id) { showConfirm('هل أنت متأكد من حذف هذا السجل من الأرشيف نهائياً؟', async () => { showLoading(true); await postToAPI('deleteArchive', {}, id); loadData(); }); }
+        async function confirmCloseMonth() { showConfirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد؟\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.', async () => { showLoading(true); const res = await postToAPI('closeMonth'); if (res.success) { showToast('تم بدء شهر جديد بنجاح', 'success'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }, 'بدء شهر جديد'); }
 
         // ==================== Export ====================
         function exportExcel() {
@@ -997,7 +1016,7 @@
             if (AppState.isPolling) return;
             AppState.isPolling = true;
             try {
-                const res = await apiGet('getDashboardOnly');
+                const res = await fetchFromAPI('getDashboardOnly');
                 if (res && res.dashboard) {
                     setConnectionStatus('live');
                     const newDash = res.dashboard;
