@@ -267,7 +267,7 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>المكنة</th><th>التاجر</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr>
+                                <tr><th>المكنة</th><th>التاجر</th><th>النشاط</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr>
                             </thead>
                             <tbody id="tblTopMachines"></tbody>
                         </table>
@@ -288,7 +288,7 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr>
+                                <tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>رقم الحساب</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr>
                             </thead>
                             <tbody id="tblMerchants"></tbody>
                         </table>
@@ -296,7 +296,7 @@
                 </div>
             </div>
 
-            <!-- MACHINES PAGE (مع حقل بحث مضاف) -->
+            <!-- MACHINES PAGE -->
             <div id="page-machines" class="page">
                 <div class="table-box">
                     <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
@@ -309,7 +309,7 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>رقم المكنة</th><th>التاجر</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr>
+                                <tr><th>رقم المكنة</th><th>التاجر</th><th>النشاط</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr>
                             </thead>
                             <tbody id="tblMachines"></tbody>
                         </table>
@@ -324,7 +324,7 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr>
+                                <tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>رقم الحساب</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr>
                             </thead>
                             <tbody id="tblTransfers"></tbody>
                         </table>
@@ -339,7 +339,7 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>إجراء</th></tr>
+                                <tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>رقم الحساب</th><th>القيمة</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>ملاحظات</th><th>إجراء</th></tr>
                             </thead>
                             <tbody id="tblCollections"></tbody>
                         </table>
@@ -359,6 +359,7 @@
                                 <input type="hidden" id="stmtMerchantId">
                                 <div id="stmtMerchantList" class="search-results"></div>
                             </div>
+                            <button class="btn btn-primary btn-sm" onclick="getStatement()"><i class="fas fa-search"></i> عرض</button>
                         </div>
                     </div>
                     <div style="padding: 1rem;">
@@ -574,9 +575,11 @@
                 const achieved = monthTransfers.filter(t => t['رقم المكنة'] == machineId).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
                 if (target > 0) {
                     const percentage = Math.floor((achieved / target) * 100);
+                    const merchant = merchants.find(mer => mer['رقم التاجر'] == m['رقم التاجر']);
                     topMachines.push({
                         name: machineId,
-                        merchant: m['اسم التاجر'],
+                        merchant: merchant ? merchant['اسم التاجر'] : '-',
+                        activity: merchant ? merchant['اسم النشاط'] : '-',
                         achieved, target, percentage
                     });
                 }
@@ -614,11 +617,18 @@
         function renderTopMachines(machines) {
             const tbody = document.getElementById('tblTopMachines');
             if (!tbody) return;
-            if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
+            if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
             let rows = '';
             machines.forEach(m => {
                 const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
-                rows += `<tr><td><strong>${m.name || '-'}</strong></td><td>${m.merchant || '-'}</td><td>${formatNumber(m.achieved)}</td><td>${formatNumber(m.target)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td></tr>`;
+                rows += `<tr>
+                            <td><strong>${m.name || '-'}</strong></td>
+                            <td>${m.merchant || '-'}</td>
+                            <td>${m.activity || '-'}</td>
+                            <td>${formatNumber(m.achieved)}</td>
+                            <td>${formatNumber(m.target)}</td>
+                            <td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td>
+                         </tr>`;
             });
             tbody.innerHTML = rows;
         }
@@ -629,7 +639,7 @@
                 merchants = merchants.filter(m => (m['اسم التاجر'] || '').toLowerCase().includes(term) || (m['رقم التاجر'] || '').toString().includes(term));
             }
             const tbody = document.getElementById('tblMerchants');
-            if (merchants.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد تجار</td></tr>'; return; }
+            if (merchants.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد تجار</td></tr>'; return; }
             let rows = '';
             merchants.forEach(m => {
                 const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
@@ -639,6 +649,7 @@
                             <td><strong>${m['رقم التاجر'] || '-'}</strong></td>
                             <td>${m['اسم التاجر'] || '-'}</td>
                             <td>${m['اسم النشاط'] || '-'}</td>
+                            <td>${m['رقم الحساب'] || '-'}</td>
                             <td>${phoneLink}</td>
                             <td>${m['المنطقة'] || '-'}</td>
                             <td>${m['العنوان'] || '-'}</td>
@@ -649,7 +660,7 @@
                                     <button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button>
                                 </div>
                             </td>
-                        </tr>`;
+                         </tr>`;
             });
             tbody.innerHTML = rows;
         }
@@ -660,13 +671,16 @@
                 machines = machines.filter(m => (m['رقم المكنة'] || '').toLowerCase().includes(term) || (m['اسم التاجر'] || '').toLowerCase().includes(term));
             }
             const tbody = document.getElementById('tblMachines');
-            if (machines.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد مكن</td></tr>'; return; }
+            if (machines.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد مكن</td></tr>'; return; }
             let rows = '';
             machines.forEach(m => {
                 const statusClass = m['الحالة'] === 'نشطة' ? 'success' : 'danger';
+                const merchant = DB.merchants.find(mer => mer['رقم التاجر'] == m['رقم التاجر']);
+                const activity = merchant ? merchant['اسم النشاط'] : '-';
                 rows += `<tr>
                             <td><strong>${m['رقم المكنة'] || '-'}</strong></td>
                             <td>${m['اسم التاجر'] || '-'}</td>
+                            <td>${activity}</td>
                             <td><code>${m['الرقم التسلسلي'] || '-'}</code></td>
                             <td>${formatNumber(m['التارجت الشهري'])}</td>
                             <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
@@ -676,20 +690,27 @@
                                     <button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button>
                                 </div>
                             </td>
-                        </tr>`;
+                         </tr>`;
             });
             tbody.innerHTML = rows;
         }
         function renderTransfers() {
             const transfers = DB.transfers || [];
             const tbody = document.getElementById('tblTransfers');
-            if (transfers.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحويلات</td></tr>'; return; }
+            if (transfers.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحويلات</td></tr>'; return; }
             let rows = '';
             transfers.slice(-50).reverse().forEach(t => {
+                const merchant = DB.merchants.find(m => m['رقم التاجر'] == t['رقم التاجر']);
+                const merchantName = t['اسم التاجر'] || (merchant ? merchant['اسم التاجر'] : '-');
+                const activity = merchant ? merchant['اسم النشاط'] : '-';
+                const account = merchant ? merchant['رقم الحساب'] : '-';
                 rows += `<tr>
                             <td>${formatDate(t['التاريخ'])}</td>
                             <td>${formatTime(t['الوقت'])}</td>
-                            <td>${t['اسم التاجر'] || '-'}</td>
+                            <td>${merchantName}</td>
+                            <td>${activity}</td>
+                            <td>${account}</td>
+                            <td>${t['نوع التحويل'] || '-'}</td>
                             <td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td>
                             <td>${t['ملاحظات'] || '-'}</td>
                             <td>
@@ -698,32 +719,39 @@
                                     <button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')"><i class="fas fa-trash"></i></button>
                                 </div>
                             </td>
-                        </tr>`;
+                         </tr>`;
             });
             tbody.innerHTML = rows;
         }
         function renderCollections() {
             const collections = DB.collections || [];
             const tbody = document.getElementById('tblCollections');
-            if (collections.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>'; return; }
+            if (collections.length === 0) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>'; return; }
             let rows = '';
             collections.slice(-50).reverse().forEach(c => {
+                const merchant = DB.merchants.find(m => m['رقم التاجر'] == c['رقم التاجر']);
+                const merchantName = c['اسم التاجر'] || (merchant ? merchant['اسم التاجر'] : '-');
+                const activity = merchant ? merchant['اسم النشاط'] : '-';
+                const account = merchant ? merchant['رقم الحساب'] : '-';
                 const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
                 const remaining = c['المتبقي بعد التحصيل'] !== undefined ? c['المتبقي بعد التحصيل'] : 0;
                 rows += `<tr>
                             <td>${formatDate(c['التاريخ'])}</td>
                             <td>${formatTime(c['الوقت'])}</td>
-                            <td>${c['اسم التاجر'] || '-'}</td>
+                            <td>${merchantName}</td>
+                            <td>${activity}</td>
+                            <td>${account}</td>
                             <td><strong>${formatNumber(c['قيمة التحصيل'])}</strong></td>
                             <td><span class="badge badge-${typeClass}">${c['نوع التحصيل'] || '-'}</span></td>
                             <td><strong>${formatNumber(remaining)}</strong></td>
+                            <td>${c['ملاحظات'] || '-'}</td>
                             <td>
                                 <div class="action-btns">
                                     <button class="btn btn-primary btn-sm" onclick="editCollection('${c['رقم التحصيل']}')"><i class="fas fa-edit"></i></button>
                                     <button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button>
                                 </div>
                             </td>
-                        </tr>`;
+                         </tr>`;
             });
             tbody.innerHTML = rows;
         }
@@ -741,7 +769,7 @@
                             <td>${formatNumber(a['إجمالي التحصيلات'])}</td>
                             <td>${formatNumber(a['إجمالي المتبقي'])}</td>
                             <td><button class="btn btn-danger btn-sm" onclick="deleteArchive('${a['رقم الأرشيف']}')"><i class="fas fa-trash"></i></button></td>
-                        </tr>`;
+                         </tr>`;
             });
             tbody.innerHTML = rows;
         }
@@ -749,7 +777,7 @@
         // ==================== Statement ====================
         async function getStatement() {
             const mid = document.getElementById('stmtMerchantId').value;
-            if (!mid) return;
+            if (!mid) { showToast('اختر تاجراً أولاً', 'warning'); return; }
             showLoading(true);
             try {
                 const res = await fetchFromAPI('getStatement', { merchantId: mid });
@@ -771,7 +799,7 @@
                                         <td><strong>${formatNumber(m.amount)}</strong></td>
                                         <td><strong>${formatNumber(m.balanceAfter)}</strong></td>
                                         <td>${m.notes || '-'}</td>
-                                    </tr>`;
+                                     </tr>`;
                         });
                         tbody.innerHTML = rows;
                     }
@@ -940,6 +968,12 @@
                     </div>
                     <div class="form-group"><label>رقم الحساب</label><input id="trAccount" class="form-control" readonly></div>
                     <div class="form-group"><label>المكنة</label><input id="trMachine" class="form-control" readonly></div>
+                    <div class="form-group"><label>نوع التحويل</label>
+                        <select id="trType" class="form-control">
+                            <option value="رصيد خدمات" ${isEdit && data['نوع التحويل'] === 'رصيد خدمات' ? 'selected' : ''}>رصيد خدمات</option>
+                            <option value="رصيد كاش" ${isEdit && data['نوع التحويل'] === 'رصيد كاش' ? 'selected' : ''}>رصيد كاش</option>
+                        </select>
+                    </div>
                     <div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="trAmt" class="form-control" placeholder="قيمة التحويل" value="${isEdit ? (data['قيمة التحويل'] || '') : ''}"></div>
                     <div class="form-group"><label>ملاحظات</label><input id="trNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}"></div>
                     <button class="btn btn-success btn-block" onclick="saveTransfer(${isEdit ? `'${data['رقم التحويل']}'` : ''})"><i class="fas fa-check"></i> تأكيد التحويل</button>
@@ -952,6 +986,7 @@
                     fillMerchantData(merchantId, 'tr');
                     document.getElementById('trAmt').value = data['قيمة التحويل'] || '';
                     document.getElementById('trNotes').value = data['ملاحظات'] || '';
+                    if (data['نوع التحويل']) document.getElementById('trType').value = data['نوع التحويل'];
                 } else {
                     const merchId = document.getElementById('trMerchId').value;
                     if (merchId) fillMerchantData(merchId, 'tr');
@@ -1039,6 +1074,7 @@
                 'رقم التاجر': merchantId,
                 'رقم المكنة': document.getElementById('trMachine').value,
                 'قيمة التحويل': Number(amount),
+                'نوع التحويل': document.getElementById('trType').value,
                 'ملاحظات': document.getElementById('trNotes').value
             };
             const res = id ? await postToAPI('updateTransfer', data, id) : await postToAPI('addTransfer', data);
