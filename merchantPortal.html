@@ -315,22 +315,23 @@
             loadMerchantData(id);
         }
 
+        // =========== التعديل الأساسي: التصفية باستخدام رقم التاجر بدلاً من الاسم ===========
         async function loadMerchantData(merchantId) {
             showLoading(true);
             try {
                 const merchant = merchants.find(m => m['رقم التاجر'] == merchantId);
                 if (!merchant) throw new Error('تاجر غير موجود');
                 
-                // جلب البيانات المطلوبة بالتوازي
                 const [allMachines, allTransfers, allCollections] = await Promise.all([
                     fetchFromAPI('getMachines'),
                     fetchFromAPI('getTransfers'),
                     fetchFromAPI('getCollections')
                 ]);
                 
-                const machines = allMachines.filter(m => m['اسم التاجر'] === merchant['اسم التاجر']);
-                const transfers = allTransfers.filter(t => t['اسم التاجر'] === merchant['اسم التاجر']);
-                const collections = allCollections.filter(c => c['اسم التاجر'] === merchant['اسم التاجر']);
+                // تصفية باستخدام رقم التاجر
+                const machines = allMachines.filter(m => m['رقم التاجر'] == merchantId);
+                const transfers = allTransfers.filter(t => t['رقم التاجر'] == merchantId);
+                const collections = allCollections.filter(c => c['رقم التاجر'] == merchantId);
                 
                 const totalTransfers = transfers.reduce((sum, t) => sum + (Number(t['قيمة التحويل']) || 0), 0);
                 const totalCollections = collections.reduce((sum, c) => sum + (Number(c['قيمة التحصيل']) || 0), 0);
@@ -351,6 +352,7 @@
                 showLoading(false);
             }
         }
+        // ==================================================================================
 
         function renderMerchantInfo(data) {
             const merchant = data.merchant;
@@ -381,7 +383,7 @@
             }
             document.getElementById('machinesList').innerHTML = machinesHtml;
 
-            let transfersHtml = '<table class="transfer-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody>';
+            let transfersHtml = '<table class="transfer-table"><thead> <tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody>';
             if (transfers.length === 0) {
                 transfersHtml += '<tr><td colspan="4" style="text-align:center;">لا توجد تحويلات</td></tr>';
             } else {
