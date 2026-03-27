@@ -571,7 +571,7 @@
         function renderTopMachines(machines) {
             const tbody = document.getElementById('tblTopMachines');
             if (!tbody) return;
-            if (!machines || machines.length === 0) { tbody.innerHTML = '欧洲<td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
+            if (!machines || machines.length === 0) { tbody.innerHTML = '<td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
             let rows = '';
             machines.forEach(m => {
                 const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
