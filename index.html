@@ -9,7 +9,6 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     
     <style>
-        /* جميع الأنماط الأصلية (لم تتغير) – تم تضمينها بالكامل في الملف الأصلي */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1d4ed8;
@@ -153,24 +152,14 @@
 </head>
 <body>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="spinner"></div>
-        <div class="loading-text">جاري التحميل...</div>
-    </div>
+    <div id="loadingOverlay" class="loading-overlay"><div class="spinner"></div><div class="loading-text">جاري التحميل...</div></div>
+    <div id="toast" class="toast"><i class="fas fa-check-circle"></i><span id="toastMessage">تم بنجاح</span></div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toastMessage">تم بنجاح</span>
-    </div>
-
-    <!-- Custom Confirm Modal -->
     <div id="confirmModal" class="modal">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
             <i class="fas fa-question-circle" style="font-size: 3rem; color: var(--warning); margin-bottom: 1rem;"></i>
             <h3 id="confirmTitle" style="border:none;">تأكيد</h3>
-            <p id="confirmMsg" style="margin-bottom: 1.5rem; color: var(--muted);"></p>
+            <p id="confirmMsg" style="margin-bottom: 1.5rem; color: var(--muted); white-space: pre-line;"></p>
             <div style="display: flex; gap: 1rem; justify-content: center;">
                 <button class="btn btn-secondary" onclick="closeConfirm()">إلغاء</button>
                 <button id="confirmBtn" class="btn btn-danger">تأكيد</button>
@@ -178,67 +167,47 @@
         </div>
     </div>
 
-    <!-- Scanner Modal -->
     <div id="scanModal" class="modal">
         <div class="modal-content" style="max-width: 600px;">
             <span class="modal-close" onclick="closeScanModal()">&times;</span>
             <h3><i class="fas fa-camera"></i> ماسح الرقم التسلسلي</h3>
-            <div class="video-wrap">
-                <video id="video" playsinline autoplay></video>
-            </div>
+            <div class="video-wrap"><video id="video" playsinline autoplay></video></div>
             <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
                 <button class="btn btn-secondary btn-sm" id="torchBtn">🔦 فلاش</button>
                 <button class="btn btn-secondary btn-sm" onclick="closeScanModal()">إغلاق</button>
             </div>
-            <div class="scan-hint" style="margin-top: 10px; font-size: 12px; color: var(--muted); text-align: center;">
-                وجه الكاميرا نحو الرقم التسلسلي (باركود) الموجود على المكنة.
-            </div>
+            <div class="scan-hint" style="margin-top: 10px; font-size: 12px; color: var(--muted); text-align: center;">وجه الكاميرا نحو الرقم التسلسلي (باركود) الموجود على المكنة.</div>
         </div>
     </div>
 
-    <!-- Login Screen -->
     <div id="loginBox">
         <div class="login-card">
-            <div class="login-logo">
-                <i class="fas fa-store"></i>
-            </div>
+            <div class="login-logo"><i class="fas fa-store"></i></div>
             <h2>Axentro System</h2>
             <p>نظام إدارة التجار والمكن</p>
             <input type="password" id="passInput" placeholder="كلمة المرور" onkeypress="handleEnter(event)">
-            <button class="btn btn-primary btn-block" onclick="login()">
-                <i class="fas fa-sign-in-alt"></i>
-                دخول
-            </button>
+            <button class="btn btn-primary btn-block" onclick="login()"><i class="fas fa-sign-in-alt"></i> دخول</button>
         </div>
         <footer style="margin-top: 2rem; background: transparent; color: #64748b;">
             <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
             <div class="qr-box">
                 <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
-                    <img src="qr-links.png" alt="QR Code">
-                    <span><i class="fas fa-qrcode"></i> QR Scan Me</span>
+                    <img src="qr-links.png" alt="QR Code"><span><i class="fas fa-qrcode"></i> QR Scan Me</span>
                 </a>
             </div>
         </footer>
     </div>
 
-    <!-- Main App -->
     <div class="app-container" id="appBox">
         <nav class="navbar">
-            <div class="logo">
-                <i class="fas fa-store"></i>
-                Axentro
-            </div>
+            <div class="logo"><i class="fas fa-store"></i> Axentro</div>
             <div class="navbar-actions">
-                <div id="connIndicator" class="conn-status">
-                    <div class="conn-dot"></div>
-                    <span>متصل</span>
-                </div>
+                <div id="connIndicator" class="conn-status"><div class="conn-dot"></div><span>متصل</span></div>
                 <button class="btn btn-primary btn-sm" onclick="loadData()"><i class="fas fa-sync-alt"></i> تحديث</button>
                 <button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="fas fa-file-excel"></i> تصدير</button>
                 <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
             </div>
         </nav>
-
         <div class="tabs-nav">
             <div class="tab-link active" onclick="showPage('home', this)"><i class="fas fa-home"></i> الرئيسية</div>
             <div class="tab-link" onclick="showPage('merchants', this)"><i class="fas fa-users"></i> التجار</div>
@@ -248,180 +217,51 @@
             <div class="tab-link" onclick="showPage('statement', this)"><i class="fas fa-file-invoice-dollar"></i> كشف حساب</div>
             <div class="tab-link" onclick="showPage('archive', this)"><i class="fas fa-archive"></i> الأرشيف</div>
         </div>
-
         <div class="content">
-            <!-- HOME PAGE -->
             <div id="page-home" class="page active">
                 <div class="stats-grid" id="dashStats"></div>
-                <div class="table-box">
-                    <div class="table-header"><h3><i class="fas fa-bolt"></i> إجراءات سريعة</h3></div>
-                    <div class="quick-actions">
-                        <button class="btn btn-success" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button>
-                        <button class="btn btn-primary" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button>
-                        <button class="btn btn-secondary" onclick="openModal('merchant')"><i class="fas fa-user-plus"></i> تاجر جديد</button>
-                        <button class="btn btn-secondary" onclick="openModal('machine')"><i class="fas fa-plus"></i> مكنة جديدة</button>
-                    </div>
-                </div>
+                <div class="table-box"><div class="table-header"><h3><i class="fas fa-bolt"></i> إجراءات سريعة</h3></div><div class="quick-actions"><button class="btn btn-success" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button><button class="btn btn-primary" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button><button class="btn btn-secondary" onclick="openModal('merchant')"><i class="fas fa-user-plus"></i> تاجر جديد</button><button class="btn btn-secondary" onclick="openModal('machine')"><i class="fas fa-plus"></i> مكنة جديدة</button></div></div>
                 <div class="table-box">
                     <div class="table-header"><h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3></div>
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>المكنة</th><th>التاجر</th><th>النشاط</th><th>التحقيق</th><th>التارجت</th><th>النسبة</th></tr>
+                                <tr><th>المكنة</th><th>رقم الحساب</th><th>التاجر</th><th>النشاط</th><th>التارجت</th><th>التحقيق</th><th>النسبة</th></tr>
                             </thead>
                             <tbody id="tblTopMachines"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
-
-            <!-- MERCHANTS PAGE -->
-            <div id="page-merchants" class="page">
-                <div class="table-box">
-                    <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
-                        <h3><i class="fas fa-users"></i> قائمة التجار</h3>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="text" id="merchantSearchInput" class="form-control" placeholder="بحث بالاسم أو رقم التاجر..." style="width: 220px;">
-                            <button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>رقم الحساب</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr>
-                            </thead>
-                            <tbody id="tblMerchants"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MACHINES PAGE -->
-            <div id="page-machines" class="page">
-                <div class="table-box">
-                    <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
-                        <h3><i class="fas fa-cash-register"></i> المكن</h3>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="text" id="machineSearchInput" class="form-control" placeholder="بحث برقم المكنة أو التاجر..." style="width: 220px;">
-                            <button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr><th>رقم المكنة</th><th>التاجر</th><th>النشاط</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr>
-                            </thead>
-                            <tbody id="tblMachines"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TRANSFERS PAGE -->
-            <div id="page-transfers" class="page">
-                <div class="table-box">
-                    <div class="table-header"><h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3><button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button></div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>رقم الحساب</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr>
-                            </thead>
-                            <tbody id="tblTransfers"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- COLLECTIONS PAGE -->
-            <div id="page-collections" class="page">
-                <div class="table-box">
-                    <div class="table-header"><h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button></div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>رقم الحساب</th><th>القيمة</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>ملاحظات</th><th>إجراء</th></tr>
-                            </thead>
-                            <tbody id="tblCollections"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STATEMENT PAGE -->
-            <div id="page-statement" class="page">
-                <div class="table-box">
-                    <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
-                        <h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3>
-                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                            <select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList', 'statement')"><option value="">-- اختر تاجر --</option></select>
-                            <div style="position: relative; width: 200px;">
-                                <input type="text" id="stmtMerchantSearch" class="form-control" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'stmtMerchantList', 'stmtMerchantId', 'statement')">
-                                <input type="hidden" id="stmtMerchantId">
-                                <div id="stmtMerchantList" class="search-results"></div>
-                            </div>
-                            <button class="btn btn-primary btn-sm" onclick="getStatement()"><i class="fas fa-search"></i> عرض</button>
-                        </div>
-                    </div>
-                    <div style="padding: 1rem;">
-                        <div class="stats-grid">
-                            <div class="stat-card"><h4>إجمالي تحويلاته</h4><div class="val" id="stmtT">0</div></div>
-                            <div class="stat-card success"><h4>إجمالي تحصيلاته</h4><div class="val" id="stmtC">0</div></div>
-                            <div class="stat-card danger"><h4>المتبقي عليه</h4><div class="val" id="stmtR">0</div></div>
-                        </div>
-                        <h4 style="margin: 1rem 0; color: var(--muted);"><i class="fas fa-history"></i> الحركات</h4>
-                        <div class="table-container">
-                            <table style="min-width: 600px;">
-                                <thead><tr><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th><th>المتبقي بعد الحركة</th><th>ملاحظات</th></tr></thead>
-                                <tbody id="tblStatement"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ARCHIVE PAGE -->
-            <div id="page-archive" class="page">
-                <div class="table-box">
-                    <div class="table-header"><h3><i class="fas fa-archive"></i> الأرشيف</h3><button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد</button></div>
-                    <div class="table-container">
-                        <table>
-                            <thead><tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr></thead>
-                            <tbody id="tblArchive"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <div id="page-merchants" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-users"></i> قائمة التجار</h3><div style="display: flex; gap: 0.5rem; align-items: center;"><input type="text" id="merchantSearchInput" class="form-control" placeholder="بحث بالاسم أو رقم التاجر..." style="width: 220px;"><button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button></div></div><div class="table-container"><table><thead><tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>رقم الحساب</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMerchants"></tbody></table></div></div></div>
+            <div id="page-machines" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-cash-register"></i> المكن</h3><div style="display: flex; gap: 0.5rem; align-items: center;"><input type="text" id="machineSearchInput" class="form-control" placeholder="بحث برقم المكنة أو التاجر..." style="width: 220px;"><button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button></div></div><div class="table-container"><table><thead><tr><th>رقم المكنة</th><th>التاجر</th><th>النشاط</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMachines"></tbody></table></div></div></div>
+            <div id="page-transfers" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3><button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>رقم الحساب</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="tblTransfers"></tbody></table></div></div></div>
+            <div id="page-collections" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>رقم الحساب</th><th>القيمة</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="tblCollections"></tbody></table></div></div></div>
+            <div id="page-statement" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3><div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;"><select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList', 'statement')"><option value="">-- اختر تاجر --</option></select><div style="position: relative; width: 200px;"><input type="text" id="stmtMerchantSearch" class="form-control" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'stmtMerchantList', 'stmtMerchantId', 'statement')"><input type="hidden" id="stmtMerchantId"><div id="stmtMerchantList" class="search-results"></div></div><button class="btn btn-primary btn-sm" onclick="getStatement()"><i class="fas fa-search"></i> عرض</button></div></div><div style="padding: 1rem;"><div class="stats-grid"><div class="stat-card"><h4>إجمالي تحويلاته</h4><div class="val" id="stmtT">0</div></div><div class="stat-card success"><h4>إجمالي تحصيلاته</h4><div class="val" id="stmtC">0</div></div><div class="stat-card danger"><h4>المتبقي عليه</h4><div class="val" id="stmtR">0</div></div></div><h4 style="margin: 1rem 0; color: var(--muted);"><i class="fas fa-history"></i> الحركات</h4><div class="table-container"><table style="min-width: 600px;"><thead><tr><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th><th>المتبقي بعد الحركة</th><th>ملاحظات</th></tr></thead><tbody id="tblStatement"></tbody></table></div></div></div></div></div>
+            <div id="page-archive" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-archive"></i> الأرشيف</h3><button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد</button></div><div class="table-container"><table><thead><tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr></thead><tbody id="tblArchive"></tbody></table></div></div></div>
         </div>
-
-        <footer>
-            <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
-            <div class="qr-box">
-                <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
-                    <img src="qr-links.png" alt="QR Code">
-                    <span><i class="fas fa-qrcode"></i> QR Scan Me</span>
-                </a>
-            </div>
-        </footer>
+        <footer><p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p><div class="qr-box"><a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank"><img src="qr-links.png" alt="QR Code"><span><i class="fas fa-qrcode"></i> QR Scan Me</span></a></div></footer>
     </div>
 
-    <!-- Main Modal -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeModal()">×</span>
-            <div id="modalBody"></div>
-        </div>
-    </div>
+    <div id="modal" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal()">×</span><div id="modalBody"></div></div></div>
 
     <script>
         // ==================== API CONFIGURATION ====================
         const API_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
 
-        // Helper: GET request with timeout (10 seconds)
-        async function fetchFromAPI(action, timeoutMs = 10000) {
+        // === إصلاح كارثي: دالة GET تدعم البارامترات الآن ===
+        async function fetchFromAPI(action, params = {}, timeoutMs = 10000) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
             try {
-                const response = await fetch(`${API_URL}?action=${action}`, { signal: controller.signal });
+                const url = new URL(API_URL);
+                url.searchParams.append('action', action);
+                for (const key in params) {
+                    if (params[key] !== undefined && params[key] !== null) {
+                        url.searchParams.append(key, params[key]);
+                    }
+                }
+                const response = await fetch(url.toString(), { signal: controller.signal });
                 clearTimeout(timeoutId);
                 if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                 const data = await response.json();
@@ -439,17 +279,11 @@
             }
         }
 
-        // Helper: POST request (no-cors – we trust the operation)
         async function postToAPI(action, payload = {}, id = null) {
             const body = { action, data: payload };
             if (id !== null) body.id = id;
             try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
                 return { success: true };
             } catch (error) {
                 console.error('API POST error:', error);
@@ -458,103 +292,42 @@
             }
         }
 
-        // ==================== Global State ====================
         let DB = { merchants: [], machines: [], transfers: [], collections: [], archives: [], dashboard: null };
         let merchantSearchTerm = '';
         let machineSearchTerm = '';
         let confirmCallback = null;
-
-        // Polling for live updates
         let AppState = { isPolling: false, pollInterval: 60000, minInterval: 30000, maxInterval: 120000, connectionStatus: 'offline' };
 
-        // ==================== Utilities ====================
         function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            toast.className = `toast ${type}`;
-            toastMessage.textContent = message;
-            const icon = toast.querySelector('i');
-            icon.className = type === 'success' ? 'fas fa-check-circle' : type === 'error' ? 'fas fa-times-circle' : 'fas fa-exclamation-triangle';
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
+        function showToast(message, type = 'success') { const toast = document.getElementById('toast'); const toastMessage = document.getElementById('toastMessage'); toast.className = `toast ${type}`; toastMessage.textContent = message; const icon = toast.querySelector('i'); icon.className = type === 'success' ? 'fas fa-check-circle' : type === 'error' ? 'fas fa-times-circle' : 'fas fa-exclamation-triangle'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 4000); }
         function formatNumber(num) { if (num === null || num === undefined || isNaN(num)) return '0'; return Number(num).toLocaleString('ar-EG'); }
         function formatDate(dateStr) { if (!dateStr) return '-'; try { const d = new Date(dateStr); if (isNaN(d)) return dateStr; return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }); } catch { return dateStr; } }
         function formatTime(t) { if (!t) return '-'; return t; }
-
-        // ==================== Cache ====================
         const CACHE_KEY = 'axentro_dashboard_cache'; const CACHE_TTL = 10 * 60 * 1000;
         function setCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: data })); } catch (e) {} }
         function getCache() { try { const cached = localStorage.getItem(CACHE_KEY); if (!cached) return null; const parsed = JSON.parse(cached); if (Date.now() - parsed.timestamp > CACHE_TTL) { localStorage.removeItem(CACHE_KEY); return null; } return parsed.data; } catch (e) { return null; } }
-
-        // ==================== Connection Status ====================
-        function setConnectionStatus(status) {
-            const prev = AppState.connectionStatus;
-            AppState.connectionStatus = status;
-            const indicator = document.getElementById('connIndicator');
-            if (!indicator) return;
-            if (status === 'live') { indicator.className = 'conn-status live'; indicator.querySelector('span').textContent = 'متصل'; }
-            else { indicator.className = 'conn-status offline'; indicator.querySelector('span').textContent = 'غير متصل'; }
-            if (prev !== status) { if (status === 'offline') showToast('فقدان الاتصال...', 'error'); else if (prev === 'offline' && status === 'live') showToast('تم استعادة الاتصال', 'success'); }
-        }
-
-        // ==================== Login / Logout ====================
+        function setConnectionStatus(status) { const prev = AppState.connectionStatus; AppState.connectionStatus = status; const indicator = document.getElementById('connIndicator'); if (!indicator) return; if (status === 'live') { indicator.className = 'conn-status live'; indicator.querySelector('span').textContent = 'متصل'; } else { indicator.className = 'conn-status offline'; indicator.querySelector('span').textContent = 'غير متصل'; } if (prev !== status) { if (status === 'offline') showToast('فقدان الاتصال...', 'error'); else if (prev === 'offline' && status === 'live') showToast('تم استعادة الاتصال', 'success'); } }
+        
         function handleEnter(e) { if (e.key === 'Enter') login(); }
-        async function login() {
-            const password = document.getElementById('passInput').value;
-            if (!password) { showToast('أدخل كلمة المرور', 'warning'); return; }
-            showLoading(true);
-            const res = await postToAPI('login', { password });
-            if (res.success) {
-                localStorage.setItem('axentro_logged', 'true');
-                document.getElementById('loginBox').style.display = 'none';
-                document.getElementById('appBox').style.display = 'flex';
-                loadData();
-                showToast('مرحباً بك!', 'success');
-            } else {
-                showToast(res.message || 'كلمة المرور غير صحيحة', 'error');
-                showLoading(false);
-            }
-        }
+        async function login() { const password = document.getElementById('passInput').value; if (!password) { showToast('أدخل كلمة المرور', 'warning'); return; } showLoading(true); const res = await postToAPI('login', { password }); if (res.success) { localStorage.setItem('axentro_logged', 'true'); document.getElementById('loginBox').style.display = 'none'; document.getElementById('appBox').style.display = 'flex'; loadData(); showToast('مرحباً بك!', 'success'); } else { showToast(res.message || 'كلمة المرور غير صحيحة', 'error'); showLoading(false); } }
         function logout() { showConfirm('هل تريد تسجيل الخروج؟', () => { localStorage.removeItem('axentro_logged'); location.reload(); }); }
 
-        // ==================== Data Loading ====================
         async function loadData() {
             showLoading(true);
             try {
                 const res = await fetchFromAPI('getAllData');
                 if (res && res.merchants) {
                     DB = res;
-                    if (!DB.dashboard) {
-                        const transfers = DB.transfers || [];
-                        const collections = DB.collections || [];
-                        const merchants = DB.merchants || [];
-                        const machines = DB.machines || [];
-                        DB.dashboard = calculateDashboardFrontend(transfers, collections, merchants, machines);
-                    }
-                    setCache(DB.dashboard);
-                    renderAll();
-                    setConnectionStatus('live');
-                    showToast('تم تحديث البيانات', 'success');
-                } else {
-                    throw new Error('فشل تحميل البيانات');
-                }
+                    if (!DB.dashboard) { DB.dashboard = calculateDashboardFrontend(DB.transfers || [], DB.collections || [], DB.merchants || [], DB.machines || []); }
+                    setCache(DB.dashboard); renderAll(); setConnectionStatus('live'); showToast('تم تحديث البيانات', 'success');
+                } else { throw new Error('فشل تحميل البيانات'); }
             } catch (e) {
                 setConnectionStatus('offline');
                 const cachedDash = getCache();
-                if (cachedDash && !DB.dashboard) {
-                    DB.dashboard = cachedDash;
-                    renderDashboard();
-                    showToast('وضع عدم الاتصال (بيانات مخزنة)', 'warning');
-                } else if (!DB.merchants) {
-                    showToast('فشل تحميل البيانات، تأكد من اتصال الإنترنت', 'error');
-                } else {
-                    showToast('تحديث فاشل، البيانات قد تكون قديمة', 'warning');
-                }
-            } finally {
-                showLoading(false);
-            }
+                if (cachedDash && !DB.dashboard) { DB.dashboard = cachedDash; renderDashboard(); showToast('وضع عدم الاتصال (بيانات مخزنة)', 'warning'); }
+                else if (!DB.merchants) { showToast('فشل تحميل البيانات، تأكد من اتصال الإنترنت', 'error'); }
+                else { showToast('تحديث فاشل، البيانات قد تكون قديمة', 'warning'); }
+            } finally { showLoading(false); }
         }
 
         function calculateDashboardFrontend(transfers, collections, merchants, machines) {
@@ -562,22 +335,21 @@
             const currentMonth = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
             const today = now.toISOString().slice(0,10);
             const monthTransfers = transfers.filter(t => t['الشهر'] === currentMonth);
-            const monthCollections = collections.filter(c => c['الشهر'] === currentMonth);
             const totalTransfers = monthTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-            const totalCollections = monthCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+            const totalCollections = collections.filter(c => c['الشهر'] === currentMonth).reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
             const remaining = totalTransfers - totalCollections;
-            const todayTransfers = transfers.filter(t => t['التاريخ'] === today);
-            const todayTotal = todayTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+            const todayTotal = transfers.filter(t => t['التاريخ'] === today).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
             const topMachines = [];
             machines.forEach(m => {
                 const machineId = m['رقم المكنة'];
                 const target = Number(m['التارجت الشهري']) || 0;
-                const achieved = monthTransfers.filter(t => t['رقم المكنة'] == machineId).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
                 if (target > 0) {
+                    const achieved = monthTransfers.filter(t => t['رقم المكنة'] == machineId).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
                     const percentage = Math.floor((achieved / target) * 100);
                     const merchant = merchants.find(mer => mer['رقم التاجر'] == m['رقم التاجر']);
                     topMachines.push({
                         name: machineId,
+                        account: merchant ? merchant['رقم الحساب'] : '-',
                         merchant: merchant ? merchant['اسم التاجر'] : '-',
                         activity: merchant ? merchant['اسم النشاط'] : '-',
                         achieved, target, percentage
@@ -585,59 +357,46 @@
                 }
             });
             topMachines.sort((a,b) => b.percentage - a.percentage);
-            return {
-                'التجار': merchants.length,
-                'المكن': machines.length,
-                'التحويلات_شهر': totalTransfers,
-                'التحصيلات_شهر': totalCollections,
-                'المتبقي_شهر': remaining,
-                'تحويلات_اليوم': todayTotal,
-                'أعلى_المكن': topMachines.slice(0,10)
-            };
+            return { 'التجار': merchants.length, 'المكن': machines.length, 'التحويلات_شهر': totalTransfers, 'التحصيلات_شهر': totalCollections, 'المتبقي_شهر': remaining, 'تحويلات_اليوم': todayTotal, 'أعلى_المكن': topMachines.slice(0,10) };
         }
 
         function renderAll() { renderDashboard(); renderMerchants(); renderMachines(); renderTransfers(); renderCollections(); renderArchive(); populateMerchantDropdowns(); }
 
-        // ==================== Rendering ====================
         function renderDashboard() {
-            const d = DB.dashboard;
-            if (!d) return;
+            const d = DB.dashboard; if (!d) return;
             const keys = ['التجار', 'المكن', 'التحويلات_شهر', 'التحصيلات_شهر', 'المتبقي_شهر', 'تحويلات_اليوم'];
             const statsContainer = document.getElementById('dashStats');
             let html = '';
             const labels = ['عدد التجار', 'عدد المكن', 'التحويلات (شهر)', 'التحصيلات (شهر)', 'المتبقي (شهر)', 'تحويلات اليوم'];
             const icons = ['fa-users', 'fa-cash-register', 'fa-exchange-alt', 'fa-hand-holding-usd', 'fa-coins', 'fa-calendar-day'];
             const colors = ['', '', '', 'success', 'danger', 'warning'];
-            keys.forEach((k, i) => {
-                html += `<div class="stat-card ${colors[i]}"><h4><i class="fas ${icons[i]}"></i> ${labels[i]}</h4><div class="val" data-key="${k}">${formatNumber(d[k])}</div></div>`;
-            });
+            keys.forEach((k, i) => { html += `<div class="stat-card ${colors[i]}"><h4><i class="fas ${icons[i]}"></i> ${labels[i]}</h4><div class="val" data-key="${k}">${formatNumber(d[k])}</div></div>`; });
             statsContainer.innerHTML = html;
             renderTopMachines(d['أعلى_المكن'] || []);
         }
+        
         function renderTopMachines(machines) {
             const tbody = document.getElementById('tblTopMachines');
             if (!tbody) return;
-            if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
+            if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
             let rows = '';
             machines.forEach(m => {
                 const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
                 rows += `<tr>
                             <td><strong>${m.name || '-'}</strong></td>
+                            <td>${m.account || '-'}</td>
                             <td>${m.merchant || '-'}</td>
                             <td>${m.activity || '-'}</td>
-                            <td>${formatNumber(m.achieved)}</td>
                             <td>${formatNumber(m.target)}</td>
+                            <td>${formatNumber(m.achieved)}</td>
                             <td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td>
                          </tr>`;
             });
             tbody.innerHTML = rows;
         }
-        function renderMerchants() {
+                function renderMerchants() {
             let merchants = DB.merchants || [];
-            if (merchantSearchTerm) {
-                const term = merchantSearchTerm.toLowerCase();
-                merchants = merchants.filter(m => (m['اسم التاجر'] || '').toLowerCase().includes(term) || (m['رقم التاجر'] || '').toString().includes(term));
-            }
+            if (merchantSearchTerm) { const term = merchantSearchTerm.toLowerCase(); merchants = merchants.filter(m => (m['اسم التاجر'] || '').toLowerCase().includes(term) || (m['رقم التاجر'] || '').toString().includes(term)); }
             const tbody = document.getElementById('tblMerchants');
             if (merchants.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد تجار</td></tr>'; return; }
             let rows = '';
@@ -645,31 +404,13 @@
                 const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
                 const phone = m['رقم الهاتف'] || '';
                 const phoneLink = phone ? `<a href="tel:${phone}" style="color: var(--primary); text-decoration: none;">${phone}</a>` : '-';
-                rows += `<tr>
-                            <td><strong>${m['رقم التاجر'] || '-'}</strong></td>
-                            <td>${m['اسم التاجر'] || '-'}</td>
-                            <td>${m['اسم النشاط'] || '-'}</td>
-                            <td>${m['رقم الحساب'] || '-'}</td>
-                            <td>${phoneLink}</td>
-                            <td>${m['المنطقة'] || '-'}</td>
-                            <td>${m['العنوان'] || '-'}</td>
-                            <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
-                            <td>
-                                <div class="action-btns">
-                                    <button class="btn btn-primary btn-sm" onclick="editMerchant('${m['رقم التاجر']}')"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </td>
-                         </tr>`;
+                rows += `<tr><td><strong>${m['رقم التاجر'] || '-'}</strong></td><td>${m['اسم التاجر'] || '-'}</td><td>${m['اسم النشاط'] || '-'}</td><td>${m['رقم الحساب'] || '-'}</td><td>${phoneLink}</td><td>${m['المنطقة'] || '-'}</td><td>${m['العنوان'] || '-'}</td><td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td><td><div class="action-btns"><button class="btn btn-primary btn-sm" onclick="editMerchant('${m['رقم التاجر']}')"><i class="fas fa-edit"></i></button><button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button></div></td></tr>`;
             });
             tbody.innerHTML = rows;
         }
         function renderMachines() {
             let machines = DB.machines || [];
-            if (machineSearchTerm) {
-                const term = machineSearchTerm.toLowerCase();
-                machines = machines.filter(m => (m['رقم المكنة'] || '').toLowerCase().includes(term) || (m['اسم التاجر'] || '').toLowerCase().includes(term));
-            }
+            if (machineSearchTerm) { const term = machineSearchTerm.toLowerCase(); machines = machines.filter(m => (m['رقم المكنة'] || '').toLowerCase().includes(term) || (m['اسم التاجر'] || '').toLowerCase().includes(term)); }
             const tbody = document.getElementById('tblMachines');
             if (machines.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد مكن</td></tr>'; return; }
             let rows = '';
@@ -677,431 +418,113 @@
                 const statusClass = m['الحالة'] === 'نشطة' ? 'success' : 'danger';
                 const merchant = DB.merchants.find(mer => mer['رقم التاجر'] == m['رقم التاجر']);
                 const activity = merchant ? merchant['اسم النشاط'] : '-';
-                rows += `<tr>
-                            <td><strong>${m['رقم المكنة'] || '-'}</strong></td>
-                            <td>${m['اسم التاجر'] || '-'}</td>
-                            <td>${activity}</td>
-                            <td><code>${m['الرقم التسلسلي'] || '-'}</code></td>
-                            <td>${formatNumber(m['التارجت الشهري'])}</td>
-                            <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
-                            <td>
-                                <div class="action-btns">
-                                    <button class="btn btn-primary btn-sm" onclick="editMachine('${m['رقم المكنة']}')"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </td>
-                         </tr>`;
+                rows += `<tr><td><strong>${m['رقم المكنة'] || '-'}</strong></td><td>${m['اسم التاجر'] || '-'}</td><td>${activity}</td><td><code>${m['الرقم التسلسلي'] || '-'}</code></td><td>${formatNumber(m['التارجت الشهري'])}</td><td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td><td><div class="action-btns"><button class="btn btn-primary btn-sm" onclick="editMachine('${m['رقم المكنة']}')"><i class="fas fa-edit"></i></button><button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button></div></td></tr>`;
             });
             tbody.innerHTML = rows;
         }
         function renderTransfers() {
-            const transfers = DB.transfers || [];
-            const tbody = document.getElementById('tblTransfers');
+            const transfers = DB.transfers || []; const tbody = document.getElementById('tblTransfers');
             if (transfers.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحويلات</td></tr>'; return; }
             let rows = '';
-            transfers.slice(-50).reverse().forEach(t => {
-                const merchant = DB.merchants.find(m => m['رقم التاجر'] == t['رقم التاجر']);
-                const merchantName = t['اسم التاجر'] || (merchant ? merchant['اسم التاجر'] : '-');
-                const activity = merchant ? merchant['اسم النشاط'] : '-';
-                const account = merchant ? merchant['رقم الحساب'] : '-';
-                rows += `<tr>
-                            <td>${formatDate(t['التاريخ'])}</td>
-                            <td>${formatTime(t['الوقت'])}</td>
-                            <td>${merchantName}</td>
-                            <td>${activity}</td>
-                            <td>${account}</td>
-                            <td>${t['نوع التحويل'] || '-'}</td>
-                            <td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td>
-                            <td>${t['ملاحظات'] || '-'}</td>
-                            <td>
-                                <div class="action-btns">
-                                    <button class="btn btn-primary btn-sm" onclick="editTransfer('${t['رقم التحويل']}')"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </td>
-                         </tr>`;
-            });
+            transfers.slice(-50).reverse().forEach(t => { const merchant = DB.merchants.find(m => m['رقم التاجر'] == t['رقم التاجر']); const merchantName = t['اسم التاجر'] || (merchant ? merchant['اسم التاجر'] : '-'); const activity = merchant ? merchant['اسم النشاط'] : '-'; const account = merchant ? merchant['رقم الحساب'] : '-'; rows += `<tr><td>${formatDate(t['التاريخ'])}</td><td>${formatTime(t['الوقت'])}</td><td>${merchantName}</td><td>${activity}</td><td>${account}</td><td>${t['نوع التحويل'] || '-'}</td><td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td><td>${t['ملاحظات'] || '-'}</td><td><div class="action-btns"><button class="btn btn-primary btn-sm" onclick="editTransfer('${t['رقم التحويل']}')"><i class="fas fa-edit"></i></button><button class="btn btn-danger btn-sm" onclick="delTransfer('${t['رقم التحويل']}')"><i class="fas fa-trash"></i></button></div></td></tr>`; });
             tbody.innerHTML = rows;
         }
         function renderCollections() {
-            const collections = DB.collections || [];
-            const tbody = document.getElementById('tblCollections');
+            const collections = DB.collections || []; const tbody = document.getElementById('tblCollections');
             if (collections.length === 0) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>'; return; }
             let rows = '';
-            collections.slice(-50).reverse().forEach(c => {
-                const merchant = DB.merchants.find(m => m['رقم التاجر'] == c['رقم التاجر']);
-                const merchantName = c['اسم التاجر'] || (merchant ? merchant['اسم التاجر'] : '-');
-                const activity = merchant ? merchant['اسم النشاط'] : '-';
-                const account = merchant ? merchant['رقم الحساب'] : '-';
-                const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
-                const remaining = c['المتبقي بعد التحصيل'] !== undefined ? c['المتبقي بعد التحصيل'] : 0;
-                rows += `<tr>
-                            <td>${formatDate(c['التاريخ'])}</td>
-                            <td>${formatTime(c['الوقت'])}</td>
-                            <td>${merchantName}</td>
-                            <td>${activity}</td>
-                            <td>${account}</td>
-                            <td><strong>${formatNumber(c['قيمة التحصيل'])}</strong></td>
-                            <td><span class="badge badge-${typeClass}">${c['نوع التحصيل'] || '-'}</span></td>
-                            <td><strong>${formatNumber(remaining)}</strong></td>
-                            <td>${c['ملاحظات'] || '-'}</td>
-                            <td>
-                                <div class="action-btns">
-                                    <button class="btn btn-primary btn-sm" onclick="editCollection('${c['رقم التحصيل']}')"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </td>
-                         </tr>`;
-            });
+            collections.slice(-50).reverse().forEach(c => { const merchant = DB.merchants.find(m => m['رقم التاجر'] == c['رقم التاجر']); const merchantName = c['اسم التاجر'] || (merchant ? merchant['اسم التاجر'] : '-'); const activity = merchant ? merchant['اسم النشاط'] : '-'; const account = merchant ? merchant['رقم الحساب'] : '-'; const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning'; const remaining = c['المتبقي بعد التحصيل'] !== undefined ? c['المتبقي بعد التحصيل'] : 0; rows += `<tr><td>${formatDate(c['التاريخ'])}</td><td>${formatTime(c['الوقت'])}</td><td>${merchantName}</td><td>${activity}</td><td>${account}</td><td><strong>${formatNumber(c['قيمة التحصيل'])}</strong></td><td><span class="badge badge-${typeClass}">${c['نوع التحصيل'] || '-'}</span></td><td><strong>${formatNumber(remaining)}</strong></td><td>${c['ملاحظات'] || '-'}</td><td><div class="action-btns"><button class="btn btn-primary btn-sm" onclick="editCollection('${c['رقم التحصيل']}')"><i class="fas fa-edit"></i></button><button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button></div></td></tr>`; });
             tbody.innerHTML = rows;
         }
         function renderArchive() {
-            const archives = DB.archives || [];
-            const tbody = document.getElementById('tblArchive');
+            const archives = DB.archives || []; const tbody = document.getElementById('tblArchive');
             if (archives.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد أرشيف</td></tr>'; return; }
             let rows = '';
-            archives.reverse().forEach(a => {
-                rows += `<tr>
-                            <td><strong>${a['الشهر'] || '-'}</strong></td>
-                            <td>${a['عدد التحويلات'] || 0}</td>
-                            <td>${formatNumber(a['إجمالي التحويلات'])}</td>
-                            <td>${a['عدد التحصيلات'] || 0}</td>
-                            <td>${formatNumber(a['إجمالي التحصيلات'])}</td>
-                            <td>${formatNumber(a['إجمالي المتبقي'])}</td>
-                            <td><button class="btn btn-danger btn-sm" onclick="deleteArchive('${a['رقم الأرشيف']}')"><i class="fas fa-trash"></i></button></td>
-                         </tr>`;
-            });
+            archives.reverse().forEach(a => { rows += `<tr><td><strong>${a['الشهر'] || '-'}</strong></td><td>${a['عدد التحويلات'] || 0}</td><td>${formatNumber(a['إجمالي التحويلات'])}</td><td>${a['عدد التحصيلات'] || 0}</td><td>${formatNumber(a['إجمالي التحصيلات'])}</td><td>${formatNumber(a['إجمالي المتبقي'])}</td><td><button class="btn btn-danger btn-sm" onclick="deleteArchive('${a['رقم الأرشيف']}')"><i class="fas fa-trash"></i></button></td></tr>`; });
             tbody.innerHTML = rows;
         }
 
-        // ==================== Statement ====================
+        // ==================== Statement (تم الإصلاح) ====================
         async function getStatement() {
             const mid = document.getElementById('stmtMerchantId').value;
             if (!mid) { showToast('اختر تاجراً أولاً', 'warning'); return; }
             showLoading(true);
             try {
-                const res = await fetchFromAPI('getStatement', { merchantId: mid });
+                const res = await fetchFromAPI('getStatement', { merchantId: mid }); // إصلاح إرسال الـ ID كـ Parameter
                 if (res && res.stats) {
                     document.getElementById('stmtT').textContent = formatNumber(res.stats.totalTransfers);
                     document.getElementById('stmtC').textContent = formatNumber(res.stats.totalCollections);
                     document.getElementById('stmtR').textContent = formatNumber(res.stats.remaining);
                     const tbody = document.getElementById('tblStatement');
-                    if (res.movements.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد حركات</td></tr>';
-                    } else {
+                    if (res.movements.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد حركات</td></tr>'; } 
+                    else {
                         let rows = '';
                         res.movements.forEach(m => {
                             const typeClass = m.type === 'تحويل' ? 'primary' : 'success';
-                            rows += `<tr>
-                                        <td>${formatDate(m.date)}</td>
-                                        <td>${formatTime(m.time)}</td>
-                                        <td><span class="badge badge-${typeClass}">${m.type}</span></td>
-                                        <td><strong>${formatNumber(m.amount)}</strong></td>
-                                        <td><strong>${formatNumber(m.balanceAfter)}</strong></td>
-                                        <td>${m.notes || '-'}</td>
-                                     </tr>`;
+                            rows += `<tr><td>${formatDate(m.date)}</td><td>${formatTime(m.time)}</td><td><span class="badge badge-${typeClass}">${m.type}</span></td><td><strong>${formatNumber(m.amount)}</strong></td><td><strong>${formatNumber(m.balanceAfter !== undefined ? m.balanceAfter : 0)}</strong></td><td>${m.notes || '-'}</td></tr>`; // إصلاح المتبقي بعد الحركة
                         });
                         tbody.innerHTML = rows;
                     }
-                } else {
-                    throw new Error('فشل تحميل كشف الحساب');
-                }
-            } catch (e) {
-                showToast(e.message || 'حدث خطأ', 'error');
-            }
+                } else { throw new Error('فشل تحميل كشف الحساب'); }
+            } catch (e) { showToast(e.message || 'حدث خطأ', 'error'); }
             showLoading(false);
         }
 
         // ==================== Search Helpers ====================
         function debounce(func, wait) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; }
-        const searchMerchantDebounced = debounce((query, listId, hiddenId, callback) => {
-            const listEl = document.getElementById(listId);
-            const hiddenEl = document.getElementById(hiddenId);
-            hiddenEl.value = '';
-            if (!query) { listEl.style.display = 'none'; return; }
-            const merchants = DB.merchants || [];
-            const filtered = merchants.filter(m => (m['اسم التاجر'] || '').includes(query) || (m['اسم النشاط'] || '').includes(query) || (m['رقم التاجر'] || '').toString().includes(query));
-            if (filtered.length === 0) { listEl.innerHTML = '<div class="no-result">لا توجد نتائج</div>'; }
-            else { listEl.innerHTML = filtered.map(m => `<div onclick="selectMerchant('${m['رقم التاجر']}', '${m['اسم التاجر']}', '${listId}', '${hiddenId}', ${callback ? `'${callback}'` : 'null'})">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join(''); }
-            listEl.style.display = 'block';
-        }, 300);
+        const searchMerchantDebounced = debounce((query, listId, hiddenId, callback) => { const listEl = document.getElementById(listId); const hiddenEl = document.getElementById(hiddenId); hiddenEl.value = ''; if (!query) { listEl.style.display = 'none'; return; } const merchants = DB.merchants || []; const filtered = merchants.filter(m => (m['اسم التاجر'] || '').includes(query) || (m['اسم النشاط'] || '').includes(query) || (m['رقم التاجر'] || '').toString().includes(query)); if (filtered.length === 0) { listEl.innerHTML = '<div class="no-result">لا توجد نتائج</div>'; } else { listEl.innerHTML = filtered.map(m => `<div onclick="selectMerchant('${m['رقم التاجر']}', '${m['اسم التاجر']}', '${listId}', '${hiddenId}', ${callback ? `'${callback}'` : 'null'})">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join(''); } listEl.style.display = 'block'; }, 300);
         function handleMerchantSearch(query, listId, hiddenId, callback) { searchMerchantDebounced(query, listId, hiddenId, callback); }
-        function selectMerchant(id, name, listId, hiddenId, callback) {
-            const hiddenInput = document.getElementById(hiddenId);
-            const listEl = document.getElementById(listId);
-            const textInput = hiddenInput.previousElementSibling;
-            if(hiddenInput) hiddenInput.value = id;
-            if(textInput && textInput.type === 'text') textInput.value = name;
-            if(listEl) listEl.style.display = 'none';
-            const selectId = hiddenId.replace('Id', 'Select');
-            const selectEl = document.getElementById(selectId);
-            if (selectEl) selectEl.value = id;
-            // Fill merchant data (account and machine) based on the hiddenId's prefix
-            let prefix = '';
-            if (hiddenId === 'trMerchId') prefix = 'tr';
-            else if (hiddenId === 'colMerchId') prefix = 'col';
-            else if (hiddenId === 'mcMerchId') prefix = 'mc';
-            else if (hiddenId === 'stmtMerchantId') prefix = 'stmt';
-            if (prefix && prefix !== 'stmt') fillMerchantData(id, prefix);
-            if (callback && window[callback]) window[callback](id);
-        }
-        function handleDropdownSelect(id, textInputId, hiddenId, listId, callback) {
-            const hiddenInput = document.getElementById(hiddenId);
-            const textInput = document.getElementById(textInputId);
-            const listEl = document.getElementById(listId);
-            if(hiddenInput) hiddenInput.value = id;
-            if(listEl) listEl.style.display = 'none';
-            if (id) {
-                const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
-                if(textInput) textInput.value = merchant ? merchant['اسم التاجر'] : '';
-                // Fill merchant data based on hiddenId prefix
-                let prefix = '';
-                if (hiddenId === 'trMerchId') prefix = 'tr';
-                else if (hiddenId === 'colMerchId') prefix = 'col';
-                else if (hiddenId === 'mcMerchId') prefix = 'mc';
-                else if (hiddenId === 'stmtMerchantId') prefix = 'stmt';
-                if (prefix && prefix !== 'stmt') fillMerchantData(id, prefix);
-                if (callback && window[callback]) window[callback](id);
-            } else {
-                if(textInput) textInput.value = '';
-            }
-        }
-        function fillMerchantData(merchantId, prefix) {
-            const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
-            if (!merchant) return;
-            const accountField = document.getElementById(`${prefix}Account`);
-            const machineField = document.getElementById(`${prefix}Machine`);
-            if (accountField) accountField.value = merchant['رقم الحساب'] || '';
-            if (machineField) {
-                // Find the machine associated with this merchant (one machine per merchant)
-                const machine = DB.machines.find(m => m['رقم التاجر'] == merchantId);
-                machineField.value = machine ? machine['رقم المكنة'] || '' : '';
-            }
-        }
-        function populateMerchantDropdowns() {
-            const merchants = DB.merchants || [];
-            const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect', 'mcMerchSelect'];
-            dropdownIds.forEach(dId => {
-                const el = document.getElementById(dId);
-                if(!el) return;
-                const currentVal = el.value;
-                el.innerHTML = '<option value="">-- اختر تاجر --</option>';
-                merchants.forEach(m => { el.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</option>`; });
-                if(currentVal && merchants.some(m => m['رقم التاجر'] == currentVal)) el.value = currentVal;
-            });
-        }
+        function selectMerchant(id, name, listId, hiddenId, callback) { const hiddenInput = document.getElementById(hiddenId); const listEl = document.getElementById(listId); const textInput = hiddenInput.previousElementSibling; if(hiddenInput) hiddenInput.value = id; if(textInput && textInput.type === 'text') textInput.value = name; if(listEl) listEl.style.display = 'none'; const selectId = hiddenId.replace('Id', 'Select'); const selectEl = document.getElementById(selectId); if (selectEl) selectEl.value = id; let prefix = ''; if (hiddenId === 'trMerchId') prefix = 'tr'; else if (hiddenId === 'colMerchId') prefix = 'col'; else if (hiddenId === 'mcMerchId') prefix = 'mc'; else if (hiddenId === 'stmtMerchantId') prefix = 'stmt'; if (prefix && prefix !== 'stmt') fillMerchantData(id, prefix); if (callback && window[callback]) window[callback](id); }
+        function handleDropdownSelect(id, textInputId, hiddenId, listId, callback) { const hiddenInput = document.getElementById(hiddenId); const textInput = document.getElementById(textInputId); const listEl = document.getElementById(listId); if(hiddenInput) hiddenInput.value = id; if(listEl) listEl.style.display = 'none'; if (id) { const merchant = DB.merchants.find(m => m['رقم التاجر'] == id); if(textInput) textInput.value = merchant ? merchant['اسم التاجر'] : ''; let prefix = ''; if (hiddenId === 'trMerchId') prefix = 'tr'; else if (hiddenId === 'colMerchId') prefix = 'col'; else if (hiddenId === 'mcMerchId') prefix = 'mc'; else if (hiddenId === 'stmtMerchantId') prefix = 'stmt'; if (prefix && prefix !== 'stmt') fillMerchantData(id, prefix); if (callback && window[callback]) window[callback](id); } else { if(textInput) textInput.value = ''; } }
+        function fillMerchantData(merchantId, prefix) { const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId); if (!merchant) return; const accountField = document.getElementById(`${prefix}Account`); const machineField = document.getElementById(`${prefix}Machine`); if (accountField) accountField.value = merchant['رقم الحساب'] || ''; if (machineField) { const machine = DB.machines.find(m => m['رقم التاجر'] == merchantId); machineField.value = machine ? machine['رقم المكنة'] || '' : ''; } }
+        function populateMerchantDropdowns() { const merchants = DB.merchants || []; const dropdownIds = ['stmtMerchantSelect', 'trMerchSelect', 'colMerchSelect', 'mcMerchSelect']; dropdownIds.forEach(dId => { const el = document.getElementById(dId); if(!el) return; const currentVal = el.value; el.innerHTML = '<option value="">-- اختر تاجر --</option>'; merchants.forEach(m => { el.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</option>`; }); if(currentVal && merchants.some(m => m['رقم التاجر'] == currentVal)) el.value = currentVal; }); }
 
         // ==================== Modals ====================
-        function openModal(type, data = null) {
-            const body = document.getElementById('modalBody');
-            const m = document.getElementById('modal');
-            m.style.display = 'flex';
-            setTimeout(() => m.classList.add('show'), 10);
-            const isEdit = data !== null;
-            if (type === 'merchant') {
-                body.innerHTML = `
-                    <h3><i class="fas fa-user-plus"></i> ${isEdit ? 'تعديل تاجر' : 'إضافة تاجر جديد'}</h3>
-                    <div class="form-group"><label>اسم التاجر<span class="required">*</span></label><input id="mName" class="form-control" placeholder="اسم التاجر" value="${isEdit ? (data['اسم التاجر'] || '') : ''}"></div>
-                    <div class="form-group"><label>اسم النشاط</label><input id="mBiz" class="form-control" placeholder="اسم النشاط" value="${isEdit ? (data['اسم النشاط'] || '') : ''}"></div>
-                    <div class="form-group"><label>رقم الحساب</label><input id="mAcc" class="form-control" placeholder="رقم الحساب" value="${isEdit ? (data['رقم الحساب'] || '') : ''}"></div>
-                    <div class="form-group"><label>رقم الهاتف</label><input id="mPhone" class="form-control" placeholder="رقم الهاتف" value="${isEdit ? (data['رقم الهاتف'] || '') : ''}"></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control" placeholder="المنطقة" value="${isEdit ? (data['المنطقة'] || '') : ''}"></div>
-                        <div class="form-group"><label>العنوان</label><input id="mAddr" class="form-control" placeholder="العنوان" value="${isEdit ? (data['العنوان'] || '') : ''}"></div>
-                    </div>
-                    <div class="form-group"><label>الحالة</label><select id="mStatus" class="form-control"><option value="نشط" ${isEdit && data['الحالة'] === 'نشط' ? 'selected' : ''}>نشط</option><option value="غير نشط" ${isEdit && data['الحالة'] === 'غير نشط' ? 'selected' : ''}>غير نشط</option></select></div>
-                    <div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}"></div>
-                    <button class="btn btn-primary btn-block" onclick="saveMerchant(${isEdit ? `'${data['رقم التاجر']}'` : ''})"><i class="fas fa-save"></i> حفظ التاجر</button>
-                `;
-            } else if (type === 'machine') {
-                body.innerHTML = `
-                    <h3><i class="fas fa-plus-circle"></i> ${isEdit ? 'تعديل مكنة' : 'إضافة مكنة جديدة'}</h3>
-                    <div class="form-group"><label>التاجر <span class="required">*</span></label>
-                        <div style="display:flex; gap:0.5rem;">
-                            <select id="mcMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'mcMerchSearch', 'mcMerchId', 'mcMerchList')"><option value="">-- اختر --</option></select>
-                            <input type="text" id="mcMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')">
-                        </div>
-                        <input type="hidden" id="mcMerchId">
-                        <div id="mcMerchList" class="search-results"></div>
-                    </div>
-                    <div class="form-group"><label>الرقم التسلسلي <span class="required">*</span></label>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <input type="text" id="mcSerial" class="form-control" placeholder="ادخل الرقم التسلسلي أو امسحه بالكاميرا" style="flex:1" value="${isEdit ? (data['الرقم التسلسلي'] || '') : ''}">
-                            <button type="button" class="btn btn-primary btn-sm" onclick="openScanModal()"><i class="fas fa-camera"></i> مسح</button>
-                        </div>
-                    </div>
-                    <div class="form-group"><label>رقم الحساب</label><input id="mcAccount" class="form-control" placeholder="رقم الحساب (يُملأ تلقائياً عند اختيار التاجر)" value="${isEdit ? (data['رقم الحساب'] || '') : ''}"></div>
-                    <div class="form-group"><label>التارجت الشهري</label><input type="number" id="mcTarget" class="form-control" placeholder="التارجت الشهري" value="${isEdit ? (data['التارجت الشهري'] || '') : ''}"></div>
-                    <div class="form-group"><label>الحالة</label>
-                        <select id="mcStatus" class="form-control">
-                            <option value="نشطة" ${isEdit && data['الحالة'] === 'نشطة' ? 'selected' : ''}>نشطة</option>
-                            <option value="متوقفة" ${isEdit && data['الحالة'] === 'متوقفة' ? 'selected' : ''}>متوقفة</option>
-                            <option value="صيانة" ${isEdit && data['الحالة'] === 'صيانة' ? 'selected' : ''}>صيانة</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label>ملاحظات</label><input id="mcNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}"></div>
-                    <button class="btn btn-primary btn-block" onclick="saveMachine(${isEdit ? `'${data['رقم المكنة']}'` : ''})"><i class="fas fa-save"></i> حفظ المكنة</button>
-                `;
-                if (isEdit) {
-                    const merchantId = data['رقم التاجر'];
-                    document.getElementById('mcMerchId').value = merchantId;
-                    const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
-                    if (merchant) {
-                        document.getElementById('mcMerchSearch').value = merchant['اسم التاجر'];
-                        document.getElementById('mcMerchSelect').value = merchantId;
-                        fillMerchantData(merchantId, 'mc');
-                    }
-                } else {
-                    const selId = document.getElementById('mcMerchId').value;
-                    if (selId) fillMerchantData(selId, 'mc');
-                }
-            } else if (type === 'transfer') {
-                body.innerHTML = `
-                    <h3><i class="fas fa-exchange-alt"></i> ${isEdit ? 'تعديل تحويل' : 'تحويل جديد'}</h3>
-                    <div class="form-group"><label>التاجر <span class="required">*</span></label>
-                        <div style="display:flex; gap:0.5rem;">
-                            <select id="trMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'trMerchSearch', 'trMerchId', 'trMerchList')"><option value="">-- اختر --</option></select>
-                            <input type="text" id="trMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'trMerchList', 'trMerchId')">
-                        </div>
-                        <input type="hidden" id="trMerchId">
-                        <div id="trMerchList" class="search-results"></div>
-                    </div>
-                    <div class="form-group"><label>رقم الحساب</label><input id="trAccount" class="form-control" readonly></div>
-                    <div class="form-group"><label>المكنة</label><input id="trMachine" class="form-control" readonly></div>
-                    <div class="form-group"><label>نوع التحويل</label>
-                        <select id="trType" class="form-control">
-                            <option value="رصيد خدمات" ${isEdit && data['نوع التحويل'] === 'رصيد خدمات' ? 'selected' : ''}>رصيد خدمات</option>
-                            <option value="رصيد كاش" ${isEdit && data['نوع التحويل'] === 'رصيد كاش' ? 'selected' : ''}>رصيد كاش</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="trAmt" class="form-control" placeholder="قيمة التحويل" value="${isEdit ? (data['قيمة التحويل'] || '') : ''}"></div>
-                    <div class="form-group"><label>ملاحظات</label><input id="trNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}"></div>
-                    <button class="btn btn-success btn-block" onclick="saveTransfer(${isEdit ? `'${data['رقم التحويل']}'` : ''})"><i class="fas fa-check"></i> تأكيد التحويل</button>
-                `;
-                if (isEdit) {
-                    const merchantId = data['رقم التاجر'];
-                    document.getElementById('trMerchId').value = merchantId;
-                    document.getElementById('trMerchSearch').value = data['اسم التاجر'];
-                    document.getElementById('trMerchSelect').value = merchantId;
-                    fillMerchantData(merchantId, 'tr');
-                    document.getElementById('trAmt').value = data['قيمة التحويل'] || '';
-                    document.getElementById('trNotes').value = data['ملاحظات'] || '';
-                    if (data['نوع التحويل']) document.getElementById('trType').value = data['نوع التحويل'];
-                } else {
-                    const merchId = document.getElementById('trMerchId').value;
-                    if (merchId) fillMerchantData(merchId, 'tr');
-                }
-            } else if (type === 'collection') {
-                body.innerHTML = `
-                    <h3><i class="fas fa-hand-holding-usd"></i> ${isEdit ? 'تعديل تحصيل' : 'تحصيل جديد'}</h3>
-                    <div class="form-group"><label>التاجر <span class="required">*</span></label>
-                        <div style="display:flex; gap:0.5rem;">
-                            <select id="colMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'colMerchSearch', 'colMerchId', 'colMerchList')"><option value="">-- اختر --</option></select>
-                            <input type="text" id="colMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'colMerchList', 'colMerchId')">
-                        </div>
-                        <input type="hidden" id="colMerchId">
-                        <div id="colMerchList" class="search-results"></div>
-                    </div>
-                    <div class="form-group"><label>رقم الحساب</label><input id="colAccount" class="form-control" readonly></div>
-                    <div class="form-group"><label>المكنة</label><input id="colMachine" class="form-control" readonly></div>
-                    <div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="colAmt" class="form-control" placeholder="قيمة التحصيل" value="${isEdit ? (data['قيمة التحصيل'] || '') : ''}"></div>
-                    <div class="form-group"><label>نوع التحصيل</label>
-                        <select id="colType" class="form-control"><option value="كلي" ${isEdit && data['نوع التحصيل'] === 'كلي' ? 'selected' : ''}>كلي</option><option value="جزئي" ${isEdit && data['نوع التحصيل'] === 'جزئي' ? 'selected' : ''}>جزئي</option></select>
-                    </div>
-                    <div class="form-group"><label>ملاحظات</label><input id="colNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}"></div>
-                    <button class="btn btn-primary btn-block" onclick="saveCollection(${isEdit ? `'${data['رقم التحصيل']}'` : ''})"><i class="fas fa-check"></i> تأكيد التحصيل</button>
-                `;
-                if (isEdit) {
-                    const merchantId = data['رقم التاجر'];
-                    document.getElementById('colMerchId').value = merchantId;
-                    document.getElementById('colMerchSearch').value = data['اسم التاجر'];
-                    document.getElementById('colMerchSelect').value = merchantId;
-                    fillMerchantData(merchantId, 'col');
-                    document.getElementById('colAmt').value = data['قيمة التحصيل'] || '';
-                    document.getElementById('colType').value = data['نوع التحصيل'] || 'كلي';
-                    document.getElementById('colNotes').value = data['ملاحظات'] || '';
-                } else {
-                    const merchId = document.getElementById('colMerchId').value;
-                    if (merchId) fillMerchantData(merchId, 'col');
-                }
-            }
+        function openModal(type, data = null) { const body = document.getElementById('modalBody'); const m = document.getElementById('modal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10); const isEdit = data !== null;
+            if (type === 'merchant') { body.innerHTML = `<h3><i class="fas fa-user-plus"></i> ${isEdit ? 'تعديل تاجر' : 'إضافة تاجر جديد'}</h3><div class="form-group"><label>اسم التاجر<span class="required">*</span></label><input id="mName" class="form-control" placeholder="اسم التاجر" value="${isEdit ? (data['اسم التاجر'] || '') : ''}"></div><div class="form-group"><label>اسم النشاط</label><input id="mBiz" class="form-control" placeholder="اسم النشاط" value="${isEdit ? (data['اسم النشاط'] || '') : ''}"></div><div class="form-group"><label>رقم الحساب</label><input id="mAcc" class="form-control" placeholder="رقم الحساب" value="${isEdit ? (data['رقم الحساب'] || '') : ''}"></div><div class="form-group"><label>رقم الهاتف</label><input id="mPhone" class="form-control" placeholder="رقم الهاتف" value="${isEdit ? (data['رقم الهاتف'] || '') : ''}"></div><div class="form-row"><div class="form-group"><label>المنطقة</label><input id="mArea" class="form-control" placeholder="المنطقة" value="${isEdit ? (data['المنطقة'] || '') : ''}"></div><div class="form-group"><label>العنوان</label><input id="mAddr" class="form-control" placeholder="العنوان" value="${isEdit ? (data['العنوان'] || '') : ''}"></div></div><div class="form-group"><label>الحالة</label><select id="mStatus" class="form-control"><option value="نشط" ${isEdit && data['الحالة'] === 'نشط' ? 'selected' : ''}>نشط</option><option value="غير نشط" ${isEdit && data['الحالة'] === 'غير نشط' ? 'selected' : ''}>غير نشط</option></select></div><div class="form-group"><label>ملاحظات</label><input id="mNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}"></div><button class="btn btn-primary btn-block" onclick="saveMerchant(${isEdit ? `'${data['رقم التاجر']}'` : ''})"><i class="fas fa-save"></i> حفظ التاجر</button>`; }
+            else if (type === 'machine') { body.innerHTML = `<h3><i class="fas fa-plus-circle"></i> ${isEdit ? 'تعديل مكنة' : 'إضافة مكنة جديدة'}</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="mcMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'mcMerchSearch', 'mcMerchId', 'mcMerchList')"><option value="">-- اختر --</option></select><input type="text" id="mcMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')"></div><input type="hidden" id="mcMerchId"><div id="mcMerchList" class="search-results"></div></div><div class="form-group"><label>الرقم التسلسلي <span class="required">*</span></label><div style="display: flex; gap: 0.5rem;"><input type="text" id="mcSerial" class="form-control" placeholder="ادخل الرقم التسلسلي أو امسحه بالكاميرا" style="flex:1" value="${isEdit ? (data['الرقم التسلسلي'] || '') : ''}"><button type="button" class="btn btn-primary btn-sm" onclick="openScanModal()"><i class="fas fa-camera"></i> مسح</button></div></div><div class="form-group"><label>رقم الحساب</label><input id="mcAccount" class="form-control" placeholder="رقم الحساب (يُملأ تلقائياً عند اختيار التاجر)" value="${isEdit ? (data['رقم الحساب'] || '') : ''}"></div><div class="form-group"><label>التارجت الشهري</label><input type="number" id="mcTarget" class="form-control" placeholder="التارجت الشهري" value="${isEdit ? (data['التارجت الشهري'] || '') : ''}"></div><div class="form-group"><label>الحالة</label><select id="mcStatus" class="form-control"><option value="نشطة" ${isEdit && data['الحالة'] === 'نشطة' ? 'selected' : ''}>نشطة</option><option value="متوقفة" ${isEdit && data['الحالة'] === 'متوقفة' ? 'selected' : ''}>متوقفة</option><option value="صيانة" ${isEdit && data['الحالة'] === 'صيانة' ? 'selected' : ''}>صيانة</option></select></div><div class="form-group"><label>ملاحظات</label><input id="mcNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}"></div><button class="btn btn-primary btn-block" onclick="saveMachine(${isEdit ? `'${data['رقم المكنة']}'` : ''})"><i class="fas fa-save"></i> حفظ المكنة</button>`; if (isEdit) { const merchantId = data['رقم التاجر']; document.getElementById('mcMerchId').value = merchantId; const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId); if (merchant) { document.getElementById('mcMerchSearch').value = merchant['اسم التاجر']; document.getElementById('mcMerchSelect').value = merchantId; fillMerchantData(merchantId, 'mc'); } } else { const selId = document.getElementById('mcMerchId').value; if (selId) fillMerchantData(selId, 'mc'); } }
+            else if (type === 'transfer') { body.innerHTML = `<h3><i class="fas fa-exchange-alt"></i> ${isEdit ? 'تعديل تحويل' : 'تحويل جديد'}</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="trMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'trMerchSearch', 'trMerchId', 'trMerchList')"><option value="">-- اختر --</option></select><input type="text" id="trMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'trMerchList', 'trMerchId')"></div><input type="hidden" id="trMerchId"><div id="trMerchList" class="search-results"></div></div><div class="form-group"><label>رقم الحساب</label><input id="trAccount" class="form-control" readonly></div><div class="form-group"><label>المكنة</label><input id="trMachine" class="form-control" readonly></div><div class="form-group"><label>نوع التحويل</label><select id="trType" class="form-control"><option value="رصيد خدمات" ${isEdit && data['نوع التحويل'] === 'رصيد خدمات' ? 'selected' : ''}>رصيد خدمات</option><option value="رصيد كاش" ${isEdit && data['نوع التحويل'] === 'رصيد كاش' ? 'selected' : ''}>رصيد كاش</option></select></div><div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="trAmt" class="form-control" placeholder="قيمة التحويل" value="${isEdit ? (data['قيمة التحويل'] || '') : ''}"></div><div class="form-group"><label>ملاحظات</label><input id="trNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}"></div><button class="btn btn-success btn-block" onclick="saveTransfer(${isEdit ? `'${data['رقم التحويل']}'` : ''})"><i class="fas fa-check"></i> تأكيد التحويل</button>`; if (isEdit) { const merchantId = data['رقم التاجر']; document.getElementById('trMerchId').value = merchantId; document.getElementById('trMerchSearch').value = data['اسم التاجر']; document.getElementById('trMerchSelect').value = merchantId; fillMerchantData(merchantId, 'tr'); document.getElementById('trAmt').value = data['قيمة التحويل'] || ''; document.getElementById('trNotes').value = data['ملاحظات'] || ''; if (data['نوع التحويل']) document.getElementById('trType').value = data['نوع التحويل']; } else { const merchId = document.getElementById('trMerchId').value; if (merchId) fillMerchantData(merchId, 'tr'); } }
+            else if (type === 'collection') { body.innerHTML = `<h3><i class="fas fa-hand-holding-usd"></i> ${isEdit ? 'تعديل تحصيل' : 'تحصيل جديد'}</h3><div class="form-group"><label>التاجر <span class="required">*</span></label><div style="display:flex; gap:0.5rem;"><select id="colMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'colMerchSearch', 'colMerchId', 'colMerchList')"><option value="">-- اختر --</option></select><input type="text" id="colMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'colMerchList', 'colMerchId')"></div><input type="hidden" id="colMerchId"><div id="colMerchList" class="search-results"></div></div><div class="form-group"><label>رقم الحساب</label><input id="colAccount" class="form-control" readonly></div><div class="form-group"><label>المكنة</label><input id="colMachine" class="form-control" readonly></div><div class="form-group"><label>المبلغ <span class="required">*</span></label><input type="number" id="colAmt" class="form-control" placeholder="قيمة التحصيل" value="${isEdit ? (data['قيمة التحصيل'] || '') : ''}"></div><div class="form-group"><label>نوع التحصيل</label><select id="colType" class="form-control"><option value="كلي" ${isEdit && data['نوع التحصيل'] === 'كلي' ? 'selected' : ''}>كلي</option><option value="جزئي" ${isEdit && data['نوع التحصيل'] === 'جزئي' ? 'selected' : ''}>جزئي</option></select></div><div class="form-group"><label>ملاحظات</label><input id="colNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}"></div><button class="btn btn-primary btn-block" onclick="saveCollection(${isEdit ? `'${data['رقم التحصيل']}'` : ''})"><i class="fas fa-check"></i> تأكيد التحصيل</button>`; if (isEdit) { const merchantId = data['رقم التاجر']; document.getElementById('colMerchId').value = merchantId; document.getElementById('colMerchSearch').value = data['اسم التاجر']; document.getElementById('colMerchSelect').value = merchantId; fillMerchantData(merchantId, 'col'); document.getElementById('colAmt').value = data['قيمة التحصيل'] || ''; document.getElementById('colType').value = data['نوع التحصيل'] || 'كلي'; document.getElementById('colNotes').value = data['ملاحظات'] || ''; } else { const merchId = document.getElementById('colMerchId').value; if (merchId) fillMerchantData(merchId, 'col'); } }
             populateMerchantDropdowns();
         }
         function closeModal() { const m = document.getElementById('modal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); }
 
         // ==================== Save Operations ====================
-        async function saveMerchant(id = null) {
-            const name = document.getElementById('mName').value.trim();
-            if (!name) { showToast('اسم التاجر مطلوب', 'warning'); return; }
-            showLoading(true);
-            const data = {
-                'اسم التاجر': name,
-                'اسم النشاط': document.getElementById('mBiz').value,
-                'رقم الحساب': document.getElementById('mAcc').value,
-                'رقم الهاتف': document.getElementById('mPhone').value,
-                'المنطقة': document.getElementById('mArea').value,
-                'العنوان': document.getElementById('mAddr').value,
-                'الحالة': document.getElementById('mStatus').value,
-                'ملاحظات': document.getElementById('mNotes').value
-            };
-            const res = id ? await postToAPI('updateMerchant', data, id) : await postToAPI('addMerchant', data);
-            if (res.success) { showToast(id ? 'تم تعديل التاجر' : 'تم إضافة التاجر', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
-        }
-        async function saveMachine(id = null) {
-            const merchantId = document.getElementById('mcMerchId').value;
-            const serial = document.getElementById('mcSerial').value.trim();
-            if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
-            if (!serial) { showToast('الرقم التسلسلي مطلوب', 'warning'); return; }
-            showLoading(true);
-            // === إصلاح: جلب بيانات التاجر من الكاش لإرسال اسم النشاط واسم التاجر ===
-            const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
-            const data = {
-                'رقم التاجر': merchantId,
-                'اسم التاجر': merchant ? (merchant['اسم التاجر'] || '') : '',
-                'اسم النشاط': merchant ? (merchant['اسم النشاط'] || '') : '',
-                'الرقم التسلسلي': serial,
-                'رقم الحساب': document.getElementById('mcAccount').value,
-                'التارجت الشهري': Number(document.getElementById('mcTarget').value) || 0,
-                'الحالة': document.getElementById('mcStatus').value,
-                'ملاحظات': document.getElementById('mcNotes').value
-            };
-            const res = id ? await postToAPI('updateMachine', data, id) : await postToAPI('addMachine', data);
-            if (res.success) { showToast(id ? 'تم تعديل المكنة' : 'تم إضافة المكنة', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
-        }
-        async function saveTransfer(id = null) {
-            const merchantId = document.getElementById('trMerchId').value;
-            const amount = document.getElementById('trAmt').value;
-            if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
-            if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحويل', 'warning'); return; }
-            showLoading(true);
-            const data = {
-                'رقم التاجر': merchantId,
-                'رقم المكنة': document.getElementById('trMachine').value,
-                'قيمة التحويل': Number(amount),
-                'نوع التحويل': document.getElementById('trType').value,
-                'ملاحظات': document.getElementById('trNotes').value
-            };
-            const res = id ? await postToAPI('updateTransfer', data, id) : await postToAPI('addTransfer', data);
-            if (res.success) { showToast(id ? 'تم تعديل التحويل' : 'تم التحويل بنجاح', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
-        }
+        async function saveMerchant(id = null) { const name = document.getElementById('mName').value.trim(); if (!name) { showToast('اسم التاجر مطلوب', 'warning'); return; } showLoading(true); const data = { 'اسم التاجر': name, 'اسم النشاط': document.getElementById('mBiz').value, 'رقم الحساب': document.getElementById('mAcc').value, 'رقم الهاتف': document.getElementById('mPhone').value, 'المنطقة': document.getElementById('mArea').value, 'العنوان': document.getElementById('mAddr').value, 'الحالة': document.getElementById('mStatus').value, 'ملاحظات': document.getElementById('mNotes').value }; const res = id ? await postToAPI('updateMerchant', data, id) : await postToAPI('addMerchant', data); if (res.success) { showToast(id ? 'تم تعديل التاجر' : 'تم إضافة التاجر', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
+        
+        async function saveMachine(id = null) { const merchantId = document.getElementById('mcMerchId').value; const serial = document.getElementById('mcSerial').value.trim(); if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!serial) { showToast('الرقم التسلسلي مطلوب', 'warning'); return; } showLoading(true); const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId); const data = { 'رقم التاجر': merchantId, 'اسم التاجر': merchant ? (merchant['اسم التاجر'] || '') : '', 'اسم النشاط': merchant ? (merchant['اسم النشاط'] || '') : '', 'الرقم التسلسلي': serial, 'رقم الحساب': document.getElementById('mcAccount').value, 'التارجت الشهري': Number(document.getElementById('mcTarget').value) || 0, 'الحالة': document.getElementById('mcStatus').value, 'ملاحظات': document.getElementById('mcNotes').value }; const res = id ? await postToAPI('updateMachine', data, id) : await postToAPI('addMachine', data); if (res.success) { showToast(id ? 'تم تعديل المكنة' : 'تم إضافة المكنة', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
+        
+        async function saveTransfer(id = null) { const merchantId = document.getElementById('trMerchId').value; const amount = document.getElementById('trAmt').value; if (!merchantId) { showToast('اختر التاجر', 'warning'); return; } if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحويل', 'warning'); return; } showLoading(true); const data = { 'رقم التاجر': merchantId, 'رقم المكنة': document.getElementById('trMachine').value, 'قيمة التحويل': Number(amount), 'نوع التحويل': document.getElementById('trType').value, 'ملاحظات': document.getElementById('trNotes').value }; const res = id ? await postToAPI('updateTransfer', data, id) : await postToAPI('addTransfer', data); if (res.success) { showToast(id ? 'تم تعديل التحويل' : 'تم التحويل بنجاح', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }
+        
         async function saveCollection(id = null) {
             const merchantId = document.getElementById('colMerchId').value;
-            const amount = document.getElementById('colAmt').value;
+            const amount = Number(document.getElementById('colAmt').value);
             if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
-            if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة التحصيل', 'warning'); return; }
+            if (!amount || amount <= 0) { showToast('أدخل قيمة التحصيل', 'warning'); return; }
+            
+            // === إصلاح: حساب المديونية محلياً للتنبيه الفوري ===
+            const mTransfers = (DB.transfers || []).filter(t => t['رقم التاجر'] == merchantId);
+            const mCollections = (DB.collections || []).filter(c => c['رقم التاجر'] == merchantId);
+            const totalTrans = mTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+            const totalCol = mCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+            const currentDebt = totalTrans - totalCol;
+
+            if (amount > currentDebt) {
+                showConfirm(
+                    `تنبيه هام: لا يمكن تحصيل هذا المبلغ!\n\nمبلغ التحصيل المطلوب: ${amount.toLocaleString('ar-EG')} ج.م\nإجمالي المديونية الحالية على التاجر: ${currentDebt.toLocaleString('ar-EG')} ج.م\nالفرق الزائد: ${(amount - currentDebt).toLocaleString('ar-EG')} ج.م\n\nيرجى مراجعة المبلغ أو تعديل التحصيل ليتناسب مع رصيد التاجر.`,
+                    () => {},
+                    'مبلغ التحصيل أكبر من المديونية'
+                );
+                return;
+            }
+
             showLoading(true);
-            const data = {
-                'رقم التاجر': merchantId,
-                'رقم المكنة': document.getElementById('colMachine').value,
-                'قيمة التحصيل': Number(amount),
-                'نوع التحصيل': document.getElementById('colType').value,
-                'ملاحظات': document.getElementById('colNotes').value
-            };
+            const data = { 'رقم التاجر': merchantId, 'رقم المكنة': document.getElementById('colMachine').value, 'قيمة التحصيل': amount, 'نوع التحصيل': document.getElementById('colType').value, 'ملاحظات': document.getElementById('colNotes').value };
             const res = id ? await postToAPI('updateCollection', data, id) : await postToAPI('addCollection', data);
             if (res.success) { showToast(id ? 'تم تعديل التحصيل' : 'تم التحصيل بنجاح', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
 
-        // ==================== Delete Operations ====================
+        // ==================== Delete / Export / Navigation ====================
         function showConfirm(msg, callback, title = 'تأكيد') { document.getElementById('confirmMsg').textContent = msg; document.getElementById('confirmTitle').textContent = title; confirmCallback = callback; const m = document.getElementById('confirmModal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10); }
         function closeConfirm() { const m = document.getElementById('confirmModal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); confirmCallback = null; }
         document.getElementById('confirmBtn').onclick = () => { if (confirmCallback) confirmCallback(); closeConfirm(); };
@@ -1111,160 +534,43 @@
         async function delCollection(id) { showConfirm('هل أنت متأكد من حذف هذا التحصيل؟', async () => { showLoading(true); await postToAPI('deleteCollection', {}, id); loadData(); }); }
         async function deleteArchive(id) { showConfirm('هل أنت متأكد من حذف هذا السجل من الأرشيف نهائياً؟', async () => { showLoading(true); await postToAPI('deleteArchive', {}, id); loadData(); }); }
         async function confirmCloseMonth() { showConfirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد؟\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.', async () => { showLoading(true); const res = await postToAPI('closeMonth'); if (res.success) { showToast('تم بدء شهر جديد بنجاح', 'success'); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); } }, 'بدء شهر جديد'); }
+        
+        function exportExcel() { if (!DB.merchants || DB.merchants.length === 0) { showToast('لا توجد بيانات للتصدير', 'warning'); return; } showLoading(true); try { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.merchants), "التجار"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.machines), "المكن"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.transfers), "التحويلات"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.collections), "التحصيلات"); XLSX.writeFile(wb, `Axentro_Report_${new Date().toISOString().slice(0, 10)}.xlsx`); showToast('تم تصدير التقرير بنجاح', 'success'); } catch (e) { showToast('حدث خطأ أثناء التصدير', 'error'); } showLoading(false); }
 
-        // ==================== Export ====================
-        function exportExcel() {
-            if (!DB.merchants || DB.merchants.length === 0) { showToast('لا توجد بيانات للتصدير', 'warning'); return; }
-            showLoading(true);
-            try {
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.merchants), "التجار");
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.machines), "المكن");
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.transfers), "التحويلات");
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.collections), "التحصيلات");
-                XLSX.writeFile(wb, `Axentro_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
-                showToast('تم تصدير التقرير بنجاح', 'success');
-            } catch (e) { showToast('حدث خطأ أثناء التصدير', 'error'); }
-            showLoading(false);
-        }
-
-        // ==================== Navigation ====================
-        function showPage(name, element) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-            document.getElementById('page-' + name).classList.add('active');
-            if (element) element.classList.add('active');
-        }
+        function showPage(name, element) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active')); document.getElementById('page-' + name).classList.add('active'); if (element) element.classList.add('active'); }
 
         // ==================== Scanner ====================
         let scanStream = null; let scanTrack = null; let torchOn = false; let scanRafId = null; let scanAudio = null;
         function initScanSound() { try { scanAudio = new Audio('scan.mp3'); scanAudio.preload = 'auto'; } catch(e) {} }
         function playScanSound() { if (scanAudio) { scanAudio.currentTime = 0; scanAudio.play().catch(e => {}); } }
-        async function startScanCamera() {
-            await stopScanCamera();
-            try {
-                const constraints = { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } };
-                scanStream = await navigator.mediaDevices.getUserMedia(constraints);
-                const video = document.getElementById('video');
-                if (video) { video.srcObject = scanStream; await video.play(); }
-                scanTrack = scanStream.getVideoTracks()[0] || null;
-                if ('BarcodeDetector' in window) {
-                    const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code", "upc_a", "upc_e", "itf", "codabar"] });
-                    const tick = async () => {
-                        try {
-                            const videoEl = document.getElementById('video');
-                            if (!videoEl || videoEl.paused || videoEl.ended) return;
-                            const codes = await detector.detect(videoEl);
-                            if (codes && codes.length) {
-                                const raw = (codes[0].rawValue || "").trim();
-                                if (raw) {
-                                    const serialInput = document.getElementById('mcSerial');
-                                    if (serialInput) { serialInput.value = raw; playScanSound(); showToast('تم مسح الرقم التسلسلي بنجاح', 'success'); }
-                                    await stopScanCamera(); closeScanModal();
-                                    return;
-                                }
-                            }
-                        } catch (e) { }
-                        scanRafId = requestAnimationFrame(tick);
-                    };
-                    scanRafId = requestAnimationFrame(tick);
-                } else { showToast('المتصفح لا يدعم ماسح الباركود', 'error'); closeScanModal(); }
-            } catch (err) { showToast('لا يمكن الوصول إلى الكاميرا. تأكد من منح الإذن.', 'error'); closeScanModal(); }
-        }
-        async function stopScanCamera() {
-            if (scanRafId) { cancelAnimationFrame(scanRafId); scanRafId = null; }
-            if (scanStream) { scanStream.getTracks().forEach(track => track.stop()); scanStream = null; }
-            scanTrack = null; torchOn = false;
-            const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = '🔦 فلاش';
-        }
-        async function toggleTorch() {
-            try {
-                if (!scanTrack) return;
-                const caps = scanTrack.getCapabilities ? scanTrack.getCapabilities() : {};
-                if (!caps.torch) { showToast('الفلاش غير مدعوم على هذا الجهاز', 'warning'); return; }
-                torchOn = !torchOn;
-                await scanTrack.applyConstraints({ advanced: [{ torch: torchOn }] });
-                const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = torchOn ? '🔦 إيقاف' : '🔦 فلاش';
-            } catch (e) { showToast('تعذر تشغيل الفلاش', 'error'); }
-        }
-        function openScanModal() {
-            const modal = document.getElementById('scanModal');
-            if (modal) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('show'), 10); startScanCamera(); }
-        }
-        function closeScanModal() {
-            const modal = document.getElementById('scanModal');
-            if (modal) { modal.classList.remove('show'); setTimeout(() => modal.style.display = 'none', 300); stopScanCamera(); }
-        }
+        async function startScanCamera() { await stopScanCamera(); try { const constraints = { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } }; scanStream = await navigator.mediaDevices.getUserMedia(constraints); const video = document.getElementById('video'); if (video) { video.srcObject = scanStream; await video.play(); } scanTrack = scanStream.getVideoTracks()[0] || null; if ('BarcodeDetector' in window) { const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code", "upc_a", "upc_e", "itf", "codabar"] }); const tick = async () => { try { const videoEl = document.getElementById('video'); if (!videoEl || videoEl.paused || videoEl.ended) return; const codes = await detector.detect(videoEl); if (codes && codes.length) { const raw = (codes[0].rawValue || "").trim(); if (raw) { const serialInput = document.getElementById('mcSerial'); if (serialInput) { serialInput.value = raw; playScanSound(); showToast('تم مسح الرقم التسلسلي بنجاح', 'success'); } await stopScanCamera(); closeScanModal(); return; } } } catch (e) { } scanRafId = requestAnimationFrame(tick); }; scanRafId = requestAnimationFrame(tick); } else { showToast('المتصفح لا يدعم ماسح الباركود', 'error'); closeScanModal(); } } catch (err) { showToast('لا يمكن الوصول إلى الكاميرا. تأكد من منح الإذن.', 'error'); closeScanModal(); } }
+        async function stopScanCamera() { if (scanRafId) { cancelAnimationFrame(scanRafId); scanRafId = null; } if (scanStream) { scanStream.getTracks().forEach(track => track.stop()); scanStream = null; } scanTrack = null; torchOn = false; const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = '🔦 فلاش'; }
+        async function toggleTorch() { try { if (!scanTrack) return; const caps = scanTrack.getCapabilities ? scanTrack.getCapabilities() : {}; if (!caps.torch) { showToast('الفلاش غير مدعوم على هذا الجهاز', 'warning'); return; } torchOn = !torchOn; await scanTrack.applyConstraints({ advanced: [{ torch: torchOn }] }); const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.textContent = torchOn ? '🔦 إيقاف' : '🔦 فلاش'; } catch (e) { showToast('تعذر تشغيل الفلاش', 'error'); } }
+        function openScanModal() { const modal = document.getElementById('scanModal'); if (modal) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('show'), 10); startScanCamera(); } }
+        function closeScanModal() { const modal = document.getElementById('scanModal'); if (modal) { modal.classList.remove('show'); setTimeout(() => modal.style.display = 'none', 300); stopScanCamera(); } }
 
         // ==================== Live Updates ====================
-        async function fetchDashboardLive() {
-            if (AppState.isPolling) return;
-            AppState.isPolling = true;
-            try {
-                const res = await fetchFromAPI('getDashboardOnly');
-                if (res && res.dashboard) {
-                    setConnectionStatus('live');
-                    const newDash = res.dashboard;
-                    const oldDash = DB.dashboard;
-                    if (oldDash && JSON.stringify(oldDash) !== JSON.stringify(newDash)) {
-                        DB.dashboard = newDash;
-                        renderDashboard();
-                        setCache(newDash);
-                    }
-                    AppState.pollInterval = AppState.minInterval;
-                } else {
-                    throw new Error('Invalid');
-                }
-            } catch (e) {
-                setConnectionStatus('offline');
-                AppState.pollInterval = Math.min(AppState.pollInterval * 1.5, AppState.maxInterval);
-            } finally {
-                AppState.isPolling = false;
-                setTimeout(fetchDashboardLive, AppState.pollInterval);
-            }
-        }
+        async function fetchDashboardLive() { if (AppState.isPolling) return; AppState.isPolling = true; try { const res = await fetchFromAPI('getDashboardOnly'); if (res && res.dashboard) { setConnectionStatus('live'); const newDash = res.dashboard; const oldDash = DB.dashboard; if (oldDash && JSON.stringify(oldDash) !== JSON.stringify(newDash)) { DB.dashboard = newDash; renderDashboard(); setCache(newDash); } AppState.pollInterval = AppState.minInterval; } else { throw new Error('Invalid'); } } catch (e) { setConnectionStatus('offline'); AppState.pollInterval = Math.min(AppState.pollInterval * 1.5, AppState.maxInterval); } finally { AppState.isPolling = false; setTimeout(fetchDashboardLive, AppState.pollInterval); } }
         function startLiveUpdates() { setTimeout(fetchDashboardLive, AppState.pollInterval); }
 
         // ==================== Edit Functions ====================
-        async function editMerchant(id) {
-            const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
-            if (merchant) openModal('merchant', merchant);
-        }
-        async function editMachine(id) {
-            const machine = DB.machines.find(m => m['رقم المكنة'] == id);
-            if (machine) openModal('machine', machine);
-        }
-        async function editTransfer(id) {
-            const transfer = DB.transfers.find(t => t['رقم التحويل'] == id);
-            if (transfer) openModal('transfer', transfer);
-        }
-        async function editCollection(id) {
-            const collection = DB.collections.find(c => c['رقم التحصيل'] == id);
-            if (collection) openModal('collection', collection);
-        }
+        async function editMerchant(id) { const merchant = DB.merchants.find(m => m['رقم التاجر'] == id); if (merchant) openModal('merchant', merchant); }
+        async function editMachine(id) { const machine = DB.machines.find(m => m['رقم المكنة'] == id); if (machine) openModal('machine', machine); }
+        async function editTransfer(id) { const transfer = DB.transfers.find(t => t['رقم التحويل'] == id); if (transfer) openModal('transfer', transfer); }
+        async function editCollection(id) { const collection = DB.collections.find(c => c['رقم التحصيل'] == id); if (collection) openModal('collection', collection); }
 
         // ==================== Initialization ====================
         window.onload = () => {
             initScanSound();
-            const torchBtn = document.getElementById('torchBtn');
-            if (torchBtn) torchBtn.onclick = toggleTorch;
-            const searchInput = document.getElementById('merchantSearchInput');
-            if (searchInput) searchInput.addEventListener('input', (e) => { merchantSearchTerm = e.target.value; renderMerchants(); });
-            const machineSearch = document.getElementById('machineSearchInput');
-            if (machineSearch) machineSearch.addEventListener('input', (e) => { machineSearchTerm = e.target.value; renderMachines(); });
-            checkSession();
-            startLiveUpdates();
+            const torchBtn = document.getElementById('torchBtn'); if (torchBtn) torchBtn.onclick = toggleTorch;
+            const searchInput = document.getElementById('merchantSearchInput'); if (searchInput) searchInput.addEventListener('input', (e) => { merchantSearchTerm = e.target.value; renderMerchants(); });
+            const machineSearch = document.getElementById('machineSearchInput'); if (machineSearch) machineSearch.addEventListener('input', (e) => { machineSearchTerm = e.target.value; renderMachines(); });
+            checkSession(); startLiveUpdates();
             document.querySelectorAll('.search-results').forEach(el => { el.previousElementSibling.addEventListener('blur', () => { setTimeout(() => el.style.display = 'none', 200); }); });
         };
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
         document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
-        function checkSession() {
-            if (localStorage.getItem('axentro_logged') === 'true') {
-                document.getElementById('loginBox').style.display = 'none';
-                document.getElementById('appBox').style.display = 'flex';
-                loadData();
-            }
-        }
+        function checkSession() { if (localStorage.getItem('axentro_logged') === 'true') { document.getElementById('loginBox').style.display = 'none'; document.getElementById('appBox').style.display = 'flex'; loadData(); } }
     </script>
 </body>
 </html>
