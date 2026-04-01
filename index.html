@@ -1047,7 +1047,7 @@
             const res = id ? await postToAPI('updateMerchant', data, id) : await postToAPI('addMerchant', data);
             if (res.success) { showToast(id ? 'تم تعديل التاجر' : 'تم إضافة التاجر', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
-            async function saveMachine(id = null) {
+        async function saveMachine(id = null) {
             const merchantId = document.getElementById('mcMerchId').value;
             const serial = document.getElementById('mcSerial').value.trim();
             if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
@@ -1067,7 +1067,7 @@
             };
             const res = id ? await postToAPI('updateMachine', data, id) : await postToAPI('addMachine', data);
             if (res.success) { showToast(id ? 'تم تعديل المكنة' : 'تم إضافة المكنة', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
-        }}
+        }
         async function saveTransfer(id = null) {
             const merchantId = document.getElementById('trMerchId').value;
             const amount = document.getElementById('trAmt').value;
