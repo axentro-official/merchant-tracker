@@ -101,7 +101,7 @@
         .badge-success { background: var(--success-light); color: var(--success); }
         .badge-danger { background: var(--danger-light); color: var(--danger); }
         .badge-primary { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
-        .badge-info { background: rgba(99, 102, 241, 0.1); color: #7c3aed; }
+        .badge-warning { background: var(--warning-light); color: #92400e; }
         footer { background: linear-gradient(135deg, var(--bg-dark) 0%, #1e293b 100%); padding: 2rem; text-align: center; margin-top: auto; }
         footer p { color: #94a3b8; font-size: 0.85rem; line-height: 1.8; }
         .qr-box { margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: float 4s ease-in-out infinite; }
@@ -142,7 +142,7 @@
         .video-wrap video { width: 100%; display: block; }
         #scanModal { z-index: 2100; }
 
-        /* ===== Overlay Alert ===== */
+        /* ===== تعديل (2): Overlay Alert - فوق كل شيء ===== */
         #overlayAlert {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(15, 23, 42, 0.75);
@@ -156,15 +156,31 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.25);
             animation: scaleIn 0.25s ease-out; overflow: hidden;
         }
-        .overlay-alert-box .oa-header { padding: 1.5rem 1.5rem 0; display: flex; align-items: center; gap: 0.8rem; }
-        .overlay-alert-box .oa-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+        .overlay-alert-box .oa-header {
+            padding: 1.5rem 1.5rem 0;
+            display: flex; align-items: center; gap: 0.8rem;
+        }
+        .overlay-alert-box .oa-icon {
+            width: 48px; height: 48px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; flex-shrink: 0;
+        }
         .overlay-alert-box .oa-icon.warning { background: var(--warning-light); color: var(--warning); }
         .overlay-alert-box .oa-icon.danger { background: var(--danger-light); color: var(--danger); }
         .overlay-alert-box .oa-icon.success { background: var(--success-light); color: var(--success); }
         .overlay-alert-box .oa-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
-        .overlay-alert-box .oa-body { padding: 1rem 1.5rem 1.5rem; font-size: 0.9rem; color: var(--muted); line-height: 1.8; white-space: pre-line; }
-        .overlay-alert-box .oa-footer { padding: 0 1.5rem 1.5rem; display: flex; justify-content: center; }
+        .overlay-alert-box .oa-body {
+            padding: 1rem 1.5rem 1.5rem;
+            font-size: 0.9rem; color: var(--muted); line-height: 1.8; white-space: pre-line;
+        }
+        .overlay-alert-box .oa-footer {
+            padding: 0 1.5rem 1.5rem; display: flex; justify-content: center;
+        }
         .overlay-alert-box .oa-footer .btn { min-width: 140px; }
+        /* ===== نهاية تعديل (2) ===== */
+
+        /* ===== شريط البحث في صفحة الطلبات ===== */
+        .request-search-wrap { display: flex; gap: 0.5rem; align-items: center; }
 
         @media (max-width: 768px) {
             .navbar { padding: 0.6rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
@@ -182,7 +198,7 @@
     <div id="loadingOverlay" class="loading-overlay"><div class="spinner"></div><div class="loading-text">جاري التحميل...</div></div>
     <div id="toast" class="toast"><i class="fas fa-check-circle"></i><span id="toastMessage">تم بنجاح</span></div>
 
-    <!-- Overlay Alert -->
+    <!-- ===== تعديل (2): عنصر Overlay Alert ===== -->
     <div id="overlayAlert">
         <div class="overlay-alert-box">
             <div class="oa-header">
@@ -195,6 +211,7 @@
             </div>
         </div>
     </div>
+    <!-- ===== نهاية تعديل (2) ===== -->
 
     <div id="confirmModal" class="modal">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
@@ -256,8 +273,7 @@
             <div class="tab-link" onclick="showPage('transfers', this)"><i class="fas fa-exchange-alt"></i> التحويلات</div>
             <div class="tab-link" onclick="showPage('collections', this)"><i class="fas fa-hand-holding-usd"></i> التحصيلات</div>
             <div class="tab-link" onclick="showPage('statement', this)"><i class="fas fa-file-invoice-dollar"></i> كشف حساب</div>
-            <!-- ===== صفحة الطلبات الجديدة ===== -->
-            <div class="tab-link" onclick="showPage('requests', this)"><i class="fas fa-bell"></i> الطلبات</div>
+            <div class="tab-link" onclick="showPage('requests', this)"><i class="fas fa-bell"></i> الطلبات <span id="pendingBadge" class="badge badge-danger" style="display:none; font-size:10px; padding:2px 6px; margin-top:2px; min-width:18px; justify-content:center;">0</span></div>
             <div class="tab-link" onclick="showPage('archive', this)"><i class="fas fa-archive"></i> الأرشيف</div>
         </div>
         <div class="content">
@@ -266,20 +282,35 @@
                 <div class="table-box"><div class="table-header"><h3><i class="fas fa-bolt"></i> إجراءات سريعة</h3></div><div class="quick-actions"><button class="btn btn-success" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button><button class="btn btn-primary" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button><button class="btn btn-secondary" onclick="openModal('merchant')"><i class="fas fa-user-plus"></i> تاجر جديد</button><button class="btn btn-secondary" onclick="openModal('machine')"><i class="fas fa-plus"></i> مكنة جديدة</button></div></div>
                 <div class="table-box">
                     <div class="table-header"><h3><i class="fas fa-trophy"></i> أعلى المكن تحقيقاً (الشهر الحالي)</h3></div>
-                    <div class="table-container"><table><thead><tr><th>المكنة</th><th>رقم الحساب</th><th>التاجر</th><th>النشاط</th><th>التارجت</th><th>التحقيق</th><th>النسبة</th></tr></thead><tbody id="tblTopMachines"></tbody></table></div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr><th>رقم المكنة</th><th>رقم الحساب</th><th>اسم التاجر</th><th>اسم النشاط</th><th>التارجت</th><th>رقم التحقيق</th><th>نسبه التحقيق %</th></tr>
+                            </thead>
+                            <tbody id="tblTopMachines"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-            <div id="page-merchants" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-users"></i> قائمة التجار</h3><div style="display: flex; gap: 0.5rem; align-items: center;"><input type="text" id="merchantSearchInput" class="form-control" placeholder="بحث بالاسم أو رقم التاجر..." style="width: 220px;"><button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button></div></div><div class="table-container"><table><thead><tr><th>رقم التاجر</th><th>الاسم</th><th>النشاط</th><th>رقم الحساب</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMerchants"></tbody></table></div></div></div>
-            <div id="page-machines" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-cash-register"></i> المكن</h3><div style="display: flex; gap: 0.5rem; align-items: center;"><input type="text" id="machineSearchInput" class="form-control" placeholder="بحث برقم المكنة أو التاجر..." style="width: 220px;"><button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button></div></div><div class="table-container"><table><thead><tr><th>رقم المكنة</th><th>التاجر</th><th>النشاط</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMachines"></tbody></table></div></div></div>
-            <div id="page-transfers" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3><button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>رقم الحساب</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="tblTransfers"></tbody></table></div></div></div>
-            <div id="page-collections" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>رقم الحساب</th><th>القيمة</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="tblCollections"></tbody></table></div></div></div>
+            <div id="page-merchants" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-users"></i> قائمة التجار</h3><div style="display: flex; gap: 0.5rem; align-items: center;"><input type="text" id="merchantSearchInput" class="form-control" placeholder="بحث بالاسم أو رقم التاجر..." style="width: 220px;"><button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button></div></div><div class="table-container"><table><thead><tr><th>رقم التاجر</th><th>الاسم</th><th>اسم النشاط</th><th>رقم الحساب</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMerchants"></tbody></table></div></div></div>
+            <div id="page-machines" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-cash-register"></i> المكن</h3><div style="display: flex; gap: 0.5rem; align-items: center;"><input type="text" id="machineSearchInput" class="form-control" placeholder="بحث برقم المكنة أو التاجر..." style="width: 220px;"><button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button></div></div><div class="table-container"><table><thead><tr><th>رقم المكنة</th><th>التاجر</th><th>اسم النشاط</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="tblMachines"></tbody></table></div></div></div>
+            <div id="page-transfers" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3><button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>اسم النشاط</th><th>رقم الحساب</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="tblTransfers"></tbody></table></div></div></div>
+            <div id="page-collections" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openModal('collection')"><i class="fas fa-plus"></i> تحصيل جديد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>اسم النشاط</th><th>رقم الحساب</th><th>القيمة</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="tblCollections"></tbody></table></div></div></div>
             <div id="page-statement" class="page"><div class="table-box"><div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;"><h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3><div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;"><select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList', 'statement')"><option value="">-- اختر تاجر --</option></select><div style="position: relative; width: 200px;"><input type="text" id="stmtMerchantSearch" class="form-control" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'stmtMerchantList', 'stmtMerchantId', 'statement')"><input type="hidden" id="stmtMerchantId"><div id="stmtMerchantList" class="search-results"></div></div><button class="btn btn-primary btn-sm" onclick="getStatement()"><i class="fas fa-search"></i> عرض</button></div></div><div style="padding: 1rem;"><div class="stats-grid"><div class="stat-card"><h4>إجمالي تحويلاته</h4><div class="val" id="stmtT">0</div></div><div class="stat-card success"><h4>إجمالي تحصيلاته</h4><div class="val" id="stmtC">0</div></div><div class="stat-card danger"><h4>المتبقي عليه</h4><div class="val" id="stmtR">0</div></div></div><h4 style="margin: 1rem 0; color: var(--muted);"><i class="fas fa-history"></i> الحركات (الأقدم فوق ← الأحدث تحت)</h4><div class="table-container"><table style="min-width: 600px;"><thead><tr><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th><th>المتبقي بعد الحركة</th><th>ملاحظات</th></tr></thead><tbody id="tblStatement"></tbody></table></div></div></div></div>
+
             <!-- ===== صفحة الطلبات الجديدة ===== -->
             <div id="page-requests" class="page">
+                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-card"><h4><i class="fas fa-inbox"></i> إجمالي الطلبات</h4><div class="val" id="reqTotal">0</div></div>
+                    <div class="stat-card warning"><h4><i class="fas fa-clock"></i> طلبات معلقة</h4><div class="val" id="reqPending">0</div></div>
+                    <div class="stat-card danger"><h4><i class="fas fa-coins"></i> إجمالي المبالغ</h4><div class="val" id="reqAmount">0</div></div>
+                </div>
                 <div class="table-box">
                     <div class="table-header">
-                        <h3><i class="fas fa-bell" style="color: #7c3aed;"></i> طلبات التجار</h3>
-                        <button class="btn btn-primary btn-sm" onclick="loadRequests()"><i class="fas fa-sync-alt"></i> تحديث</button>
+                        <h3><i class="fas fa-bell"></i> طلبات التجار</h3>
+                        <div class="request-search-wrap">
+                            <input type="text" id="requestSearchInput" class="form-control" placeholder="بحث بالاسم أو رقم الطلب..." style="width: 220px;">
+                        </div>
                     </div>
                     <div class="table-container">
                         <table>
@@ -289,12 +320,13 @@
                                     <th>التاريخ</th>
                                     <th>الوقت</th>
                                     <th>التاجر</th>
-                                    <th>النشاط</th>
-                                    <th>المديونية</th>
+                                    <th>اسم النشاط</th>
                                     <th>نوع الطلب</th>
                                     <th>المبلغ</th>
-                                    <th>ملاحظات</th>
+                                    <th>المديونية</th>
                                     <th>الحالة</th>
+                                    <th>ملاحظات</th>
+                                    <th>إجراء</th>
                                 </tr>
                             </thead>
                             <tbody id="tblRequests"></tbody>
@@ -303,12 +335,13 @@
                 </div>
             </div>
             <!-- ===== نهاية صفحة الطلبات ===== -->
+
             <div id="page-archive" class="page"><div class="table-box"><div class="table-header"><h3><i class="fas fa-archive"></i> الأرشيف</h3><button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()"><i class="fas fa-calendar-check"></i> بدء شهر جديد</button></div><div class="table-container"><table><thead><tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr></thead><tbody id="tblArchive"></tbody></table></div></div></div>
         </div>
         <footer><p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p><div class="qr-box"><a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank"><img src="qr-links.png" alt="QR Code"><span><i class="fas fa-qrcode"></i> QR Scan Me</span></a></div></footer>
     </div>
 
-    <div id="modal" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal()">×</span><div id="modalBody"></div></div></div>
+    <div id="modal" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal()">&times;</span><div id="modalBody"></div></div></div>
 
     <script>
         // ==================== API CONFIGURATION ====================
@@ -343,197 +376,30 @@
             }
         }
 
-        // ===== إصلاح أمني: إزالة no-clux لقراءة الاستجابة الفعلية من السيرفر =====
         async function postToAPI(action, payload = {}, id = null) {
             const body = { action, data: payload };
             if (id !== null) body.id = id;
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                // تطبيع: لو السيرفر رجع {error: ...} من غير success، نحوّلها
-                if (data.error !== undefined && data.success === undefined) {
-                    data.success = false;
-                    data.message = data.error;
-                }
-                return data;
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                return { success: true };
             } catch (error) {
                 console.error('API POST error:', error);
-                return { success: false, message: error.message };
+                showToast('فشل الحفظ', 'error');
+                return { success: false };
             }
         }
 
         let DB = { merchants: [], machines: [], transfers: [], collections: [], archives: [], requests: [], dashboard: null };
         let merchantSearchTerm = '';
         let machineSearchTerm = '';
+        let requestSearchTerm = '';
         let confirmCallback = null;
         let AppState = { isPolling: false, pollInterval: 60000, minInterval: 30000, maxInterval: 120000, connectionStatus: 'offline' };
 
-        // ==================== الأصوات - إنشاء كائن جديد كل مرة لمنع القطع ====================
-        function playLoginSuccess() { try { const a = new Audio('login-success.mp3'); a.play().catch(e => {}); } catch(e) {} }
-        function playLoginError() { try { const a = new Audio('login-error.mp3'); a.play().catch(e => {}); } catch(e) {} }
-        function playDone() { try { const a = new Audio('done.mp3'); a.play().catch(e => {}); } catch(e) {} }
-        function playLogout() {
-            try {
-                const a = new Audio('logout-success.mp3');
-                a.onended = () => location.reload();
-                a.play().catch(() => location.reload());
-                setTimeout(() => location.reload(), 2500);
-            } catch(e) { location.reload(); }
-        }
+        // ==================== الأصوات ====================
+        let loginSuccessAudio = null;
+        let loginErrorAudio = null;
+        let logoutSuccessAudio = null;
+        let doneAudio = null;
 
-        function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
-        function showToast(message, type = 'success') { const toast = document.getElementById('toast'); const toastMessage = document.getElementById('toastMessage'); toast.className = `toast ${type}`; toastMessage.textContent = message; const icon = toast.querySelector('i'); icon.className = type === 'success' ? 'fas fa-check-circle' : type === 'error' ? 'fas fa-times-circle' : 'fas fa-exclamation-triangle'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 4000); }
-        function formatNumber(num) { if (num === null || num === undefined || isNaN(num)) return '0'; return Number(num).toLocaleString('ar-EG'); }
-        function formatMoney(num) {
-            if (num === null || num === undefined || isNaN(num)) return '0 <span class="curr-inline">جنيه</span>';
-            return Number(num).toLocaleString('ar-EG') + ' <span class="curr-inline">جنيه</span>';
-        }
-        function formatDate(dateStr) { if (!dateStr) return '-'; try { const d = new Date(dateStr); if (isNaN(d)) return dateStr; return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }); } catch { return dateStr; } }
-        function formatTime(t) { if (!t) return '-'; return t; }
-        const CACHE_KEY = 'axentro_dashboard_cache'; const CACHE_TTL = 10 * 60 * 1000;
-        function setCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: data })); } catch (e) {} }
-        function getCache() { try { const cached = localStorage.getItem(CACHE_KEY); if (!cached) return null; const parsed = JSON.parse(cached); if (Date.now() - parsed.timestamp > CACHE_TTL) { localStorage.removeItem(CACHE_KEY); return null; } return parsed.data; } catch (e) { return null; } }
-        function setConnectionStatus(status) { const prev = AppState.connectionStatus; AppState.connectionStatus = status; const indicator = document.getElementById('connIndicator'); if (!indicator) return; if (status === 'live') { indicator.className = 'conn-status live'; indicator.querySelector('span').textContent = 'متصل'; } else { indicator.className = 'conn-status offline'; indicator.querySelector('span').textContent = 'غير متصل'; } if (prev !== status) { if (status === 'offline') showToast('فقدان الاتصال...', 'error'); else if (prev === 'offline' && status === 'live') showToast('تم استعادة الاتصال', 'success'); } }
-
-        // ===== Overlay Alert =====
-        function showOverlayAlert(title, message, type) {
-            const iconEl = document.getElementById('oaIcon');
-            iconEl.className = 'oa-icon ' + (type || 'warning');
-            if (type === 'danger') iconEl.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
-            else if (type === 'success') iconEl.innerHTML = '<i class="fas fa-check-circle"></i>';
-            else iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-            document.getElementById('oaTitle').textContent = title;
-            document.getElementById('oaBody').textContent = message;
-            document.getElementById('overlayAlert').classList.add('show');
-        }
-        function closeOverlayAlert() { document.getElementById('overlayAlert').classList.remove('show'); }
-
-        function handleEnter(e) { if (e.key === 'Enter') login(); }
-        async function login() {
-            const password = document.getElementById('passInput').value;
-            if (!password) { showToast('أدخل كلمة المرور', 'warning'); return; }
-            showLoading(true);
-            const res = await postToAPI('login', { password });
-            if (res.success) {
-                playLoginSuccess();
-                localStorage.setItem('axentro_logged', 'true');
-                document.getElementById('loginBox').style.display = 'none';
-                document.getElementById('appBox').style.display = 'flex';
-                loadData();
-                showToast('مرحباً بك!', 'success');
-            } else {
-                playLoginError();
-                showToast(res.message || 'كلمة المرور غير صحيحة', 'error');
-                showLoading(false);
-            }
-        }
-        function logout() {
-            showConfirm('هل تريد تسجيل الخروج؟', () => {
-                playLogout();
-            });
-        }
-
-        async function loadData() {
-            showLoading(true);
-            try {
-                const res = await fetchFromAPI('getAllData');
-                if (res && res.merchants) {
-                    DB = res;
-                    if (!DB.dashboard) { DB.dashboard = calculateDashboardFrontend(DB.transfers || [], DB.collections || [], DB.merchants || [], DB.machines || []); }
-                    setCache(DB.dashboard); renderAll(); setConnectionStatus('live'); showToast('تم تحديث البيانات', 'success');
-                    // جلب الطلبات في الخلفية
-                    fetchFromAPI('getRequests').then(reqRes => {
-                        if (reqRes) { DB.requests = reqRes; renderRequests(); }
-                    });
-                } else { throw new Error('فشل تحميل البيانات'); }
-            } catch (e) {
-                setConnectionStatus('offline');
-                const cachedDash = getCache();
-                if (cachedDash && !DB.dashboard) { DB.dashboard = cachedDash; renderDashboard(); showToast('وضع عدم الاتصال (بيانات مخزنة)', 'warning'); }
-                else if (!DB.merchants) { showToast('فشل تحميل البيانات، تأكد من اتصال الإنترنت', 'error'); }
-                else { showToast('تحديث فاشل، البيانات قد تكون قديمة', 'warning'); }
-            } finally { showLoading(false); }
-        }
-
-        function calculateDashboardFrontend(transfers, collections, merchants, machines) {
-            const now = new Date();
-            const currentMonth = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
-            const today = now.toISOString().slice(0,10);
-            const monthTransfers = transfers.filter(t => t['الشهر'] === currentMonth);
-            const totalTransfers = monthTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-            const totalCollections = collections.filter(c => c['الشهر'] === currentMonth).reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
-            const remaining = totalTransfers - totalCollections;
-            const todayTotal = transfers.filter(t => t['التاريخ'] === today).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-            const topMachines = [];
-            machines.forEach(m => {
-                const machineId = m['رقم المكنة'];
-                const target = Number(m['التارجت الشهري']) || 0;
-                if (target > 0) {
-                    const achieved = monthTransfers.filter(t => t['رقم المكنة'] == machineId).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-                    const percentage = Math.floor((achieved / target) * 100);
-                    const merchant = merchants.find(mer => mer['رقم التاجر'] == m['رقم التاجر']);
-                    topMachines.push({ name: machineId, account: merchant ? merchant['رقم الحساب'] : '-', merchant: merchant ? merchant['اسم التاجر'] : '-', activity: merchant ? merchant['اسم النشاط'] : '-', achieved, target, percentage });
-                }
-            });
-            topMachines.sort((a,b) => b.percentage - a.percentage);
-            return { 'التجار': merchants.length, 'المكن': machines.length, 'التحويلات_شهر': totalTransfers, 'التحصيلات_شهر': totalCollections, 'المتبقي_شهر': remaining, 'تحويلات_اليوم': todayTotal, 'أعلى_المكن': topMachines.slice(0,10) };
-        }
-
-        function renderAll() { renderDashboard(); renderMerchants(); renderMachines(); renderTransfers(); renderCollections(); renderRequests(); renderArchive(); populateMerchantDropdowns(); }
-
-        function renderDashboard() {
-            const d = DB.dashboard; if (!d) return;
-            const keys = ['التجار', 'المكن', 'التحويلات_شهر', 'التحصيلات_شهر', 'المتبقي_شهر', 'تحويلات_اليوم'];
-            const financialKeys = ['التحويلات_شهر', 'التحصيلات_شهر', 'المتبقي_شهر', 'تحويلات_اليوم'];
-            const statsContainer = document.getElementById('dashStats');
-            let html = '';
-            const labels = ['عدد التجار', 'عدد المكن', 'التحويلات (شهر)', 'التحصيلات (شهر)', 'المتبقي (شهر)', 'تحويلات اليوم'];
-            const icons = ['fa-users', 'fa-cash-register', 'fa-exchange-alt', 'fa-hand-holding-usd', 'fa-coins', 'fa-calendar-day'];
-            const colors = ['', '', '', 'success', 'danger', 'warning'];
-            keys.forEach((k, i) => {
-                const valHtml = financialKeys.includes(k) ? formatMoney(d[k]) : formatNumber(d[k]);
-                html += `<div class="stat-card ${colors[i]}"><h4><i class="fas ${icons[i]}"></i> ${labels[i]}</h4><div class="val" data-key="${k}">${valHtml}</div></div>`;
-            });
-            statsContainer.innerHTML = html;
-            renderTopMachines(d['أعلى_المكن'] || []);
-        }
-
-        function renderTopMachines(machines) {
-            const tbody = document.getElementById('tblTopMachines');
-            if (!tbody) return;
-            if (!machines || machines.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 2rem;">لا توجد بيانات (تأكد من وجود تارجت للمكن)</td></tr>'; return; }
-            let rows = '';
-            machines.forEach(m => {
-                const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
-                rows += `<tr><td><strong>${m.name || '-'}</strong></td><td>${m.account || '-'}</td><td>${m.merchant || '-'}</td><td>${m.activity || '-'}</td><td>${formatMoney(m.target)}</td><td>${formatMoney(m.achieved)}</td><td><span class="badge badge-${pctClass}">${m.percentage}%</span><div class="progress-bar"><div class="fill ${pctClass}" style="width: ${Math.min(m.percentage, 100)}%"></div></div></td></tr>`;
-            });
-            tbody.innerHTML = rows;
-        }
-
-        function renderMerchants() {
-            let merchants = DB.merchants || [];
-            if (merchantSearchTerm) { const term = merchantSearchTerm.toLowerCase(); merchants = merchants.filter(m => (m['اسم التاجر'] || '').toLowerCase().includes(term) || (m['رقم التاجر'] || '').toString().includes(term)); }
-            const tbody = document.getElementById('tblMerchants');
-            if (merchants.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد تجار</td></tr>'; return; }
-            let rows = '';
-            merchants.forEach(m => {
-                const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
-                const phone = m['رقم الهاتف'] || '';
-                const phoneLink = phone ? `<a href="tel:${phone}" style="color: var(--primary); text-decoration: none;">${phone}</a>` : '-';
-                rows += `<tr><td><strong>${m['رقم التاجر'] || '-'}</strong></td><td>${m['اسم التاجر'] || '-'}</td><td>${m['اسم النشاط'] || '-'}</td><td>${m['رقم الحساب'] || '-'}</td><td>${phoneLink}</td><td>${m['المنطقة'] || '-'}</td><td>${m['العنوان'] || '-'}</td><td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td><td><div class="action-btns"><button class="btn btn-primary btn-sm" onclick="editMerchant('${m['رقم التاجر']}')"><i class="fas fa-edit"></i></button><button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button></div></td></tr>`;
-            });
-            tbody.innerHTML = rows;
-        }
-
-        function renderMachines() {
-            let machines = DB.machines || [];
-            if (machineSearchTerm) { const term = machineSearchTerm.toLowerCase(); machines = machines.filter(m => (m['رقم المكنة'] || '').toLowerCase().includes(term) || (m['اسم التاجر'] || '').toLowerCase().includes(term)); }
-            const tbody = document.getElementById('tblMachines');
-            if (machines.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد مكن</td></tr>'; return; }
-            let rows = '';
-            machines.forEach(m =>
+        function initSounds
