@@ -191,8 +191,7 @@
                 return [];
             }
         }
-
-        // Helper: POST request (no-cors – we trust the operation)
+                // Helper: POST request (no-cors – we trust the operation)
         async function postToAPI(action, payload = {}, id = null) {
             const body = {
                 action: action,
@@ -269,7 +268,8 @@
             if (!select) return;
             select.innerHTML = '<option value="">-- اختر تاجر --</option>';
             merchants.forEach(m => {
-                select.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</option>`;
+                const activityName = m['اسم النشاط'] || '-';
+                select.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${activityName})</option>`;
             });
         }
 
@@ -285,7 +285,8 @@
             document.getElementById('merchantSelect').value = merchantId;
             const merchant = merchants.find(m => m['رقم التاجر'] == merchantId);
             if (merchant) {
-                document.getElementById('merchantSearch').value = merchant['اسم التاجر'];
+                const activityName = merchant['اسم النشاط'] || '-';
+                document.getElementById('merchantSearch').value = `${merchant['اسم التاجر']} (${activityName})`;
             }
             loadMerchantData(merchantId);
         }
@@ -304,16 +305,20 @@
             if (filtered.length === 0) {
                 listEl.innerHTML = '<div class="no-result">لا توجد نتائج</div>';
             } else {
-                listEl.innerHTML = filtered.map(m => `<div onclick="selectMerchant('${m['رقم التاجر']}', '${m['اسم التاجر']}')">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join('');
+                listEl.innerHTML = filtered.map(m => {
+                    const activityName = m['اسم النشاط'] || '-';
+                    return `<div onclick="selectMerchant('${m['رقم التاجر']}', '${m['اسم التاجر']}', '${activityName}')">${m['اسم التاجر']} (${activityName})</div>`;
+                }).join('');
             }
             listEl.style.display = 'block';
         }
 
-        function selectMerchant(id, name) {
+        function selectMerchant(id, name, activityName) {
             // تحديث جميع العناصر المرتبطة بالتاجر
             document.getElementById('selectedMerchantId').value = id;
             document.getElementById('merchantSelect').value = id;
-            document.getElementById('merchantSearch').value = name;
+            const displayName = activityName ? `${name} (${activityName})` : name;
+            document.getElementById('merchantSearch').value = displayName;
             document.getElementById('searchResults').style.display = 'none';
             loadMerchantData(id);
         }
@@ -363,6 +368,7 @@
             const detailsHtml = `
                 <div class="info-item"><span class="info-label">رقم التاجر</span><div class="info-value">${merchant['رقم التاجر'] || '-'}</div></div>
                 <div class="info-item"><span class="info-label">اسم التاجر</span><div class="info-value">${merchant['اسم التاجر'] || '-'}</div></div>
+                <div class="info-item"><span class="info-label">اسم النشاط</span><div class="info-value">${merchant['اسم النشاط'] || '-'}</div></div>
                 <div class="info-item"><span class="info-label">رقم الحساب</span><div class="info-value">${merchant['رقم الحساب'] || '-'}</div></div>
                 <div class="info-item"><span class="info-label">رقم الهاتف</span><div class="info-value">${merchant['رقم الهاتف'] || '-'}</div></div>
             `;
@@ -383,7 +389,7 @@
             }
             document.getElementById('machinesList').innerHTML = machinesHtml;
 
-            let transfersHtml = '<table class="transfer-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody>';
+            let transfersHtml = '<table class="transfer-table"><thead> <th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th> </thead><tbody>';
             if (transfers.length === 0) {
                 transfersHtml += '<tr><td colspan="4" style="text-align:center;">لا توجد تحويلات</td></tr>';
             } else {
