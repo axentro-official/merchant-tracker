@@ -1047,14 +1047,18 @@
             const res = id ? await postToAPI('updateMerchant', data, id) : await postToAPI('addMerchant', data);
             if (res.success) { showToast(id ? 'تم تعديل التاجر' : 'تم إضافة التاجر', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
         }
-        async function saveMachine(id = null) {
+            async function saveMachine(id = null) {
             const merchantId = document.getElementById('mcMerchId').value;
             const serial = document.getElementById('mcSerial').value.trim();
             if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
             if (!serial) { showToast('الرقم التسلسلي مطلوب', 'warning'); return; }
             showLoading(true);
+            // === إصلاح: جلب بيانات التاجر من الكاش لإرسال اسم النشاط واسم التاجر ===
+            const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
             const data = {
                 'رقم التاجر': merchantId,
+                'اسم التاجر': merchant ? (merchant['اسم التاجر'] || '') : '',
+                'اسم النشاط': merchant ? (merchant['اسم النشاط'] || '') : '',
                 'الرقم التسلسلي': serial,
                 'رقم الحساب': document.getElementById('mcAccount').value,
                 'التارجت الشهري': Number(document.getElementById('mcTarget').value) || 0,
@@ -1063,7 +1067,7 @@
             };
             const res = id ? await postToAPI('updateMachine', data, id) : await postToAPI('addMachine', data);
             if (res.success) { showToast(id ? 'تم تعديل المكنة' : 'تم إضافة المكنة', 'success'); closeModal(); loadData(); } else { showToast(res.message || 'حدث خطأ', 'error'); showLoading(false); }
-        }
+        }}
         async function saveTransfer(id = null) {
             const merchantId = document.getElementById('trMerchId').value;
             const amount = document.getElementById('trAmt').value;
