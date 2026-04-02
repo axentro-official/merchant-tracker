@@ -6,24 +6,10 @@
     <title>بوابة التاجر - Axentro</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- مكتبة Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* جميع الأنماط الأصلية (لم تتغير) */
-        :root {
-            --primary: #3b82f6;
-            --primary-dark: #1d4ed8;
-            --secondary: #6366f1;
-            --bg: #f8fafc;
-            --bg-dark: #0f172a;
-            --white: #ffffff;
-            --text: #1e293b;
-            --muted: #64748b;
-            --success: #10b981;
-            --success-light: #d1fae5;
-            --danger: #ef4444;
-            --border: #e2e8f0;
-            --radius: 12px;
-            --radius-sm: 8px;
-        }
+        :root { --primary: #3b82f6; --primary-dark: #1d4ed8; --secondary: #6366f1; --bg: #f8fafc; --bg-dark: #0f172a; --white: #ffffff; --text: #1e293b; --muted: #64748b; --success: #10b981; --success-light: #d1fae5; --danger: #ef4444; --border: #e2e8f0; --radius: 12px; --radius-sm: 8px; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
         body { background: linear-gradient(135deg, #f0f9ff 0%, #e6f0fa 100%); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
         .container { max-width: 800px; margin: 0 auto; padding: 1rem; flex: 1; }
@@ -51,8 +37,6 @@
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: all 0.3s; width: 100%; }
         .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 14px rgba(59,130,246,0.4); }
         .btn-primary:hover { transform: translateY(-2px); }
-        .btn-secondary { background: #e2e8f0; color: var(--text); }
-        .btn-secondary:hover { background: #cbd5e1; }
         .btn-success { background: linear-gradient(135deg, var(--success), #059669); color: white; }
         .radio-group { display: flex; gap: 1rem; margin: 0.5rem 0; }
         .radio-group label { display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer; }
@@ -74,11 +58,7 @@
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .success-icon { font-size: 4rem; color: var(--success); margin-bottom: 1rem; }
         .success-message { text-align: center; padding: 2rem; }
-        @media (max-width: 640px) {
-            .info-grid { grid-template-columns: 1fr; }
-            .container { padding: 0.5rem; }
-            .card { padding: 1rem; }
-        }
+        @media (max-width: 640px) { .info-grid { grid-template-columns: 1fr; } .container { padding: 0.5rem; } .card { padding: 1rem; } }
     </style>
 </head>
 <body>
@@ -104,6 +84,16 @@
                 <input type="hidden" id="selectedMerchantId">
             </div>
 
+            <!-- خطوة التحقق من رقم الحساب -->
+            <div id="verifySection" style="display:none; text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%); border-radius: var(--radius-sm); margin-bottom: 1.5rem; border: 1px dashed var(--primary);">
+                <i class="fas fa-shield-alt" style="font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
+                <p style="margin-bottom: 1rem; font-weight: 700; color: #1d4ed8;">لحماية خصوصيتك، يرجى إدخال رقم الحساب</p>
+                <div class="form-group" style="max-width: 300px; margin: 0 auto;">
+                    <input type="password" id="accNumberInput" class="form-control" placeholder="أدخل رقم الحساب" onkeypress="if(event.key==='Enter') verifyMerchant()">
+                </div>
+                <button class="btn btn-primary" onclick="verifyMerchant()" style="margin-top: 1rem; max-width: 300px;"><i class="fas fa-unlock"></i> تحقق</button>
+            </div>
+
             <div id="merchantInfo" style="display: none;">
                 <hr>
                 <h3><i class="fas fa-user-circle"></i> بيانات التاجر</h3>
@@ -126,7 +116,7 @@
                     <label><input type="radio" name="requestType" value="كاش على المكنة"> <i class="fas fa-money-bill-wave"></i> كاش على المكنة</label>
                 </div>
                 <div class="form-group">
-                    <label>المبلغ <span class="required">*</span></label>
+                    <label>المبلغ <span class="required" style="color: var(--danger);">*</span></label>
                     <input type="number" id="amount" class="form-control" placeholder="أدخل المبلغ المطلوب" step="any">
                 </div>
                 <div class="form-group">
@@ -155,322 +145,100 @@
         </div>
     </footer>
 
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="spinner"></div>
-        <div class="loading-text">جاري التحميل...</div>
-    </div>
-
-    <div id="toast" class="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toastMessage">تم بنجاح</span>
-    </div>
+    <div id="loadingOverlay" class="loading-overlay"><div class="spinner"></div><div class="loading-text">جاري التحميل...</div></div>
+    <div id="toast" class="toast"><i class="fas fa-check-circle"></i><span id="toastMessage">تم بنجاح</span></div>
 
     <script>
-        // ======================== API CONFIGURATION ========================
-        const API_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
+        const SUPABASE_URL = 'https://bwcrdcudpnxkmcyyhzhe.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const EMAIL_API_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
 
-        // Helper: GET request with timeout (10 seconds)
-        async function fetchFromAPI(action, timeoutMs = 10000) {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-                const response = await fetch(`${API_URL}?action=${action}`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                clearTimeout(timeoutId);
-                if (error.name === 'AbortError') {
-                    console.error('Request timeout:', action);
-                    showToast('انتهت مهلة الاتصال بالخادم', 'error');
-                } else {
-                    console.error('API GET error:', error);
-                    showToast('فشل الاتصال بالخادم', 'error');
-                }
-                return [];
-            }
-        }
-                // Helper: POST request (no-cors – we trust the operation)
-        async function postToAPI(action, payload = {}, id = null) {
-            const body = {
-                action: action,
-                data: payload
-            };
-            if (id !== null) body.id = id;
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                return { success: true };
-            } catch (error) {
-                console.error('API POST error:', error);
-                showToast('فشل الحفظ', 'error');
-                return { success: false };
-            }
-        }
-
-        // ======================== GLOBAL VARIABLES ========================
         let merchants = [];
+        let selectedMerchant = null;
+        let verifiedMerchantUUID = null;
         let currentMerchantData = null;
         let isLoadingMerchants = false;
 
-        function showLoading(show) {
-            const overlay = document.getElementById('loadingOverlay');
-            if (overlay) overlay.style.display = show ? 'flex' : 'none';
-        }
-
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            if (!toast) return;
-            toast.className = `toast ${type}`;
-            toastMessage.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        function formatNumber(num) {
-            if (num === null || num === undefined || isNaN(num)) return '0';
-            return Number(num).toLocaleString('ar-EG');
-        }
-
-        function formatDate(dateStr) {
-            if (!dateStr) return '-';
-            try {
-                const d = new Date(dateStr);
-                if (isNaN(d)) return dateStr;
-                return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'numeric', day: 'numeric' });
-            } catch { return dateStr; }
-        }
+        function showLoading(show) { const overlay = document.getElementById('loadingOverlay'); if (overlay) overlay.style.display = show ? 'flex' : 'none'; }
+        function showToast(message, type = 'success') { const toast = document.getElementById('toast'); const toastMessage = document.getElementById('toastMessage'); if (!toast) return; toast.className = `toast ${type}`; toastMessage.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
+        function formatNumber(num) { if (num === null || num === undefined || isNaN(num)) return '0'; return Number(num).toLocaleString('ar-EG'); }
+        function formatDate(dateStr) { if (!dateStr) return '-'; try { const d = new Date(dateStr); if (isNaN(d)) return dateStr; return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'numeric', day: 'numeric' }); } catch { return dateStr; } }
 
         async function loadMerchants() {
-            if (isLoadingMerchants) return;
-            isLoadingMerchants = true;
-            showLoading(true);
+            if (isLoadingMerchants) return; isLoadingMerchants = true; showLoading(true);
             try {
-                merchants = await fetchFromAPI('getMerchants');
+                const { data, error } = await supabase.from('merchants').select('*').eq('الحالة', 'نشط');
+                if(error) throw error;
+                merchants = data || [];
                 populateSelect();
-            } catch (e) {
-                console.error(e);
-                showToast('فشل تحميل التجار', 'error');
-            } finally {
-                showLoading(false);
-                isLoadingMerchants = false;
-            }
+            } catch (e) { console.error(e); showToast('فشل تحميل التجار', 'error'); }
+            finally { showLoading(false); isLoadingMerchants = false; }
         }
 
         function populateSelect() {
-            const select = document.getElementById('merchantSelect');
-            if (!select) return;
+            const select = document.getElementById('merchantSelect'); if (!select) return;
             select.innerHTML = '<option value="">-- اختر تاجر --</option>';
-            merchants.forEach(m => {
-                const activityName = m['اسم النشاط'] || '-';
-                select.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${activityName})</option>`;
-            });
+            merchants.forEach(m => { select.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</option>`; });
         }
 
         function handleSelect(merchantId) {
-            if (!merchantId) {
-                document.getElementById('merchantInfo').style.display = 'none';
-                document.getElementById('selectedMerchantId').value = '';
-                document.getElementById('merchantSearch').value = '';
-                return;
-            }
-            // تحديث الحقل المخفي والقائمة المنسدلة وحقل البحث
-            document.getElementById('selectedMerchantId').value = merchantId;
-            document.getElementById('merchantSelect').value = merchantId;
-            const merchant = merchants.find(m => m['رقم التاجر'] == merchantId);
-            if (merchant) {
-                const activityName = merchant['اسم النشاط'] || '-';
-                document.getElementById('merchantSearch').value = `${merchant['اسم التاجر']} (${activityName})`;
-            }
-            loadMerchantData(merchantId);
+            if (!merchantId) { document.getElementById('merchantInfo').style.display = 'none'; document.getElementById('verifySection').style.display = 'none'; document.getElementById('selectedMerchantId').value = ''; document.getElementById('merchantSearch').value = ''; return; }
+            document.getElementById('selectedMerchantId').value = merchantId; document.getElementById('merchantSelect').value = merchantId;
+            selectedMerchant = merchants.find(m => m['رقم التاجر'] == merchantId);
+            if (selectedMerchant) document.getElementById('merchantSearch').value = `${selectedMerchant['اسم التاجر']} (${selectedMerchant['اسم النشاط'] || '-'})`;
+            showVerificationStep();
         }
 
         function handleSearch(query) {
-            const listEl = document.getElementById('searchResults');
-            if (!query) {
-                listEl.style.display = 'none';
-                return;
-            }
-            const filtered = merchants.filter(m => 
-                (m['اسم التاجر'] || '').includes(query) || 
-                (m['اسم النشاط'] || '').includes(query) ||
-                (m['رقم التاجر'] || '').toString().includes(query)
-            );
-            if (filtered.length === 0) {
-                listEl.innerHTML = '<div class="no-result">لا توجد نتائج</div>';
-            } else {
-                listEl.innerHTML = filtered.map(m => {
-                    const activityName = m['اسم النشاط'] || '-';
-                    return `<div onclick="selectMerchant('${m['رقم التاجر']}', '${m['اسم التاجر']}', '${activityName}')">${m['اسم التاجر']} (${activityName})</div>`;
-                }).join('');
-            }
+            const listEl = document.getElementById('searchResults'); if (!query) { listEl.style.display = 'none'; return; }
+            const filtered = merchants.filter(m => (m['اسم التاجر'] || '').includes(query) || (m['اسم النشاط'] || '').includes(query) || (m['رقم التاجر'] || '').toString().includes(query));
+            if (filtered.length === 0) { listEl.innerHTML = '<div class="no-result">لا توجد نتائج</div>'; } else { listEl.innerHTML = filtered.map(m => `<div onclick="selectMerchant('${m['رقم التاجر']}', '${m['اسم التاجر']}', '${m['اسم النشاط'] || '-'}')">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`).join(''); }
             listEl.style.display = 'block';
         }
 
         function selectMerchant(id, name, activityName) {
-            // تحديث جميع العناصر المرتبطة بالتاجر
-            document.getElementById('selectedMerchantId').value = id;
-            document.getElementById('merchantSelect').value = id;
-            const displayName = activityName ? `${name} (${activityName})` : name;
-            document.getElementById('merchantSearch').value = displayName;
+            document.getElementById('selectedMerchantId').value = id; document.getElementById('merchantSelect').value = id;
+            document.getElementById('merchantSearch').value = activityName ? `${name} (${activityName})` : name;
             document.getElementById('searchResults').style.display = 'none';
-            loadMerchantData(id);
+            selectedMerchant = merchants.find(m => m['رقم التاجر'] == id);
+            showVerificationStep();
         }
 
-        async function loadMerchantData(merchantId) {
+        function showVerificationStep() {
+            document.getElementById('verifySection').style.display = 'block';
+            document.getElementById('merchantInfo').style.display = 'none';
+            document.getElementById('accNumberInput').value = '';
+            document.getElementById('accNumberInput').focus();
+        }
+
+        async function verifyMerchant() {
+            const accNum = document.getElementById('accNumberInput').value.trim();
+            if (!accNum) { showToast('أدخل رقم الحساب', 'warning'); return; }
+            if (!selectedMerchant) return;
+            showLoading(true);
+            const { data, error } = await supabase.rpc('verify_merchant_access', { p_name: selectedMerchant['اسم التاجر'], p_account_number: accNum });
+            if (data && data.success) {
+                verifiedMerchantUUID = data.merchant_id;
+                document.getElementById('verifySection').style.display = 'none';
+                loadMerchantData(verifiedMerchantUUID);
+            } else { showToast(data?.message || 'رقم الحساب غير صحيح أو الحساب معطل', 'error'); }
+            showLoading(false);
+        }
+
+        async function loadMerchantData(merchantUUID) {
             showLoading(true);
             try {
-                const merchant = merchants.find(m => m['رقم التاجر'] == merchantId);
-                if (!merchant) throw new Error('تاجر غير موجود');
-                
-                const [allMachines, allTransfers, allCollections] = await Promise.all([
-                    fetchFromAPI('getMachines'),
-                    fetchFromAPI('getTransfers'),
-                    fetchFromAPI('getCollections')
+                const [machRes, trRes, colRes] = await Promise.all([
+                    supabase.from('machines').select('*').eq('merchant_id', merchantUUID),
+                    supabase.from('transfers').select('*').eq('merchant_id', merchantUUID).order('created_at', { ascending: false }),
+                    supabase.from('collections').select('*').eq('merchant_id', merchantUUID).order('created_at', { ascending: false })
                 ]);
-                
-                const machines = allMachines.filter(m => m['رقم التاجر'] == merchantId);
-                const transfers = allTransfers.filter(t => t['رقم التاجر'] == merchantId);
-                const collections = allCollections.filter(c => c['رقم التاجر'] == merchantId);
-                
+                const machines = machRes.data || []; const transfers = trRes.data || []; const collections = colRes.data || [];
                 const totalTransfers = transfers.reduce((sum, t) => sum + (Number(t['قيمة التحويل']) || 0), 0);
                 const totalCollections = collections.reduce((sum, c) => sum + (Number(c['قيمة التحصيل']) || 0), 0);
                 const remaining = totalTransfers - totalCollections;
-
-                currentMerchantData = {
-                    merchant: merchant,
-                    machines: machines,
-                    transfers: transfers,
-                    remaining: remaining
-                };
+                currentMerchantData = { merchant: selectedMerchant, machines, transfers, remaining };
                 renderMerchantInfo(currentMerchantData);
-                document.getElementById('merchantInfo').style.display = 'block';
-            } catch (e) {
-                showToast(e.message || 'فشل تحميل بيانات التاجر', 'error');
-                document.getElementById('merchantInfo').style.display = 'none';
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        function renderMerchantInfo(data) {
-            const merchant = data.merchant;
-            const machines = data.machines;
-            const transfers = data.transfers;
-            const remaining = data.remaining;
-
-            const detailsHtml = `
-                <div class="info-item"><span class="info-label">رقم التاجر</span><div class="info-value">${merchant['رقم التاجر'] || '-'}</div></div>
-                <div class="info-item"><span class="info-label">اسم التاجر</span><div class="info-value">${merchant['اسم التاجر'] || '-'}</div></div>
-                <div class="info-item"><span class="info-label">اسم النشاط</span><div class="info-value">${merchant['اسم النشاط'] || '-'}</div></div>
-                <div class="info-item"><span class="info-label">رقم الحساب</span><div class="info-value">${merchant['رقم الحساب'] || '-'}</div></div>
-                <div class="info-item"><span class="info-label">رقم الهاتف</span><div class="info-value">${merchant['رقم الهاتف'] || '-'}</div></div>
-            `;
-            document.getElementById('merchantDetails').innerHTML = detailsHtml;
-
-            let machinesHtml = '';
-            if (machines.length === 0) {
-                machinesHtml = '<p class="info-item">لا توجد مكنات مسجلة</p>';
-            } else {
-                machines.forEach(m => {
-                    machinesHtml += `
-                        <div class="machine-item">
-                            <strong>${m['رقم المكنة']}</strong> - الرقم التسلسلي: ${m['الرقم التسلسلي'] || 'غير موجود'} 
-                            (الحالة: ${m['الحالة'] || '-'})
-                        </div>
-                    `;
-                });
-            }
-            document.getElementById('machinesList').innerHTML = machinesHtml;
-
-            let transfersHtml = '<table class="transfer-table"><thead> <th>التاريخ</th><th>الوقت</th><th>المبلغ</th><th>ملاحظات</th> </thead><tbody>';
-            if (transfers.length === 0) {
-                transfersHtml += '<tr><td colspan="4" style="text-align:center;">لا توجد تحويلات</td></tr>';
-            } else {
-                transfers.slice(-10).reverse().forEach(t => {
-                    transfersHtml += `
-                        <tr>
-                            <td>${formatDate(t['التاريخ'])}</td>
-                            <td>${t['الوقت'] || '-'}</td>
-                            <td><strong>${formatNumber(t['قيمة التحويل'])}</strong></td>
-                            <td>${t['ملاحظات'] || '-'}</td>
-                        </tr>
-                    `;
-                });
-            }
-            transfersHtml += '</tbody></table>';
-            document.getElementById('transfersList').innerHTML = transfersHtml;
-
-            document.getElementById('remainingBalance').innerHTML = `<div class="info-label">المبلغ المتبقي على التاجر</div><div class="info-value" style="color: var(${remaining > 0 ? '--danger' : '--success'});">${formatNumber(remaining)} جنيه</div>`;
-        }
-
-        async function submitRequest() {
-            // احصل على رقم التاجر من الحقل المخفي أو من القائمة المنسدلة كاحتياط
-            let merchantId = document.getElementById('selectedMerchantId').value;
-            if (!merchantId) {
-                merchantId = document.getElementById('merchantSelect').value;
-            }
-            if (!merchantId) {
-                showToast('الرجاء اختيار التاجر أولاً', 'warning');
-                return;
-            }
-            const amount = document.getElementById('amount').value;
-            if (!amount || Number(amount) <= 0) {
-                showToast('أدخل مبلغاً صحيحاً أكبر من صفر', 'warning');
-                return;
-            }
-            const requestType = document.querySelector('input[name="requestType"]:checked').value;
-            const notes = document.getElementById('notes').value;
-            const merchant = merchants.find(m => m['رقم التاجر'] == merchantId);
-
-            showLoading(true);
-            const result = await postToAPI('addMerchantRequest', {
-                merchantId: merchantId,
-                merchantName: merchant ? merchant['اسم التاجر'] : 'غير معروف',
-                requestType: requestType,
-                amount: Number(amount),
-                notes: notes
-            });
-            showLoading(false);
-            
-            if (result.success) {
-                document.getElementById('portalForm').style.display = 'none';
-                document.getElementById('successPage').style.display = 'block';
-                showToast('تم إرسال الطلب بنجاح', 'success');
-            } else {
-                showToast('حدث خطأ في إرسال الطلب', 'error');
-            }
-        }
-
-        function resetForm() {
-            document.getElementById('selectedMerchantId').value = '';
-            document.getElementById('merchantSearch').value = '';
-            document.getElementById('merchantSelect').value = '';
-            document.getElementById('amount').value = '';
-            document.getElementById('notes').value = '';
-            document.getElementById('merchantInfo').style.display = 'none';
-            document.getElementById('successPage').style.display = 'none';
-            document.getElementById('portalForm').style.display = 'block';
-            document.querySelector('input[name="requestType"][value="رصيد على المكنة"]').checked = true;
-        }
-
-        document.addEventListener('click', function(e) {
-            const searchBox = document.getElementById('merchantSearch');
-            const results = document.getElementById('searchResults');
-            if (searchBox && !searchBox.contains(e.target) && results && !results.contains(e.target)) {
-                results.style.display = 'none';
-            }
-        });
-
-        window.onload = () => {
-            loadMerchants();
-        };
-    </script>
-</body>
-</html>
+                document.getElementById('merchantInfo').style.display = '
