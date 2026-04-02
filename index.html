@@ -281,9 +281,14 @@
             const body = { action, data: payload };
             if (id !== null) body.id = id;
             try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const result = await res.json();
+                if (result.error) {
+                    showToast(result.error, 'error');
+                    return { success: false };
+                }
                 return { success: true };
-            } catch (error) { showToast('فشل الحفظ', 'error'); return { success: false }; }
+            } catch (error) { showToast('فشل الاتصال أثناء الحفظ', 'error'); return { success: false }; }
         }
 
         let DB = { merchants: [], machines: [], transfers: [], collections: [], archives: [], requests: [], dashboard: null };
@@ -295,7 +300,6 @@
         function initSounds() { try { loginSuccessAudio = new Audio('login-success.mp3'); loginSuccessAudio.preload = 'auto'; loginErrorAudio = new Audio('login-error.mp3'); loginErrorAudio.preload = 'auto'; logoutSuccessAudio = new Audio('logout-success.mp3'); logoutSuccessAudio.preload = 'auto'; doneAudio = new Audio('done.mp3'); doneAudio.preload = 'auto'; } catch(e) {} }
         function playSound(audio) { if (!audio) return; try { if (audio.readyState >= 2) { audio.currentTime = 0; audio.play().catch(e => {}); } else { audio.addEventListener('canplaythrough', function onReady() { audio.removeEventListener('canplaythrough', onReady); audio.currentTime = 0; audio.play().catch(e => {}); }, { once: true }); audio.load(); } } catch(e) {} }
         
-        // دالة مساعدة لحل مشكلة فقدان الاتصال بعد الإجراءات (تأخير ذكي)
         function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
         function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
@@ -313,7 +317,6 @@
         function showOverlayAlert(title, message, type) { const iconEl = document.getElementById('oaIcon'); iconEl.className = 'oa-icon ' + (type || 'warning'); if (type === 'danger') iconEl.innerHTML = '<i class="fas fa-exclamation-circle"></i>'; else if (type === 'success') iconEl.innerHTML = '<i class="fas fa-check-circle"></i>'; else iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; document.getElementById('oaTitle').textContent = title; document.getElementById('oaBody').textContent = message; document.getElementById('overlayAlert').classList.add('show'); }
         function closeOverlayAlert() { document.getElementById('overlayAlert').classList.remove('show'); }
 
-        // دالة تطوير البحث لتوحيد الحروف العربية
         function normalizeArabic(str) { return str.toString().trim().replace(/[إأآا]/g, 'ا').replace(/[ة]/g, 'ه').replace(/[يى]/g, 'ي').replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '').toLowerCase(); }
 
         function handleEnter(e) { if (e.key === 'Enter') login(); }
@@ -414,8 +417,7 @@
             collections.slice(-50).reverse().forEach(c => { const merchant = DB.merchants.find(m => m['رقم التاجر'].toString().trim() == c['رقم التاجر'].toString().trim()); const merchantName = c['اسم التاجر'] || (merchant ? merchant['اسم التاجر'] : '-'); const activity = merchant ? merchant['اسم النشاط'] : '-'; const account = merchant ? merchant['رقم الحساب'] : '-'; const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning'; const remaining = c['المتبقي بعد التحصيل'] !== undefined ? c['المتبقي بعد التحصيل'] : 0; rows += `<tr><td><code style="font-size:0.8rem;color:var(--secondary);">${c['الرقم المرجعي'] || '-'}</code></td><td>${formatDate(c['التاريخ'])}</td><td>${formatTime(c['الوقت'])}</td><td>${merchantName}</td><td>${activity}</td><td>${account}</td><td><strong>${formatMoney(c['قيمة التحصيل'])}</strong></td><td><span class="badge badge-${typeClass}">${c['نوع التحصيل'] || '-'}</span></td><td><strong>${formatMoney(remaining)}</strong></td><td>${c['ملاحظات'] || '-'}</td><td><div class="action-btns"><button class="btn btn-primary btn-sm" onclick="editCollection('${c['رقم التحصيل']}')"><i class="fas fa-edit"></i></button><button class="btn btn-danger btn-sm" onclick="delCollection('${c['رقم التحصيل']}')"><i class="fas fa-trash"></i></button></div></td></tr>`; });
             tbody.innerHTML = rows;
         }
-
-        function renderRequests() {
+                    function renderRequests() {
             let requests = DB.requests || [];
             if (requestSearchTerm) { const term = normalizeArabic(requestSearchTerm); requests = requests.filter(r => normalizeArabic(r['اسم التاجر'] || '').includes(term) || (r['رقم الطلب'] || '').toString().includes(term)); }
             const tbody = document.getElementById('tblRequests');
@@ -512,7 +514,6 @@
         async function deleteArchive(id) { showConfirm('هل أنت متأكد من حذف هذا السجل من الأرشيف نهائياً؟', async () => { showLoading(true); await postToAPI('deleteArchive', {}, id); await delay(1500); loadData(); }); }
         async function delRequest(id) { showConfirm('هل أنت متأكد من حذف هذا الطلب؟', async () => { showLoading(true); await postToAPI('deleteRequest', {}, id); await delay(1500); loadData(); }); }
         
-        // دالة الزر الاحترافي لتحويل الطلب إلى تحويل مالي تلقائياً
         async function convertReq(id) { showConfirm('هل تريد تحويل هذا الطلب إلى تحويل مالي تلقائياً؟\nسيتم إنشاء تحويل بقيمة الطلب وتغيير حالة الطلب إلى (محوّل).', async () => { showLoading(true); const res = await postToAPI('convertRequestToTransfer', {}, id); if(res.success) { playSound(doneAudio); showToast('تم تحويل الطلب وتسجيله كتحويل مالي بنجاح!', 'success'); await delay(1500); loadData(); } else { showToast('فشل في تحويل الطلب، ربما الحالة ليست معلقة', 'error'); showLoading(false); } }, 'تحويل تلقائي للتحويلات'); }
 
         async function confirmCloseMonth() { showConfirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد؟\n\nسيتم ترحيل بيانات الشهر الحالي للأرشيف ومسح التحويلات والتحصيلات.', async () => { showLoading(true); const res = await postToAPI('closeMonth'); if (res.success) { showToast('تم بدء شهر جديد بنجاح', 'success'); await delay(1500); loadData(); } else { showToast('حدث خطأ', 'error'); showLoading(false); } }, 'بدء شهر جديد'); }
