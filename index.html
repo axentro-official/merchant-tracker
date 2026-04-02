@@ -278,22 +278,41 @@
         function formatDate(dateStr) { if (!dateStr) return '-'; try { const d = new Date(dateStr); if (isNaN(d)) return dateStr; return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }); } catch { return dateStr; } }
         function formatTime(t) { if (!t) return '-'; return t; }
         function normalizeArabic(str) { return str.toString().trim().replace(/[إأآا]/g, 'ا').replace(/[ة]/g, 'ه').replace(/[يى]/g, 'ي').replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '').toLowerCase(); }
-        function handleEnter(e) { if (e.key === 'Enter') login(); }
-        function showOverlayAlert(title, message, type) { const iconEl = document.getElementById('oaIcon'); iconEl.className = 'oa-icon ' + (type || 'warning'); if (type === 'danger') iconEl.innerHTML = '<i class="fas fa-exclamation-circle"></i>'; else if (type === 'success') iconEl.innerHTML = '<i class="fas fa-check-circle"></i>'; else iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; document.getElementById('oaTitle').textContent = title; document.getElementById('oaBody').textContent = message; document.getElementById('overlayAlert').classList.add('show'); }
-        function closeOverlayAlert() { document.getElementById('overlayAlert').classList.remove('show'); }
-        function showConfirm(msg, callback, title = 'تأكيد') { document.getElementById('confirmMsg').textContent = msg; document.getElementById('confirmTitle').textContent = title; confirmCallback = callback; const m = document.getElementById('confirmModal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10); }
-        function closeConfirm() { const m = document.getElementById('confirmModal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); confirmCallback = null; }
-        document.getElementById('confirmBtn').onclick = () => { if (confirmCallback) confirmCallback(); closeConfirm(); };
-        function setConnectionStatus(status) { const ind = document.getElementById('connIndicator'); ind.className = 'conn-status live'; ind.querySelector('span').textContent = status === 'live' ? 'متصل' : 'غير متصل'; }
-
+        
+        function handleEnter(e) { 
+            if (e.key === 'Enter') { 
+                e.preventDefault(); 
+                login(); 
+            } 
+        }
+        
         async function login() {
             const password = document.getElementById('passInput').value;
             if (!password) { showToast('أدخل كلمة المرور', 'warning'); return; }
             showLoading(true);
-            const { data, error } = await supabase.rpc('check_admin_login', { p_password: password });
-            if (data && data.success) { playSound(loginSuccessAudio); localStorage.setItem('axentro_logged', 'true'); document.getElementById('loginBox').style.display = 'none'; document.getElementById('appBox').style.display = 'flex'; loadData(); showToast('مرحباً بك!', 'success'); }
-            else { playSound(loginErrorAudio); showToast('كلمة المرور غير صحيحة', 'error'); showLoading(false); }
+            try {
+                const { data, error } = await supabase.rpc('check_admin_login', { p_password: password });
+                if (error) {
+                    console.error("خطأ من قاعدة البيانات:", error);
+                    showToast('خطأ في قاعدة البيانات: ' + error.message, 'error');
+                    showLoading(false);
+                    return;
+                }
+                if (data && data.success) { 
+                    playSound(loginSuccessAudio); localStorage.setItem('axentro_logged', 'true'); 
+                    document.getElementById('loginBox').style.display = 'none'; document.getElementById('appBox').style.display = 'flex'; 
+                    loadData(); showToast('مرحباً بك!', 'success'); 
+                } else { 
+                    playSound(loginErrorAudio); showToast(data?.message || 'كلمة المرور غير صحيحة', 'error'); 
+                    showLoading(false); 
+                }
+            } catch (err) {
+                console.error("خطأ في الاتصال:", err);
+                showToast('فشل الاتصال بالسيرفر، تأكد من إنترنتك', 'error');
+                showLoading(false);
+            }
         }
+
         function logout() { showConfirm('هل تريد تسجيل الخروج؟', () => { playSound(logoutSuccessAudio); localStorage.removeItem('axentro_logged'); setTimeout(() => location.reload(), 1200); }); }
         function mapData(rows) { return rows.map(row => { const obj = { _uuid: row.id }; for (const key in row) { obj[key] = row[key]; } return obj; }); }
 
