@@ -7,20 +7,68 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    <!-- مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #3b82f6; --primary-dark: #1d4ed8; --secondary: #6366f1; --bg: #f8fafc; --bg-dark: #0f172a; --white: #ffffff; --text: #1e293b; --muted: #64748b; --success: #10b981; --success-light: #d1fae5; --danger: #ef4444; --danger-light: #fee2e2; --warning: #f59e0b; --warning-light: #fef3c7; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); --radius: 12px; --radius-sm: 8px; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
         body { background: linear-gradient(135deg, var(--bg) 0%, #e2e8f0 100%); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* ====== تحسين قوائم الاختيار ====== */
+        select.form-control {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 12px center;
+            padding-left: 35px !important;
+        }
+        
+        select.form-control option {
+            padding: 10px;
+            font-weight: 600;
+        }
+        
+        select.form-control option:checked {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .search-results {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        
+        .search-results div {
+            padding: 12px 16px;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .search-results div:hover {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            transform: translateX(-5px);
+        }
+        
+        .search-results div .result-code {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            font-weight: 700;
+        }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
         .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(4px); }
         .spinner { width: 50px; height: 50px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         .loading-text { margin-top: 1rem; color: var(--muted); font-weight: 600; }
+        
         #loginBox { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; }
         .login-card { background: var(--white); padding: 2.5rem; border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; text-align: center; animation: fadeIn 0.5s ease-out; position: relative; overflow: hidden; }
         .login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--secondary)); }
@@ -30,6 +78,7 @@
         .login-card p { color: var(--muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
         .login-card input { width: 100%; padding: 1rem 1.2rem; margin-bottom: 1rem; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 1rem; transition: all 0.3s; background: var(--bg); }
         .login-card input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59,130,246,0.1); background: white; }
+        
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border: none; border-radius: var(--radius-sm); color: white; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: all 0.3s ease; }
         .btn:active { transform: scale(0.98); }
         .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); box-shadow: 0 4px 14px rgba(59,130,246,0.4); }
@@ -41,6 +90,7 @@
         .btn-secondary { background: linear-gradient(135deg, #64748b, #475569); }
         .btn-sm { padding: 0.5rem 1rem; font-size: 0.85rem; }
         .btn-block { width: 100%; }
+        
         .app-container { display: none; flex-direction: column; min-height: 100vh; }
         .navbar { background: var(--white); padding: 0.8rem 1.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
         .navbar .logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.3rem; color: var(--primary); }
@@ -49,15 +99,18 @@
         .conn-status.live { background: var(--success-light); color: var(--success); }
         .conn-status.offline { background: var(--danger-light); color: var(--danger); animation: pulse 2s infinite; }
         .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+        
         .tabs-nav { display: flex; background: var(--white); border-bottom: 2px solid var(--border); overflow-x: auto; position: sticky; top: 60px; z-index: 90; scrollbar-width: none; }
         .tabs-nav::-webkit-scrollbar { display: none; }
         .tab-link { flex: 1; min-width: 90px; padding: 1rem 0.5rem; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; transition: all 0.3s; white-space: nowrap; font-size: 0.85rem; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
         .tab-link i { font-size: 1.2rem; }
         .tab-link:hover { color: var(--primary); background: rgba(59,130,246,0.05); }
         .tab-link.active { color: var(--primary); border-color: var(--primary); background: linear-gradient(180deg, rgba(59,130,246,0.1) 0%, transparent 100%); }
+        
         .content { padding: 1.5rem; flex: 1; overflow-y: auto; padding-bottom: 120px; }
         .page { display: none; animation: fadeIn 0.4s ease-out; }
         .page.active { display: block; }
+        
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
         .stat-card { background: var(--white); padding: 1.2rem; border-radius: var(--radius); box-shadow: var(--shadow); position: relative; overflow: hidden; transition: all 0.3s ease; }
         .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
@@ -68,6 +121,7 @@
         .stat-card h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; font-weight: 600; }
         .stat-card .val { font-size: 1.5rem; font-weight: 800; color: var(--text); transition: color 0.3s; }
         .curr-inline { font-size: 0.75rem; color: var(--muted); font-weight: 400; margin-right: 2px; }
+        
         .table-box { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.5rem; }
         .table-header { padding: 1rem 1.5rem; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.5rem; }
         .table-header h3 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
@@ -75,19 +129,21 @@
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { padding: 0.9rem 1rem; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-        th { background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 0.8rem; }
+        th { background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 0.8rem; position: sticky; top: 0; }
         tr:hover { background: rgba(59,130,246,0.02); }
         .badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; }
         .badge-success { background: var(--success-light); color: var(--success); }
         .badge-danger { background: var(--danger-light); color: var(--danger); }
         .badge-primary { background: rgba(59,130,246,0.1); color: var(--primary); }
         .badge-warning { background: var(--warning-light); color: #92400e; }
+        
         footer { background: linear-gradient(135deg, var(--bg-dark) 0%, #1e293b 100%); padding: 2rem; text-align: center; margin-top: auto; }
         footer p { color: #94a3b8; font-size: 0.85rem; line-height: 1.8; }
         .qr-box { margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: float 4s ease-in-out infinite; }
         .qr-box img { width: 100px; border-radius: var(--radius-sm); border: 3px solid rgba(255,255,255,0.2); margin-bottom: 0.8rem; transition: all 0.3s; }
         .qr-box img:hover { transform: scale(1.1); border-color: var(--primary); }
         .qr-box a { color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; }
+        
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.7); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 1rem; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s ease; }
         .modal.show { opacity: 1; }
         .modal-content { background: var(--white); padding: 2rem; border-radius: var(--radius); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; animation: scaleIn 0.3s ease-out; }
@@ -95,32 +151,35 @@
         .modal-content h3 i { color: var(--primary); }
         .modal-close { position: absolute; top: 15px; left: 15px; font-size: 1.8rem; cursor: pointer; color: var(--muted); transition: all 0.3s; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
         .modal-close:hover { color: var(--danger); background: var(--danger-light); }
+        
         .form-group { margin-bottom: 1rem; position: relative; }
         .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; }
         .form-group label .required { color: var(--danger); }
         .form-control { width: 100%; padding: 0.8rem 1rem; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; transition: all 0.3s; background: var(--bg); }
         .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59,130,246,0.1); background: white; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .search-results { position: absolute; top: 100%; right: 0; left: 0; background: var(--white); border: 1px solid var(--border); border-radius: 0 0 var(--radius-sm) var(--radius-sm); max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: var(--shadow-lg); display: none; }
-        .search-results div { padding: 0.8rem 1rem; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+        
+        .search-results { position: absolute; top: 100%; right: 0; left: 0; background: var(--white); border: 1px solid var(--border); border-radius: 0 0 var(--radius-sm) var(--radius-sm); max-height: 280px; overflow-y: auto; z-index: 1000; box-shadow: var(--shadow-lg); display: none; }
+        .search-results div { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
         .search-results div:last-child { border-bottom: none; }
-        .search-results div:hover { background: var(--primary); color: white; }
+        .search-results div:hover { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; transform: translateX(-3px); }
         .search-results .no-result { color: var(--muted); cursor: default; }
-        .search-results .no-result:hover { background: transparent; color: var(--muted); }
+        .search-results .no-result:hover { background: transparent; color: var(--muted); transform: none; }
+        
         .progress-bar { height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 0.5rem; }
         .progress-bar .fill { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
         .progress-bar .fill.success { background: var(--success); }
         .progress-bar .fill.warning { background: var(--warning); }
         .progress-bar .fill.danger { background: var(--danger); }
+        
         .quick-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; padding: 1.5rem; background: linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(99,102,241,0.05) 100%); border-radius: var(--radius); }
+        
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--bg-dark); color: white; padding: 1rem 2rem; border-radius: var(--radius); box-shadow: var(--shadow-lg); z-index: 9999; transition: transform 0.3s ease; display: flex; align-items: center; gap: 0.5rem; }
         .toast.show { transform: translateX(-50%) translateY(0); }
         .toast.success { background: var(--success); }
         .toast.error { background: var(--danger); }
         .toast.warning { background: var(--warning); }
-        .video-wrap { background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 10px; position: relative; }
-        .video-wrap video { width: 100%; display: block; }
-        #scanModal { z-index: 2100; }
+        
         #overlayAlert { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.75); display: none; justify-content: center; align-items: center; z-index: 99999; backdrop-filter: blur(6px); padding: 1rem; }
         #overlayAlert.show { display: flex; }
         .overlay-alert-box { background: var(--white); border-radius: var(--radius); width: 100%; max-width: 460px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: scaleIn 0.25s ease-out; overflow: hidden; }
@@ -133,8 +192,30 @@
         .overlay-alert-box .oa-body { padding: 1rem 1.5rem 1.5rem; font-size: 0.9rem; color: var(--muted); line-height: 1.8; white-space: pre-line; }
         .overlay-alert-box .oa-footer { padding: 0 1.5rem 1.5rem; display: flex; justify-content: center; }
         .overlay-alert-box .oa-footer .btn { min-width: 140px; }
+        
         .action-btns { display: flex; gap: 5px; justify-content: center; flex-wrap: nowrap; }
-        @media (max-width: 768px) { .navbar { padding: 0.6rem 1rem; flex-wrap: wrap; gap: 0.5rem; } .navbar-actions { width: 100%; justify-content: center; margin-top: 0.5rem; } .tabs-nav { top: 100px; } .tab-link { padding: 0.7rem 0.3rem; font-size: 0.75rem; } .content { padding: 1rem; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .form-row { grid-template-columns: 1fr; } }
+        
+        /* تحسين عرض الوقت */
+        .time-badge {
+            font-family: 'Courier New', monospace;
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            direction: ltr;
+            display: inline-block;
+        }
+        
+        @media (max-width: 768px) { 
+            .navbar { padding: 0.6rem 1rem; flex-wrap: wrap; gap: 0.5rem; } 
+            .navbar-actions { width: 100%; justify-content: center; margin-top: 0.5rem; } 
+            .tabs-nav { top: 100px; } 
+            .tab-link { padding: 0.7rem 0.3rem; font-size: 0.75rem; } 
+            .content { padding: 1rem; } 
+            .stats-grid { grid-template-columns: repeat(2, 1fr); } 
+            .form-row { grid-template-columns: 1fr; } 
+        }
     </style>
 </head>
 <body>
@@ -169,25 +250,11 @@
         </div>
     </div>
 
-    <!-- Scan Modal -->
-    <div id="scanModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <span class="modal-close" onclick="closeScanModal()">&times;</span>
-            <h3><i class="fas fa-camera"></i> ماسح الرقم التسلسلي</h3>
-            <div class="video-wrap"><video id="video" playsinline autoplay></video></div>
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
-                <button class="btn btn-secondary btn-sm" id="torchBtn">🔦 فلاش</button>
-                <button class="btn btn-secondary btn-sm" onclick="closeScanModal()">إغلاق</button>
-            </div>
-            <div class="scan-hint" style="margin-top: 10px; font-size: 12px; color: var(--muted); text-align: center;">وجه الكاميرا نحو الرقم التسلسلي (باركود) الموجود على المكنة.</div>
-        </div>
-    </div>
-
     <!-- Login Box -->
     <div id="loginBox">
         <div class="login-card">
             <div class="login-logo"><i class="fas fa-store"></i></div>
-            <h2>Axentro System</h2>
+            <h2>Axentro System v2.1</h2>
             <p>نظام إدارة التجار والمكن</p>
             <input type="password" id="passInput" placeholder="كلمة المرور" onkeypress="handleEnter(event)">
             <button class="btn btn-primary btn-block" onclick="login()"><i class="fas fa-sign-in-alt"></i> دخول</button>
@@ -207,7 +274,7 @@
         <nav class="navbar">
             <div class="logo"><i class="fas fa-store"></i> Axentro</div>
             <div class="navbar-actions">
-                <div id="connIndicator" class="conn-status"><div class="conn-dot"></div><span>متصل</span></div>
+                <div id="connIndicator" class="conn-status live"><div class="conn-dot"></div><span>متصل</span></div>
                 <button class="btn btn-primary btn-sm" onclick="loadData()"><i class="fas fa-sync-alt"></i> تحديث</button>
                 <button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="fas fa-file-excel"></i> تصدير</button>
                 <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
@@ -257,14 +324,20 @@
                     <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
                         <h3><i class="fas fa-users"></i> قائمة التجار</h3>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="text" id="merchantSearchInput" class="form-control" placeholder="بحث بالاسم أو رقم التاجر..." style="width: 220px;">
+                            <input type="text" id="merchantSearchInput" class="form-control" placeholder="🔍 بحث بالاسم أو الرقم..." style="width: 250px;">
+                            <select id="merchantStatusFilter" class="form-control" style="width: 140px;" onchange="renderMerchants()">
+                                <option value="">كل الحالات</option>
+                                <option value="نشط">✅ نشط</option>
+                                <option value="غير نشط">⛔ غير نشط</option>
+                                <option value="موقوف">🚫 موقوف</option>
+                            </select>
                             <button class="btn btn-primary btn-sm" onclick="openModal('merchant')"><i class="fas fa-plus"></i> إضافة</button>
                         </div>
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>رقم التاجر</th><th>الاسم</th><th>اسم النشاط</th><th>رقم الحساب</th><th>الهاتف</th><th>المنطقة</th><th>العنوان</th><th>الحالة</th><th>إجراء</th></tr>
+                                <tr><th>#</th><th>رقم التاجر</th><th>الاسم</th><th>اسم النشاط</th><th>رقم الحساب</th><th>الهاتف</th><th>المنطقة</th><th>الحالة</th><th>إجراء</th></tr>
                             </thead>
                             <tbody id="tblMerchants"></tbody>
                         </table>
@@ -278,14 +351,20 @@
                     <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
                         <h3><i class="fas fa-cash-register"></i> المكن</h3>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="text" id="machineSearchInput" class="form-control" placeholder="بحث برقم المكنة أو التاجر..." style="width: 220px;">
+                            <input type="text" id="machineSearchInput" class="form-control" placeholder="🔍 بحث..." style="width: 220px;">
+                            <select id="machineStatusFilter" class="form-control" style="width: 140px;" onchange="renderMachines()">
+                                <option value="">كل الحالات</option>
+                                <option value="نشطة">✅ نشطة</option>
+                                <option value="متوقفة">⏸️ متوقفة</option>
+                                <option value="صيانة">🔧 صيانة</option>
+                            </select>
                             <button class="btn btn-primary btn-sm" onclick="openModal('machine')"><i class="fas fa-plus"></i> إضافة</button>
                         </div>
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>رقم المكنة</th><th>التاجر</th><th>اسم النشاط</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr>
+                                <tr><th>#</th><th>رقم المكنة</th><th>التاجر</th><th>الرقم التسلسلي</th><th>التارجت</th><th>الحالة</th><th>إجراء</th></tr>
                             </thead>
                             <tbody id="tblMachines"></tbody>
                         </table>
@@ -298,12 +377,16 @@
                 <div class="table-box">
                     <div class="table-header">
                         <h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3>
-                        <button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button>
+                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                            <input type="date" id="transferDateFrom" class="form-control" style="width:150px;" onchange="renderTransfers()">
+                            <input type="date" id="transferDateTo" class="form-control" style="width:150px;" onchange="renderTransfers()">
+                            <button class="btn btn-success btn-sm" onclick="openModal('transfer')"><i class="fas fa-plus"></i> تحويل جديد</button>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>اسم النشاط</th><th>رقم الحساب</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr>
+                                <tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النوع</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr>
                             </thead>
                             <tbody id="tblTransfers"></tbody>
                         </table>
@@ -321,7 +404,7 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>اسم النشاط</th><th>رقم الحساب</th><th>القيمة</th><th>النوع</th><th>المتبقي بعد التحصيل</th><th>ملاحظات</th><th>إجراء</th></tr>
+                                <tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>المتبقي</th><th>إجراء</th></tr>
                             </thead>
                             <tbody id="tblCollections"></tbody>
                         </table>
@@ -335,11 +418,11 @@
                     <div class="table-header" style="flex-wrap: wrap; gap: 0.5rem;">
                         <h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3>
                         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                            <select id="stmtMerchantSelect" class="form-control" style="width: 200px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList', 'statement')">
+                            <select id="stmtMerchantSelect" class="form-control" style="width: 220px;" onchange="handleDropdownSelect(this.value, 'stmtMerchantSearch', 'stmtMerchantId', 'stmtMerchantList', 'statement')">
                                 <option value="">-- اختر تاجر --</option>
                             </select>
-                            <div style="position: relative; width: 200px;">
-                                <input type="text" id="stmtMerchantSearch" class="form-control" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'stmtMerchantList', 'stmtMerchantId', 'statement')">
+                            <div style="position: relative; width: 220px;">
+                                <input type="text" id="stmtMerchantSearch" class="form-control" placeholder="🔍 أو ابحث عن تاجر..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'stmtMerchantList', 'stmtMerchantId', 'statement')">
                                 <input type="hidden" id="stmtMerchantId">
                                 <div id="stmtMerchantList" class="search-results"></div>
                             </div>
@@ -354,9 +437,9 @@
                         </div>
                         <h4 style="margin: 1rem 0; color: var(--muted);"><i class="fas fa-history"></i> الحركات (الأقدم فوق ← الأحدث تحت)</h4>
                         <div class="table-container">
-                            <table style="min-width: 600px;">
+                            <table style="min-width: 650px;">
                                 <thead>
-                                    <tr><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th><th>المتبقي بعد الحركة</th><th>ملاحظات</th></tr>
+                                    <tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th><th>المتبقي</th><th>ملاحظات</th></tr>
                                 </thead>
                                 <tbody id="tblStatement"></tbody>
                             </table>
@@ -375,12 +458,21 @@
                 <div class="table-box">
                     <div class="table-header">
                         <h3><i class="fas fa-bell"></i> طلبات التجار</h3>
-                        <input type="text" id="requestSearchInput" class="form-control" placeholder="بحث بالاسم أو رقم الطلب..." style="width: 220px;">
+                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                            <select id="requestStatusFilter" class="form-control" style="width:140px;" onchange="renderRequests()">
+                                <option value="">كل الحالات</option>
+                                <option value="pending">⏳ معلقة</option>
+                                <option value="محوّل">🔄 محوّل</option>
+                                <option value="مكتمل">✅ مكتمل</option>
+                                <option value="مرفوض">❌ مرفوض</option>
+                            </select>
+                            <input type="text" id="requestSearchInput" class="form-control" placeholder="بحث..." style="width:180px;">
+                        </div>
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>رقم الطلب</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>اسم النشاط</th><th>نوع الطلب</th><th>المبلغ</th><th>المديونية</th><th>الحالة</th><th>ملاحظات</th><th>إجراء</th></tr>
+                                <tr><th>#</th><th>رقم الطلب</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>نوع الطلب</th><th>المبلغ</th><th>المديونية</th><th>الحالة</th><th>إجراء</th></tr>
                             </thead>
                             <tbody id="tblRequests"></tbody>
                         </table>
@@ -398,7 +490,7 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>الشهر</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr>
+                                <tr><th>#</th><th>الشهر</th><th>تحويلات</th><th>إجمالي التحويلات</th><th>تحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>حذف</th></tr>
                             </thead>
                             <tbody id="tblArchive"></tbody>
                         </table>
@@ -408,7 +500,7 @@
         </div>
         
         <footer>
-            <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team</p>
+            <p>© 2024 Axentro – All Rights Reserved<br>By Axentro Team | v2.1</p>
             <div class="qr-box">
                 <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
                     <img src="qr-links.png" alt="QR Code"><span><i class="fas fa-qrcode"></i> QR Scan Me</span>
@@ -427,7 +519,7 @@
 
     <script>
         // ============================================
-        // 🔧 الإعدادات الأساسية والثوابت
+        // 🔧 الإعدادات الأساسية
         // ============================================
         const SUPABASE_URL = 'https://bwcrdcudpnxkmcyyhzhe.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY';
@@ -436,8 +528,9 @@
         
         try {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('✅ Supabase client initialized');
         } catch(e) {
-            console.error('خطأ في تهيئة Supabase:', e);
+            console.error('❌ Supabase init error:', e);
         }
 
         // قاعدة البيانات المحلية
@@ -484,13 +577,45 @@
         }
 
         // ============================================
-        // 🔄 وظائف واجهة المستخدم الأساسية
+        // ⏰ وظيفة تنسيق الوقت الاحترافية (12 ساعة)
+        // ============================================
+        function formatTime12h(dateStrOrObj) {
+            if (!dateStrOrObj) return '-';
+            try {
+                const d = typeof dateStrOrObj === 'string' ? new Date(dateStrOrObj) : dateStrOrObj;
+                if (isNaN(d)) return dateStrOrObj;
+                
+                // تنسيق 12 ساعة مع AM/PM واضح
+                let hours = d.getHours();
+                const minutes = d.getMinutes().toString().padStart(2, '0');
+                const seconds = d.getSeconds().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // تحويل 0 إلى 12
+                const timeStr = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+                
+                return `<span class="time-badge">${timeStr}</span>`;
+            } catch {
+                return dateStrOrObj;
+            }
+        }
+
+        // تنسيق الوقت النصي للعرض العادي
+        function formatTimePlain(timeVal) {
+            if (!timeVal) return '-';
+            // إذا كان الوقت جاهزاً بصيغة نصية
+            if (typeof timeVal === 'string' && timeVal.includes('AM') || timeVal.includes('PM')) {
+                return `<span class="time-badge">${timeVal}</span>`;
+            }
+            return `<span class="time-badge">${timeVal}</span>`;
+        }
+
+        // ============================================
+        // 🔄 وظائف واجهة المستخدم
         // ============================================
         function showLoading(show) {
             const overlay = document.getElementById('loadingOverlay');
-            if (overlay) {
-                overlay.style.display = show ? 'flex' : 'none';
-            }
+            if (overlay) overlay.style.display = show ? 'flex' : 'none';
         }
 
         function showToast(message, type = 'success') {
@@ -523,15 +648,10 @@
             try {
                 const d = new Date(dateStr);
                 if (isNaN(d)) return dateStr;
-                return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+                return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
             } catch {
                 return dateStr;
             }
-        }
-
-        function formatTime(t) {
-            if (!t) return '-';
-            return t;
         }
 
         function normalizeArabic(str) {
@@ -543,9 +663,6 @@
                 .toLowerCase();
         }
 
-        // ============================================
-        // ⌨️ معالجة ضغط Enter
-        // ============================================
         function handleEnter(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -554,7 +671,7 @@
         }
 
         // ============================================
-        // 🔐 وظيفة تسجيل الدخول (مُصححة)
+        // 🔐 تسجيل الدخول
         // ============================================
         async function login() {
             const password = document.getElementById('passInput').value;
@@ -566,10 +683,7 @@
             showLoading(true);
             
             try {
-                // التحقق من وجود عميل Supabase
-                if (!supabaseClient) {
-                    throw new Error('عميل Supabase غير مهيأ');
-                }
+                if (!supabaseClient) throw new Error('عميل Supabase غير مهيأ');
                 
                 const { data, error } = await supabaseClient.rpc('check_admin_login', { 
                     p_password: password 
@@ -596,14 +710,11 @@
                 }
             } catch (err) {
                 console.error("خطأ في الاتصال:", err);
-                showToast('فشل الاتصال بالسيرفر، تأكد من إنترنتك', 'error');
+                showToast('فشل الاتصال بالسيرفر', 'error');
                 showLoading(false);
             }
         }
 
-        // ============================================
-        // 🚪 وظيفة تسجيل الخروج
-        // ============================================
         function logout() {
             showConfirm('هل تريد تسجيل الخروج؟', () => {
                 playSound(logoutSuccessAudio);
@@ -614,17 +725,14 @@
         }
 
         // ============================================
-        // ✅ نافذة التأكيد (تم إصلاحها - كانت ناقصة!)
+        // ✅ نوافذ التنبيه والتأكيد
         // ============================================
         function showConfirm(message, callback, buttonText = 'تأكيد') {
             const modal = document.getElementById('confirmModal');
             const msgEl = document.getElementById('confirmMsg');
             const btnEl = document.getElementById('confirmBtn');
             
-            if (!modal || !msgEl || !btnEl) {
-                console.error('عناصر نافذة التأكيد غير موجودة');
-                return;
-            }
+            if (!modal || !msgEl || !btnEl) return;
             
             confirmCallback = callback;
             msgEl.textContent = message;
@@ -643,22 +751,16 @@
             confirmCallback = null;
         }
 
-        // معالج زر التأكيد
         document.addEventListener('DOMContentLoaded', function() {
             const confirmBtn = document.getElementById('confirmBtn');
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', function() {
-                    if (typeof confirmCallback === 'function') {
-                        confirmCallback();
-                    }
+                    if (typeof confirmCallback === 'function') confirmCallback();
                     closeConfirm();
                 });
             }
         });
 
-        // ============================================
-        // ⚠️ نافذة التنبيه المنبثقة (تم إصلاحها - كانت ناقصة!)
-        // ============================================
         function showOverlayAlert(title, message, type = 'warning') {
             const overlay = document.getElementById('overlayAlert');
             const titleEl = document.getElementById('oaTitle');
@@ -666,7 +768,6 @@
             const iconEl = document.getElementById('oaIcon');
             
             if (!overlay || !titleEl || !bodyEl || !iconEl) {
-                console.error('عناصر نافذة التنبيه غير موجودة');
                 showToast(message, type === 'danger' ? 'error' : 'warning');
                 return;
             }
@@ -674,7 +775,6 @@
             titleEl.textContent = title;
             bodyEl.textContent = message;
             
-            // تغيير الأيقونة حسب النوع
             iconEl.className = 'oa-icon ' + type;
             iconEl.innerHTML = type === 'danger' ? '<i class="fas fa-times-circle"></i>' :
                               type === 'success' ? '<i class="fas fa-check-circle"></i>' :
@@ -685,21 +785,17 @@
 
         function closeOverlayAlert() {
             const overlay = document.getElementById('overlayAlert');
-            if (overlay) {
-                overlay.classList.remove('show');
-            }
+            if (overlay) overlay.classList.remove('show');
         }
 
         // ============================================
-        // 📊 وظائف قاعدة البيانات
+        // 📊 قاعدة البيانات (★ الترتيب مصحح: الأقدم فوق)
         // ============================================
         function mapData(rows) {
             if (!rows) return [];
             return rows.map(row => {
                 const obj = { _uuid: row.id };
-                for (const key in row) {
-                    obj[key] = row[key];
-                }
+                for (const key in row) obj[key] = row[key];
                 return obj;
             });
         }
@@ -707,17 +803,16 @@
         async function loadData() {
             showLoading(true);
             try {
-                if (!supabaseClient) {
-                    throw new Error('عميل Supabase غير متاح');
-                }
+                if (!supabaseClient) throw new Error('عميل Supabase غير متاح');
                 
+                // ★★ التغيير الرئيسي: ascending: true للأقدم فوق ★★
                 const [mRes, macRes, tRes, cRes, rRes, aRes] = await Promise.all([
-                    supabaseClient.from('merchants').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('machines').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('transfers').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('collections').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('merchant_requests').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('archives').select('*').order('created_at', { ascending: false })
+                    supabaseClient.from('merchants').select('*').order('created_at', { ascending: true }),  // الأقدم فوق
+                    supabaseClient.from('machines').select('*').order('created_at', { ascending: true }),     // الأقدم فوق
+                    supabaseClient.from('transfers').select('*').order('created_at', { ascending: true }),   // الأقدم فوق
+                    supabaseClient.from('collections').select('*').order('created_at', { ascending: true }), // الأقدم فوق
+                    supabaseClient.from('merchant_requests').select('*').order('created_at', { ascending: true }),
+                    supabaseClient.from('archives').select('*').order('created_at', { ascending: false })      // الأحدث فوق للأرشيف
                 ]);
                 
                 DB.merchants = mapData(mRes.data || []);
@@ -747,7 +842,7 @@
             try {
                 await supabaseClient.from('system_logs').insert([{
                     "التاريخ": now.toISOString().split('T')[0],
-                    "الوقت": now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true}),
+                    "الوقت": now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true}),
                     "النوع": type,
                     "الرقم المرجعي": ref,
                     "التفاصيل": details,
@@ -764,7 +859,7 @@
         }
 
         // ============================================
-        // 📈 حسابات لوحة التحكم
+        // 📈 لوحة التحكم
         // ============================================
         function calculateDashboardFrontend(transfers, collections, merchants, machines) {
             const now = new Date();
@@ -810,7 +905,7 @@
         }
 
         // ============================================
-        // 🎨 وظائف العرض
+        // 🎨 وظائف العرض (★ محسّنة مع ترقيم ★)
         // ============================================
         function renderAll() {
             renderDashboard();
@@ -857,9 +952,10 @@
             }
             
             let rows = '';
-            machines.forEach(m => {
+            machines.forEach((m, idx) => {
                 const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
                 rows += `<tr>
+                    <td>${idx + 1}</td>
                     <td><strong>${m.name || '-'}</strong></td>
                     <td>${m.account || '-'}</td>
                     <td>${m.merchant || '-'}</td>
@@ -875,14 +971,23 @@
             tbody.innerHTML = rows;
         }
 
+        // ★★ عرض التجار مع الترتيب الصحيح وأرقام تسلسلية ★★
         function renderMerchants() {
-            let merchants = DB.merchants || [];
+            let merchants = [...DB.merchants]; // نسخة لتجنب تعديل الأصلي
+            
+            // فلترة البحث
             if (merchantSearchTerm) {
                 const term = normalizeArabic(merchantSearchTerm);
                 merchants = merchants.filter(m => 
                     normalizeArabic(m['اسم التاجر'] || '').includes(term) || 
                     (m['رقم التاجر'] || '').toString().includes(term)
                 );
+            }
+            
+            // فلترة الحالة
+            const statusFilter = document.getElementById('merchantStatusFilter')?.value;
+            if (statusFilter) {
+                merchants = merchants.filter(m => m['الحالة'] === statusFilter);
             }
             
             const tbody = document.getElementById('tblMerchants');
@@ -894,24 +999,24 @@
             }
             
             let rows = '';
-            merchants.forEach(m => {
+            merchants.forEach((m, index) => {
                 const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
                 const phone = m['رقم الهاتف'] || '';
                 const phoneLink = phone ? `<a href="tel:${phone}" style="color:var(--primary);text-decoration:none;">${phone}</a>` : '-';
                 
                 rows += `<tr>
-                    <td><strong>${m['رقم التاجر'] || '-'}</strong></td>
-                    <td>${m['اسم التاجر'] || '-'}</td>
+                    <td><strong>${index + 1}</strong></td>
+                    <td><code style="color:var(--secondary);">${m['رقم التاجر'] || '-'}</code></td>
+                    <td><strong>${m['اسم التاجر'] || '-'}</strong></td>
                     <td>${m['اسم النشاط'] || '-'}</td>
-                    <td>${m['رقم الحساب'] || '-'}</td>
-                    <td>${phoneLink}</td>
+                    <td dir="ltr" style="text-align:left">${m['رقم الحساب'] || '-'}</td>
+                    <td dir="ltr" style="text-align:left">${phoneLink}</td>
                     <td>${m['المنطقة'] || '-'}</td>
-                    <td>${m['العنوان'] || '-'}</td>
                     <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
                     <td>
                         <div class="action-btns">
-                            <button class="btn btn-primary btn-sm" onclick="editMerchant('${m['رقم التاجر']}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-primary btn-sm" onclick="editMerchant('${m['رقم التاجر']}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="delMerchant('${m['رقم التاجر']}')" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>`;
@@ -920,13 +1025,20 @@
         }
 
         function renderMachines() {
-            let machines = DB.machines || [];
+            let machines = [...DB.machines];
+            
             if (machineSearchTerm) {
                 const term = normalizeArabic(machineSearchTerm);
                 machines = machines.filter(m => 
                     (m['رقم المكنة'] || '').toString().includes(term) || 
-                    normalizeArabic(m['اسم التاجر'] || '').includes(term)
+                    normalizeArabic(m['اسم التاجر'] || '').includes(term) ||
+                    (m['الرقم التسلسلي'] || '').includes(term)
                 );
+            }
+            
+            const statusFilter = document.getElementById('machineStatusFilter')?.value;
+            if (statusFilter) {
+                machines = machines.filter(m => m['الحالة'] === statusFilter);
             }
             
             const tbody = document.getElementById('tblMachines');
@@ -938,22 +1050,20 @@
             }
             
             let rows = '';
-            machines.forEach(m => {
+            machines.forEach((m, index) => {
                 const statusClass = m['الحالة'] === 'نشطة' ? 'success' : 'danger';
-                const merchant = DB.merchants.find(mer => mer['رقم التاجر']?.toString().trim() == m['رقم التاجر']?.toString().trim());
-                const activity = merchant ? merchant['اسم النشاط'] : '-';
                 
                 rows += `<tr>
-                    <td><strong>${m['رقم المكنة'] || '-'}</strong></td>
+                    <td>${index + 1}</td>
+                    <td><code style="color:var(--secondary);">${m['رقم المكنة'] || '-'}</code></td>
                     <td>${m['اسم التاجر'] || '-'}</td>
-                    <td>${activity}</td>
                     <td><code>${m['الرقم التسلسلي'] || '-'}</code></td>
                     <td>${formatMoney(m['التارجت الشهري'])}</td>
                     <td><span class="badge badge-${statusClass}">${m['الحالة'] || '-'}</span></td>
                     <td>
                         <div class="action-btns">
-                            <button class="btn btn-primary btn-sm" onclick="editMachine('${m['رقم المكنة']}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-primary btn-sm" onclick="editMachine('${m['رقم المكنة']}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="delMachine('${m['رقم المكنة']}')" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>`;
@@ -961,37 +1071,41 @@
             tbody.innerHTML = rows;
         }
 
+        // ★★ عرض التحويلات (الأقدم فوق) ★★
         function renderTransfers() {
-            const transfers = DB.transfers || [];
+            let transfers = [...DB.transfers];
+            
+            // فلترة التاريخ
+            const dateFrom = document.getElementById('transferDateFrom')?.value;
+            const dateTo = document.getElementById('transferDateTo')?.value;
+            if (dateFrom) transfers = transfers.filter(t => t['التاريخ'] >= dateFrom);
+            if (dateTo) transfers = transfers.filter(t => t['التاريخ'] <= dateTo);
+            
             const tbody = document.getElementById('tblTransfers');
             if (!tbody) return;
             
             if (transfers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحويلات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحويلات</td></tr>';
                 return;
             }
             
             let rows = '';
-            transfers.slice(-50).reverse().forEach(t => {
-                const merchant = DB.merchants.find(m => m['رقم التاجر']?.toString().trim() == t['رقم التاجر']?.toString().trim());
-                const merchantName = t['اسم التاجر'] || (merchant ? merchant['اسم التاجر'] : '-');
-                const activity = merchant ? merchant['اسم النشاط'] : '-';
-                const account = merchant ? merchant['رقم الحساب'] : '-';
+            transfers.forEach((t, index) => {
+                const merchantName = t['اسم التاجر'] || '-';
                 
                 rows += `<tr>
+                    <td>${index + 1}</td>
                     <td><code style="font-size:0.8rem;color:var(--secondary);">${t['الرقم المرجعي'] || '-'}</code></td>
                     <td>${formatDate(t['التاريخ'])}</td>
-                    <td>${formatTime(t['الوقت'])}</td>
-                    <td>${merchantName}</td>
-                    <td>${activity}</td>
-                    <td>${account}</td>
-                    <td>${t['نوع التحويل'] || '-'}</td>
+                    <td>${formatTimePlain(t['الوقت'])}</td>
+                    <td><strong>${merchantName}</strong></td>
+                    <td><span class="badge badge-primary">${t['نوع التحويل'] || '-'}</span></td>
                     <td><strong>${formatMoney(t['قيمة التحويل'])}</strong></td>
-                    <td>${t['ملاحظات'] || '-'}</td>
+                    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t['ملاحظات'] || ''}">${t['ملاحظات'] || '-'}</td>
                     <td>
                         <div class="action-btns">
-                            <button class="btn btn-primary btn-sm" onclick="editTransfer('${t['الرقم المرجعي']}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-danger btn-sm" onclick="delTransfer('${t['الرقم المرجعي']}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-primary btn-sm" onclick="editTransfer('${t['الرقم المرجعي']}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="delTransfer('${t['الرقم المرجعي']}')" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>`;
@@ -1000,39 +1114,33 @@
         }
 
         function renderCollections() {
-            const collections = DB.collections || [];
+            const collections = [...DB.collections];
             const tbody = document.getElementById('tblCollections');
             if (!tbody) return;
             
             if (collections.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد تحصيلات</td></tr>';
                 return;
             }
             
             let rows = '';
-            collections.slice(-50).reverse().forEach(c => {
-                const merchant = DB.merchants.find(m => m['رقم التاجر']?.toString().trim() == c['رقم التاجر']?.toString().trim());
-                const merchantName = c['اسم التاجر'] || (merchant ? merchant['اسم التاجر'] : '-');
-                const activity = merchant ? merchant['اسم النشاط'] : '-';
-                const account = merchant ? merchant['رقم الحساب'] : '-';
+            collections.forEach((c, index) => {
                 const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
                 const remaining = c['المتبقي بعد التحصيل'] !== undefined ? c['المتبقي بعد التحصيل'] : 0;
                 
                 rows += `<tr>
+                    <td>${index + 1}</td>
                     <td><code style="font-size:0.8rem;color:var(--secondary);">${c['الرقم المرجعي'] || '-'}</code></td>
                     <td>${formatDate(c['التاريخ'])}</td>
-                    <td>${formatTime(c['الوقت'])}</td>
-                    <td>${merchantName}</td>
-                    <td>${activity}</td>
-                    <td>${account}</td>
+                    <td>${formatTimePlain(c['الوقت'])}</td>
+                    <td><strong>${c['اسم التاجر'] || '-'}</strong></td>
                     <td><strong>${formatMoney(c['قيمة التحصيل'])}</strong></td>
                     <td><span class="badge badge-${typeClass}">${c['نوع التحصيل'] || '-'}</span></td>
-                    <td><strong>${formatMoney(remaining)}</strong></td>
-                    <td>${c['ملاحظات'] || '-'}</td>
+                    <td><strong style="color:var(--danger);">${formatMoney(remaining)}</strong></td>
                     <td>
                         <div class="action-btns">
-                            <button class="btn btn-primary btn-sm" onclick="editCollection('${c['الرقم المرجعي']}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-danger btn-sm" onclick="delCollection('${c['الرقم المرجعي']}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-primary btn-sm" onclick="editCollection('${c['الرقم المرجعي']}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="delCollection('${c['الرقم المرجعي']}')" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>`;
@@ -1041,13 +1149,19 @@
         }
 
         function renderRequests() {
-            let requests = DB.requests || [];
+            let requests = [...DB.requests];
+            
             if (requestSearchTerm) {
                 const term = normalizeArabic(requestSearchTerm);
                 requests = requests.filter(r => 
                     normalizeArabic(r['اسم التاجر'] || '').includes(term) || 
                     (r['رقم الطلب'] || '').toString().includes(term)
                 );
+            }
+            
+            const statusFilter = document.getElementById('requestStatusFilter')?.value;
+            if (statusFilter) {
+                requests = requests.filter(r => r['الحالة'] === statusFilter);
             }
             
             const tbody = document.getElementById('tblRequests');
@@ -1075,27 +1189,26 @@
             }
             
             let rows = '';
-            requests.slice(-100).reverse().forEach(r => {
+            requests.forEach((r, index) => {
                 const statusClass = r['الحالة'] === 'pending' ? 'warning' : (r['الحالة'] === 'محوّل' ? 'primary' : 'success');
-                const statusText = r['الحالة'] === 'pending' ? 'معلق' : (r['الحالة'] === 'محوّل' ? 'محوّل' : 'مكتمل');
+                const statusText = r['الحالة'] === 'pending' ? 'معلق' : (r['الحالة'] === 'محوّل' ? 'محوّل' : r['الحالة'] === 'مكتمل' ? 'مكتمل' : 'مرفوض');
                 const convertBtn = r['الحالة'] === 'pending' ? 
-                    `<button class="btn btn-success btn-sm" title="تحويل تلقائي للتحويلات" onclick="convertReq('${r['رقم الطلب']}')"><i class="fas fa-exchange-alt"></i></button>` : '';
+                    `<button class="btn btn-success btn-sm" title="تحويل تلقائي" onclick="convertReq('${r['رقم الطلب']}')"><i class="fas fa-exchange-alt"></i></button>` : '';
                 
                 rows += `<tr>
+                    <td>${index + 1}</td>
                     <td><strong>${r['رقم الطلب'] || '-'}</strong></td>
                     <td>${formatDate(r['التاريخ'])}</td>
-                    <td>${formatTime(r['الوقت'])}</td>
+                    <td>${formatTimePlain(r['الوقت'])}</td>
                     <td>${r['اسم التاجر'] || '-'}</td>
-                    <td>${r['اسم النشاط'] || '-'}</td>
                     <td>${r['نوع الطلب'] || '-'}</td>
                     <td><strong>${formatMoney(r['المبلغ'])}</strong></td>
                     <td>${formatMoney(r['المديونية الحالية'])}</td>
                     <td><span class="badge badge-${statusClass}">${statusText}</span></td>
-                    <td>${r['ملاحظات'] || '-'}</td>
                     <td>
                         <div class="action-btns">
                             ${convertBtn}
-                            <button class="btn btn-danger btn-sm" onclick="delRequest('${r['رقم الطلب']}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="delRequest('${r['رقم الطلب']}')" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>`;
@@ -1104,24 +1217,25 @@
         }
 
         function renderArchive() {
-            const archives = DB.archives || [];
+            const archives = [...DB.archives];
             const tbody = document.getElementById('tblArchive');
             if (!tbody) return;
             
             if (archives.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد أرشيف</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">لا يوجد أرشيف</td></tr>';
                 return;
             }
             
             let rows = '';
-            archives.reverse().forEach(a => {
+            archives.forEach((a, index) => {
                 rows += `<tr>
+                    <td>${index + 1}</td>
                     <td><strong>${a['الشهر'] || '-'}</strong></td>
                     <td>${a['عدد التحويلات'] || 0}</td>
                     <td>${formatMoney(a['إجمالي التحويلات'])}</td>
                     <td>${a['عدد التحصيلات'] || 0}</td>
                     <td>${formatMoney(a['إجمالي التحصيلات'])}</td>
-                    <td>${formatMoney(a['إجمالي المتبقي'])}</td>
+                    <td><strong style="color:var(--danger);">${formatMoney(a['إجمالي المتبقي'])}</strong></td>
                     <td><button class="btn btn-danger btn-sm" onclick="deleteArchive('${a['رقم الأرشيف']}')"><i class="fas fa-trash"></i></button></td>
                 </tr>`;
             });
@@ -1129,7 +1243,7 @@
         }
 
         // ============================================
-        // 🔍 وظائف البحث
+        // 🔍 وظائف البحث المحسنة
         // ============================================
         function debounce(func, wait) {
             let timeout;
@@ -1147,7 +1261,7 @@
             
             hiddenEl.value = '';
             
-            if (!query) {
+            if (!query || query.length < 1) {
                 listEl.style.display = 'none';
                 return;
             }
@@ -1156,18 +1270,25 @@
             const filtered = merchants.filter(m => 
                 normalizeArabic(m['اسم التاجر'] || '').includes(normalizeArabic(query)) ||
                 normalizeArabic(m['اسم النشاط'] || '').includes(normalizeArabic(query)) ||
-                (m['رقم التاجر'] || '').toString().includes(query)
+                (m['رقم التاجر'] || '').toString().includes(query) ||
+                (m['رقم الهاتف'] || '').includes(query)
             );
             
             if (filtered.length === 0) {
-                listEl.innerHTML = '<div class="no-result">لا توجد نتائج</div>';
+                listEl.innerHTML = '<div class="no-result"><i class="fas fa-search"></i> لا توجد نتائج</div>';
             } else {
-                listEl.innerHTML = filtered.map(m => 
-                    `<div onclick="selectMerchant('${m['رقم التاجر']}', '${m['اسم التاجر']}', '${listId}', '${hiddenId}', ${callback ? `'${callback}'` : 'null'})">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</div>`
+                listEl.innerHTML = filtered.slice(0, 10).map(m => 
+                    `<div onclick="selectMerchant('${m['رقم التاجر']}', '${m['اسم التاجر'].replace(/'/g, "\\'")}', '${listId}', '${hiddenId}', ${callback ? `'${callback}'` : 'null'})">
+                        <div>
+                            <strong>${m['اسم التاجر']}</strong>
+                            <small style="display:block;color:var(--muted);font-size:0.75rem;">${m['اسم النشاط'] || '-'}</small>
+                        </div>
+                        <span class="result-code">${m['رقم التاجر']}</span>
+                    </div>`
                 ).join('');
             }
             listEl.style.display = 'block';
-        }, 300);
+        }, 250);
 
         function handleMerchantSearch(query, listId, hiddenId, callback) {
             searchMerchantDebounced(query, listId, hiddenId, callback);
@@ -1246,7 +1367,7 @@
                 const currentVal = el.value;
                 el.innerHTML = '<option value="">-- اختر تاجر --</option>';
                 merchants.forEach(m => {
-                    el.innerHTML += `<option value="${m['رقم التاجر']}">${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</option>`;
+                    el.innerHTML += `<option value="${m['رقم التاجر']}">${m['رقم التاجر']} - ${m['اسم التاجر']} (${m['اسم النشاط'] || '-'})</option>`;
                 });
                 if (currentVal && merchants.some(m => m['رقم التاجر'] == currentVal)) el.value = currentVal;
             });
@@ -1259,10 +1380,7 @@
             const body = document.getElementById('modalBody');
             const m = document.getElementById('modal');
             
-            if (!body || !m) {
-                console.error('عناصر النافذة غير موجودة');
-                return;
-            }
+            if (!body || !m) return;
             
             m.style.display = 'flex';
             setTimeout(() => m.classList.add('show'), 10);
@@ -1274,43 +1392,46 @@
                     <h3><i class="fas fa-user-plus"></i> ${isEdit ? 'تعديل تاجر' : 'إضافة تاجر جديد'}</h3>
                     <div class="form-group">
                         <label>اسم التاجر<span class="required">*</span></label>
-                        <input id="mName" class="form-control" placeholder="اسم التاجر" value="${isEdit ? (data['اسم التاجر'] || '') : ''}">
+                        <input id="mName" class="form-control" placeholder="الاسم الكامل" value="${isEdit ? (data['اسم التاجر'] || '') : ''}">
                     </div>
                     <div class="form-group">
                         <label>اسم النشاط</label>
-                        <input id="mBiz" class="form-control" placeholder="اسم النشاط" value="${isEdit ? (data['اسم النشاط'] || '') : ''}">
+                        <input id="mBiz" class="form-control" placeholder="نشاط التجارة" value="${isEdit ? (data['اسم النشاط'] || '') : ''}">
                     </div>
-                    <div class="form-group">
-                        <label>رقم الحساب</label>
-                        <input id="mAcc" class="form-control" placeholder="رقم الحساب" value="${isEdit ? (data['رقم الحساب'] || '') : ''}">
-                    </div>
-                    <div class="form-group">
-                        <label>رقم الهاتف</label>
-                        <input id="mPhone" class="form-control" placeholder="رقم الهاتف" value="${isEdit ? (data['رقم الهاتف'] || '') : ''}">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>رقم الحساب<span class="required">*</span></label>
+                            <input id="mAcc" class="form-control" placeholder="رقم الحساب البنكي" value="${isEdit ? (data['رقم الحساب'] || '') : ''}" dir="ltr">
+                        </div>
+                        <div class="form-group">
+                            <label>رقم الهاتف</label>
+                            <input id="mPhone" class="form-control" placeholder="010xxxxxxxx" value="${isEdit ? (data['رقم الهاتف'] || '') : ''}" dir="ltr">
+                        </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>المنطقة</label>
-                            <input id="mArea" class="form-control" placeholder="المنطقة" value="${isEdit ? (data['المنطقة'] || '') : ''}">
+                            <input id="mArea" class="form-control" placeholder="المدينة/المنطقة" value="${isEdit ? (data['المنطقة'] || '') : ''}">
                         </div>
                         <div class="form-group">
-                            <label>العنوان</label>
-                            <input id="mAddr" class="form-control" placeholder="العنوان" value="${isEdit ? (data['العنوان'] || '') : ''}">
+                            <label>الحالة</label>
+                            <select id="mStatus" class="form-control">
+                                <option value="نشط" ${isEdit && data['الحالة'] === 'نشط' ? 'selected' : ''}>✅ نشط</option>
+                                <option value="غير نشط" ${isEdit && data['الحالة'] === 'غير نشط' ? 'selected' : ''}>⛔ غير نشط</option>
+                                <option value="موقوف" ${isEdit && data['الحالة'] === 'موقوف' ? 'selected' : ''}>🚫 موقوف</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>الحالة</label>
-                        <select id="mStatus" class="form-control">
-                            <option value="نشط" ${isEdit && data['الحالة'] === 'نشط' ? 'selected' : ''}>نشط</option>
-                            <option value="غير نشط" ${isEdit && data['الحالة'] === 'غير نشط' ? 'selected' : ''}>غير نشط</option>
-                        </select>
+                        <label>العنوان</label>
+                        <input id="mAddr" class="form-control" placeholder="العنوان التفصيلي" value="${isEdit ? (data['العنوان'] || '') : ''}">
                     </div>
                     <div class="form-group">
                         <label>ملاحظات</label>
-                        <input id="mNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}">
+                        <textarea id="mNotes" class="form-control" rows="2" placeholder="ملاحظات إضافية...">${isEdit ? (data['ملاحظات'] || '') : ''}</textarea>
                     </div>
                     <button class="btn btn-primary btn-block" onclick="saveMerchant(${isEdit ? `'${data['رقم التاجر']}'` : ''})">
-                        <i class="fas fa-save"></i> حفظ التاجر
+                        <i class="fas fa-save"></i> ${isEdit ? 'تحديث البيانات' : 'حفظ التاجر'}
                     </button>
                 `;
             }
@@ -1320,10 +1441,10 @@
                     <div class="form-group">
                         <label>التاجر <span class="required">*</span></label>
                         <div style="display:flex; gap:0.5rem;">
-                            <select id="mcMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'mcMerchSearch', 'mcMerchId', 'mcMerchList')">
-                                <option value="">-- اختر --</option>
+                            <select id="mcMerchSelect" class="form-control" style="width:55%" onchange="handleDropdownSelect(this.value, 'mcMerchSearch', 'mcMerchId', 'mcMerchList')">
+                                <option value="">-- اختر التاجر --</option>
                             </select>
-                            <input type="text" id="mcMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')">
+                            <input type="text" id="mcMerchSearch" class="form-control" style="width:45%" placeholder="🔍 بحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'mcMerchList', 'mcMerchId')">
                         </div>
                         <input type="hidden" id="mcMerchId">
                         <div id="mcMerchList" class="search-results"></div>
@@ -1331,34 +1452,35 @@
                     <div class="form-group">
                         <label>الرقم التسلسلي <span class="required">*</span></label>
                         <div style="display: flex; gap: 0.5rem;">
-                            <input type="text" id="mcSerial" class="form-control" placeholder="ادخل الرقم التسلسلي" style="flex:1" value="${isEdit ? (data['الرقم التسلسلي'] || '') : ''}">
-                            <button type="button" class="btn btn-primary btn-sm" onclick="openScanModal()">
-                                <i class="fas fa-camera"></i> مسح
-                            </button>
+                            <input type="text" id="mcSerial" class="form-control" placeholder="SN-XXXXX" style="flex:1" value="${isEdit ? (data['الرقم التسلسلي'] || '') : ''}" dir="ltr">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>رقم الحساب</label>
+                            <input id="mcAccount" class="form-control" readonly dir="ltr">
+                        </div>
+                        <div class="form-group">
+                            <label>التارجت الشهري</label>
+                            <input type="number" id="mcTarget" class="form-control" placeholder="0" value="${isEdit ? (data['التارجت الشهري'] || '') : ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>الحالة</label>
+                            <select id="mcStatus" class="form-control">
+                                <option value="نشطة" ${isEdit && data['الحالة'] === 'نشطة' ? 'selected' : ''}>✅ نشطة</option>
+                                <option value="متوقفة" ${isEdit && data['الحالة'] === 'متوقفة' ? 'selected' : ''}>⏸️ متوقفة</option>
+                                <option value="صيانة" ${isEdit && data['الحالة'] === 'صيانة' ? 'selected' : ''}>🔧 صيانة</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>رقم الحساب</label>
-                        <input id="mcAccount" class="form-control" placeholder="رقم الحساب" value="${isEdit ? (data['رقم الحساب'] || '') : ''}">
-                    </div>
-                    <div class="form-group">
-                        <label>التارجت الشهري</label>
-                        <input type="number" id="mcTarget" class="form-control" placeholder="التارجت الشهري" value="${isEdit ? (data['التارجت الشهري'] || '') : ''}">
-                    </div>
-                    <div class="form-group">
-                        <label>الحالة</label>
-                        <select id="mcStatus" class="form-control">
-                            <option value="نشطة" ${isEdit && data['الحالة'] === 'نشطة' ? 'selected' : ''}>نشطة</option>
-                            <option value="متوقفة" ${isEdit && data['الحالة'] === 'متوقفة' ? 'selected' : ''}>متوقفة</option>
-                            <option value="صيانة" ${isEdit && data['الحالة'] === 'صيانة' ? 'selected' : ''}>صيانة</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label>ملاحظات</label>
-                        <input id="mcNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}">
+                        <textarea id="mcNotes" class="form-control" rows="2" placeholder="ملاحظات...">${isEdit ? (data['ملاحظات'] || '') : ''}</textarea>
                     </div>
                     <button class="btn btn-primary btn-block" onclick="saveMachine(${isEdit ? `'${data['رقم المكنة']}'` : ''})">
-                        <i class="fas fa-save"></i> حفظ المكنة
+                        <i class="fas fa-save"></i> ${isEdit ? 'تحديث المكنة' : 'حفظ المكنة'}
                     </button>
                 `;
                 
@@ -1379,39 +1501,43 @@
                     <div class="form-group">
                         <label>التاجر <span class="required">*</span></label>
                         <div style="display:flex; gap:0.5rem;">
-                            <select id="trMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'trMerchSearch', 'trMerchId', 'trMerchList')">
-                                <option value="">-- اختر --</option>
+                            <select id="trMerchSelect" class="form-control" style="width:55%" onchange="handleDropdownSelect(this.value, 'trMerchSearch', 'trMerchId', 'trMerchList')">
+                                <option value="">-- اختر التاجر --</option>
                             </select>
-                            <input type="text" id="trMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'trMerchList', 'trMerchId')">
+                            <input type="text" id="trMerchSearch" class="form-control" style="width:45%" placeholder="🔍 بحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'trMerchList', 'trMerchId')">
                         </div>
                         <input type="hidden" id="trMerchId">
                         <div id="trMerchList" class="search-results"></div>
                     </div>
-                    <div class="form-group">
-                        <label>رقم الحساب</label>
-                        <input id="trAccount" class="form-control" readonly>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>رقم الحساب</label>
+                            <input id="trAccount" class="form-control" readonly dir="ltr">
+                        </div>
+                        <div class="form-group">
+                            <label>المكنة</label>
+                            <input id="trMachine" class="form-control" readonly>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>المكنة</label>
-                        <input id="trMachine" class="form-control" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label>نوع التحويل</label>
-                        <select id="trType" class="form-control">
-                            <option value="رصيد خدمات" ${isEdit && data['نوع التحويل'] === 'رصيد خدمات' ? 'selected' : ''}>رصيد خدمات</option>
-                            <option value="رصيد كاش" ${isEdit && data['نوع التحويل'] === 'رصيد كاش' ? 'selected' : ''}>رصيد كاش</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>المبلغ <span class="required">*</span></label>
-                        <input type="number" id="trAmt" class="form-control" placeholder="قيمة التحويل" value="${isEdit ? (data['قيمة التحويل'] || '') : ''}">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>نوع التحويل</label>
+                            <select id="trType" class="form-control">
+                                <option value="رصيد خدمات" ${isEdit && data['نوع التحويل'] === 'رصيد خدمات' ? 'selected' : ''}>💳 رصيد خدمات</option>
+                                <option value="رصيد كاش" ${isEdit && data['نوع التحويل'] === 'رصيد كاش' ? 'selected' : ''}>💵 رصيد كاش</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>المبلغ <span class="required">*</span></label>
+                            <input type="number" id="trAmt" class="form-control" placeholder="0.00" step="0.01" min="0.01" value="${isEdit ? (data['قيمة التحويل'] || '') : ''}">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>ملاحظات</label>
-                        <input id="trNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}">
+                        <textarea id="trNotes" class="form-control" rows="2" placeholder="ملاحظات...">${isEdit ? (data['ملاحظات'] || '') : ''}</textarea>
                     </div>
                     <button class="btn btn-success btn-block" onclick="saveTransfer(${isEdit ? `'${data['الرقم المرجعي']}'` : ''})">
-                        <i class="fas fa-check"></i> تأكيد التحويل
+                        <i class="fas fa-check"></i> ${isEdit ? 'تحديث التحويل' : 'تأكيد التحويل'}
                     </button>
                 `;
                 
@@ -1431,39 +1557,43 @@
                     <div class="form-group">
                         <label>التاجر <span class="required">*</span></label>
                         <div style="display:flex; gap:0.5rem;">
-                            <select id="colMerchSelect" class="form-control" style="width:50%" onchange="handleDropdownSelect(this.value, 'colMerchSearch', 'colMerchId', 'colMerchList')">
-                                <option value="">-- اختر --</option>
+                            <select id="colMerchSelect" class="form-control" style="width:55%" onchange="handleDropdownSelect(this.value, 'colMerchSearch', 'colMerchId', 'colMerchList')">
+                                <option value="">-- اختر التاجر --</option>
                             </select>
-                            <input type="text" id="colMerchSearch" class="form-control" style="width:50%" placeholder="أو ابحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'colMerchList', 'colMerchId')">
+                            <input type="text" id="colMerchSearch" class="form-control" style="width:45%" placeholder="🔍 بحث..." autocomplete="off" oninput="handleMerchantSearch(this.value, 'colMerchList', 'colMerchId')">
                         </div>
                         <input type="hidden" id="colMerchId">
                         <div id="colMerchList" class="search-results"></div>
                     </div>
-                    <div class="form-group">
-                        <label>رقم الحساب</label>
-                        <input id="colAccount" class="form-control" readonly>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>رقم الحساب</label>
+                            <input id="colAccount" class="form-control" readonly dir="ltr">
+                        </div>
+                        <div class="form-group">
+                            <label>المكنة</label>
+                            <input id="colMachine" class="form-control" readonly>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>المكنة</label>
-                        <input id="colMachine" class="form-control" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label>المبلغ <span class="required">*</span></label>
-                        <input type="number" id="colAmt" class="form-control" placeholder="قيمة التحصيل" value="${isEdit ? (data['قيمة التحصيل'] || '') : ''}">
-                    </div>
-                    <div class="form-group">
-                        <label>نوع التحصيل</label>
-                        <select id="colType" class="form-control">
-                            <option value="كلي" ${isEdit && data['نوع التحصيل'] === 'كلي' ? 'selected' : ''}>كلي</option>
-                            <option value="جزئي" ${isEdit && data['نوع التحصيل'] === 'جزئي' ? 'selected' : ''}>جزئي</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>المبلغ <span class="required">*</span></label>
+                            <input type="number" id="colAmt" class="form-control" placeholder="0.00" step="0.01" min="0.01" value="${isEdit ? (data['قيمة التحصيل'] || '') : ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>نوع التحصيل</label>
+                            <select id="colType" class="form-control">
+                                <option value="كلي" ${isEdit && data['نوع التحصيل'] === 'كلي' ? 'selected' : ''}>✅ كلي</option>
+                                <option value="جزئي" ${isEdit && data['نوع التحصيل'] === 'جزئي' ? 'selected' : ''}>📝 جزئي</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>ملاحظات</label>
-                        <input id="colNotes" class="form-control" placeholder="ملاحظات" value="${isEdit ? (data['ملاحظات'] || '') : ''}">
+                        <textarea id="colNotes" class="form-control" rows="2" placeholder="ملاحظات...">${isEdit ? (data['ملاحظات'] || '') : ''}</textarea>
                     </div>
                     <button class="btn btn-primary btn-block" onclick="saveCollection(${isEdit ? `'${data['الرقم المرجعي']}'` : ''})">
-                        <i class="fas fa-check"></i> تأكيد التحصيل
+                        <i class="fas fa-check"></i> ${isEdit ? 'تحديث التحصيل' : 'تأكيد التحصيل'}
                     </button>
                 `;
                 
@@ -1490,7 +1620,7 @@
         }
 
         // ============================================
-        // 💾 وظائف الحفظ
+        // 💾 وظائف الحفظ (★ محسّنة مع الوقت ★)
         // ============================================
         async function saveMerchant(id = null) {
             const name = document.getElementById('mName').value.trim();
@@ -1502,50 +1632,51 @@
             showLoading(true);
             
             const merchant = id ? DB.merchants.find(m => m['رقم التاجر'] == id) : null;
+            const now = new Date();
             const data = {
                 'اسم التاجر': name,
-                'اسم النشاط': document.getElementById('mBiz').value,
-                'رقم الحساب': document.getElementById('mAcc').value,
-                'رقم الهاتف': document.getElementById('mPhone').value,
-                'المنطقة': document.getElementById('mArea').value,
-                'العنوان': document.getElementById('mAddr').value,
+                'اسم النشاط': document.getElementById('mBiz').value.trim(),
+                'رقم الحساب': document.getElementById('mAcc').value.trim(),
+                'رقم الهاتف': document.getElementById('mPhone').value.trim(),
+                'المنطقة': document.getElementById('mArea').value.trim(),
+                'العنوان': document.getElementById('mAddr').value.trim(),
                 'الحالة': document.getElementById('mStatus').value,
-                'ملاحظات': document.getElementById('mNotes').value
+                'ملاحظات': document.getElementById('mNotes').value.trim(),
+                'وقت الإنشاء': now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true})
             };
             
             let success = false;
             
             try {
                 if (!id) {
-                    const { data: newCode } = await supabaseClient.rpc('generate_merchant_id');
+                    const { data: newCode, error: codeErr } = await supabaseClient.rpc('generate_merchant_id');
+                    if (codeErr) throw new Error('فشل توليد الرقم: ' + codeErr.message);
+                    
                     data['رقم التاجر'] = newCode;
-                    const now = new Date();
                     data['تاريخ الإضافة'] = now.toISOString().split('T')[0];
-                    data['وقت الإنشاء'] = now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
                     
                     const { error } = await supabaseClient.from('merchants').insert([data]);
                     success = !error;
-                    if (error) showToast(error.message, 'error');
+                    if (error) throw error;
                     if (success) logAction('MERCHANT_ADD', newCode, `تاجر: ${name}`, data);
                 } else {
                     const { error } = await supabaseClient.from('merchants').update(data).eq('id', merchant._uuid);
                     success = !error;
-                    if (error) showToast(error.message, 'error');
+                    if (error) throw error;
                     if (success) logAction('MERCHANT_UPDATE', id, 'تحديث بيانات', data);
                 }
                 
                 if (success) {
                     playSound(doneAudio);
-                    showToast(id ? 'تم تعديل التاجر' : 'تم إضافة التاجر', 'success');
+                    showToast(id ? 'تم تعديل التاجر ✓' : 'تم إضافة التاجر ✓', 'success');
                     closeModal();
-                    await delay(1500);
+                    await delay(1200);
                     loadData();
-                } else {
-                    showLoading(false);
                 }
             } catch (e) {
                 console.error('خطأ في حفظ التاجر:', e);
-                showToast('حدث خطأ أثناء الحفظ', 'error');
+                showToast('حدث خطأ: ' + e.message, 'error');
+            } finally {
                 showLoading(false);
             }
         }
@@ -1554,18 +1685,13 @@
             const merchantId = document.getElementById('mcMerchId').value;
             const serial = document.getElementById('mcSerial').value.trim();
             
-            if (!merchantId) {
-                showToast('اختر التاجر', 'warning');
-                return;
-            }
-            if (!serial) {
-                showToast('الرقم التسلسلي مطلوب', 'warning');
-                return;
-            }
+            if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
+            if (!serial) { showToast('الرقم التسلسلي مطلوب', 'warning'); return; }
             
             showLoading(true);
             
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
+            const now = new Date();
             const data = {
                 merchant_id: merchant ? merchant._uuid : null,
                 "رقم التاجر": merchantId,
@@ -1575,43 +1701,43 @@
                 "رقم الحساب": document.getElementById('mcAccount').value,
                 "التارجت الشهري": Number(document.getElementById('mcTarget').value) || 0,
                 "الحالة": document.getElementById('mcStatus').value,
-                "ملاحظات": document.getElementById('mcNotes').value
+                "ملاحظات": document.getElementById('mcNotes').value.trim(),
+                'وقت الإنشاء': now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true})
             };
             
             let success = false;
             
             try {
                 if (!id) {
-                    const { data: newCode } = await supabaseClient.rpc('generate_machine_id');
+                    const { data: newCode, error: codeErr } = await supabaseClient.rpc('generate_machine_id');
+                    if (codeErr) throw new Error('فشل توليد الرقم: ' + codeErr.message);
+                    
                     data['رقم المكنة'] = newCode;
-                    const now = new Date();
                     data['تاريخ الإسناد'] = now.toISOString().split('T')[0];
-                    data['وقت الإنشاء'] = now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
                     
                     const { error } = await supabaseClient.from('machines').insert([data]);
                     success = !error;
-                    if (error) showToast(error.message, 'error');
-                    if (success) logAction('MACHINE_ADD', newCode, `مكنة جديدة`, data);
+                    if (error) throw error;
+                    if (success) logAction('MACHINE_ADD', newCode, `مكنة جديدة: ${serial}`, data);
                 } else {
                     const machine = DB.machines.find(m => m['رقم المكنة'] == id);
                     const { error } = await supabaseClient.from('machines').update(data).eq('id', machine._uuid);
                     success = !error;
-                    if (error) showToast(error.message, 'error');
+                    if (error) throw error;
                     if (success) logAction('MACHINE_UPDATE', id, 'تحديث', data);
                 }
                 
                 if (success) {
                     playSound(doneAudio);
-                    showToast(id ? 'تم تعديل المكنة' : 'تم إضافة المكنة', 'success');
+                    showToast(id ? 'تم تعديل المكنة ✓' : 'تم إضافة المكنة ✓', 'success');
                     closeModal();
-                    await delay(1500);
+                    await delay(1200);
                     loadData();
-                } else {
-                    showLoading(false);
                 }
             } catch (e) {
                 console.error('خطأ في حفظ المكنة:', e);
-                showToast('حدث خطأ أثناء الحفظ', 'error');
+                showToast('حدث خطأ: ' + e.message, 'error');
+            } finally {
                 showLoading(false);
             }
         }
@@ -1620,18 +1746,14 @@
             const merchantId = document.getElementById('trMerchId').value;
             const amount = document.getElementById('trAmt').value;
             
-            if (!merchantId) {
-                showToast('اختر التاجر', 'warning');
-                return;
-            }
-            if (!amount || Number(amount) <= 0) {
-                showToast('أدخل قيمة التحويل', 'warning');
-                return;
-            }
+            if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
+            if (!amount || Number(amount) <= 0) { showToast('أدخل قيمة صحيحة', 'warning'); return; }
             
             showLoading(true);
             
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
             const data = {
                 merchant_id: merchant ? merchant._uuid : null,
                 "رقم التاجر": merchantId,
@@ -1641,61 +1763,56 @@
                 "رقم المكنة": document.getElementById('trMachine').value,
                 "قيمة التحويل": Number(amount),
                 "نوع التحويل": document.getElementById('trType').value,
-                "ملاحظات": document.getElementById('trNotes').value
+                "ملاحظات": document.getElementById('trNotes').value.trim(),
+                "الوقت": timeStr
             };
             
             let success = false;
             
             try {
                 if (!id) {
-                    const { data: newCode } = await supabaseClient.rpc('generate_daily_id', { 
+                    // ★★ تصحيح مهم: استخدام الدالة الصحيحة ★★
+                    const { data: newCode, error: codeErr } = await supabaseClient.rpc('generate_daily_id', { 
                         p_prefix: 'TRF', 
                         p_key_suffix: 'رقم آخر تحويل' 
                     });
                     
-                    if (!newCode) {
-                        showToast('فشل توليد الرقم', 'error');
-                        showLoading(false);
-                        return;
-                    }
+                    if (codeErr) throw new Error('فشل توليد الرقم المرجعي: ' + codeErr.message);
+                    if (!newCode) throw new Error('لم يتم إنشاء رمز تحويل');
                     
-                    const now = new Date();
                     const dateStr = now.toISOString().split('T')[0];
-                    const timeStr = now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
                     const monthStr = now.toLocaleString('ar-EG', {month:'long', year:'numeric'});
                     
                     Object.assign(data, {
                         "الرقم المرجعي": newCode,
                         "التاريخ": dateStr,
-                        "الوقت": timeStr,
                         "الشهر": monthStr,
                         "وقت الإنشاء": `${dateStr} ${timeStr}`
                     });
                     
                     const { error } = await supabaseClient.from('transfers').insert([data]);
                     success = !error;
-                    if (error) showToast(error.message, 'error');
-                    if (success) logAction('TRANSFER_ADD', newCode, `قيمة: ${amount}`, data);
+                    if (error) throw error;
+                    if (success) logAction('TRANSFER_ADD', newCode, `قيمة: ${amount} جنيه`, data);
                 } else {
                     const transfer = DB.transfers.find(t => t['الرقم المرجعي'] == id);
                     const { error } = await supabaseClient.from('transfers').update(data).eq('id', transfer._uuid);
                     success = !error;
-                    if (error) showToast(error.message, 'error');
+                    if (error) throw error;
                     if (success) logAction('TRANSFER_UPDATE', id, 'تحديث', data);
                 }
                 
                 if (success) {
                     playSound(doneAudio);
-                    showToast(id ? 'تم تعديل التحويل' : 'تم التحويل بنجاح', 'success');
+                    showToast(id ? 'تم تعديل التحويل ✓' : '✅ تم التحويل بنجاح!', 'success');
                     closeModal();
-                    await delay(1500);
+                    await delay(1200);
                     loadData();
-                } else {
-                    showLoading(false);
                 }
             } catch (e) {
                 console.error('خطأ في حفظ التحويل:', e);
-                showToast('حدث خطأ أثناء الحفظ', 'error');
+                showToast('❌ ' + e.message, 'error');
+            } finally {
                 showLoading(false);
             }
         }
@@ -1704,14 +1821,8 @@
             const merchantId = document.getElementById('colMerchId').value;
             const amount = Number(document.getElementById('colAmt').value);
             
-            if (!merchantId) {
-                showToast('اختر التاجر', 'warning');
-                return;
-            }
-            if (!amount || amount <= 0) {
-                showToast('أدخل قيمة التحصيل', 'warning');
-                return;
-            }
+            if (!merchantId) { showToast('اختر التاجر', 'warning'); return; }
+            if (!amount || amount <= 0) { showToast('أدخل قيمة صحيحة', 'warning'); return; }
             
             const mTransfers = (DB.transfers || []).filter(t => t['رقم التاجر'] == merchantId);
             const mCollections = (DB.collections || []).filter(c => c['رقم التاجر'] == merchantId);
@@ -1720,8 +1831,8 @@
             
             if (amount > currentDebt) {
                 showOverlayAlert(
-                    'مبلغ التحصيل أكبر من المديونية',
-                    `لا يمكن تحصيل هذا المبلغ!\n\nمبلغ التحصيل المطلوب: ${amount.toLocaleString('ar-EG')} جنيه\nإجمالي المديونية الحالية على التاجر: ${currentDebt.toLocaleString('ar-EG')} جنيه`,
+                    '⚠️ مبلغ التحصيل أكبر من المديونية',
+                    `لا يمكن تحصيل هذا المبلغ!\n\n💰 مبلغ التحصيل: ${amount.toLocaleString('ar-EG')} جنيه\n💳 المديونية الحالية: ${currentDebt.toLocaleString('ar-EG')} جنيه\n\nالفرق: ${(amount - currentDebt).toLocaleString('ar-EG')} جنيه`,
                     'warning'
                 );
                 return;
@@ -1730,6 +1841,8 @@
             showLoading(true);
             
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
             const data = {
                 merchant_id: merchant ? merchant._uuid : null,
                 "رقم التاجر": merchantId,
@@ -1739,33 +1852,27 @@
                 "رقم المكنة": document.getElementById('colMachine').value,
                 "قيمة التحصيل": amount,
                 "نوع التحصيل": document.getElementById('colType').value,
-                "ملاحظات": document.getElementById('colNotes').value
+                "ملاحظات": document.getElementById('colNotes').value.trim(),
+                "الوقت": timeStr
             };
             
             let success = false;
             
             try {
                 if (!id) {
-                    const { data: newCode } = await supabaseClient.rpc('generate_daily_id', { 
+                    const { data: newCode, error: codeErr } = await supabaseClient.rpc('generate_daily_id', { 
                         p_prefix: 'COL', 
                         p_key_suffix: 'رقم آخر تحصيل' 
                     });
                     
-                    if (!newCode) {
-                        showToast('فشل توليد الرقم', 'error');
-                        showLoading(false);
-                        return;
-                    }
+                    if (codeErr) throw new Error('فشل توليد الرقم: ' + codeErr.message);
                     
-                    const now = new Date();
                     const dateStr = now.toISOString().split('T')[0];
-                    const timeStr = now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
                     const monthStr = now.toLocaleString('ar-EG', {month:'long', year:'numeric'});
                     
                     Object.assign(data, {
                         "الرقم المرجعي": newCode,
                         "التاريخ": dateStr,
-                        "الوقت": timeStr,
                         "الشهر": monthStr,
                         "وقت الإنشاء": `${dateStr} ${timeStr}`,
                         "المتبقي بعد التحصيل": currentDebt - amount
@@ -1773,75 +1880,84 @@
                     
                     const { error } = await supabaseClient.from('collections').insert([data]);
                     success = !error;
-                    if (error) showToast(error.message, 'error');
+                    if (error) throw error;
                     if (success) logAction('COLLECTION_ADD', newCode, `قيمة: ${amount}`, data);
                 } else {
                     const collection = DB.collections.find(c => c['الرقم المرجعي'] == id);
                     const { error } = await supabaseClient.from('collections').update(data).eq('id', collection._uuid);
                     success = !error;
-                    if (error) showToast(error.message, 'error');
+                    if (error) throw error;
                     if (success) logAction('COLLECTION_UPDATE', id, 'تحديث', data);
                 }
                 
                 if (success) {
                     playSound(doneAudio);
-                    showToast(id ? 'تم تعديل التحصيل' : 'تم التحصيل بنجاح', 'success');
+                    showToast(id ? 'تم تعديل التحصيل ✓' : '✅ تم التحصيل بنجاح!', 'success');
                     closeModal();
-                    await delay(1500);
+                    await delay(1200);
                     loadData();
-                } else {
-                    showLoading(false);
                 }
             } catch (e) {
                 console.error('خطأ في حفظ التحصيل:', e);
-                showToast('حدث خطأ أثناء الحفظ', 'error');
+                showToast('❌ ' + e.message, 'error');
+            } finally {
                 showLoading(false);
             }
         }
 
         // ============================================
-        // 🗑️ وظائف الحذف
+        // 🗑️ وظائف الحذف (★ مع إعادة الترقيم ★)
         // ============================================
         async function delMerchant(id) {
-            showConfirm('هل أنت متأكد من حذف هذا التاجر؟', async () => {
+            showConfirm(`⚠️ هل أنت متأكد من حذف التاجر (${id})؟\n\nسيتم إعادة ترقيم باقي التجار تلقائياً!`, async () => {
                 showLoading(true);
                 try {
                     const m = DB.merchants.find(x => x['رقم التاجر'] == id);
                     const { error } = await supabaseClient.from('merchants').delete().eq('id', m._uuid);
                     if (!error) {
-                        logAction('MERCHANT_DELETE', id, 'حذف تاجر', m);
+                        // ★★ استدعاء دالة إعادة الترقيم ★★
+                        await supabaseClient.rpc('renumber_merchants');
+                        
+                        logAction('MERCHANT_DELETE', id, 'حذف تاجر + إعادة ترقيم', m);
                         playSound(doneAudio);
+                        showToast('✅ تم الحذف وإعادة الترقيم', 'success');
                         await delay(1000);
                         loadData();
                     } else {
-                        showToast('فشل الحذف: ' + error.message, 'error');
+                        throw new Error(error.message);
                     }
                 } catch (e) {
-                    showToast('حدث خطأ أثناء الحذف', 'error');
+                    showToast('فشل الحذف: ' + e.message, 'error');
+                } finally {
+                    showLoading(false);
                 }
-                showLoading(false);
-            });
+            }, 'نعم، احذف');
         }
 
         async function delMachine(id) {
-            showConfirm('هل أنت متأكد من حذف هذه المكنة؟', async () => {
+            showConfirm(`⚠️ هل أنت متأكد من حذف المكنة (${id})؟\n\nسيتم إعادة ترقيم باقي المكن تلقائياً!`, async () => {
                 showLoading(true);
                 try {
                     const m = DB.machines.find(x => x['رقم المكنة'] == id);
                     const { error } = await supabaseClient.from('machines').delete().eq('id', m._uuid);
                     if (!error) {
-                        logAction('MACHINE_DELETE', id, 'حذف مكنة', m);
+                        // ★★ استدعاء دالة إعادة ترقيم المكن ★★
+                        await supabaseClient.rpc('renumber_machines');
+                        
+                        logAction('MACHINE_DELETE', id, 'حذف مكنة + إعادة ترقيم', m);
                         playSound(doneAudio);
+                        showToast('✅ تم الحذف وإعادة الترقيم', 'success');
                         await delay(1000);
                         loadData();
                     } else {
-                        showToast('فشل الحذف: ' + error.message, 'error');
+                        throw new Error(error.message);
                     }
                 } catch (e) {
-                    showToast('حدث خطأ أثناء الحذف', 'error');
+                    showToast('فشل الحذف: ' + e.message, 'error');
+                } finally {
+                    showLoading(false);
                 }
-                showLoading(false);
-            });
+            }, 'نعم، احذف');
         }
 
         async function delTransfer(id) {
@@ -1853,550 +1969,6 @@
                     if (!error) {
                         logAction('TRANSFER_DELETE', id, 'حذف تحويل', t);
                         playSound(doneAudio);
+                        showToast('✅ تم الحذف', 'success');
                         await delay(1000);
                         loadData();
-                    } else {
-                        showToast('فشل الحذف: ' + error.message, 'error');
-                    }
-                } catch (e) {
-                    showToast('حدث خطأ أثناء الحذف', 'error');
-                }
-                showLoading(false);
-            });
-        }
-
-        async function delCollection(id) {
-            showConfirm('هل أنت متأكد من حذف هذا التحصيل؟', async () => {
-                showLoading(true);
-                try {
-                    const c = DB.collections.find(x => x['الرقم المرجعي'] == id);
-                    const { error } = await supabaseClient.from('collections').delete().eq('id', c._uuid);
-                    if (!error) {
-                        logAction('COLLECTION_DELETE', id, 'حذف تحصيل', c);
-                        playSound(doneAudio);
-                        await delay(1000);
-                        loadData();
-                    } else {
-                        showToast('فشل الحذف: ' + error.message, 'error');
-                    }
-                } catch (e) {
-                    showToast('حدث خطأ أثناء الحذف', 'error');
-                }
-                showLoading(false);
-            });
-        }
-
-        async function deleteArchive(id) {
-            showConfirm('هل أنت متأكد من حذف هذا السجل من الأرشيف نهائياً؟', async () => {
-                showLoading(true);
-                try {
-                    const a = DB.archives.find(x => x['رقم الأرشيف'] == id);
-                    const { error } = await supabaseClient.from('archives').delete().eq('id', a._uuid);
-                    if (!error) {
-                        await delay(1000);
-                        loadData();
-                    } else {
-                        showToast('فشل الحذف: ' + error.message, 'error');
-                    }
-                } catch (e) {
-                    showToast('حدث خطأ أثناء الحذف', 'error');
-                }
-                showLoading(false);
-            });
-        }
-
-        async function delRequest(id) {
-            showConfirm('هل أنت متأكد من حذف هذا الطلب؟', async () => {
-                showLoading(true);
-                try {
-                    const r = DB.requests.find(x => x['رقم الطلب'] == id);
-                    const { error } = await supabaseClient.from('merchant_requests').delete().eq('id', r._uuid);
-                    if (!error) {
-                        logAction('REQUEST_DELETE', id, 'حذف طلب', r);
-                        playSound(doneAudio);
-                        await delay(1000);
-                        loadData();
-                    } else {
-                        showToast('فشل الحذف: ' + error.message, 'error');
-                    }
-                } catch (e) {
-                    showToast('حدث خطأ أثناء الحذف', 'error');
-                }
-                showLoading(false);
-            });
-        }
-
-        // ============================================
-        // 🔄 تحويل الطلب
-        // ============================================
-        async function convertReq(id) {
-            showConfirm('هل تريد تحويل هذا الطلب إلى تحويل مالي تلقائياً؟', async () => {
-                showLoading(true);
-                try {
-                    const req = DB.requests.find(r => r['رقم الطلب'] == id);
-                    if (!req || req['الحالة'] !== 'pending') {
-                        showToast('الطلب غير موجود أو ليست حالته معلقة', 'error');
-                        showLoading(false);
-                        return;
-                    }
-                    
-                    const merchant = DB.merchants.find(m => m['رقم التاجر'] == req['رقم التاجر']);
-                    if (!merchant) {
-                        showToast('التاجر غير موجود', 'error');
-                        showLoading(false);
-                        return;
-                    }
-                    
-                    const { data: newCode } = await supabaseClient.rpc('generate_daily_id', { 
-                        p_prefix: 'TRF', 
-                        p_key_suffix: 'رقم آخر تحويل' 
-                    });
-                    
-                    const now = new Date();
-                    const dateStr = now.toISOString().split('T')[0];
-                    const timeStr = now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
-                    const monthStr = now.toLocaleString('ar-EG', {month:'long', year:'numeric'});
-                    
-                    const trData = {
-                        merchant_id: merchant._uuid,
-                        "رقم التاجر": req['رقم التاجر'],
-                        "اسم التاجر": req['اسم التاجر'],
-                        "اسم النشاط": req['اسم النشاط'],
-                        "رقم الحساب": req['رقم الحساب'],
-                        "الرقم المرجعي": newCode,
-                        "التاريخ": dateStr,
-                        "الوقت": timeStr,
-                        "الشهر": monthStr,
-                        "وقت الإنشاء": `${dateStr} ${timeStr}`,
-                        "قيمة التحويل": Number(req['المبلغ']),
-                        "نوع التحويل": 'رصيد خدمات',
-                        "ملاحظات": `تم التحويل تلقائياً بناءً على الطلب: ${id}`
-                    };
-                    
-                    const { error: trErr } = await supabaseClient.from('transfers').insert([trData]);
-                    
-                    if (!trErr) {
-                        await supabaseClient.from('merchant_requests').update({ "الحالة": 'محوّل' }).eq('id', req._uuid);
-                        logAction('REQUEST_CONVERT', id, `تم تحويل الطلب إلى تحويل مالي (${newCode})`);
-                        playSound(doneAudio);
-                        showToast('تم تحويل الطلب بنجاح!', 'success');
-                        await delay(1500);
-                        loadData();
-                    } else {
-                        showToast('فشل في تحويل الطلب: ' + trErr.message, 'error');
-                    }
-                } catch (e) {
-                    console.error('خطأ في تحويل الطلب:', e);
-                    showToast('حدث خطأ أثناء التحويل', 'error');
-                }
-                showLoading(false);
-            }, 'تحويل تلقائي للتحويلات');
-        }
-
-        // ============================================
-        // 📅 إغلاق الشهر
-        // ============================================
-        async function confirmCloseMonth() {
-            showConfirm('⚠️ تحذير!\n\nهل أنت متأكد من بدء شهر جديد?', async () => {
-                showLoading(true);
-                try {
-                    const now = new Date();
-                    const currentMonth = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
-                    
-                    const monthTransfers = (DB.transfers || []).filter(t => t['الشهر'] === currentMonth);
-                    const monthCollections = (DB.collections || []).filter(c => c['الشهر'] === currentMonth);
-                    
-                    const totalTransfers = monthTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-                    const totalCollections = monthCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
-                    
-                    const { data: newArchId } = await supabaseClient.rpc('generate_daily_id', { 
-                        p_prefix: 'ARCH', 
-                        p_key_suffix: 'رقم آخر أرشيف' 
-                    });
-                    
-                    const archData = {
-                        "رقم الأرشيف": newArchId,
-                        "الشهر": currentMonth,
-                        "سنة التشغيل": now.getFullYear(),
-                        "عدد التحويلات": monthTransfers.length,
-                        "إجمالي التحويلات": totalTransfers,
-                        "عدد التحصيلات": monthCollections.length,
-                        "إجمالي التحصيلات": totalCollections,
-                        "إجمالي المتبقي": totalTransfers - totalCollections,
-                        "تاريخ الإغلاق": now.toISOString().split('T')[0],
-                        "ملاحظات": '',
-                        "وقت الإنشاء": `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString('ar-EG')}`
-                    };
-                    
-                    const { error } = await supabaseClient.from('archives').insert([archData]);
-                    
-                    if (!error) {
-                        logAction('ARCHIVE_MONTH', newArchId, `تم أرشفة شهر ${currentMonth}`);
-                        playSound(doneAudio);
-                        showToast('تم بدء شهر جديد بنجاح', 'success');
-                        await delay(1500);
-                        loadData();
-                    } else {
-                        showToast('حدث خطأ: ' + error.message, 'error');
-                    }
-                } catch (e) {
-                    console.error('خطأ في إغلاق الشهر:', e);
-                    showToast('حدث خطأ أثناء إغلاق الشهر', 'error');
-                }
-                showLoading(false);
-            }, 'بدء شهر جديد');
-        }
-
-        // ============================================
-        // 📋 كشف الحساب
-        // ============================================
-        async function getStatement() {
-            const mid = document.getElementById('stmtMerchantId').value;
-            if (!mid) {
-                showToast('اختر تاجراً أولاً', 'warning');
-                return;
-            }
-            
-            const mTransfers = (DB.transfers || []).filter(t => t['رقم التاجر'] == mid);
-            const mCollections = (DB.collections || []).filter(c => c['رقم التاجر'] == mid);
-            
-            const totalTransfers = mTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
-            const totalCollections = mCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
-            const remaining = totalTransfers - totalCollections;
-            
-            document.getElementById('stmtT').innerHTML = formatMoney(totalTransfers);
-            document.getElementById('stmtC').innerHTML = formatMoney(totalCollections);
-            document.getElementById('stmtR').innerHTML = formatMoney(remaining);
-            
-            const allMovements = [];
-            
-            mTransfers.forEach(t => allMovements.push({
-                type: 'تحويل',
-                date: t['التاريخ'],
-                time: t['الوقت'],
-                amount: Number(t['قيمة التحويل']) || 0,
-                notes: t['ملاحظات'] || ''
-            }));
-            
-            mCollections.forEach(c => allMovements.push({
-                type: 'تحصيل',
-                date: c['التاريخ'],
-                time: c['الوقت'],
-                amount: Number(c['قيمة التحصيل']) || 0,
-                notes: c['ملاحظات'] || ''
-            }));
-            
-            allMovements.sort((a, b) => new Date(`${a.date} ${a.time}`) - new Date(`${b.date} ${b.time}`));
-            
-            let runBalance = 0;
-            allMovements.forEach(m => {
-                if (m.type === 'تحويل') runBalance += m.amount;
-                else runBalance -= m.amount;
-                m.balanceAfter = runBalance;
-            });
-            
-            const tbody = document.getElementById('tblStatement');
-            if (!tbody) return;
-            
-            if (allMovements.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد حركات</td></tr>';
-            } else {
-                let rows = '';
-                allMovements.forEach(m => {
-                    const typeClass = m.type === 'تحويل' ? 'primary' : 'success';
-                    rows += `<tr>
-                        <td>${formatDate(m.date)}</td>
-                        <td>${formatTime(m.time)}</td>
-                        <td><span class="badge badge-${typeClass}">${m.type}</span></td>
-                        <td><strong>${formatMoney(m.amount)}</strong></td>
-                        <td><strong>${formatMoney(m.balanceAfter !== undefined ? m.balanceAfter : 0)}</strong></td>
-                        <td>${m.notes || '-'}</td>
-                    </tr>`;
-                });
-                tbody.innerHTML = rows;
-            }
-        }
-
-        // ============================================
-        // 📤 تصدير Excel
-        // ============================================
-        function exportExcel() {
-            if (!DB.merchants || DB.merchants.length === 0) {
-                showToast('لا توجد بيانات للتصدير', 'warning');
-                return;
-            }
-            
-            showLoading(true);
-            try {
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.merchants), "التجار");
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.machines), "المكن");
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.transfers), "التحويلات");
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.collections), "التحصيلات");
-                XLSX.writeFile(wb, `Axentro_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
-                showToast('تم تصدير التقرير بنجاح', 'success');
-            } catch (e) {
-                console.error('خطأ في التصدير:', e);
-                showToast('حدث خطأ أثناء التصدير', 'error');
-            }
-            showLoading(false);
-        }
-
-        // ============================================
-        // 📄 تبديل الصفحات
-        // ============================================
-        function showPage(name, element) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-            
-            const page = document.getElementById('page-' + name);
-            if (page) page.classList.add('active');
-            if (element) element.classList.add('active');
-        }
-
-        // ============================================
-        // 📷 ماسح الباركود
-        // ============================================
-        let scanStream = null, scanTrack = null, torchOn = false, scanRafId = null, scanAudio = null;
-
-        function initScanSound() {
-            try {
-                scanAudio = new Audio('scan.mp3');
-                scanAudio.preload = 'auto';
-            } catch(e) {}
-        }
-
-        function playScanSound() {
-            if (scanAudio) {
-                scanAudio.currentTime = 0;
-                scanAudio.play().catch(e => {});
-            }
-        }
-
-        async function startScanCamera() {
-            await stopScanCamera();
-            try {
-                const constraints = {
-                    audio: false,
-                    video: {
-                        facingMode: { ideal: "environment" },
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
-                };
-                
-                scanStream = await navigator.mediaDevices.getUserMedia(constraints);
-                const video = document.getElementById('video');
-                if (video) {
-                    video.srcObject = scanStream;
-                    await video.play();
-                }
-                
-                scanTrack = scanStream.getVideoTracks()[0] || null;
-                
-                if ('BarcodeDetector' in window) {
-                    const detector = new BarcodeDetector({
-                        formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code", "upc_a", "upc_e", "itf", "codabar"]
-                    });
-                    
-                    const tick = async () => {
-                        try {
-                            const videoEl = document.getElementById('video');
-                            if (!videoEl || videoEl.paused || videoEl.ended) return;
-                            
-                            const codes = await detector.detect(videoEl);
-                            if (codes && codes.length) {
-                                const raw = (codes[0].rawValue || "").trim();
-                                if (raw) {
-                                    const serialInput = document.getElementById('mcSerial');
-                                    if (serialInput) {
-                                        serialInput.value = raw;
-                                        playScanSound();
-                                        showToast('تم مسح الرقم التسلسلي بنجاح', 'success');
-                                    }
-                                    await stopScanCamera();
-                                    closeScanModal();
-                                    return;
-                                }
-                            }
-                        } catch (e) {}
-                        scanRafId = requestAnimationFrame(tick);
-                    };
-                    scanRafId = requestAnimationFrame(tick);
-                } else {
-                    showToast('المتصفح لا يدعم ماسح الباركود', 'error');
-                    closeScanModal();
-                }
-            } catch (err) {
-                console.error('خطأ في الكاميرا:', err);
-                showToast('لا يمكن الوصول إلى الكاميرا', 'error');
-                closeScanModal();
-            }
-        }
-
-        async function stopScanCamera() {
-            if (scanRafId) {
-                cancelAnimationFrame(scanRafId);
-                scanRafId = null;
-            }
-            if (scanStream) {
-                scanStream.getTracks().forEach(track => track.stop());
-                scanStream = null;
-            }
-            scanTrack = null;
-            torchOn = false;
-            const torchBtn = document.getElementById('torchBtn');
-            if (torchBtn) torchBtn.textContent = '🔦 فلاش';
-        }
-
-        async function toggleTorch() {
-            try {
-                if (!scanTrack) return;
-                const caps = scanTrack.getCapabilities ? scanTrack.getCapabilities() : {};
-                if (!caps.torch) {
-                    showToast('الفلاش غير مدعوم', 'warning');
-                    return;
-                }
-                torchOn = !torchOn;
-                await scanTrack.applyConstraints({ advanced: [{ torch: torchOn }] });
-                const torchBtn = document.getElementById('torchBtn');
-                if (torchBtn) torchBtn.textContent = torchOn ? '🔦 إيقاف' : '🔦 فلاش';
-            } catch (e) {
-                showToast('تعذر تشغيل الفلاش', 'error');
-            }
-        }
-
-        function openScanModal() {
-            const modal = document.getElementById('scanModal');
-            if (modal) {
-                modal.style.display = 'flex';
-                setTimeout(() => modal.classList.add('show'), 10);
-                startScanCamera();
-            }
-        }
-
-        function closeScanModal() {
-            const modal = document.getElementById('scanModal');
-            if (modal) {
-                modal.classList.remove('show');
-                setTimeout(() => modal.style.display = 'none', 300);
-                stopScanCamera();
-            }
-        }
-
-        // ============================================
-        // ✏️ وظائف التعديل
-        // ============================================
-        async function editMerchant(id) {
-            const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
-            if (merchant) openModal('merchant', merchant);
-        }
-
-        async function editMachine(id) {
-            const machine = DB.machines.find(m => m['رقم المكنة'] == id);
-            if (machine) openModal('machine', machine);
-        }
-
-        async function editTransfer(id) {
-            const transfer = DB.transfers.find(t => t['الرقم المرجعي'] == id);
-            if (transfer) openModal('transfer', transfer);
-        }
-
-        async function editCollection(id) {
-            const collection = DB.collections.find(c => c['الرقم المرجعي'] == id);
-            if (collection) openModal('collection', collection);
-        }
-
-        // ============================================
-        // 🌐 حالة الاتصال
-        // ============================================
-        function setConnectionStatus(status) {
-            const indicator = document.getElementById('connIndicator');
-            if (!indicator) return;
-            
-            indicator.className = 'conn-status ' + status;
-            indicator.innerHTML = `<div class="conn-dot"></div><span>${status === 'live' ? 'متصل' : 'غير متصل'}</span>`;
-        }
-
-        // ============================================
-        // 🔄 التهيئة عند تحميل الصفحة
-        // ============================================
-        function checkSession() {
-            if (localStorage.getItem('axentro_logged') === 'true') {
-                document.getElementById('loginBox').style.display = 'none';
-                document.getElementById('appBox').style.display = 'flex';
-                loadData();
-            }
-        }
-
-        // تشغيل عند تحميل الصفحة
-        window.onload = function() {
-            initSounds();
-            initScanSound();
-            
-            // ربط حدث زر الفلاش
-            const torchBtn = document.getElementById('torchBtn');
-            if (torchBtn) torchBtn.onclick = toggleTorch;
-            
-            // ربط أحداث البحث
-            const searchInput = document.getElementById('merchantSearchInput');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    merchantSearchTerm = e.target.value;
-                    renderMerchants();
-                });
-            }
-            
-            const machineSearch = document.getElementById('machineSearchInput');
-            if (machineSearch) {
-                machineSearch.addEventListener('input', (e) => {
-                    machineSearchTerm = e.target.value;
-                    renderMachines();
-                });
-            }
-            
-            const reqSearch = document.getElementById('requestSearchInput');
-            if (reqSearch) {
-                reqSearch.addEventListener('input', (e) => {
-                    requestSearchTerm = e.target.value;
-                    renderRequests();
-                });
-            }
-            
-            // التحقق من الجلسة
-            checkSession();
-            
-            // إخفاء نتائج البحث عند الخروج
-            document.querySelectorAll('.search-results').forEach(el => {
-                if (el.previousElementSibling) {
-                    el.previousElementSibling.addEventListener('blur', () => {
-                        setTimeout(() => el.style.display = 'none', 200);
-                    });
-                }
-            });
-        };
-
-        // أحداث لوحة المفاتيح
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeOverlayAlert();
-                closeConfirm();
-            }
-        });
-
-        // النقر خارج النوافذ لإغلاقها
-        document.getElementById('modal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-
-        document.getElementById('overlayAlert').addEventListener('click', function(e) {
-            if (e.target === this) closeOverlayAlert();
-        });
-
-        document.getElementById('confirmModal').addEventListener('click', function(e) {
-            if (e.target === this) closeConfirm();
-        });
-    </script>
-</body>
-</html>
