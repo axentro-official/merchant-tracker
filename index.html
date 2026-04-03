@@ -2527,67 +2527,474 @@
         }
 
         // ============================================
-        // 📋 كشف الحساب
+        // ★★★ كشف الحساب - محسن ★★★
         // ============================================
         function getStatement() {
             const merchantId = document.getElementById('stmtMerchantId')?.value;
-            if (!merchantId) { showToast('⚠️ اختر تاجراً أولاً', 'warning'); return; }
             
-            const merchant = DB.merchants.find(m => m['رقم_التاجر'] == merchantId);
-            if (!merchant) { showToast('❌ لم يتم العثور على التاجر', 'error'); return; }
+            if (!merchantId) {
+                showToast('⚠️ اختر تاجراً أولاً', 'warning');
+                return;
+            }
             
+            const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
+            if (!merchant) {
+                showToast('❌ لم يتم العثور على التاجر', 'error');
+                return;
+            }
+            
+            // حساب التحويلات
             const transfers = DB.transfers
-                .filter(t => t['رقم_التاجر'] == merchantId)
-                .sort((a, b) => new Date(a['التاريخ'] + ' ' ' + (a['وقت'] || '')) - new Date(b['التاريخ'] + ' ' ' + (b['وقت'] || '')));
+                .filter(t => t['رقم التاجر'] == merchantId)
+                .sort((a, b) => new Date(a['التاريخ']) - new Date(b['التاريخ'])); // ★★★ الأقدم أولاً ★★★
             
+            const totalTransfers = transfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+            
+            // حساب التحصيلات
             const collections = DB.collections
-                .filter(c => c['رقم_التاجر'] == merchantId && c['الرقم_المرجعي'] !== editId)
-                .sort((a, b) => new Date(a['التاريخ'] + ' ' + (a['وقت'] || '')) - new Date(b['التاريخ'] + ' ' ' + (b['وقت'] || '')));
+                .filter(c => c['رقم التاجر'] == merchantId)
+                .sort((a, b) => new Date(a['التاريخ']) - new Date(b['التاريخ'])); // ★★★ الأقدم أولاً ★★★
             
-            const totalTransfers = transfers.reduce((s, t) => s + (Number(t['قيمة_التحويل']) || 0), 0);
-            const totalCollections = collections.reduce((s, c) => s + (Number(c['قيمة_التحصيل']) || 0), 0);
+            const totalCollections = collections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+            
             const remaining = totalTransfers - totalCollections;
             
+            // عرض الإحصائيات
             document.getElementById('stmtT').innerHTML = formatMoney(totalTransfers);
             document.getElementById('stmtC').innerHTML = formatMoney(totalCollections);
             document.getElementById('stmtR').innerHTML = formatMoney(remaining);
             
+            // دمج الحركات وترتيبها
             const movements = [];
+            
             transfers.forEach(t => {
-                movements.push({ type: 'تحويل', date: t['التاريخ'], time: t['وقت'] || getCurrentTime12h(), value: true, value: true), value: Number(t['قيمة_التحويل']), remaining: 0, notes: t['ملاحظات'] || '-', isTransfer: true });
+                movements.push({
+                    type: 'تحويل',
+                    date: t['التاريخ'],
+                    time: t['وقت'],
+                    value: Number(t['قيمة التحويل']),
+                    remaining: 0,
+                    notes: t['ملاحظات'] || '-'
+                });
             });
             
             collections.forEach(c => {
-                movements.push({ type: 'تحصيل', date: c['التاريخ'], time: c['وقت'] || getCurrentTime12h(), value: true, value: true), value: -Number(c['قيمة_التحصيل']), remaining: c['المتبقي_بعد_التحصيل'] || 0, notes: c['ملاحظات'] || '-', isTransfer: false });
+                movements.push({
+                    type: 'تحصيل',
+                    date: c['التاريخ'],
+                    time: c['وقت'],
+                    value: -Number(c['قيمة التحصيل']), // سالب للتحصيل
+                    remaining: c['المتبقي بعد التحصيل'] || 0,
+                    notes: c['ملاحظات'] || '-'
+                });
             });
             
+            // ★★★ ترتيب: الأقدم فوق ★★★
             movements.sort((a, b) => {
-                const dateA = new Date(a.date + ' ' + (a.time || ''));
-                const dateB = new Date(b.date + ' ' + (b.time || ''));
+                const dateA = new Date(a.date + ' ' + a.time);
+                const dateB = new Date(b.date + ' ' + b.time);
                 return dateA - dateB;
             });
             
+            // حساب الرصيد التراكمي
             let runningBalance = 0;
             const tbody = document.getElementById('tblStatement');
             
             if (!movements.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;"><i class="fas fa-history"></i><br>لا توجد حركات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">لا توجد حركات</td></tr>';
                 return;
             }
             
             tbody.innerHTML = movements.map((m, index) => {
                 runningBalance += m.value;
-                const isTransfer = m.isTransfer;
-                return `<tr>
-                    <td>${index + 1}</td>
-                    <td>${formatDateDisplay(m.date, true)}</td>
-                    <td>${m.time.html}</td>
-                    <td><span class="badge ${isTransfer ? 'badge-danger' : 'success'}">${isTransfer ? '📤 تحويل' : '📥 تحصيل'}</span></td>
-                    <td style="color:${isTransfer ? 'var(--danger)' : 'var(--success)'};font-weight:700;">${isTransfer ? '+' : '-'}${formatMoney(Math.abs(m.value))}</td>
-                    <td><strong>${formatMoney(runningBalance)}</td>
-                    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${m.notes}">${m.notes}</td>
-                </tr>`;
+                const isTransfer = m.type === 'تحويل';
+                
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${formatDate(m.date)}</td>
+                        <td>${formatTimePlain(m.time)}</td>
+                        <td>
+                            <span class="badge badge-${isTransfer ? 'danger' : 'success'}">
+                                ${isTransfer ? '📤 تحويل' : '📥 تحصيل'}
+                            </span>
+                        </td>
+                        <td style="color:${isTransfer ? 'var(--danger)' : 'var(--success)'};font-weight:700;">
+                            ${isTransfer ? '+' : '-'}${formatMoney(Math.abs(m.value))}
+                        </td>
+                        <td><strong>${formatMoney(runningBalance)}</strong></td>
+                        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${m.notes}">${m.notes}</td>
+                    </tr>
+                `;
             }).join('');
         }
 
-        //
+        // ============================================
+        // ★★★ الطلبات - مكتملة ★★★
+        // ============================================
+        
+        async function convertReq(requestId) {
+            const request = DB.requests.find(r => r['رقم الطلب'] == requestId);
+            if (!request) return;
+            
+            showConfirm(`هل تريد تحويل الطلب "${requestId}" تلقائياً؟\nالمبلغ: ${request['المبلغ']} جنيه`, async () => {
+                try {
+                    showLoading(true);
+                    
+                    // إنشاء تحويل من الطلب
+                    const now = new Date();
+                    const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
+                    const randomPart = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+                    const refCode = `TRF-REQ-${datePart}-${randomPart}`;
+                    
+                    const transferData = {
+                        "الرقم المرجعي": refCode,
+                        "رقم التاجر": request['رقم التاجر'],
+                        "اسم التاجر": request['اسم التاجر'],
+                        "رقم الحساب": request['رقم الحساب'] || '',
+                        "نوع التحويل": 'رصيد خدمات',
+                        "قيمة التحويل": Number(request['المبلغ']),
+                        "التاريخ": now.toISOString().split('T')[0],
+                        "الوقت": now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
+                        "ملاحظات": `تحويل تلقائي من طلب: ${requestId}`,
+                        "الشهر": now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' }),
+                        "created_at": now.toISOString()
+                    };
+                    
+                    // إضافة التحويل
+                    const { error: trError } = await supabaseClient
+                        .from('transfers')
+                        .insert([transferData]);
+                    
+                    if (trError) throw trError;
+                    
+                    // تحديث حالة الطلب - ★★ إصلاح: استخدام requests ★★
+                    const { error: reqError } = await supabaseClient
+                        .from('requests')  // ✅ تم الإصلاح
+                        .update({ "الحالة": 'محوّل' })
+                        .eq('رقم الطلب', requestId);
+                    
+                    if (reqError) throw reqError;
+                    
+                    showToast('✅ تم تحويل الطلب بنجاح!', 'success');
+                    logAction('تحويل طلب', requestId, `تم تحويل الطلب تلقائياً: ${request['المبلغ']} جنيه`);
+                    
+                    playSound(doneAudio);
+                    await loadData();
+                    
+                } catch (e) {
+                    console.error('❌ خطأ تحويل الطلب:', e);
+                    showToast('❌ ' + e.message, 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }, 'نعم، حول');
+        }
+
+        async function delRequest(requestId) {
+            const request = DB.requests.find(r => r['رقم الطلب'] == requestId);
+            if (!request) return;
+            
+            showConfirm(`هل أنت متأكد من حذف الطلب "${requestId}"؟`, async () => {
+                try {
+                    showLoading(true);
+                    
+                    // ★★ إصلاح: استخدام requests ★★
+                    const { error } = await supabaseClient
+                        .from('requests')  // ✅ تم الإصلاح
+                        .delete()
+                        .eq('رقم الطلب', requestId);
+                    
+                    if (error) throw error;
+                    
+                    showToast('✅ تم حذف الطلب بنجاح', 'success');
+                    logAction('حذف طلب', requestId, `تم حذف الطلب: ${request['نوع الطلب']}`);
+                    
+                    playSound(doneAudio);
+                    await loadData();
+                    
+                } catch (e) {
+                    console.error('❌ خطأ حذف الطلب:', e);
+                    showToast('❌ ' + e.message, 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }, 'نعم، احذف');
+        }
+
+        // ============================================
+        // ★★★ الأرشيف - مكتمل ★★★
+        // ============================================
+        
+        function confirmCloseMonth() {
+            const monthName = new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
+            
+            showConfirm(`هل تريد إغلاق شهر "${monthName}"؟\n\n⚠️ سيتم:\n• أرشفة جميع التحويلات والتحصيلات\n• بدء شهر جديد نظيف`, async () => {
+                try {
+                    showLoading(true);
+                    
+                    const now = new Date();
+                    const currentMonth = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
+                    
+                    // حساب الإحصائيات
+                    const monthTransfers = DB.transfers.filter(t => t['الشهر'] === currentMonth);
+                    const monthCollections = DB.collections.filter(c => c['شهر'] === currentMonth);
+                    
+                    const totalTransfersVal = monthTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+                    const totalCollectionsVal = monthCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+                    
+                    // إنشاء الأرشيف
+                    const archiveData = {
+                        "رقم الأرشيف": `ARCH-${now.toISOString().slice(0,10).replace(/-/g,'')}`,
+                        "الشهر": currentMonth,
+                        "عدد التحويلات": monthTransfers.length,
+                        "إجمالي التحويلات": totalTransfersVal,
+                        "عدد التحصيلات": monthCollections.length,
+                        "إجمالي التحصيلات": totalCollectionsVal,
+                        "إجمالي المتبقي": totalTransfersVal - totalCollectionsVal,
+                        "تاريخ الإنشاء": now.toISOString(),
+                        created_at: now.toISOString()
+                    };
+                    
+                    const { error: archError } = await supabaseClient
+                        .from('archives')
+                        .insert([archiveData]);
+                    
+                    if (archError) throw archError;
+                    
+                    showToast(`✅ تم إغلاق شهر "${monthName}" بنجاح!`, 'success');
+                    logAction('إغلاق شهر', archiveData["رقم الأرشيف"], `تم أرشفة شهر: ${currentMonth}`);
+                    
+                    playSound(doneAudio);
+                    await loadData();
+                    
+                } catch (e) {
+                    console.error('❌ خطأ إغلاق الشهر:', e);
+                    showToast('❌ ' + e.message, 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }, 'نعم، أغلق الشهر');
+        }
+
+        async function deleteArchive(archiveId) {
+            showConfirm(`هل أنت متأكد من حذف هذا الأرشيف؟\n⚠️ لا يمكن التراجع عن هذا الإجراء!`, async () => {
+                try {
+                    showLoading(true);
+                    
+                    const { error } = await supabaseClient
+                        .from('archives')
+                        .delete()
+                        .eq('رقم الأرشيف', archiveId);
+                    
+                    if (error) throw error;
+                    
+                    showToast('✅ تم حذف الأرشيف', 'success');
+                    logAction('حذف أرشيف', archiveId, 'تم حذف أرشيف');
+                    
+                    playSound(doneAudio);
+                    await loadData();
+                    
+                } catch (e) {
+                    console.error('❌ خطأ حذف الأرشيف:', e);
+                    showToast('❌ ' + e.message, 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }, 'نعم، احذف');
+        }
+
+        // ============================================
+        // 📊 التصدير إلى Excel - ★★★ محسن ★★★
+        // ============================================
+        function exportExcel() {
+            try {
+                // إنشاء workbook جديد
+                const wb = XLSX.utils.book_new();
+                
+                // ورقة التجار
+                if (DB.merchants.length) {
+                    const merchantsData = DB.merchants.map((m, i) => ({
+                        '#': i + 1,
+                        'رقم التاجر': m['رقم التاجر'],
+                        'الاسم': m['اسم التاجر'],
+                        'النشاط': m['اسم النشاط'],
+                        'الحساب': m['رقم الحساب'],
+                        'الهاتف': m['رقم الهاتف'],
+                        'المنطقة': m['المنطقة'],
+                        'الحالة': m['الحالة']
+                    }));
+                    const wsMerchants = XLSX.utils.json_to_sheet(merchantsData);
+                    XLSX.utils.book_append_sheet(wb, wsMerchants, 'التجار');
+                }
+                
+                // ورقة المكن
+                if (DB.machines.length) {
+                    const machinesData = DB.machines.map((m, i) => ({
+                        '#': i + 1,
+                        'رقم المكنة': m['رقم المكنة'],
+                        'التاجر': m['اسم التاجر'],
+                        'التسلسلي': m['الرقم التسلسلي'],
+                        'التارجت': m['التارجت الشهري'],
+                        'الحالة': m['الحالة']
+                    }));
+                    const wsMachines = XLSX.utils.json_to_sheet(machinesData);
+                    XLSX.utils.book_append_sheet(wb, wsMachines, 'المكن');
+                }
+                
+                // ورقة التحويلات
+                if (DB.transfers.length) {
+                    const transfersData = DB.transfers.map((t, i) => ({
+                        '#': i + 1,
+                        'المرجعي': t['الرقم المرجعي'],
+                        'التاريخ': t['التاريخ'],
+                        'الوقت': t['وقت'],
+                        'التاجر': t['اسم التاجر'],
+                        'النوع': t['نوع التحويل'],
+                        'القيمة': t['قيمة التحويل'],
+                        'ملاحظات': t['ملاحظات']
+                    }));
+                    const wsTransfers = XLSX.utils.json_to_sheet(transfersData);
+                    XLSX.utils.book_append_sheet(wb, wsTransfers, 'التحويلات');
+                }
+                
+                // ورقة التحصيلات
+                if (DB.collections.length) {
+                    const collectionsData = DB.collections.map((c, i) => ({
+                        '#': i + 1,
+                        'المرجعي': c['الرقم المرجعي'],
+                        'التاريخ': c['التاريخ'],
+                        'الوقت': c['وقت'],
+                        'التاجر': c['اسم التاجر'],
+                        'القيمة': c['قيمة التحصيل'],
+                        'النوع': c['نوع التحصيل'],
+                        'المتبقي': c['المتبقي بعد التحصيل']
+                    }));
+                    const wsCollections = XLSX.utils.json_to_sheet(collectionsData);
+                    XLSX.utils.book_append_sheet(wb, wsCollections, 'التحصيلات');
+                }
+                
+                // تنزيل الملف
+                const fileName = `Axentro_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+                showToast('✅ تم تصدير البيانات بنجاح!', 'success');
+                playSound(doneAudio);
+                
+            } catch (e) {
+                console.error('❌ خطأ التصدير:', e);
+                showToast('❌ فشل التصدير: ' + e.message, 'error');
+            }
+        }
+
+        // ============================================
+        // 📱 نافذة مسح الباركود (اختياري)
+        // ============================================
+        function openScanModal() {
+            showToast('📷 ميزة المسح قيد التطوير...', 'warning');
+            // هنا يمكن إضافة كود الكاميرا أو القارئ
+        }
+
+        // ============================================
+        // ⚡ التهيئة عند تحميل الصفحة
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Axentro System v2.1 Final - Loading...');
+            
+            // تهيئة الصوتيات
+            initSounds();
+            
+            // التحقق من تسجيل الدخول السابق
+            const isLoggedIn = localStorage.getItem('axentro_logged') === 'true';
+            
+            if (isLoggedIn) {
+                // فحص إذا كان الجلسة لا تزال صالحة (24 ساعة)
+                const loginTime = localStorage.getItem('axentro_login_time');
+                if (loginTime) {
+                    const elapsed = Date.now() - new Date(loginTime).getTime();
+                    const hoursElapsed = elapsed / (1000 * 60 * 60);
+                    
+                    if (hoursElapsed < 24) {
+                        // الجلسة صالحة - تسجيل دخول تلقائي
+                        document.getElementById('loginBox').style.display = 'none';
+                        document.getElementById('appBox').style.display = 'flex';
+                        loadData();
+                    } else {
+                        // انتهت الجلسة
+                        localStorage.removeItem('axentro_logged');
+                        localStorage.removeItem('axentro_login_time');
+                    }
+                }
+            }
+            
+            console.log('✅ System Ready!');
+        });
+
+        // ============================================
+        // ⌨️ اختصارات لوحة المفاتيح
+        // ============================================
+        document.addEventListener('keydown', function(e) {
+            // ESC لإغلاق النوافذ
+            if (e.key === 'Escape') {
+                closeModal();
+                closeConfirm();
+                closeOverlayAlert();
+            }
+            
+            // Ctrl+S لمنع الحفظ العادي
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                showToast('💡 استخدم أزرار النظام للحفظ', 'warning');
+            }
+        });
+
+        // ============================================
+        // 🔔 خدمة الإشعارات (اختياري)
+        // ============================================
+        function checkPendingRequests() {
+            const pending = DB.requests.filter(r => r['الحالة'] === 'pending').length;
+            
+            if (pending > 0) {
+                const badge = document.getElementById('pendingBadge');
+                if (badge) {
+                    badge.style.display = 'inline-flex';
+                    badge.textContent = pending;
+                }
+                
+                // إظهار إشعار كل 5 دقائق إذا كانت هناك طلبات معلقة
+                if (Notification.permission === 'granted') {
+                    new Notification('Axentro System', {
+                        body: `لديك ${pending} طلب(ات) معلقة بانتظار المراجعة`,
+                        icon: '🔔'
+                    });
+                }
+            }
+        }
+
+        // طلب إذن الإشعارات
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // ============================================
+        // 🔄 تحديث تلقائي كل 5 دقائق
+        // ============================================
+        setInterval(async () => {
+            const isLoggedIn = localStorage.getItem('axentro_logged') === 'true';
+            if (isLoggedIn && document.getElementById('appBox').style.display === 'flex') {
+                console.log('🔄 Auto-refreshing data...');
+                await loadData();
+                checkPendingRequests();
+            }
+        }, 300000); // 5 دقائق
+
+        // ============================================
+        // ✨ نهاية الكود - Axentro System v2.1 Final
+        // ============================================
+        console.log('%c🎉 Axentro System v2.1 Final Loaded Successfully!', 
+            'color: #2563eb; font-size: 16px; font-weight: bold; padding: 10px;');
+        console.log('%c⚡ Developed by Axentro Team | © 2024', 
+            'color: #64748b; font-size: 12px;');
+    </script>
+</body>
+</html>
