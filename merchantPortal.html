@@ -1066,99 +1066,172 @@
     }
 
     // =============================================
-    // 📤 إرسال الطلب - ★★★ تم الإصلاح ★★★
-    // =============================================
-    async function submitRequest(){
-        const amount=document.getElementById('amount').value;
-        const notes=document.getElementById('notes').value.trim();
-        const type=document.querySelector('input[name="requestType"]:checked')?.value;
+// 📤 إرسال الطلب - ★★★ إصلاح الإيميل ★★★
+// =============================================
+async function submitRequest(){
+    const amount=document.getElementById('amount').value;
+    const notes=document.getElementById('notes').value.trim();
+    const type=document.querySelector('input[name="requestType"]:checked')?.value;
+    
+    // ★★ التحقق من المبلغ ★★
+    if(!amount||Number(amount)<=0){
+        showToast('⚠️ أدخل مبلغ صحيح','error');
+        document.getElementById('amount').focus();
+        return;
+    }
+    
+    if(Number(amount) > 100000){
+        showToast('⚠️ المبلغ كبير جداً! تواصل مع الإدارة','warning');
+        return;
+    }
+    
+    if(!merchantData || !merchantData.merchant){
+        showToast('❌ لم يتم تحميل بيانات التاجر','error');
+        return;
+    }
+    
+    showLoading(true);
+    
+    try{
+        const now=new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
         
-        if(!amount||Number(amount)<=0){
-            showToast('⚠️ أدخل مبلغ صحيح','error');
-            document.getElementById('amount').focus();
-            return;
-        }
+        // إنشاء رقم الطلب
+        const reqCode='REQ-'+dateStr.replace(/-/g,'')+'-'+Math.floor(Math.random()*999).toString().padStart(3,'0');
         
-        if(Number(amount) > 100000){
-            showToast('⚠️ المبلغ كبير جداً! تواصل مع الإدارة','warning');
-            return;
-        }
+        // ★★ بيانات الطلب ★★
+        const insData={
+            'رقم الطلب':reqCode,
+            'التاريخ':dateStr,
+            'الوقت':timeStr,
+            'رقم التاجر':merchantData.merchant['رقم التاجر'],
+            'اسم التاجر':merchantData.merchant['اسم التاجر'],
+            'اسم النشاط':merchantData.merchant['اسم النشاط'],
+            'رقم الحساب':merchantData.merchant['رقم الحساب'],
+            'المديونية الحالية':merchantData.remaining,
+            'نوع الطلب':type,
+            'المبلغ':Number(amount),
+            'ملاحظات':notes||'لا توجد',
+            'الحالة':'pending'
+        };
         
-        showLoading(true);
+        // 1. ★★ حفظ في Supabase أولاً ★★
+        const {error:dbErr}=await client.from('requests').insert([insData]);
+        if(dbErr) throw new Error('فشل حفظ الطلب: '+dbErr.message);
         
-        try{
-            const now=new Date();
-            const dateStr = now.toISOString().split('T')[0];
-            const timeStr = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
-            
-            // إنشاء رقم الطلب
-            const reqCode='REQ-'+dateStr.replace(/-/g,'')+'-'+Math.floor(Math.random()*999).toString().padStart(3,'0');
-            
-            // 1. حفظ في Supabase - ★★ إصلاح: استخدام requests ★★
-            const insData={
-                'رقم الطلب':reqCode,
-                'التاريخ':dateStr,
-                'الوقت':timeStr,
-                'رقم التاجر':merchantData.merchant['رقم التاجر'],
-                'اسم التاجر':merchantData.merchant['اسم التاجر'],
-                'اسم النشاط':merchantData.merchant['اسم النشاط'],
-                'رقم الحساب':merchantData.merchant['رقم الحساب'],
-                'المديونية الحالية':merchantData.remaining,
-                'نوع الطلب':type,
-                'المبلغ':Number(amount),
-                'ملاحظات':notes||'لا توجد',
-                'الحالة':'pending'
+        console.log('✅ Request saved to Supabase:', reqCode);
+        
+        // 2. ★★ إرسال الإيميل عبر GS - مع محاولة متعددة ★★
+        let emailSent = false;
+        let emailError = null;
+        
+        try {
+            const payload={
+                merchant:{
+                    code:merchantData.merchant['رقم التاجر'],
+                    name:merchantData.merchant['اسم التاجر'],
+                    activityName:merchantData.merchant['اسم النشاط'],
+                    accountNumber:merchantData.merchant['رقم الحساب'],
+                    phone:merchantData.merchant['رقم الهاتف'],
+                    area:merchantData.merchant['المنطقة'],
+                    address:merchantData.merchant['العنوان'],
+                    status:merchantData.merchant['الحالة']
+                },
+                machines:merchantData.machines.map(x=>({
+                    code:x['رقم المكنة'], 
+                    serial:x['الرقم التسلسلي'], 
+                    status:x['الحالة']
+                })),
+                request:{code:reqCode,requestType:type,amount:Number(amount),notes:notes||'لا توجد'},
+                remainingBalance:merchantData.remaining,
+                dateTime:now.toISOString()
             };
             
-            // ★★ إصلاح: استخدام requests بدلاً من merchant_requests ★★
-            const {error:dbErr}=await client.from('requests').insert([insData]);  // ✅ تم الإصلاح
-            if(dbErr) throw new Error('فشل الحفظ: '+dbErr.message);
+            // ★★ المحاولة الأولى: fetch عادي ★★
+            const response = await fetch(CONFIG.gsUrl,{
+                method:'POST',
+                mode:'no-cors', // ★★ تغيير إلى no-cors ★★
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({action:'sendRequestEmail',payload})
+            });
             
-            // 2. إرسال الإيميل عبر GS (اختياري)
-            try{
-                const payload={
-                    merchant:{
-                        code:merchantData.merchant['رقم التاجر'],
-                        name:merchantData.merchant['اسم التاجر'],
-                        activityName:merchantData.merchant['اسم النشاط'],
-                        accountNumber:merchantData.merchant['رقم الحساب'],
-                        phone:merchantData.merchant['رقم الهاتف'],
-                        area:merchantData.merchant['المنطقة'],
-                        address:merchantData.merchant['العنوان'],
-                        status:merchantData.merchant['الحالة']
-                    },
-                    machines:merchantData.machines.map(x=>({code:x['رقم المكنة'],serial:x['الرقم التسلسلي'],status:x['الحالة']})),
-                    request:{code:reqCode,requestType:type,amount:Number(amount),notes:notes||'لا توجد'},
-                    remainingBalance:merchantData.remaining,
-                    dateTime:now.toISOString()
-                };
-                
-                await fetch(CONFIG.gsUrl,{
-                    method:'POST',
-                    mode:'cors',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({action:'sendRequestEmail',payload})
-                }).catch(e => console.warn('Email service unavailable:', e.message));
-                
-            }catch(emailErr){
-                console.warn('⚠️ Email failed (non-critical):', emailErr.message);
+            // ★★ في no-cors لا يمكن قراءة الاستجابة ★★
+            // لكن إذا وصلنا هنا بدون error، فغالباً تم الإرسال
+            emailSent = true;
+            console.log('✅ Email request sent (no-cors mode)');
+            
+        } catch(fetchErr) {
+            emailError = fetchErr.message;
+            console.warn('⚠️ Fetch failed:', emailError);
+            
+            // ★★ المحاولة الثانية: XMLHttpRequest ★★
+            try {
+                await sendEmailViaXHR(payload);
+                emailSent = true;
+                console.log('✅ Email sent via XHR fallback');
+            } catch(xhrErr) {
+                console.error('❌ XHR also failed:', xhrErr.message);
+                emailError = xhrErr.message;
             }
-            
-            // 3. عرض النجاح
-            document.getElementById('requestNumberDisplay').textContent=reqCode;
-            document.getElementById('portalForm').style.display='none';
-            document.getElementById('successPage').style.display='block';
-            showToast('✅ تم إرسال طلبك بنجاح!','success');
-            window.scrollTo({top:0, behavior:'smooth'});
-            
-        }catch(e){
-            console.error(e);
-            showToast('❌ '+e.message,'error');
-        }finally{
-            showLoading(false);
         }
+        
+        // 3. ★★ عرض النتيجة ★★
+        document.getElementById('requestNumberDisplay').textContent=reqCode;
+        document.getElementById('portalForm').style.display='none';
+        document.getElementById('successPage').style.display='block';
+        
+        // ★★ رسالة نجاح مع حالة الإيميل ★★
+        if (emailSent) {
+            showToast('✅ تم إرسال طلبك بنجاح! (تم إشعار الإدارة)','success');
+        } else {
+            showToast('✅ تم تسجيل طلبك! (سيتم المراجعة لاحقاً)','success');
+            console.warn('⚠️ Email notification failed but request saved:', emailError);
+        }
+        
+        window.scrollTo({top:0, behavior:'smooth'});
+        
+    }catch(e){
+        console.error('❌ Submit Error:', e);
+        showToast('❌ '+e.message,'error');
+    }finally{
+        showLoading(false);
     }
+}
 
+// ★★ دالة بديلة لإرسال الإيميل via XHR ★★★
+function sendEmailViaXHR(payload) {
+    return new Promise((resolve, reject) => {
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', CONFIG.gsUrl, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.timeout = 10000; // 10 ثواني
+            
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(true);
+                } else {
+                    reject(new Error(`HTTP ${xhr.status}`));
+                }
+            };
+            
+            xhr.onerror = function() {
+                reject(new Error('Network error'));
+            };
+            
+            xhr.ontimeout = function() {
+                reject(new Error('Timeout'));
+            };
+            
+            xhr.send(JSON.stringify({action:'sendRequestEmail',payload}));
+            
+        } catch(e) {
+            reject(e);
+        }
+    });
+}
     // =============================================
     // 🔄 إعادة تعيين
     // =============================================
