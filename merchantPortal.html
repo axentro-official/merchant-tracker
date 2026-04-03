@@ -926,7 +926,7 @@
                 verifiedUUID=data.merchant_id;
                 document.getElementById('verifySection').style.display='none';
                 showToast('✅ تم التحقق بنجاح!','success');
-                await loadMerchantFullData(verifiedUUID);
+                await loadMerchantFullData(selectedMerchant['رقم التاجر']);  // ★★ إصلاح: تمرير رقم التاجر
             }else{
                 showToast(data?.message || '❌ رقم الحساب غير صحيح','error');
                 document.getElementById('accNumberInput').value='';
@@ -941,16 +941,17 @@
     }
 
     // =============================================
-    // 📊 تحميل كل بيانات التاجر
+    // 📊 تحميل كل بيانات التاجر - ★★★ تم الإصلاح ★★★
     // =============================================
-    async function loadMerchantFullData(uuid){
+    async function loadMerchantFullData(merchantCode) {
         showLoading(true);
         
         try{
+            // ★★★ إصلاح حرج: استخدام "رقم التاجر" بدلاً من merchant_id ★★★
             const[machRes,trRes,colRes]=await Promise.all([
-                client.from('machines').select('*').eq('merchant_id',uuid),
-                client.from('transfers').select('*').eq('merchant_id',uuid).order('created_at',{ascending:false}).limit(5),
-                client.from('collections').select('*').eq('merchant_id',uuid)
+                client.from('machines').select('*').eq('رقم التاجر', merchantCode),  // ✅ تم الإصلاح
+                client.from('transfers').select('*').eq('رقم التاجر', merchantCode).order('created_at',{ascending:false}).limit(5),  // ✅ تم الإصلاح
+                client.from('collections').select('*').eq('رقم التاجر', merchantCode)  // ✅ تم الإصلاح
             ]);
             
             const machines=machRes.data||[];
@@ -1065,7 +1066,7 @@
     }
 
     // =============================================
-    // 📤 إرسال الطلب
+    // 📤 إرسال الطلب - ★★★ تم الإصلاح ★★★
     // =============================================
     async function submitRequest(){
         const amount=document.getElementById('amount').value;
@@ -1093,7 +1094,7 @@
             // إنشاء رقم الطلب
             const reqCode='REQ-'+dateStr.replace(/-/g,'')+'-'+Math.floor(Math.random()*999).toString().padStart(3,'0');
             
-            // 1. حفظ في Supabase
+            // 1. حفظ في Supabase - ★★ إصلاح: استخدام requests ★★
             const insData={
                 'رقم الطلب':reqCode,
                 'التاريخ':dateStr,
@@ -1109,7 +1110,8 @@
                 'الحالة':'pending'
             };
             
-            const {error:dbErr}=await client.from('merchant_requests').insert([insData]);
+            // ★★ إصلاح: استخدام requests بدلاً من merchant_requests ★★
+            const {error:dbErr}=await client.from('requests').insert([insData]);  // ✅ تم الإصلاح
             if(dbErr) throw new Error('فشل الحفظ: '+dbErr.message);
             
             // 2. إرسال الإيميل عبر GS (اختياري)
