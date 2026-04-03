@@ -2074,19 +2074,59 @@
             }
         }
 
-        // تسجيل الخروج - ★★★ تم الإصلاح ★★★
+        // ============================================
+// 🚪 تسجيل الخروج - ★★★ محسن مع تأكيد ★★★
+// ============================================
 function logout() {
-    // تأكيد مباشر بدون showConfirm
-    if (confirm('هل تريد تسجيل الخروج من النظام؟')) {
+    // إنشاء نافذة تأكيد مخصصة
+    const modal = document.getElementById('confirmModal');
+    const msgEl = document.getElementById('confirmMsg');
+    const btnEl = document.getElementById('confirmBtn');
+    const titleEl = document.getElementById('confirmTitle');
+    
+    if (!modal || !msgEl || !btnEl) {
+        // إذا لم توجد نافذة، استخدم confirm العادية
+        if (confirm('هل تريد تسجيل الخروج من النظام؟')) {
+            performLogout();
+        }
+        return;
+    }
+    
+    // تعيين المحتوى
+    if (titleEl) titleEl.textContent = 'تأكيد الخروج';
+    msgEl.textContent = 'هل تريد تسجيل الخروج من النظام؟';
+    btnEl.textContent = 'نعم، سجل خروجي';
+    btnEl.className = 'btn btn-danger'; // زر أحمر للخروج
+    
+    // إظهار النافذة
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+    
+    // ربط حدث الزر - ★★★ تم الإصلاح ★★★
+    btnEl.onclick = function() {
+        closeConfirm();
+        performLogout();
+    };
+}
+
+// دالة تنفيذ الخروج الفعلي
+function performLogout() {
+    try {
         playSound(logoutSuccessAudio);
         localStorage.removeItem('axentro_logged');
         localStorage.removeItem('axentro_login_time');
-        showToast('تم تسجيل الخروج بنجاح', 'success');
+        showToast('👋 تم تسجيل الخروج بنجاح', 'success');
         
-        // إعادة تحميل فورية
+        // إعادة تحميل بعد ثانية
         setTimeout(() => {
             window.location.href = window.location.href;
-        }, 500);
+        }, 800);
+        
+    } catch (e) {
+        console.error('خطأ في تسجيل الخروج:', e);
+        // خروج طوارئ حتى لو حدث خطأ
+        localStorage.removeItem('axentro_logged');
+        window.location.href = window.location.href;
     }
 }
 
