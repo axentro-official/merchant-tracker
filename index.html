@@ -164,6 +164,18 @@
             0%, 100% { box-shadow: 0 0 5px rgba(37,99,235, 0.2); }
             50% { box-shadow: 0 0 20px rgba(37,99,235, 0.4), 0 0 30px rgba(59,130,246, 0.15); }
         }
+
+        /* ★★★ تأثير اهتزاز حقل كلمة المرور - تمت الإضافة ★★★ */
+        @keyframes shake-animation {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake-animation {
+            animation: shake-animation 0.5s ease-in-out;
+            border-color: var(--danger) !important;
+        }
         
         /* ====== شاشة التحميل ====== */
         .loading-overlay {
@@ -1219,14 +1231,13 @@
             </p>
         </div>
         
-        <!-- Login Footer with QR - ★★★ تم إصلاح الرابط ★★★ -->
+        <!-- Login Footer with QR -->
         <footer style="background: transparent;">
             <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 0.8rem;">
                 © 2024 Axentro – All Rights Reserved<br>
                 By Axentro Team
             </p>
             
-            <!-- ★★★ QR Code Box - الرابط المصحح ★★★ -->
             <div class="qr-box">
                 <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" title="زيارة روابط Axentro">
                     <img 
@@ -1744,16 +1755,13 @@
             
         </div>
         
-        <!-- ================================ -->
-        <!-- App Footer - ★★★ تم إصلاح الفوتر والـ QR ★★★ -->
-        <!-- ================================ -->
+        <!-- App Footer -->
         <footer>
             <p>© 2024 Axentro – All Rights Reserved</p>
             <p style="font-size: 0.82rem; color: #94a3b8; margin-top: 0.6rem;">
                 Powered by Axentro Engine v2.1 Final
             </p>
             
-            <!-- ★★★ QR Code Box - الرابط المصحح ★★★ -->
             <div class="qr-box">
                 <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" title="زيارة روابط Axentro">
                     <img 
@@ -1789,19 +1797,21 @@
     <!-- ================================ -->
     <script>
         // ============================================
-        // ⚙️ الإعدادات الأساسية
+        // ⚙️ الإعدادات الأساسية - ★★★ مصحح ★★★
         // ============================================
         const SUPABASE_URL = 'https://bwcrdcudpnxkmcyyhzhe.supabase.co';
-       // ✅ هذا فقط - للواجهة الأمامية
-       const SUPABASE_ANON_KEY = 'sb_publishable_uXB930H6_CJ2bzzY3NWI2A_vaVub_jg';
+        
+        // ✅ المفتاح الصحيح من المستخدم
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY';
         
         let supabaseClient = null;
         
         try {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('✅ Supabase client initialized');
+            console.log('✅ Supabase client initialized successfully');
         } catch(e) {
             console.error('❌ Supabase init error:', e);
+            showToast('❌ خطأ في تهيئة الاتصال بقاعدة البيانات', 'error');
         }
 
         // ============================================
@@ -1886,7 +1896,7 @@
         }
 
         // ============================================
-        // ⏰ تنسيق الوقت بنظام 12 ساعة - ★★★ محسن ★★★
+        // ⏰ تنسيق الوقت بنظام 12 ساعة
         // ============================================
         function formatTime12h(dateStrOrObj) {
             if (!dateStrOrObj) return '-';
@@ -1906,16 +1916,14 @@
             }
         }
 
-        // تنسيق الوقت النصي - ★★★ محسن ★★★
+        // تنسيق الوقت النصي
         function formatTimePlain(timeVal) {
             if (!timeVal) return '-';
             
-            // إذا كان الوقت يحتوي على AM/PM بالفعل
             if (typeof timeVal === 'string' && (timeVal.includes('AM') || timeVal.includes('PM'))) {
                 return `<span class="time-badge">${timeVal}</span>`;
             }
             
-            // إذا كان وقت بصيغة HH:mm:ss - تحويله لنظام 12 ساعة
             if (typeof timeVal === 'string' && timeVal.includes(':')) {
                 const parts = timeVal.split(':');
                 if (parts.length >= 2) {
@@ -1956,22 +1964,18 @@
             setTimeout(() => toast.classList.remove('show'), 3800);
         }
 
-                // ============================================
-        // 💰 دوال التنسيق المالي - ★★★ محسنة ★★★
+        // ============================================
+        // 💰 دوال التنسيق المالي
         // ============================================
         
-        // ★★ تنسيق الأرقام مع حماية ★★★
         function formatNumber(num) {
-            // ★★ التعامل مع القيم الفارغة/غير الصحيحة ★★
             if (num === null || num === undefined || num === '') return '0';
             if (typeof num === 'string') {
-                // ★★ تنظيف النصوص ★★
                 num = num.replace(/[^\d.-]/g, '');
                 num = parseFloat(num) || 0;
             }
             if (isNaN(num) || !isFinite(num)) return '0';
             
-            // ★★ تقريب لأقرب رقمين عشريين ★★
             num = Math.round(Number(num) * 100) / 100;
             
             return Number(num).toLocaleString('ar-EG', {
@@ -1980,7 +1984,6 @@
             });
         }
 
-        // ★★ تنسيق العملة مع رمز الجنيه ★★★
         function formatMoney(num) {
             if (num === null || num === undefined || num === '') {
                 return '0 <span class="curr-inline">جنيه</span>';
@@ -1993,7 +1996,6 @@
                 return '0 <span class="curr-inline">جنيه</span>';
             }
             
-            // ★★ تقريب آمن ★★
             num = Math.abs(Math.round(Number(num) * 100) / 100);
             
             return `${Number(num).toLocaleString('ar-EG', {
@@ -2002,11 +2004,9 @@
             })} <span class="curr-inline">جنيه</span>`;
         }
 
-        // ★★ حساب الرصيد المتبقي بدقة ★★★
         function calculateRemainingBalance(merchantId) {
             if (!merchantId) return { totalTransfers: 0, totalCollections: 0, remaining: 0 };
             
-            // ★★ تصفية تحويلات هذا التاجر فقط ★★
             const merchantTransfers = DB.transfers.filter(t => 
                 t['رقم التاجر']?.toString().trim() === merchantId.toString().trim()
             );
@@ -2015,7 +2015,6 @@
                 c['رقم التاجر']?.toString().trim() === merchantId.toString().trim()
             );
             
-            // ★★ المجموع مع التحقق ★★
             let totalTransfers = 0;
             merchantTransfers.forEach(t => {
                 const val = parseFloat(t['قيمة التحويل']) || 0;
@@ -2028,7 +2027,6 @@
                 totalCollections += val;
             });
             
-            // ★★ التقريب النهائي ★★
             totalTransfers = Math.round(totalTransfers * 100) / 100;
             totalCollections = Math.round(totalCollections * 100) / 100;
             const remaining = Math.round((totalTransfers - totalCollections) * 100) / 100;
@@ -2036,11 +2034,10 @@
             return {
                 totalTransfers,
                 totalCollections,
-                remaining: Math.max(0, remaining) // ★★ لا يسمح بالسالب ★★
+                remaining: Math.max(0, remaining)
             };
         }
 
-        // ★★ التحقق من صحة المبلغ ★★★
         function validateAmount(value, fieldName = 'المبلغ') {
             const num = parseFloat(value);
             
@@ -2059,9 +2056,9 @@
                 return { valid: false, value: 0 };
             }
             
-            // ★★ تقريب لرقمين عشريين ★★
             return { valid: true, value: Math.round(num * 100) / 100 };
         }
+        
         // تنسيق التاريخ
         function formatDate(dateStr) {
             if (!dateStr) return '-';
@@ -2100,7 +2097,6 @@
             const loginBtn = document.getElementById('loginBtn');
             const password = passwordInput ? passwordInput.value.trim() : '';
             
-            // التحقق من وجود كلمة المرور
             if (!password) {
                 showToast('⚠️ أدخل كلمة المرور أولاً', 'warning');
                 passwordInput?.focus();
@@ -2109,7 +2105,6 @@
                 return;
             }
             
-            // تعطيل الزر
             if (loginBtn) {
                 loginBtn.disabled = true;
                 loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
@@ -2118,7 +2113,6 @@
             showLoading(true);
             
             try {
-                // التحقق من العميل
                 if (!supabaseClient) {
                     throw new Error('لم يتم تهيئة الاتصال بقاعدة البيانات');
                 }
@@ -2136,7 +2130,6 @@
                 }
                 
                 if (data && data.success) {
-                    // نجاح الدخول
                     playSound(loginSuccessAudio);
                     localStorage.setItem('axentro_logged', 'true');
                     localStorage.setItem('axentro_login_time', new Date().toISOString());
@@ -2148,7 +2141,6 @@
                     
                     await loadData();
                 } else {
-                    // فشل الدخول
                     playSound(loginErrorAudio);
                     showToast(data?.message || '❌ كلمة المرور غير صحيحة', 'error');
                     document.getElementById('passInput').value = '';
@@ -2161,7 +2153,6 @@
             } finally {
                 showLoading(false);
                 
-                // إعادة تفعيل الزر
                 if (loginBtn) {
                     loginBtn.disabled = false;
                     loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول';
@@ -2170,78 +2161,70 @@
         }
 
         // ============================================
-// 🚪 تسجيل الخروج - ★★★ إصلاح الصوت ★★★
-// ============================================
-function logout() {
-    const modal = document.getElementById('confirmModal');
-    const msgEl = document.getElementById('confirmMsg');
-    const btnEl = document.getElementById('confirmBtn');
-    const titleEl = document.getElementById('confirmTitle');
-    
-    if (!modal || !msgEl || !btnEl) {
-        if (confirm('هل تريد تسجيل الخروج من النظام؟')) {
-            performLogout();
+        // 🚪 تسجيل الخروج
+        // ============================================
+        function logout() {
+            const modal = document.getElementById('confirmModal');
+            const msgEl = document.getElementById('confirmMsg');
+            const btnEl = document.getElementById('confirmBtn');
+            const titleEl = document.getElementById('confirmTitle');
+            
+            if (!modal || !msgEl || !btnEl) {
+                if (confirm('هل تريد تسجيل الخروج من النظام؟')) {
+                    performLogout();
+                }
+                return;
+            }
+            
+            if (titleEl) titleEl.textContent = 'تأكيد الخروج';
+            msgEl.textContent = 'هل تريد تسجيل الخروج من النظام؟';
+            btnEl.textContent = 'نعم، سجل خروجي';
+            btnEl.className = 'btn btn-danger';
+            
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+            
+            btnEl.onclick = function() {
+                closeConfirm();
+                performLogout();
+            };
         }
-        return;
-    }
-    
-    if (titleEl) titleEl.textContent = 'تأكيد الخروج';
-    msgEl.textContent = 'هل تريد تسجيل الخروج من النظام؟';
-    btnEl.textContent = 'نعم، سجل خروجي';
-    btnEl.className = 'btn btn-danger';
-    
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('show'), 10);
-    
-    // ★★★ إصلاح: فصل الحدث ★★★
-    btnEl.onclick = function() {
-        closeConfirm();
-        performLogout();
-    };
-}
 
-// دالة تنفيذ الخروج الفعلي - ★★★ محسّنة ★★★
-async function performLogout() {
-    try {
-        // ★★★ تشغيل الصوت وانتظاره ★★★
-        if (logoutSuccessAudio) {
-            logoutSuccessAudio.currentTime = 0;
+        async function performLogout() {
             try {
-                await logoutSuccessAudio.play();
-                // انتظر انتهاء الصوت (2 ثانية كحد أقصى)
-                await new Promise(resolve => setTimeout(resolve, 1500));
-            } catch(e) {
-                console.warn('⚠️ خطأ تشغيل صوت الخروج:', e);
-                // انتظر حتى لو فشل الصوت
-                await new Promise(resolve => setTimeout(resolve, 500));
+                if (logoutSuccessAudio) {
+                    logoutSuccessAudio.currentTime = 0;
+                    try {
+                        await logoutSuccessAudio.play();
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                    } catch(e) {
+                        console.warn('⚠️ خطأ تشغيل صوت الخروج:', e);
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                }
+                
+                localStorage.removeItem('axentro_logged');
+                localStorage.removeItem('axentro_login_time');
+                showToast('👋 تم تسجيل الخروج بنجاح', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = window.location.href;
+                }, 300);
+                
+            } catch (e) {
+                console.error('خطأ في تسجيل الخروج:', e);
+                localStorage.removeItem('axentro_logged');
+                window.location.href = window.location.href;
             }
         }
-        
-        localStorage.removeItem('axentro_logged');
-        localStorage.removeItem('axentro_login_time');
-        showToast('👋 تم تسجيل الخروج بنجاح', 'success');
-        
-        // ★★★ إعادة تحميل بعد التأكد من اكتمال الصوت ★★★
-        setTimeout(() => {
-            window.location.href = window.location.href;
-        }, 300);
-        
-    } catch (e) {
-        console.error('خطأ في تسجيل الخروج:', e);
-        localStorage.removeItem('axentro_logged');
-        window.location.href = window.location.href;
-    }
-}
 
         // ============================================
-        // ✅ نوافذ التنبيه والتأكيد - ★★★ إصلاح التعارض ★★★
+        // ✅ نوافذ التنبيه والتأكيد
         // ============================================
         
-        // ★★ متغير لتتبع النافذة الحالية ★★
         let currentConfirmCallback = null;
 
         function showConfirm(message, callback, buttonText = 'تأكيد') {
-            // ★★ إغلاق أي نافذة مفتوحة سابقاً ★★
             closeConfirm();
             
             const modal = document.getElementById('confirmModal');
@@ -2249,24 +2232,19 @@ async function performLogout() {
             const btnEl = document.getElementById('confirmBtn');
             
             if (!modal || !msgEl || !btnEl) {
-                // Fallback إذا لم توجد النافذة
                 if (confirm(message)) {
                     if (callback) callback();
                 }
                 return;
             }
             
-            // ★★ حفظ Callback ★★
             currentConfirmCallback = callback;
             
             msgEl.textContent = message;
             btnEl.textContent = buttonText;
             
             modal.style.display = 'flex';
-            
-            // Force reflow
             void modal.offsetWidth;
-            
             modal.classList.add('show');
             
             console.log('🔔 Confirm opened:', message.substring(0, 50));
@@ -2277,8 +2255,6 @@ async function performLogout() {
             if (!modal) return;
             
             modal.classList.remove('show');
-            
-            // ★★ مسح Callback بعد إغلاق ★★
             setTimeout(() => {
                 if (modal && !modal.classList.contains('show')) {
                     modal.style.display = 'none';
@@ -2288,25 +2264,16 @@ async function performLogout() {
             currentConfirmCallback = null;
         }
 
-        // ★★★ ربط حدث زر التأكيد - Event Delegation آمن ★★★
         document.addEventListener('DOMContentLoaded', function() {
             const confirmBtn = document.getElementById('confirmBtn');
             if (confirmBtn) {
-                // ★★ إزالة أي أحداث قديمة ★★
                 const newBtn = confirmBtn.cloneNode(true);
                 confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
                 
-                // ★★ ربط جديد - آمن 100% ★★
                 document.getElementById('confirmBtn').addEventListener('click', function() {
                     console.log('✅ Confirm button clicked!');
-                    
-                    // ★★ حفظ Callback قبل الإغلاق ★★
                     const callbackToExecute = currentConfirmCallback;
-                    
-                    // ★★ إغلاق أولاً ★★
                     closeConfirm();
-                    
-                    // ★★ تنفيذ بعد 150ms ★★
                     if (callbackToExecute) {
                         setTimeout(() => {
                             try {
@@ -2322,7 +2289,6 @@ async function performLogout() {
             }
         });
 
-        // نافذة التنبيه
         function showOverlayAlert(title, message, type = 'warning') {
             const overlay = document.getElementById('overlayAlert');
             const tEl = document.getElementById('oaTitle');
@@ -2370,14 +2336,12 @@ async function performLogout() {
                 
                 console.log('📥 جاري تحميل البيانات...');
                 
-                // ★★★ ترتيب البيانات: الأقدم أولاً (ascending) ★★★
-                // ★★ إصلاح: تغيير merchant_requests إلى requests ★★
                 const [mRes, macRes, tRes, cRes, rRes, aRes] = await Promise.all([
                     supabaseClient.from('merchants').select('*').order('created_at', { ascending: true }),
                     supabaseClient.from('machines').select('*').order('created_at', { ascending: true }),
                     supabaseClient.from('transfers').select('*').order('created_at', { ascending: true }),
                     supabaseClient.from('collections').select('*').order('created_at', { ascending: true }),
-                    supabaseClient.from('requests').select('*').order('created_at', { ascending: true }),  // ✅ تم الإصلاح
+                    supabaseClient.from('requests').select('*').order('created_at', { ascending: true }),
                     supabaseClient.from('archives').select('*').order('created_at', { ascending: false })
                 ]);
                 
@@ -2385,7 +2349,7 @@ async function performLogout() {
                 DB.machines = mapData(macRes.data || []);
                 DB.transfers = mapData(tRes.data || []);
                 DB.collections = mapData(cRes.data || []);
-                DB.requests = mapData(rRes.data || []);  // ✅ تم الإصلاح
+                DB.requests = mapData(rRes.data || []);
                 DB.archives = mapData(aRes.data || []);
                 
                 DB.dashboard = calculateDashboardFrontend(DB.transfers, DB.collections, DB.merchants, DB.machines);
@@ -2403,14 +2367,12 @@ async function performLogout() {
             }
         }
 
-        // تسجيل العمليات
         async function logAction(type, ref, details, merchantData = {}) {
             if (!supabaseClient) return;
             
             const now = new Date();
             try {
-                // ★★ إصلاح: تغيير system_logs إلى logs ★★
-                await supabaseClient.from('logs').insert([{  // ✅ تم الإصلاح
+                await supabaseClient.from('logs').insert([{
                     "التاريخ": now.toISOString().split('T')[0],
                     "الوقت": now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
                     "النوع": type,
@@ -2429,7 +2391,6 @@ async function performLogout() {
             }
         }
 
-        // لوحة التحكم
         function calculateDashboardFrontend(transfers, collections, merchants, machines) {
             const now = new Date();
             const currentMonth = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
@@ -2545,13 +2506,9 @@ async function performLogout() {
             }).join('');
         }
 
-        // ============================================
-        // ★★★ عرض التجار - محسن مع الترتيب ★★★
-        // ============================================
         function renderMerchants() {
             let merchants = [...DB.merchants];
             
-            // فلترة البحث
             if (merchantSearchTerm) {
                 const term = normalizeArabic(merchantSearchTerm);
                 merchants = merchants.filter(m =>
@@ -2560,7 +2517,6 @@ async function performLogout() {
                 );
             }
             
-            // فلترة الحالة
             const statusFilter = document.getElementById('merchantStatusFilter')?.value;
             if (statusFilter) {
                 merchants = merchants.filter(m => m['الحالة'] === statusFilter);
@@ -2574,7 +2530,6 @@ async function performLogout() {
                 return;
             }
             
-            // ★★★ الترقيم التلقائي المتسلسل ★★★
             tbody.innerHTML = merchants.map((m, index) => {
                 const statusClass = m['الحالة'] === 'نشط' ? 'success' : 'danger';
                 const phone = m['رقم الهاتف'] || '';
@@ -2601,9 +2556,6 @@ async function performLogout() {
             }).join('');
         }
 
-        // ============================================
-        // ★★★ عرض المكن - محسن مع الترتيب ★★★
-        // ============================================
         function renderMachines() {
             let machines = [...DB.machines];
             
@@ -2629,7 +2581,6 @@ async function performLogout() {
                 return;
             }
             
-            // ★★★ الترقيم التلقائي المتسلسل ★★★
             tbody.innerHTML = machines.map((m, index) => {
                 const statusClass = m['الحالة'] === 'نشطة' ? 'success' : 'danger';
                 
@@ -2652,13 +2603,9 @@ async function performLogout() {
             }).join('');
         }
 
-        // ============================================
-        // ★★★ عرض التحويلات - محسن ★★★
-        // ============================================
         function renderTransfers() {
             let transfers = [...DB.transfers];
             
-            // فلترة التاريخ
             const dateFrom = document.getElementById('transferDateFrom')?.value;
             const dateTo = document.getElementById('transferDateTo')?.value;
             if (dateFrom) transfers = transfers.filter(t => t['التاريخ'] >= dateFrom);
@@ -2672,7 +2619,6 @@ async function performLogout() {
                 return;
             }
             
-            // ★★★ الترقيم التلقائي ★★★
             tbody.innerHTML = transfers.map((t, index) => {
                 const merchantName = t['اسم التاجر'] || '-';
                 
@@ -2697,9 +2643,6 @@ async function performLogout() {
             }).join('');
         }
 
-        // ============================================
-        // ★★★ عرض التحصيلات - محسن ★★★
-        // ============================================
         function renderCollections() {
             const collections = [...DB.collections];
             const tbody = document.getElementById('tblCollections');
@@ -2710,7 +2653,6 @@ async function performLogout() {
                 return;
             }
             
-            // ★★★ الترقيم التلقائي ★★★
             tbody.innerHTML = collections.map((c, index) => {
                 const typeClass = c['نوع التحصيل'] === 'كلي' ? 'success' : 'warning';
                 const remaining = c['المتبقي بعد التحصيل'] !== undefined ? c['المتبقي بعد التحصيل'] : 0;
@@ -2736,9 +2678,6 @@ async function performLogout() {
             }).join('');
         }
 
-        // ============================================
-        // ★★★ عرض الطلبات - محسن ★★★
-        // ============================================
         function renderRequests() {
             let requests = [...DB.requests];
             
@@ -2779,7 +2718,6 @@ async function performLogout() {
                 return;
             }
             
-            // ★★★ الترقيم التلقائي ★★★
             tbody.innerHTML = requests.map((r, index) => {
                 const statusClass = r['الحالة'] === 'pending' ? 'warning' : r['الحالة'] === 'محوّل' ? 'primary' : 'success';
                 const statusText = r['الحالة'] === 'pending' ? 'معلق' : r['الحالة'] === 'محوّل' ? 'محوّل' : r['الحالة'] === 'مكتمل' ? 'مكتمل' : 'مرفوض';
@@ -2808,9 +2746,6 @@ async function performLogout() {
             }).join('');
         }
 
-        // ============================================
-        // ★★★ عرض الأرشيف - محسن ★★★
-        // ============================================
         function renderArchive() {
             const archives = [...DB.archives];
             const tbody = document.getElementById('tblArchive');
@@ -2821,7 +2756,6 @@ async function performLogout() {
                 return;
             }
             
-            // ★★★ الترقيم التلقائي ★★★
             tbody.innerHTML = archives.map((a, index) => `
                 <tr>
                     <td>${index + 1}</td>
@@ -2837,7 +2771,7 @@ async function performLogout() {
         }
 
         // ============================================
-        // 🔍 البحث والفلترة - ★★★ محسن ★★★
+        // 🔍 البحث والفلترة
         // ============================================
         function debounce(func, wait) {
             let timeout;
@@ -2847,25 +2781,21 @@ async function performLogout() {
             };
         }
 
-        // معالج بحث التجار
         window.merchantSearchHandler = debounce(function(input) {
             merchantSearchTerm = input.value.trim();
             renderMerchants();
         }, 300);
 
-        // معالج بحث المكن
         window.machineSearchHandler = debounce(function(input) {
             machineSearchTerm = input.value.trim();
             renderMachines();
         }, 300);
 
-        // معالج بحث الطلبات
         window.requestSearchHandler = debounce(function(input) {
             requestSearchTerm = input.value.trim();
             renderRequests();
         }, 300);
 
-        // البحث في القوائم المنسدلة
         const searchMerchantDebounced = debounce((query, lid, hid, cb) => {
             const le = document.getElementById(lid);
             const he = document.getElementById(hid);
@@ -2907,7 +2837,6 @@ async function performLogout() {
             searchMerchantDebounced(q, lid, hid, cb); 
         }
         
-        // ★★★ اختيار تاجر من نتائج البحث - مصحح ★★★
         function selectMerchantResult(id, name, lid, hid, cb) {
             const hi = document.getElementById(hid);
             const ti = document.getElementById(hid.replace('Id', 'Search'));
@@ -2917,24 +2846,20 @@ async function performLogout() {
             if (hi) hi.value = id;
             if (li) li.style.display = 'none';
             
-            // تحديث القائمة المنسدلة
             const selectId = lid.replace('List', 'Select');
             const se = document.getElementById(selectId);
             if (se) se.value = id;
             
-            // تحديد البادئة
             let prefix = '';
             if (hid.includes('trMerch')) prefix = 'tr';
             else if (hid.includes('colMerch')) prefix = 'col';
             else if (hid.includes('mcMerch')) prefix = 'mc';
             else if (hid.includes('stmtMerchant')) prefix = 'stmt';
             
-            // ملء بيانات التاجر
             if (prefix && prefix !== 'stmt' && id) {
                 fillMerchantData(id, prefix);
             }
             
-            // تنفيذ Callback
             if (cb && window[cb]) {
                 window[cb](id);
             }
@@ -2969,50 +2894,46 @@ async function performLogout() {
             }
         }
 
-        // ★★★ ملء بيانات التاجر تلقائياً - محسّنة ★★★
-function fillMerchantData(mid, prefix) {
-    if (!mid) {
-        console.warn('⚠️ fillMerchantData: لا يوجد رقم تاجر');
-        return;
-    }
-    
-    const m = DB.merchants.find(m => m['رقم التاجر'] == mid);
-    if (!m) {
-        console.warn('⚠️ fillMerchantData: لم يتم العثور على تاجر:', mid);
-        return;
-    }
-    
-    console.log(`📝 Filling data for prefix [${prefix}]:`, m['اسم التاجر']);
-    
-    const af = document.getElementById(`${prefix}Account`);
-    const mf = document.getElementById(`${prefix}Machine`);
-    
-    // ★★ ملء رقم الحساب ★★
-    if (af) {
-        af.value = m['رقم الحساب'] || '';
-        af.style.background = 'var(--success-light)';
-        af.style.borderColor = 'var(--success)';
-        setTimeout(() => {
-            af.style.background = '';
-            af.style.borderColor = '';
-        }, 2000);
-    }
-    
-    // ★★ ملء المكنة (إن وجدت) ★★
-    if (mf && prefix !== 'mc') {
-        const machine = DB.machines.find(mac => mac['رقم التاجر'] == mid);
-        if (machine) {
-            mf.value = machine['رقم المكنة'] || '';
-            mf.title = `التسلسلي: ${machine['الرقم التسلسلي'] || '-'}`;
-        } else {
-            mf.value = '';
-            mf.title = 'لا توجد مكنات لهذا التاجر';
+        function fillMerchantData(mid, prefix) {
+            if (!mid) {
+                console.warn('⚠️ fillMerchantData: لا يوجد رقم تاجر');
+                return;
+            }
+            
+            const m = DB.merchants.find(m => m['رقم التاجر'] == mid);
+            if (!m) {
+                console.warn('⚠️ fillMerchantData: لم يتم العثور على تاجر:', mid);
+                return;
+            }
+            
+            console.log(`📝 Filling data for prefix [${prefix}]:`, m['اسم التاجر']);
+            
+            const af = document.getElementById(`${prefix}Account`);
+            const mf = document.getElementById(`${prefix}Machine`);
+            
+            if (af) {
+                af.value = m['رقم الحساب'] || '';
+                af.style.background = 'var(--success-light)';
+                af.style.borderColor = 'var(--success)';
+                setTimeout(() => {
+                    af.style.background = '';
+                    af.style.borderColor = '';
+                }, 2000);
+            }
+            
+            if (mf && prefix !== 'mc') {
+                const machine = DB.machines.find(mac => mac['رقم التاجر'] == mid);
+                if (machine) {
+                    mf.value = machine['رقم المكنة'] || '';
+                    mf.title = `التسلسلي: ${machine['الرقم التسلسلي'] || '-'}`;
+                } else {
+                    mf.value = '';
+                    mf.title = 'لا توجد مكنات لهذا التاجر';
+                }
+            }
+            
+            playSound(doneAudio);
         }
-    }
-    
-    // ★★ تشغيل صوت نجاح خفيف ★★
-    playSound(doneAudio);
-}
 
         function populateMerchantDropdowns() {
             const ms = DB.merchants || [];
@@ -3032,8 +2953,8 @@ function fillMerchantData(mid, prefix) {
             });
         }
 
-                // ============================================
-        // 📝 نوافذ الإضافة/التعديل - ★★★ محسنة ★★★
+        // ============================================
+        // 📝 نوافذ الإضافة/التعديل
         // ============================================
         function openModal(type, data = null) {
             const bd = document.getElementById('modalBody');
@@ -3189,7 +3110,8 @@ function fillMerchantData(mid, prefix) {
                 </div>
                 
                 <div class="form-row">
-                    <div class="formroup">
+                    <!-- ★★★ مصحح: form-group بدلاً من formroup ★★★ -->
+                    <div class="form-group">
                         <label>رقم الحساب</label>
                         <input id="trAccount" class="form-control" readonly dir="ltr">
                     </div>
@@ -3241,7 +3163,7 @@ function fillMerchantData(mid, prefix) {
                     <label>التاجر <span class="required">*</span></label>
                     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                         <select id="colMerchSelect" class="form-control" style="flex:1;min-width:150px;" onchange="handleDropdownSelect(this.value,'colMerchSearch','colMerchId','colMerchList')">
-                            <option value="">-- اختر تاجر --</option>
+                            <option value="">-- اختر التاجر --</option>
                         </select>
                         <input type="text" id="colMerchSearch" class="form-control" placeholder="🔍 بحث..." autocomplete="off" oninput="handleMerchantSearch(this.value,'colMerchList','colMerchId')" style="min-width:150px;">
                         <input type="hidden" id="colMerchId">
@@ -3294,11 +3216,9 @@ function fillMerchantData(mid, prefix) {
                 }
             }
             
-            // ★★★ إصلاح حرج: تحديث القوائم المنسدلة فوراً ★★★
             if (type === 'machine' || type === 'transfer' || type === 'collection') {
                 populateMerchantDropdowns();
                 
-                // إذا كان تعديل، املأ البيانات تلقائياً
                 if (isEdit && data) {
                     setTimeout(() => {
                         if (type === 'machine' && data['رقم التاجر']) {
@@ -3325,16 +3245,12 @@ function fillMerchantData(mid, prefix) {
         }
 
         function showPage(pageName, element) {
-            // إخفاء كل الصفحات
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            // إزالة active من كل التبويبات
             document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
             
-            // إظهار الصفحة المطلوبة
             const page = document.getElementById('page-' + pageName);
             if (page) page.classList.add('active');
             
-            // تفعيل التبويب
             if (element) element.classList.add('active');
         }
 
@@ -3347,10 +3263,9 @@ function fillMerchantData(mid, prefix) {
         }
 
         // ============================================
-        // 💾 دوال الحفظ - ★★★ مكتملة ★★★
+        // 💾 دوال الحفظ
         // ============================================
         
-        // ★★★ حفظ تاجر ★★★
         async function saveMerchant(editId) {
             const name = document.getElementById('mName')?.value.trim();
             const biz = document.getElementById('mBiz')?.value.trim();
@@ -3369,7 +3284,6 @@ function fillMerchantData(mid, prefix) {
             try {
                 showLoading(true);
                 
-                // ★★ توليد رقم تاجر احترافي ★★
                 let merchantId = editId;
                 if (!editId) {
                     const maxMerchant = DB.merchants.reduce((max, m) => {
@@ -3394,24 +3308,20 @@ function fillMerchantData(mid, prefix) {
                 };
                 
                 if (editId) {
-                    // تعديل
                     const { error } = await supabaseClient
                         .from('merchants')
                         .update(merchantData)
                         .eq('رقم التاجر', editId);
                     
                     if (error) throw error;
-                    
                     showToast('✅ تم تحديث التاجر بنجاح', 'success');
                     logAction('تعديل تاجر', merchantId, `تم تعديل بيانات التاجر: ${name}`, merchantData);
                 } else {
-                    // إضافة جديدة
                     const { error } = await supabaseClient
                         .from('merchants')
                         .insert([merchantData]);
                     
                     if (error) throw error;
-                    
                     showToast('✅ تم إضافة التاجر بنجاح', 'success');
                     logAction('إضافة تاجر', merchantId, `تم إضافة تاجر جديد: ${name}`, merchantData);
                 }
@@ -3428,7 +3338,6 @@ function fillMerchantData(mid, prefix) {
             }
         }
 
-        // ★★★ تعديل تاجر ★★★
         async function editMerchant(id) {
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
             if (!merchant) {
@@ -3438,7 +3347,6 @@ function fillMerchantData(mid, prefix) {
             openModal('merchant', merchant);
         }
 
-        // ★★★ حذف تاجر ★★★
         async function delMerchant(id) {
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
             if (!merchant) return;
@@ -3459,8 +3367,6 @@ function fillMerchantData(mid, prefix) {
                     
                     playSound(doneAudio);
                     await loadData();
-                    
-                    // ★★★ إعادة الترقيم التلقائي ★★★
                     await renumberMerchants();
                     
                 } catch (e) {
@@ -3472,7 +3378,6 @@ function fillMerchantData(mid, prefix) {
             }, 'نعم، احذف');
         }
 
-        // ★★★ إعادة ترقيم التجار ★★★
         async function renumberMerchants() {
             try {
                 const { data: merchants } = await supabaseClient
@@ -3492,7 +3397,6 @@ function fillMerchantData(mid, prefix) {
                             .update({ "رقم التاجر": newId })
                             .eq('رقم التاجر', oldId);
                         
-                        // تحديث المكن المرتبطة
                         await supabaseClient
                             .from('machines')
                             .update({ "رقم التاجر": newId })
@@ -3504,7 +3408,6 @@ function fillMerchantData(mid, prefix) {
             }
         }
 
-        // ★★★ حفظ مكنة ★★★
         async function saveMachine(editId) {
             const merchId = document.getElementById('mcMerchId')?.value;
             const serial = document.getElementById('mcSerial')?.value.trim();
@@ -3526,7 +3429,6 @@ function fillMerchantData(mid, prefix) {
             try {
                 showLoading(true);
                 
-                // ★★ توليد رقم مكنة احترافي ★★
                 let machineId = editId;
                 if (!editId) {
                     const maxMachine = DB.machines.reduce((max, m) => {
@@ -3580,7 +3482,6 @@ function fillMerchantData(mid, prefix) {
             }
         }
 
-        // ★★★ تعديل مكنة ★★★
         async function editMachine(id) {
             const machine = DB.machines.find(m => m['رقم المكنة'] == id);
             if (!machine) {
@@ -3590,7 +3491,6 @@ function fillMerchantData(mid, prefix) {
             openModal('machine', machine);
         }
 
-        // ★★★ حذف مكنة ★★★
         async function delMachine(id) {
             const machine = DB.machines.find(m => m['رقم المكنة'] == id);
             if (!machine) return;
@@ -3611,8 +3511,6 @@ function fillMerchantData(mid, prefix) {
                     
                     playSound(doneAudio);
                     await loadData();
-                    
-                    // ★★★ إعادة الترقيم التلقائي ★★★
                     await renumberMachines();
                     
                 } catch (e) {
@@ -3624,7 +3522,6 @@ function fillMerchantData(mid, prefix) {
             }, 'نعم، احذف');
         }
 
-        // ★★★ إعادة ترقيم المكن ★★★
         async function renumberMachines() {
             try {
                 const { data: machines } = await supabaseClient
@@ -3650,20 +3547,17 @@ function fillMerchantData(mid, prefix) {
             }
         }
 
-                // ★★★ حفظ تحويل - ★★★ مع تحقق محسن ★★★
         async function saveTransfer(editId) {
             const merchId = document.getElementById('trMerchId')?.value;
             const type = document.getElementById('trType')?.value;
             const notes = document.getElementById('trNotes')?.value.trim();
             
-            // ★★ التحقق من التاجر ★★
             if (!merchId) {
                 showToast('⚠️ يجب اختيار التاجر', 'warning');
                 document.getElementById('trMerchSearch')?.focus();
                 return;
             }
             
-            // ★★ التحقق من المبلغ باستخدام الدالة الجديدة ★★
             const amountValidation = validateAmount(
                 document.getElementById('trAmt')?.value,
                 'قيمة التحويل'
@@ -3682,7 +3576,6 @@ function fillMerchantData(mid, prefix) {
             try {
                 showLoading(true);
                 
-                // ★★ توليد رقم مرجعي احترافي ★★
                 let refCode = editId;
                 if (!editId) {
                     const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
@@ -3720,7 +3613,7 @@ function fillMerchantData(mid, prefix) {
                         .insert([transferData]);
                     
                     if (error) throw error;
-                    showToast('✅ تم إضافة التحويل بنجاح', 'success');
+                                        showToast('✅ تم إضافة التحويل بنجاح', 'success');
                     logAction('تحويل جديد', refCode, `تحويل جديد: ${amount} جنيه`, transferData);
                 }
                 
@@ -3736,7 +3629,6 @@ function fillMerchantData(mid, prefix) {
             }
         }
 
-        // ★★★ تعديل تحويل ★★★
         async function editTransfer(ref) {
             const transfer = DB.transfers.find(t => t['الرقم المرجعي'] == ref);
             if (!transfer) {
@@ -3746,7 +3638,6 @@ function fillMerchantData(mid, prefix) {
             openModal('transfer', transfer);
         }
 
-        // ★★★ حذف تحويل - ★★★ تم إصلاح الإغلاق ★★★
         async function delTransfer(ref) {
             const transfer = DB.transfers.find(t => t['الرقم المرجعي'] == ref);
             if (!transfer) return;
@@ -3774,27 +3665,24 @@ function fillMerchantData(mid, prefix) {
                 } finally {
                     showLoading(false);
                 }
-            }, 'نعم، احذف');  // ✅ تم إصلاح الإغلاق
+            }, 'نعم، احذف');
         }
 
         // ============================================
         // ★★★ دوال التحصيلات - مكتملة ★★★
         // ============================================
         
-                // ★★★ حفظ تحصيل - ★★★ مع تحقق محسن ★★★
         async function saveCollection(editId) {
             const merchId = document.getElementById('colMerchId')?.value;
             const type = document.getElementById('colType')?.value;
             const notes = document.getElementById('colNotes')?.value.trim();
             
-            // ★★ التحقق من التاجر ★★
             if (!merchId) {
                 showToast('⚠️ يجب اختيار التاجر', 'warning');
                 document.getElementById('colMerchSearch')?.focus();
                 return;
             }
             
-            // ★★ التحقق من المبلغ ★★
             const amountValidation = validateAmount(
                 document.getElementById('colAmt')?.value,
                 'قيمة التحصيل'
@@ -3813,7 +3701,6 @@ function fillMerchantData(mid, prefix) {
             try {
                 showLoading(true);
                 
-                // حساب المتبقي
                 const merchantTransfers = DB.transfers.filter(t => t['رقم التاجر'] == merchId);
                 const merchantCollections = DB.collections.filter(c => c['رقم التاجر'] == merchId && c['الرقم المرجعي'] !== editId);
                 
@@ -3821,7 +3708,6 @@ function fillMerchantData(mid, prefix) {
                 const totalCollections = merchantCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
                 const remaining = totalTransfers - totalCollections - Number(amount);
                 
-                                // ★★ توليد رقم مرجعي احترافي ★★
                 let refCode = editId;
                 if (!editId) {
                     const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
@@ -3931,28 +3817,24 @@ function fillMerchantData(mid, prefix) {
                 return;
             }
             
-            // حساب التحويلات
             const transfers = DB.transfers
                 .filter(t => t['رقم التاجر'] == merchantId)
-                .sort((a, b) => new Date(a['التاريخ']) - new Date(b['التاريخ'])); // ★★★ الأقدم أولاً ★★★
+                .sort((a, b) => new Date(a['التاريخ']) - new Date(b['التاريخ']));
             
             const totalTransfers = transfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
             
-            // حساب التحصيلات
             const collections = DB.collections
                 .filter(c => c['رقم التاجر'] == merchantId)
-                .sort((a, b) => new Date(a['التاريخ']) - new Date(b['التاريخ'])); // ★★★ الأقدم أولاً ★★★
+                .sort((a, b) => new Date(a['التاريخ']) - new Date(b['التاريخ']));
             
             const totalCollections = collections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
             
             const remaining = totalTransfers - totalCollections;
             
-            // عرض الإحصائيات
             document.getElementById('stmtT').innerHTML = formatMoney(totalTransfers);
             document.getElementById('stmtC').innerHTML = formatMoney(totalCollections);
             document.getElementById('stmtR').innerHTML = formatMoney(remaining);
             
-            // دمج الحركات وترتيبها
             const movements = [];
             
             transfers.forEach(t => {
@@ -3971,20 +3853,18 @@ function fillMerchantData(mid, prefix) {
                     type: 'تحصيل',
                     date: c['التاريخ'],
                     time: c['وقت'],
-                    value: -Number(c['قيمة التحصيل']), // سالب للتحصيل
+                    value: -Number(c['قيمة التحصيل']),
                     remaining: c['المتبقي بعد التحصيل'] || 0,
                     notes: c['ملاحظات'] || '-'
                 });
             });
             
-            // ★★★ ترتيب: الأقدم فوق ★★★
             movements.sort((a, b) => {
                 const dateA = new Date(a.date + ' ' + a.time);
                 const dateB = new Date(b.date + ' ' + b.time);
                 return dateA - dateB;
             });
             
-            // حساب الرصيد التراكمي
             let runningBalance = 0;
             const tbody = document.getElementById('tblStatement');
             
@@ -4029,7 +3909,6 @@ function fillMerchantData(mid, prefix) {
                 try {
                     showLoading(true);
                     
-                    // إنشاء تحويل من الطلب
                     const now = new Date();
                     const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
                     const randomPart = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
@@ -4049,16 +3928,14 @@ function fillMerchantData(mid, prefix) {
                         "created_at": now.toISOString()
                     };
                     
-                    // إضافة التحويل
                     const { error: trError } = await supabaseClient
                         .from('transfers')
                         .insert([transferData]);
                     
                     if (trError) throw trError;
                     
-                    // تحديث حالة الطلب - ★★ إصلاح: استخدام requests ★★
                     const { error: reqError } = await supabaseClient
-                        .from('requests')  // ✅ تم الإصلاح
+                        .from('requests')
                         .update({ "الحالة": 'محوّل' })
                         .eq('رقم الطلب', requestId);
                     
@@ -4087,9 +3964,8 @@ function fillMerchantData(mid, prefix) {
                 try {
                     showLoading(true);
                     
-                    // ★★ إصلاح: استخدام requests ★★
                     const { error } = await supabaseClient
-                        .from('requests')  // ✅ تم الإصلاح
+                        .from('requests')
                         .delete()
                         .eq('رقم الطلب', requestId);
                     
@@ -4124,14 +4000,12 @@ function fillMerchantData(mid, prefix) {
                     const now = new Date();
                     const currentMonth = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
                     
-                    // حساب الإحصائيات
                     const monthTransfers = DB.transfers.filter(t => t['الشهر'] === currentMonth);
                     const monthCollections = DB.collections.filter(c => c['شهر'] === currentMonth);
                     
                     const totalTransfersVal = monthTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
                     const totalCollectionsVal = monthCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
                     
-                    // إنشاء الأرشيف
                     const archiveData = {
                         "رقم الأرشيف": `ARCH-${now.toISOString().slice(0,10).replace(/-/g,'')}`,
                         "الشهر": currentMonth,
@@ -4197,10 +4071,8 @@ function fillMerchantData(mid, prefix) {
         // ============================================
         function exportExcel() {
             try {
-                // إنشاء workbook جديد
                 const wb = XLSX.utils.book_new();
                 
-                // ورقة التجار
                 if (DB.merchants.length) {
                     const merchantsData = DB.merchants.map((m, i) => ({
                         '#': i + 1,
@@ -4216,7 +4088,6 @@ function fillMerchantData(mid, prefix) {
                     XLSX.utils.book_append_sheet(wb, wsMerchants, 'التجار');
                 }
                 
-                // ورقة المكن
                 if (DB.machines.length) {
                     const machinesData = DB.machines.map((m, i) => ({
                         '#': i + 1,
@@ -4230,7 +4101,6 @@ function fillMerchantData(mid, prefix) {
                     XLSX.utils.book_append_sheet(wb, wsMachines, 'المكن');
                 }
                 
-                // ورقة التحويلات
                 if (DB.transfers.length) {
                     const transfersData = DB.transfers.map((t, i) => ({
                         '#': i + 1,
@@ -4246,7 +4116,6 @@ function fillMerchantData(mid, prefix) {
                     XLSX.utils.book_append_sheet(wb, wsTransfers, 'التحويلات');
                 }
                 
-                // ورقة التحصيلات
                 if (DB.collections.length) {
                     const collectionsData = DB.collections.map((c, i) => ({
                         '#': i + 1,
@@ -4262,7 +4131,6 @@ function fillMerchantData(mid, prefix) {
                     XLSX.utils.book_append_sheet(wb, wsCollections, 'التحصيلات');
                 }
                 
-                // تنزيل الملف
                 const fileName = `Axentro_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
                 XLSX.writeFile(wb, fileName);
                 
@@ -4276,7 +4144,7 @@ function fillMerchantData(mid, prefix) {
         }
 
         // ============================================
-// 📷 كاميرا مسح الباركود - ★★★ جديدة ★★★
+// 📷 كاميرا مسح الباركود - ★★★ مصححة ★★★
 // ============================================
 let cameraStream = null;
 let cameraFlashElement = null;
@@ -4303,8 +4171,8 @@ async function openScanModal() {
                 <div style="position:absolute;top:-2px;left:-2px;right:-2px;height:3px;background:linear-gradient(90deg,transparent,#2563eb,#2563eb,transparent);animation:scanLine 2s linear infinite;"></div>
             </div>
             
-                        <!-- رسالة الحالة -->
->
+            <!-- ★★★ تم إصلاح: إزالة > الزائد ★★★ -->
+            <!-- رسالة الحالة -->
             <div id="cameraStatus" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#fff;padding:6px 16px;border-radius:20px;font-size:0.82rem;font-weight:600;">
                 <i class="fas fa-circle-notch fa-spin"></i> جاري تشغيل الكاميرا...
             </div>
@@ -4341,11 +4209,9 @@ async function openScanModal() {
         </style>
     `;
     
-    // بدء الكاميرا
     setTimeout(startCamera, 500);
 }
 
-// ★★★ تشغيل الكاميرا ★★★
 async function startCamera() {
     const video = document.getElementById('cameraVideo');
     const status = document.getElementById('cameraStatus');
@@ -4353,10 +4219,9 @@ async function startCamera() {
     if (!video || !status) return;
     
     try {
-        // ★★ طلب إذن الكاميرا ★★
         cameraStream = await navigator.mediaDevices.getUserMedia({
             video: {
-                facingMode: 'environment', // الكاميرا الخلفية
+                facingMode: 'environment',
                 width: { ideal: 1280 },
                 height: { ideal: 720 }
             },
@@ -4379,7 +4244,6 @@ async function startCamera() {
     }
 }
 
-// ★★★ رسائل خطأ الكاميرا ★★★
 function getCameraErrorMessage(err) {
     switch(err.name) {
         case 'NotAllowedError':
@@ -4395,7 +4259,6 @@ function getCameraErrorMessage(err) {
     }
 }
 
-// ★★★ تبديل الفلاش ★★★
 async function toggleCameraFlash() {
     const btn = document.getElementById('flashBtn');
     const video = document.getElementById('cameraVideo');
@@ -4406,7 +4269,6 @@ async function toggleCameraFlash() {
         const track = cameraStream?.getVideoTracks()[0];
         if (!track) throw new Error('لا توجد كاميرا نشطة');
         
-        // ★★ الحصول على إعدادات الفلاش ★★
         const capabilities = track.getCapabilities?.();
         
         if (capabilities?.torch) {
@@ -4415,12 +4277,9 @@ async function toggleCameraFlash() {
                 advanced: [{ torch: !currentTorch }]
             });
             
-            // ★★ تحديث واجهة الزر ★★
             if (!currentTorch) {
                 btn.innerHTML = '<i class="fas fa-bolt"></i> إيقاف الفلاش';
                 btn.className = 'btn btn-warning btn-sm';
-                
-                // ★★ إضافة تأثير بصرى للفلاش ★★
                 createFlashOverlay(video);
             } else {
                 btn.innerHTML = '<i class="fas fa-bolt"></i> تشغيل الفلاش';
@@ -4440,9 +4299,7 @@ async function toggleCameraFlash() {
     }
 }
 
-// ★★ فلاش برمجي (بديل) ★★
 let softwareFlashOn = false;
-let flashInterval = null;
 
 function toggleSoftwareFlash() {
     const video = document.getElementById('cameraVideo');
@@ -4451,7 +4308,6 @@ function toggleSoftwareFlash() {
     softwareFlashOn = !softwareFlashOn;
     
     if (softwareFlashOn) {
-        // إنشاء طبقة بيضاء فوق الفيديو
         cameraFlashElement = document.createElement('div');
         cameraFlashElement.style.cssText = `
             position: absolute;
@@ -4479,7 +4335,6 @@ function toggleSoftwareFlash() {
     }
 }
 
-// ★★★ تأثير وميض الفلاش ★★★
 function createFlashOverlay(video) {
     const flash = document.createElement('div');
     flash.style.cssText = `
@@ -4502,7 +4357,6 @@ function createFlashOverlay(video) {
     }, 150);
 }
 
-// ★★★ التقاط ومسح الباركود ★★★
 async function captureAndScan() {
     const video = document.getElementById('cameraVideo');
     const canvas = document.getElementById('cameraCanvas');
@@ -4513,17 +4367,12 @@ async function captureAndScan() {
     if (!video || !canvas || !resultInput) return;
     
     try {
-        // ★★ رسم الإطار الحالي على Canvas ★★
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0);
         
-        // ★★ محاكاة المسح (تأثير بصري) ★★
         status.innerHTML = '<i class="fas fa-search"></i> جاري المسح...';
-        
-        // ★★ هنا يمكنك إضافة مكتبة مسح حقيقية مثل QuaggaJS ★★
-        // حالياً: نعرض رسالة للمستخدم لإدخال يدوي
         
         showToast('📸 تم التقاط الصورة - أدخل الرقم التسلسلي يدوياً', 'success');
         
@@ -4545,7 +4394,6 @@ async function captureAndScan() {
     }
 }
 
-// ★★★ تطبيق الرقم المسوح ★★★
 function applyScannedSerial() {
     const serialValue = document.getElementById('scannedSerialResult')?.value.trim();
     
@@ -4554,7 +4402,6 @@ function applyScannedSerial() {
         return;
     }
     
-    // ★★ نقل القيمة لحقل المكنة ★★
     const mcSerialField = document.getElementById('mcSerial');
     if (mcSerialField) {
         mcSerialField.value = serialValue;
@@ -4564,21 +4411,17 @@ function applyScannedSerial() {
         showToast(`✅ تم تطبيق الرقم: ${serialValue}`, 'success');
         playSound(doneAudio);
         
-        // ★★ إغلاق نافذة الكاميرا ★★
         closeCamera();
         closeModal();
     }
 }
 
-// ★★★ إغلاق الكاميرا ★★★
 function closeCamera() {
-    // ★★ إيقاف البث ★★
     if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
     }
     
-    // ★★ إزالة الفلاش البرمجي ★★
     if (cameraFlashElement) {
         cameraFlashElement.remove();
         cameraFlashElement = null;
@@ -4596,26 +4439,21 @@ function closeCamera() {
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Axentro System v2.1 Final - Loading...');
             
-            // تهيئة الصوتيات
             initSounds();
             
-            // التحقق من تسجيل الدخول السابق
             const isLoggedIn = localStorage.getItem('axentro_logged') === 'true';
             
             if (isLoggedIn) {
-                // فحص إذا كان الجلسة لا تزال صالحة (24 ساعة)
                 const loginTime = localStorage.getItem('axentro_login_time');
                 if (loginTime) {
                     const elapsed = Date.now() - new Date(loginTime).getTime();
                     const hoursElapsed = elapsed / (1000 * 60 * 60);
                     
                     if (hoursElapsed < 24) {
-                        // الجلسة صالحة - تسجيل دخول تلقائي
                         document.getElementById('loginBox').style.display = 'none';
                         document.getElementById('appBox').style.display = 'flex';
                         loadData();
                     } else {
-                        // انتهت الجلسة
                         localStorage.removeItem('axentro_logged');
                         localStorage.removeItem('axentro_login_time');
                     }
@@ -4629,14 +4467,12 @@ function closeCamera() {
         // ⌨️ اختصارات لوحة المفاتيح
         // ============================================
         document.addEventListener('keydown', function(e) {
-            // ESC لإغلاق النوافذ
             if (e.key === 'Escape') {
                 closeModal();
                 closeConfirm();
                 closeOverlayAlert();
             }
             
-            // Ctrl+S لمنع الحفظ العادي
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 showToast('💡 استخدم أزرار النظام للحفظ', 'warning');
@@ -4656,7 +4492,6 @@ function closeCamera() {
                     badge.textContent = pending;
                 }
                 
-                // إظهار إشعار كل 5 دقائق إذا كانت هناك طلبات معلقة
                 if (Notification.permission === 'granted') {
                     new Notification('Axentro System', {
                         body: `لديك ${pending} طلب(ات) معلقة بانتظار المراجعة`,
@@ -4666,7 +4501,6 @@ function closeCamera() {
             }
         }
 
-        // طلب إذن الإشعارات
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
         }
@@ -4681,7 +4515,7 @@ function closeCamera() {
                 await loadData();
                 checkPendingRequests();
             }
-        }, 300000); // 5 دقائق
+        }, 300000);
 
         // ============================================
         // ✨ نهاية الكود - Axentro System v2.1 Final
