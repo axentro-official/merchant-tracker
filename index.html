@@ -1792,7 +1792,7 @@
         // ⚙️ الإعدادات الأساسية
         // ============================================
         const SUPABASE_URL = 'https://bwcrdcudpnxkmcyyhzhe.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeHloemhlIiwicm9sZSI6ImFub24iIwiaWF0IjoxNzc1MTQxMDAwLCJleHAiOjIwOTAyODcwMDB9.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iIwiaWF0IjoxNzc1MTQxMDAwLCJleHAiOjIwOTAyODcwMDB9.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY';
         
         let supabaseClient = null;
         
@@ -2166,12 +2166,13 @@
                 console.log('📥 جاري تحميل البيانات...');
                 
                 // ★★★ ترتيب البيانات: الأقدم أولاً (ascending) ★★★
+                // ★★ إصلاح: تغيير merchant_requests إلى requests ★★
                 const [mRes, macRes, tRes, cRes, rRes, aRes] = await Promise.all([
                     supabaseClient.from('merchants').select('*').order('created_at', { ascending: true }),
                     supabaseClient.from('machines').select('*').order('created_at', { ascending: true }),
                     supabaseClient.from('transfers').select('*').order('created_at', { ascending: true }),
                     supabaseClient.from('collections').select('*').order('created_at', { ascending: true }),
-                    supabaseClient.from('merchant_requests').select('*').order('created_at', { ascending: true }),
+                    supabaseClient.from('requests').select('*').order('created_at', { ascending: true }),  // ✅ تم الإصلاح
                     supabaseClient.from('archives').select('*').order('created_at', { ascending: false })
                 ]);
                 
@@ -2179,7 +2180,7 @@
                 DB.machines = mapData(macRes.data || []);
                 DB.transfers = mapData(tRes.data || []);
                 DB.collections = mapData(cRes.data || []);
-                DB.requests = mapData(rRes.data || []);
+                DB.requests = mapData(rRes.data || []);  // ✅ تم الإصلاح
                 DB.archives = mapData(aRes.data || []);
                 
                 DB.dashboard = calculateDashboardFrontend(DB.transfers, DB.collections, DB.merchants, DB.machines);
@@ -2203,7 +2204,8 @@
             
             const now = new Date();
             try {
-                await supabaseClient.from('system_logs').insert([{
+                // ★★ إصلاح: تغيير system_logs إلى logs ★★
+                await supabaseClient.from('logs').insert([{  // ✅ تم الإصلاح
                     "التاريخ": now.toISOString().split('T')[0],
                     "الوقت": now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
                     "النوع": type,
@@ -2215,8 +2217,6 @@
                     "اسم النشاط": merchantData['اسم النشاط'] || '-',
                     "رقم المكنة": merchantData['رقم المكنة'] || '-',
                     "الرقم التسلسلي": merchantData['الرقم التسلسلي'] || '-',
-                    "IP Address": window.client?.connection?.remoteAddress || '127.0.0.1',
-                    "user_agent": navigator.userAgent,
                     created_at: now.toISOString()
                 }]);
             } catch (e) {
@@ -3483,7 +3483,7 @@
             openModal('transfer', transfer);
         }
 
-        // ★★★ حذف تحويل ★★★
+        // ★★★ حذف تحويل - ★★★ تم إصلاح الإغلاق ★★★
         async function delTransfer(ref) {
             const transfer = DB.transfers.find(t => t['الرقم المرجعي'] == ref);
             if (!transfer) return;
@@ -3509,8 +3509,9 @@
                     console.error('❌ خطأ حذف التحويل:', e);
                     showToast('❌ ' + e.message, 'error');
                 } finally {
-                            // ★★★ حذف تحويل (إكمال) ★★★
-            }, 'نعم، احذف');
+                    showLoading(false);
+                }
+            }, 'نعم، احذف');  // ✅ تم إصلاح الإغلاق
         }
 
         // ============================================
@@ -3546,7 +3547,7 @@
                 const totalCollections = merchantCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
                 const remaining = totalTransfers - totalCollections - Number(amount);
                 
-                // ★★ توليد رقم مرجعي احترافي ★★
+                                // ★★ توليد رقم مرجعي احترافي ★★
                 let refCode = editId;
                 if (!editId) {
                     const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
@@ -3781,9 +3782,9 @@
                     
                     if (trError) throw trError;
                     
-                    // تحديث حالة الطلب
+                    // تحديث حالة الطلب - ★★ إصلاح: استخدام requests ★★
                     const { error: reqError } = await supabaseClient
-                        .from('merchant_requests')
+                        .from('requests')  // ✅ تم الإصلاح
                         .update({ "الحالة": 'محوّل' })
                         .eq('رقم الطلب', requestId);
                     
@@ -3812,8 +3813,9 @@
                 try {
                     showLoading(true);
                     
+                    // ★★ إصلاح: استخدام requests ★★
                     const { error } = await supabaseClient
-                        .from('merchant_requests')
+                        .from('requests')  // ✅ تم الإصلاح
                         .delete()
                         .eq('رقم الطلب', requestId);
                     
@@ -3874,7 +3876,7 @@
                     
                     if (archError) throw archError;
                     
-                    showToast(`✅ تم إغلاش شهر "${monthName}" بنجاح!`, 'success');
+                    showToast(`✅ تم إغلاق شهر "${monthName}" بنجاح!`, 'success');
                     logAction('إغلاق شهر', archiveData["رقم الأرشيف"], `تم أرشفة شهر: ${currentMonth}`);
                     
                     playSound(doneAudio);
