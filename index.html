@@ -1956,18 +1956,112 @@
             setTimeout(() => toast.classList.remove('show'), 3800);
         }
 
-        // تنسيق الأرقام
+                // ============================================
+        // 💰 دوال التنسيق المالي - ★★★ محسنة ★★★
+        // ============================================
+        
+        // ★★ تنسيق الأرقام مع حماية ★★★
         function formatNumber(num) {
-            if (num == null || num === undefined || isNaN(num)) return '0';
-            return Number(num).toLocaleString('ar-EG');
+            // ★★ التعامل مع القيم الفارغة/غير الصحيحة ★★
+            if (num === null || num === undefined || num === '') return '0';
+            if (typeof num === 'string') {
+                // ★★ تنظيف النصوص ★★
+                num = num.replace(/[^\d.-]/g, '');
+                num = parseFloat(num) || 0;
+            }
+            if (isNaN(num) || !isFinite(num)) return '0';
+            
+            // ★★ تقريب لأقرب رقمين عشريين ★★
+            num = Math.round(Number(num) * 100) / 100;
+            
+            return Number(num).toLocaleString('ar-EG', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
         }
 
-        // تنسيق العملة
+        // ★★ تنسيق العملة مع رمز الجنيه ★★★
         function formatMoney(num) {
-            if (num == null || num === undefined || isNaN(num)) return '0 <span class="curr-inline">جنيه</span>';
-            return Number(num).toLocaleString('ar-EG') + ' <span class="curr-inline">جنيه</span>';
+            if (num === null || num === undefined || num === '') {
+                return '0 <span class="curr-inline">جنيه</span>';
+            }
+            if (typeof num === 'string') {
+                num = num.replace(/[^\d.-]/g, '');
+                num = parseFloat(num) || 0;
+            }
+            if (isNaN(num) || !isFinite(num)) {
+                return '0 <span class="curr-inline">جنيه</span>';
+            }
+            
+            // ★★ تقريب آمن ★★
+            num = Math.abs(Math.round(Number(num) * 100) / 100);
+            
+            return `${Number(num).toLocaleString('ar-EG', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })} <span class="curr-inline">جنيه</span>`;
         }
 
+        // ★★ حساب الرصيد المتبقي بدقة ★★★
+        function calculateRemainingBalance(merchantId) {
+            if (!merchantId) return { totalTransfers: 0, totalCollections: 0, remaining: 0 };
+            
+            // ★★ تصفية تحويلات هذا التاجر فقط ★★
+            const merchantTransfers = DB.transfers.filter(t => 
+                t['رقم التاجر']?.toString().trim() === merchantId.toString().trim()
+            );
+            
+            const merchantCollections = DB.collections.filter(c => 
+                c['رقم التاجر']?.toString().trim() === merchantId.toString().trim()
+            );
+            
+            // ★★ المجموع مع التحقق ★★
+            let totalTransfers = 0;
+            merchantTransfers.forEach(t => {
+                const val = parseFloat(t['قيمة التحويل']) || 0;
+                totalTransfers += val;
+            });
+            
+            let totalCollections = 0;
+            merchantCollections.forEach(c => {
+                const val = parseFloat(c['قيمة التحصيل']) || 0;
+                totalCollections += val;
+            });
+            
+            // ★★ التقريب النهائي ★★
+            totalTransfers = Math.round(totalTransfers * 100) / 100;
+            totalCollections = Math.round(totalCollections * 100) / 100;
+            const remaining = Math.round((totalTransfers - totalCollections) * 100) / 100;
+            
+            return {
+                totalTransfers,
+                totalCollections,
+                remaining: Math.max(0, remaining) // ★★ لا يسمح بالسالب ★★
+            };
+        }
+
+        // ★★ التحقق من صحة المبلغ ★★★
+        function validateAmount(value, fieldName = 'المبلغ') {
+            const num = parseFloat(value);
+            
+            if (!value || value.toString().trim() === '') {
+                showToast(`⚠️ ${fieldName} مطلوب`, 'warning');
+                return { valid: false, value: 0 };
+            }
+            
+            if (isNaN(num) || num <= 0) {
+                showToast(`⚠️ ${fieldName} غير صحيح`, 'error');
+                return { valid: false, value: 0 };
+            }
+            
+            if (num > 99999999.99) {
+                showToast(`⚠️ ${fieldName} كبير جداً!`, 'warning');
+                return { valid: false, value: 0 };
+            }
+            
+            // ★★ تقريب لرقمين عشريين ★★
+            return { valid: true, value: Math.round(num * 100) / 100 };
+        }
         // تنسيق التاريخ
         function formatDate(dateStr) {
             if (!dateStr) return '-';
@@ -2076,93 +2170,157 @@
         }
 
         // ============================================
-// 🚪 تسجيل الخروج - ★★★ محسن مع تأكيد ★★★
+// 🚪 تسجيل الخروج - ★★★ إصلاح الصوت ★★★
 // ============================================
 function logout() {
-    // إنشاء نافذة تأكيد مخصصة
     const modal = document.getElementById('confirmModal');
     const msgEl = document.getElementById('confirmMsg');
     const btnEl = document.getElementById('confirmBtn');
     const titleEl = document.getElementById('confirmTitle');
     
     if (!modal || !msgEl || !btnEl) {
-        // إذا لم توجد نافذة، استخدم confirm العادية
         if (confirm('هل تريد تسجيل الخروج من النظام؟')) {
             performLogout();
         }
         return;
     }
     
-    // تعيين المحتوى
     if (titleEl) titleEl.textContent = 'تأكيد الخروج';
     msgEl.textContent = 'هل تريد تسجيل الخروج من النظام؟';
     btnEl.textContent = 'نعم، سجل خروجي';
-    btnEl.className = 'btn btn-danger'; // زر أحمر للخروج
+    btnEl.className = 'btn btn-danger';
     
-    // إظهار النافذة
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('show'), 10);
     
-    // ربط حدث الزر - ★★★ تم الإصلاح ★★★
+    // ★★★ إصلاح: فصل الحدث ★★★
     btnEl.onclick = function() {
         closeConfirm();
         performLogout();
     };
 }
 
-// دالة تنفيذ الخروج الفعلي
-function performLogout() {
+// دالة تنفيذ الخروج الفعلي - ★★★ محسّنة ★★★
+async function performLogout() {
     try {
-        playSound(logoutSuccessAudio);
+        // ★★★ تشغيل الصوت وانتظاره ★★★
+        if (logoutSuccessAudio) {
+            logoutSuccessAudio.currentTime = 0;
+            try {
+                await logoutSuccessAudio.play();
+                // انتظر انتهاء الصوت (2 ثانية كحد أقصى)
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            } catch(e) {
+                console.warn('⚠️ خطأ تشغيل صوت الخروج:', e);
+                // انتظر حتى لو فشل الصوت
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
         localStorage.removeItem('axentro_logged');
         localStorage.removeItem('axentro_login_time');
         showToast('👋 تم تسجيل الخروج بنجاح', 'success');
         
-        // إعادة تحميل بعد ثانية
+        // ★★★ إعادة تحميل بعد التأكد من اكتمال الصوت ★★★
         setTimeout(() => {
             window.location.href = window.location.href;
-        }, 800);
+        }, 300);
         
     } catch (e) {
         console.error('خطأ في تسجيل الخروج:', e);
-        // خروج طوارئ حتى لو حدث خطأ
         localStorage.removeItem('axentro_logged');
         window.location.href = window.location.href;
     }
 }
 
         // ============================================
-        // ✅ نوافذ التنبيه والتأكيد
+        // ✅ نوافذ التنبيه والتأكيد - ★★★ إصلاح التعارض ★★★
         // ============================================
+        
+        // ★★ متغير لتتبع النافذة الحالية ★★
+        let currentConfirmCallback = null;
+
         function showConfirm(message, callback, buttonText = 'تأكيد') {
+            // ★★ إغلاق أي نافذة مفتوحة سابقاً ★★
+            closeConfirm();
+            
             const modal = document.getElementById('confirmModal');
             const msgEl = document.getElementById('confirmMsg');
             const btnEl = document.getElementById('confirmBtn');
             
-            if (!modal || !msgEl || !btnEl) return;
+            if (!modal || !msgEl || !btnEl) {
+                // Fallback إذا لم توجد النافذة
+                if (confirm(message)) {
+                    if (callback) callback();
+                }
+                return;
+            }
             
-            confirmCallback = callback;
+            // ★★ حفظ Callback ★★
+            currentConfirmCallback = callback;
+            
             msgEl.textContent = message;
             btnEl.textContent = buttonText;
             
             modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('show'), 10);
             
-            // ربط حدث الزر
-            btnEl.onclick = () => {
-                closeConfirm();
-                if (confirmCallback) confirmCallback();
-            };
+            // Force reflow
+            void modal.offsetWidth;
+            
+            modal.classList.add('show');
+            
+            console.log('🔔 Confirm opened:', message.substring(0, 50));
         }
 
         function closeConfirm() {
             const modal = document.getElementById('confirmModal');
-            if (modal) {
-                modal.classList.remove('show');
-                setTimeout(() => modal.style.display = 'none', 300);
-            }
-            confirmCallback = null;
+            if (!modal) return;
+            
+            modal.classList.remove('show');
+            
+            // ★★ مسح Callback بعد إغلاق ★★
+            setTimeout(() => {
+                if (modal && !modal.classList.contains('show')) {
+                    modal.style.display = 'none';
+                }
+            }, 300);
+            
+            currentConfirmCallback = null;
         }
+
+        // ★★★ ربط حدث زر التأكيد - Event Delegation آمن ★★★
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmBtn = document.getElementById('confirmBtn');
+            if (confirmBtn) {
+                // ★★ إزالة أي أحداث قديمة ★★
+                const newBtn = confirmBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+                
+                // ★★ ربط جديد - آمن 100% ★★
+                document.getElementById('confirmBtn').addEventListener('click', function() {
+                    console.log('✅ Confirm button clicked!');
+                    
+                    // ★★ حفظ Callback قبل الإغلاق ★★
+                    const callbackToExecute = currentConfirmCallback;
+                    
+                    // ★★ إغلاق أولاً ★★
+                    closeConfirm();
+                    
+                    // ★★ تنفيذ بعد 150ms ★★
+                    if (callbackToExecute) {
+                        setTimeout(() => {
+                            try {
+                                callbackToExecute();
+                            } catch(e) {
+                                console.error('❌ Callback error:', e);
+                            }
+                        }, 150);
+                    }
+                });
+                
+                console.log('✅ Confirm button event bound safely');
+            }
+        });
 
         // نافذة التنبيه
         function showOverlayAlert(title, message, type = 'warning') {
@@ -2811,20 +2969,50 @@ function performLogout() {
             }
         }
 
-        function fillMerchantData(mid, prefix) {
-            const m = DB.merchants.find(m => m['رقم التاجر'] == mid);
-            if (!m) return;
-            
-            const af = document.getElementById(`${prefix}Account`);
-            const mf = document.getElementById(`${prefix}Machine`);
-            
-            if (af) af.value = m['رقم الحساب'] || '';
-            if (mf && prefix !== 'mc') {
-                // البحث عن مكنة لهذا التاجر
-                const machine = DB.machines.find(mac => mac['رقم التاجر'] == mid);
-                if (mf) mf.value = machine ? machine['رقم المكنة'] : '';
-            }
+        // ★★★ ملء بيانات التاجر تلقائياً - محسّنة ★★★
+function fillMerchantData(mid, prefix) {
+    if (!mid) {
+        console.warn('⚠️ fillMerchantData: لا يوجد رقم تاجر');
+        return;
+    }
+    
+    const m = DB.merchants.find(m => m['رقم التاجر'] == mid);
+    if (!m) {
+        console.warn('⚠️ fillMerchantData: لم يتم العثور على تاجر:', mid);
+        return;
+    }
+    
+    console.log(`📝 Filling data for prefix [${prefix}]:`, m['اسم التاجر']);
+    
+    const af = document.getElementById(`${prefix}Account`);
+    const mf = document.getElementById(`${prefix}Machine`);
+    
+    // ★★ ملء رقم الحساب ★★
+    if (af) {
+        af.value = m['رقم الحساب'] || '';
+        af.style.background = 'var(--success-light)';
+        af.style.borderColor = 'var(--success)';
+        setTimeout(() => {
+            af.style.background = '';
+            af.style.borderColor = '';
+        }, 2000);
+    }
+    
+    // ★★ ملء المكنة (إن وجدت) ★★
+    if (mf && prefix !== 'mc') {
+        const machine = DB.machines.find(mac => mac['رقم التاجر'] == mid);
+        if (machine) {
+            mf.value = machine['رقم المكنة'] || '';
+            mf.title = `التسلسلي: ${machine['الرقم التسلسلي'] || '-'}`;
+        } else {
+            mf.value = '';
+            mf.title = 'لا توجد مكنات لهذا التاجر';
         }
+    }
+    
+    // ★★ تشغيل صوت نجاح خفيف ★★
+    playSound(doneAudio);
+}
 
         function populateMerchantDropdowns() {
             const ms = DB.merchants || [];
@@ -2844,7 +3032,7 @@ function performLogout() {
             });
         }
 
-        // ============================================
+                // ============================================
         // 📝 نوافذ الإضافة/التعديل - ★★★ محسنة ★★★
         // ============================================
         function openModal(type, data = null) {
@@ -3001,7 +3189,7 @@ function performLogout() {
                 </div>
                 
                 <div class="form-row">
-                    <div class="form-group">
+                    <div class="formroup">
                         <label>رقم الحساب</label>
                         <input id="trAccount" class="form-control" readonly dir="ltr">
                     </div>
@@ -3014,7 +3202,7 @@ function performLogout() {
                 <div class="form-group">
                     <label>نوع التحويل</label>
                     <select id="trType" class="form-control">
-                        <option value="رصيد خدمات" ${isEdit&&data['نوع التحويل']==='رصيد خدمات'?'selected':''}>💳 رصيد خدمات</option>
+                        <option value="رصيد خدمات" ${isEdit&&data['نوع التحويل']==='رصيد خدمات'?'selected:''}>💳 رصيد خدمات</option>
                         <option value="رصيد كاش" ${isEdit&&data['نوع التحويل']==='رصيد كاش'?'selected':''}>💵 رصيد كاش</option>
                     </select>
                 </div>
@@ -3103,6 +3291,24 @@ function performLogout() {
                     document.getElementById('colAmt').value=data['قيمة التحصيل']||'';
                     document.getElementById('colType').value=data['نوع التحصيل']||'كلي';
                     document.getElementById('colNotes').value=data['ملاحظات']||'';
+                }
+            }
+            
+            // ★★★ إصلاح حرج: تحديث القوائم المنسدلة فوراً ★★★
+            if (type === 'machine' || type === 'transfer' || type === 'collection') {
+                populateMerchantDropdowns();
+                
+                // إذا كان تعديل، املأ البيانات تلقائياً
+                if (isEdit && data) {
+                    setTimeout(() => {
+                        if (type === 'machine' && data['رقم التاجر']) {
+                            fillMerchantData(data['رقم التاجر'], 'mc');
+                        } else if (type === 'transfer' && data['رقم التاجر']) {
+                            fillMerchantData(data['رقم التاجر'], 'tr');
+                        } else if (type === 'collection' && data['رقم التاجر']) {
+                            fillMerchantData(data['رقم التاجر'], 'col');
+                        }
+                    }, 100);
                 }
             }
         }
@@ -3444,21 +3650,31 @@ function performLogout() {
             }
         }
 
-        // ★★★ حفظ تحويل ★★★
+                // ★★★ حفظ تحويل - ★★★ مع تحقق محسن ★★★
         async function saveTransfer(editId) {
             const merchId = document.getElementById('trMerchId')?.value;
             const type = document.getElementById('trType')?.value;
-            const amount = document.getElementById('trAmt')?.value;
             const notes = document.getElementById('trNotes')?.value.trim();
             
+            // ★★ التحقق من التاجر ★★
             if (!merchId) {
                 showToast('⚠️ يجب اختيار التاجر', 'warning');
+                document.getElementById('trMerchSearch')?.focus();
                 return;
             }
-            if (!amount || Number(amount) <= 0) {
-                showToast('⚠️ المبلغ غير صحيح', 'warning');
+            
+            // ★★ التحقق من المبلغ باستخدام الدالة الجديدة ★★
+            const amountValidation = validateAmount(
+                document.getElementById('trAmt')?.value,
+                'قيمة التحويل'
+            );
+            
+            if (!amountValidation.valid) {
+                document.getElementById('trAmt')?.focus();
                 return;
             }
+            
+            const amount = amountValidation.value;
             
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchId);
             const now = new Date();
@@ -3565,20 +3781,31 @@ function performLogout() {
         // ★★★ دوال التحصيلات - مكتملة ★★★
         // ============================================
         
+                // ★★★ حفظ تحصيل - ★★★ مع تحقق محسن ★★★
         async function saveCollection(editId) {
             const merchId = document.getElementById('colMerchId')?.value;
-            const amount = document.getElementById('colAmt')?.value;
             const type = document.getElementById('colType')?.value;
             const notes = document.getElementById('colNotes')?.value.trim();
             
+            // ★★ التحقق من التاجر ★★
             if (!merchId) {
                 showToast('⚠️ يجب اختيار التاجر', 'warning');
+                document.getElementById('colMerchSearch')?.focus();
                 return;
             }
-            if (!amount || Number(amount) <= 0) {
-                showToast('⚠️ المبلغ غير صحيح', 'warning');
+            
+            // ★★ التحقق من المبلغ ★★
+            const amountValidation = validateAmount(
+                document.getElementById('colAmt')?.value,
+                'قيمة التحصيل'
+            );
+            
+            if (!amountValidation.valid) {
+                document.getElementById('colAmt')?.focus();
                 return;
             }
+            
+            const amount = amountValidation.value;
             
             const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchId);
             const now = new Date();
@@ -4049,12 +4276,319 @@ function performLogout() {
         }
 
         // ============================================
-        // 📱 نافذة مسح الباركود (اختياري)
-        // ============================================
-        function openScanModal() {
-            showToast('📷 ميزة المسح قيد التطوير...', 'warning');
-            // هنا يمكن إضافة كود الكاميرا أو القارئ
+// 📷 كاميرا مسح الباركود - ★★★ جديدة ★★★
+// ============================================
+let cameraStream = null;
+let cameraFlashElement = null;
+
+async function openScanModal() {
+    const bd = document.getElementById('modalBody');
+    const m = document.getElementById('modal');
+    
+    if (!bd || !m) return;
+    
+    m.style.display = 'flex';
+    setTimeout(() => m.classList.add('show'), 10);
+    
+    bd.innerHTML = `
+        <h3><i class="fas fa-camera"></i> مسح الرقم التسلسلي</h3>
+        
+        <!-- منطقة الكاميرا -->
+        <div style="position:relative;width:100%;height:280px;background:#000;border-radius:12px;overflow:hidden;margin-bottom:1rem;">
+            <video id="cameraVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+            <canvas id="cameraCanvas" style="display:none;"></canvas>
+            
+            <!-- مؤشر المسح -->
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:220px;height:120px;border:3px solid rgba(37,99,235,0.8);border-radius:12px;box-shadow:0 0 20px rgba(37,99,235,0.4);pointer-events:none;">
+                <div style="position:absolute;top:-2px;left:-2px;right:-2px;height:3px;background:linear-gradient(90deg,transparent,#2563eb,#2563eb,transparent);animation:scanLine 2s linear infinite;"></div>
+            </div>
+            
+                        <!-- رسالة الحالة -->
+>
+            <div id="cameraStatus" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#fff;padding:6px 16px;border-radius:20px;font-size:0.82rem;font-weight:600;">
+                <i class="fas fa-circle-notch fa-spin"></i> جاري تشغيل الكاميرا...
+            </div>
+        </div>
+        
+        <!-- أزرار التحكم -->
+        <div style="display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;">
+            <button class="btn btn-secondary btn-sm" onclick="toggleCameraFlash()" id="flashBtn">
+                <i class="fas fa-bolt"></i> تشغيل الفلاش
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="captureAndScan()">
+                <i class="fas fa-camera"></i> التقاط ومسح
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="closeCamera()">
+                <i class="fas fa-times"></i> إغلاق
+            </button>
+        </div>
+        
+        <!-- حقل النتيجة -->
+        <div class="form-group">
+            <label>الرقم التسلسلي الممسوح:</label>
+            <input type="text" id="scannedSerialResult" class="form-control" placeholder="SN-XXXXX" dir="ltr" readonly style="background:var(--success-light);color:var(--success);font-weight:700;font-size:1.1rem;text-align:center;">
+        </div>
+        
+        <button class="btn btn-success btn-block" onclick="applyScannedSerial()" id="applySerialBtn" disabled style="opacity:0.5;">
+            <i class="fas fa-check"></i> تطبيق الرقم التسلسلي
+        </button>
+        
+        <style>
+            @keyframes scanLine {
+                0% { top: -2px; }
+                100% { top: calc(100% + 2px); }
+            }
+        </style>
+    `;
+    
+    // بدء الكاميرا
+    setTimeout(startCamera, 500);
+}
+
+// ★★★ تشغيل الكاميرا ★★★
+async function startCamera() {
+    const video = document.getElementById('cameraVideo');
+    const status = document.getElementById('cameraStatus');
+    
+    if (!video || !status) return;
+    
+    try {
+        // ★★ طلب إذن الكاميرا ★★
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: 'environment', // الكاميرا الخلفية
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        });
+        
+        video.srcObject = cameraStream;
+        
+        status.innerHTML = '<i class="fas fa-check-circle"></i> الكاميرا نشطة - وجه للرقم التسلسلي';
+        status.style.background = 'rgba(16,185,129,0.9)';
+        
+        console.log('✅ Camera started successfully');
+        
+    } catch(err) {
+        console.error('❌ Camera error:', err);
+        status.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + getCameraErrorMessage(err);
+        status.style.background = 'rgba(239,68,68,0.9)';
+        
+        showToast('❌ فشل تشغيل الكاميرا: ' + err.message, 'error');
+    }
+}
+
+// ★★★ رسائل خطأ الكاميرا ★★★
+function getCameraErrorMessage(err) {
+    switch(err.name) {
+        case 'NotAllowedError':
+            return 'تم رفض إذن الكاميرا - اسمح بالوصول في إعدادات المتصفح';
+        case 'NotFoundError':
+            return 'لم يتم العثور على كاميرا';
+        case 'NotReadableError':
+            return 'الكاميرا مستخدمة في تطبيق آخر';
+        case 'OverconstrainedError':
+            return 'الكاميرا لا تدعم المواصفات المطلوبة';
+        default:
+            return 'خطأ: ' + err.message;
+    }
+}
+
+// ★★★ تبديل الفلاش ★★★
+async function toggleCameraFlash() {
+    const btn = document.getElementById('flashBtn');
+    const video = document.getElementById('cameraVideo');
+    
+    if (!btn || !video) return;
+    
+    try {
+        const track = cameraStream?.getVideoTracks()[0];
+        if (!track) throw new Error('لا توجد كاميرا نشطة');
+        
+        // ★★ الحصول على إعدادات الفلاش ★★
+        const capabilities = track.getCapabilities?.();
+        
+        if (capabilities?.torch) {
+            const currentTorch = track.getSettings()?.torch || false;
+            await track.applyConstraints({
+                advanced: [{ torch: !currentTorch }]
+            });
+            
+            // ★★ تحديث واجهة الزر ★★
+            if (!currentTorch) {
+                btn.innerHTML = '<i class="fas fa-bolt"></i> إيقاف الفلاش';
+                btn.className = 'btn btn-warning btn-sm';
+                
+                // ★★ إضافة تأثير بصرى للفلاش ★★
+                createFlashOverlay(video);
+            } else {
+                btn.innerHTML = '<i class="fas fa-bolt"></i> تشغيل الفلاش';
+                btn.className = 'btn btn-secondary btn-sm';
+            }
+            
+            showToast(!currentTorch ? '✅ تم تشغيل الفلاش' : '💡 تم إيقاف الفلاش', 'success');
+            
+        } else {
+            showToast('⚠️ كاميرتك لا تدعم الفلاش - سيتم استخدام بديل', 'warning');
+            toggleSoftwareFlash();
         }
+        
+    } catch(e) {
+        console.warn('⚠️ Flash error:', e);
+        showToast('⚠️ لا يمكن التحكم بالفلاش', 'warning');
+    }
+}
+
+// ★★ فلاش برمجي (بديل) ★★
+let softwareFlashOn = false;
+let flashInterval = null;
+
+function toggleSoftwareFlash() {
+    const video = document.getElementById('cameraVideo');
+    const btn = document.getElementById('flashBtn');
+    
+    softwareFlashOn = !softwareFlashOn;
+    
+    if (softwareFlashOn) {
+        // إنشاء طبقة بيضاء فوق الفيديو
+        cameraFlashElement = document.createElement('div');
+        cameraFlashElement.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.4);
+            pointer-events: none;
+            z-index: 10;
+        `;
+        video.parentElement.appendChild(cameraFlashElement);
+        
+        btn.innerHTML = '<i class="fas fa-bolt"></i> إيقاف الفلاش';
+        btn.className = 'btn btn-warning btn-sm';
+        
+    } else {
+        if (cameraFlashElement) {
+            cameraFlashElement.remove();
+            cameraFlashElement = null;
+        }
+        
+        btn.innerHTML = '<i class="fas fa-bolt"></i> تشغيل الفلاش';
+        btn.className = 'btn btn-secondary btn-sm';
+    }
+}
+
+// ★★★ تأثير وميض الفلاش ★★★
+function createFlashOverlay(video) {
+    const flash = document.createElement('div');
+    flash.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        opacity: 0.8;
+        z-index: 15;
+        pointer-events: none;
+        transition: opacity 0.3s;
+    `;
+    video.parentElement.appendChild(flash);
+    
+    setTimeout(() => {
+        flash.style.opacity = '0';
+        setTimeout(() => flash.remove(), 300);
+    }, 150);
+}
+
+// ★★★ التقاط ومسح الباركود ★★★
+async function captureAndScan() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const resultInput = document.getElementById('scannedSerialResult');
+    const applyBtn = document.getElementById('applySerialBtn');
+    const status = document.getElementById('cameraStatus');
+    
+    if (!video || !canvas || !resultInput) return;
+    
+    try {
+        // ★★ رسم الإطار الحالي على Canvas ★★
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        
+        // ★★ محاكاة المسح (تأثير بصري) ★★
+        status.innerHTML = '<i class="fas fa-search"></i> جاري المسح...';
+        
+        // ★★ هنا يمكنك إضافة مكتبة مسح حقيقية مثل QuaggaJS ★★
+        // حالياً: نعرض رسالة للمستخدم لإدخال يدوي
+        
+        showToast('📸 تم التقاط الصورة - أدخل الرقم التسلسلي يدوياً', 'success');
+        
+        resultInput.removeAttribute('readonly');
+        resultInput.placeholder = 'أدخل الرقم التسلسلي من الصورة...';
+        resultInput.focus();
+        resultInput.style.background = '#fef3c7';
+        resultInput.style.color = '#92400e';
+        
+        applyBtn.disabled = false;
+        applyBtn.style.opacity = '1';
+        
+        status.innerHTML = '<i class="fas fa-edit"></i> أدخل الرقم ثم اضغط "تطبيق"';
+        status.style.background = 'rgba(245,158,11,0.9)';
+        
+    } catch(e) {
+        console.error('❌ Capture error:', e);
+        showToast('❌ فشل التقاط الصورة', 'error');
+    }
+}
+
+// ★★★ تطبيق الرقم المسوح ★★★
+function applyScannedSerial() {
+    const serialValue = document.getElementById('scannedSerialResult')?.value.trim();
+    
+    if (!serialValue) {
+        showToast('⚠️ أدخل الرقم التسلسلي أولاً', 'warning');
+        return;
+    }
+    
+    // ★★ نقل القيمة لحقل المكنة ★★
+    const mcSerialField = document.getElementById('mcSerial');
+    if (mcSerialField) {
+        mcSerialField.value = serialValue;
+        mcSerialField.style.background = 'var(--success-light)';
+        mcSerialField.style.border = '2px solid var(--success)';
+        
+        showToast(`✅ تم تطبيق الرقم: ${serialValue}`, 'success');
+        playSound(doneAudio);
+        
+        // ★★ إغلاق نافذة الكاميرا ★★
+        closeCamera();
+        closeModal();
+    }
+}
+
+// ★★★ إغلاق الكاميرا ★★★
+function closeCamera() {
+    // ★★ إيقاف البث ★★
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    
+    // ★★ إزالة الفلاش البرمجي ★★
+    if (cameraFlashElement) {
+        cameraFlashElement.remove();
+        cameraFlashElement = null;
+    }
+    
+    softwareFlashOn = false;
+    
+    closeModal();
+    console.log('📷 Camera closed');
+}
 
         // ============================================
         // ⚡ التهيئة عند تحميل الصفحة
