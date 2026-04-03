@@ -2074,15 +2074,21 @@
             }
         }
 
-        // تسجيل الخروج
-        function logout() {
-            showConfirm('هل تريد تسجيل الخروج من النظام؟', () => {
-                playSound(logoutSuccessAudio);
-                localStorage.removeItem('axentro_logged');
-                showToast('تم تسجيل الخروج بنجاح', 'success');
-                setTimeout(() => location.reload(), 1200);
-            }, 'نعم، سجل خروجي');
-        }
+        // تسجيل الخروج - ★★★ تم الإصلاح ★★★
+function logout() {
+    // تأكيد مباشر بدون showConfirm
+    if (confirm('هل تريد تسجيل الخروج من النظام؟')) {
+        playSound(logoutSuccessAudio);
+        localStorage.removeItem('axentro_logged');
+        localStorage.removeItem('axentro_login_time');
+        showToast('تم تسجيل الخروج بنجاح', 'success');
+        
+        // إعادة تحميل فورية
+        setTimeout(() => {
+            window.location.href = window.location.href;
+        }, 500);
+    }
+}
 
         // ============================================
         // ✅ نوافذ التنبيه والتأكيد
