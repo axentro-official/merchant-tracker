@@ -1,803 +1,2975 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Axentro System</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f8fafc 100%);color:#1e293b;min-height:100vh;display:flex;flex-direction:column}
-::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:#f1f5f9;border-radius:10px}::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#2563eb,#7c3aed);border-radius:10px}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Axentro System v3.0 Professional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3"></script>
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #7c3aed;
+            --secondary-dark: #6d28d9;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --success-dark: #059669;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --warning: #f59e0b;
+            --warning-dark: #d97706;
+            --bg: #f8fafc;
+            --bg-dark: #0f172a;
+            --white: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --muted: #94a3b8;
+            --border: #e2e8f0;
+            --border-dark: #cbd5e1;
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.06);
+            --shadow-xl: 0 25px 50px -12px rgba(0,0,0,0.25);
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);display:none;justify-content:center;align-items:center;z-index:99999;backdrop-filter:blur(8px)}
-.spinner{width:56px;height:56px;border:5px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .75s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
-@keyframes shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-6px)}20%,40%,60%,80%{transform:translateX(6px)}}
-.shake{animation:shake .4s ease-in-out}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
 
-.login-container{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-.login-card{background:#fff;border-radius:24px;padding:45px 38px;box-shadow:0 10px 40px rgba(0,0,0,.12);text-align:center;max-width:420px;width:100%;animation:scaleIn .5s ease-out}
-.login-logo{width:85px;height:85px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:34px;color:#fff;animation:float 3s ease-in-out infinite;box-shadow:0 8px 25px rgba(37,99,235,.35)}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-.login-title{font-size:26px;font-weight:800;color:#1d4ed8;margin-bottom:8px}
-.login-subtitle{color:#64748b;font-size:14px;margin-bottom:28px}
-.login-input-group{position:relative;margin-bottom:18px}
-.login-input{width:100%;padding:15px 18px;padding-right:46px;border:2px solid #e2e8f0;border-radius:10px;font-family:'Cairo',sans-serif;font-size:15px;transition:all .25s ease;background:#f8fafc}
-.login-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.12);background:#fff}
-.login-input-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#64748b;font-size:17px}
-.login-btn{width:100%;padding:15px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .25s ease;margin-top:8px}
-.login-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(37,99,235,.35)}
+        body {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
 
-.main-app{display:none;flex-direction:column;min-height:100vh}
-.app-header{background:linear-gradient(135deg,#0f172a,#1e293b);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,.15)}
-.header-brand{display:flex;align-items:center;gap:12px}
-.header-logo{width:42px;height:42px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px}
-.header-title{color:#fff;font-size:20px;font-weight:800}
-.status-badge{display:flex;align-items:center;gap:6px;background:rgba(16,185,129,.15);color:#10b981;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600}
-.status-dot{width:8px;height:8px;background:#10b981;border-radius:50%;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
-.header-actions{display:flex;gap:10px}
-.header-btn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);padding:8px 16px;border-radius:10px;font-family:'Cairo',sans-serif;font-size:13px;cursor:pointer;transition:all .2s ease;display:flex;align-items:center;gap:6px}
-.header-btn:hover{background:rgba(255,255,255,.18)}
+        /* ====== Scrollbar Custom ====== */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-light); }
 
-.sidebar-nav{background:#fff;padding:18px 14px;display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid #e2e8f0}
-.nav-item{padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .22s ease;display:flex;align-items:center;gap:9px;color:#64748b;border:2px solid transparent;background:#f8fafc}
-.nav-item:hover{background:#eff6ff;color:#2563eb;transform:translateY(-1px)}
-.nav-item.active{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.3)}
+        /* ====== Loading Overlay ====== */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            backdrop-filter: blur(12px);
+            transition: opacity 0.4s ease;
+        }
 
-.main-content{flex:1;padding:22px;max-width:1300px;margin:0 auto;width:100%}
-.section-card{background:#fff;border-radius:14px;box-shadow:0 4px 6px -1px rgba(0,0,0,.08),0 2px 4px -1px rgba(0,0,0,.04);overflow:hidden;animation:fadeIn .4s ease-out;margin-bottom:22px}
-.section-header{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;background:linear-gradient(135deg,#f8fafc,#fff)}
-.section-title{font-size:17px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:10px}
-.btn{padding:9px 18px;border-radius:10px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .22s ease;display:inline-flex;align-items:center;gap:7px;border:none}
-.btn-primary{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.25)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(37,99,235,.35)}
-.btn-success{background:#10b981;color:#fff}
-.btn-danger{background:#ef4444;color:#fff}
-.btn-warning{background:#f59e0b;color:#fff}
-.btn-outline{background:transparent;border:2px solid #e2e8f0;color:#64748b}
-.btn-sm{padding:6px 13px;font-size:12px}
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
 
-.table-wrapper{overflow-x:auto;padding:16px 22px}
-.data-table{width:100%;border-collapse:collapse;font-size:13px}
-.data-table th{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;padding:13px 15px;text-align:right;font-weight:700;font-size:12px;white-space:nowrap}
-.data-table td{padding:12px 15px;border-bottom:1px solid #e2e8f0;vertical-align:middle}
-.data-table tr:hover{background:#f8fafc}
-.table-number{background:#f8fafc;padding:4px 11px;border-radius:8px;font-weight:700;font-size:11px;color:#64748b}
-.status-active{background:#d1fae5;color:#065f46;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
-.status-inactive{background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
-.amount-positive{color:#10b981;font-weight:700}
-.amount-negative{color:#ef4444;font-weight:700}
-.action-btns{display:flex;gap:6px;flex-wrap:wrap}
-.action-btn{width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s ease}
-.action-btn-edit{background:#dbeafe;color:#2563eb}.action-btn-edit:hover{background:#2563eb;color:#fff}
-.action-btn-delete{background:#fee2e2;color:#dc2626}.action-btn-delete:hover{background:#dc2626;color:#fff}
-.action-btn-view{background:#d1fae5;color:#059669}.action-btn-view:hover{background:#059669;color:#fff}
+        .loader {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
 
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.65);display:none;justify-content:center;align-items:center;z-index:10000;padding:20px;backdrop-filter:blur(4px)}
-.modal-overlay.active{display:flex}
-.modal{background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;animation:scaleIn .3s ease-out;box-shadow:0 25px 50px -12px rgba(0,0,0,.25)}
-.modal-header{padding:22px 24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#f8fafc,#fff)}
-.modal-header h3{font-size:18px;font-weight:700;color:#1d4ed8;display:flex;align-items:center;gap:10px}
-.modal-close{width:36px;height:36px;border-radius:10px;border:none;background:#f8fafc;cursor:pointer;font-size:18px;color:#64748b;transition:all .2s ease;display:flex;align-items:center;justify-content:center}
-.modal-close:hover{background:#fee2e2;color:#ef4444}
-.modal-body{padding:24px}
-.form-group{margin-bottom:18px}
-.form-label{display:block;font-size:13px;font-weight:600;color:#1e293b;margin-bottom:7px}
-.form-label.required::after{content:' *';color:#ef4444}
-.form-input,.form-select{width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;transition:all .22s ease;background:#f8fafc}
-.form-input:focus,.form-select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.1);background:#fff}
-textarea.form-input{min-height:90px;resize:vertical}
-.modal-footer{padding:16px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;background:#f8fafc}
+        .loader::before, .loader::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
 
-.toast-container{position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:10px;width:90%;max-width:420px}
-.toast{background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 10px 35px rgba(0,0,0,.15);display:flex;align-items:center;gap:12px;animation:fadeIn .35s ease-out;border-right:4px solid #2563eb}
-.toast.success{border-right-color:#10b981}.toast.error{border-right-color:#ef4444}.toast.warning{border-right-color:#f59e0b}
-.toast-icon{font-size:22px}.toast.success .toast-icon{color:#10b981}.toast.error .toast-icon{color:#ef4444}
-.toast-message{flex:1}.toast-message strong{display:block;font-size:14px;margin-bottom:2px}.toast-message small{color:#64748b;font-size:12px}
-.toast-close{background:none;border:none;cursor:pointer;color:#64748b;font-size:16px;padding:4px}
+        .loader::after {
+            inset: 6px;
+            border-top-color: var(--secondary);
+            animation-duration: 0.8s;
+            animation-direction: reverse;
+        }
 
-.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.65);display:none;justify-content:center;align-items:center;z-index:10001;backdrop-filter:blur(4px)}
-.confirm-overlay.active{display:flex}
-.confirm-dialog{background:#fff;border-radius:14px;padding:30px;max-width:400px;width:90%;text-align:center;animation:scaleIn .25s ease-out}
-.confirm-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px}
-.confirm-icon.danger{background:#fee2e2;color:#ef4444}.confirm-icon.warning{background:#fef3c7;color:#d97706}
-.confirm-dialog h3{font-size:18px;margin-bottom:10px}.confirm-dialog p{color:#64748b;font-size:14px;margin-bottom:22px}
-.confirm-buttons{display:flex;gap:12px;justify-content:center}
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-.search-results{position:absolute;top:100%;right:0;left:0;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;max-height:280px;overflow-y:auto;z-index:1050;display:none;box-shadow:0 12px 35px rgba(0,0,0,.12);margin-top:5px}
-.search-results.active{display:block}
-.search-results div{padding:13px 16px;cursor:pointer;border-bottom:1px solid #e2e8f0;transition:all .22s ease;display:flex;justify-content:space-between;align-items:center}
-.search-results div:last-child{border-bottom:none}
-.search-results div:hover{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;transform:translateX(-4px)}
-.search-results .no-result{color:#64748b;cursor:default;justify-content:center;padding:22px!important}
-.search-results .no-result:hover{background:transparent;transform:none}
+        .loading-text {
+            margin-top: 1.5rem;
+            color: var(--text-light);
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
 
-.balance-display{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:18px 22px}
-.balance-item{text-align:center;padding:18px;background:#f8fafc;border-radius:10px}
-.balance-item label{font-size:12px;color:#64748b;display:block;margin-bottom:6px}
-.balance-item value{font-size:22px;font-weight:800;color:#1e293b}
-.balance-item.negative value{color:#ef4444}
+        .loading-text i { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-.app-footer{background:#0f172a;padding:18px 24px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;margin-top:auto}
-.app-footer a{color:#10b981;text-decoration:none;font-weight:600}
+        /* ====== Login Section ====== */
+        #loginSection {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
 
-.quick-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;padding:18px 22px}
-.quick-action-btn{background:#f8fafc;border:2px dashed #e2e8f0;border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:all .25s ease;font-family:'Cairo',sans-serif}
-.quick-action-btn:hover{border-color:#2563eb;background:#eff6ff;transform:translateY(-3px)}
-.quick-action-btn i{font-size:26px;color:#2563eb;margin-bottom:10px;display:block}
-.quick-action-btn span{font-size:13px;font-weight:600;color:#1e293b}
+        #loginSection::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(124,58,237,0.1));
+            border-radius: 50%;
+            top: -200px;
+            right: -200px;
+            animation: float 8s ease-in-out infinite;
+        }
 
-.page{display:block}
-@media(max-width:768px){.app-header{flex-direction:column;gap:12px;padding:14px}.sidebar-nav{overflow-x:auto;flex-wrap:nowrap}.nav-item{white-space:nowrap;font-size:12px;padding:9px 14px}.balance-display{grid-template-columns:1fr}.quick-actions{grid-template-columns:repeat(2,1fr)}.modal{max-width:100%;margin:10px}.section-header{flex-direction:column;gap:12px;align-items:stretch}}
-</style>
+        @keyframes float {
+            0%,100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(5deg); }
+        }
+
+        .login-container {
+            background: var(--white);
+            padding: 3rem 2.8rem;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 440px;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        }
+
+        .login-logo {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.8rem;
+            box-shadow: 0 10px 40px rgba(37,99,235,0.35);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .login-logo i {
+            font-size: 2.2rem;
+            color: white;
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-size: 1.75rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 0.92rem;
+        }
+
+        /* ====== Form Controls ====== */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .form-label .required {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1.1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+            background: white;
+        }
+
+        .form-control::placeholder {
+            color: var(--muted);
+        }
+
+        select.form-control {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 14px center;
+            padding-left: 38px !important;
+            cursor: pointer;
+        }
+
+        /* Password Wrapper */
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 8px;
+            font-size: 1.15rem;
+            transition: var(--transition);
+        }
+
+        .password-toggle:hover { color: var(--primary); }
+
+        /* ====== Buttons ====== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            padding: 0.85rem 1.6rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            letter-spacing: 0.02em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(255,255,255,0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn:hover::after { opacity: 1; }
+
+        .btn:active:not(:disabled) { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(37,99,235,0.35);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37,99,235,0.45);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), var(--success-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(16,185,129,0.35);
+        }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16,185,129,0.45);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(239,68,68,0.35);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239,68,68,0.45);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), var(--warning-dark));
+            color: white;
+        }
+
+        .btn-block { width: 100%; }
+        .btn-sm { padding: 0.55rem 1rem; font-size: 0.85rem; }
+        .btn-lg { padding: 1rem 2rem; font-size: 1.05rem; }
+
+        /* ====== App Container ====== */
+        #appContainer {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ====== Navbar ====== */
+        .navbar {
+            background: var(--white);
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-weight: 800;
+            font-size: 1.35rem;
+            color: var(--primary);
+        }
+
+        .navbar-brand i { font-size: 1.5rem; }
+
+        .navbar-actions {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Connection Status */
+        .conn-status {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.4rem 0.85rem;
+            border-radius: 22px;
+            background: var(--bg);
+            color: var(--text-light);
+            transition: var(--transition);
+        }
+
+        .conn-status.live {
+            background: rgba(16,185,129,0.12);
+            color: var(--success);
+            border: 1px solid rgba(16,185,129,0.25);
+        }
+
+        .conn-status.offline {
+            background: rgba(239,68,68,0.12);
+            color: var(--danger);
+            animation: pulse 2s infinite;
+            border: 1px solid rgba(239,68,68,0.25);
+        }
+
+        .conn-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        /* ====== Tabs Navigation ====== */
+        .tabs-nav {
+            display: flex;
+            background: var(--white);
+            border-bottom: 2px solid var(--border);
+            overflow-x: auto;
+            position: sticky;
+            top: 64px;
+            z-index: 90;
+            scrollbar-width: none;
+        }
+
+        .tabs-nav::-webkit-scrollbar { display: none; }
+
+        .tab-link {
+            flex: 1;
+            min-width: 90px;
+            padding: 0.9rem 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-light);
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            white-space: nowrap;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            position: relative;
+        }
+
+        .tab-link i { font-size: 1.15rem; }
+
+        .tab-link:hover {
+            color: var(--primary);
+            background: rgba(37,99,235,0.04);
+        }
+
+        .tab-link.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: linear-gradient(180deg, rgba(37,99,235,0.08) 0%, transparent 100%);
+        }
+
+        .tab-link .badge-count {
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(calc(-50% + 20px));
+            background: var(--danger);
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            display: none;
+        }
+
+        .tab-link .badge-count.show { display: block; }
+
+        /* ====== Main Content ====== */
+        .main-content {
+            padding: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 100px;
+        }
+
+        .page { display: none; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ====== Stats Grid ====== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.3rem 1.4rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+            border-right: 4px solid var(--primary);
+        }
+
+        .stat-card.success { border-right-color: var(--success); }
+        .stat-card.danger { border-right-color: var(--danger); }
+        .stat-card.warning { border-right-color: var(--warning); }
+        .stat-card.purple { border-right-color: var(--secondary); }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.6rem;
+        }
+
+        .stat-card-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            background: rgba(37,99,235,0.1);
+            color: var(--primary);
+        }
+
+        .stat-card.success .stat-card-icon { background: rgba(16,185,129,0.1); color: var(--success); }
+        .stat-card.danger .stat-card-icon { background: rgba(239,68,68,0.1); color: var(--danger); }
+        .stat-card.warning .stat-card-icon { background: rgba(245,158,11,0.1); color: var(--warning); }
+        .stat-card.purple .stat-card-icon { background: rgba(124,58,237,0.1); color: var(--secondary); }
+
+        .stat-card-title {
+            font-size: 0.78rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .stat-card-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .currency { font-size: 0.72rem; color: var(--text-light); font-weight: 400; margin-right: 3px; }
+
+        /* ====== Table Box ====== */
+        .table-box {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .table-header {
+            padding: 1.1rem 1.5rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 0.7rem;
+        }
+
+        .table-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text);
+        }
+
+        .table-header h3 i { color: var(--primary); }
+
+        .table-actions {
+            display: flex;
+            gap: 0.55rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .table-container { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th, td {
+            padding: 0.9rem 1rem;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.88rem;
+        }
+
+        th {
+            background: #f8fafc;
+            color: var(--text-light);
+            font-weight: 700;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            position: sticky;
+            top: 0;
+            white-space: nowrap;
+        }
+
+        tr:hover td { background: rgba(37,99,235,0.02); }
+        tr:last-child td { border-bottom: none; }
+
+        /* ====== Badges ====== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.28rem 0.7rem;
+            border-radius: 50px;
+            font-size: 0.73rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .badge-success { background: rgba(16,185,129,0.12); color: var(--success-dark); }
+        .badge-danger { background: rgba(239,68,68,0.12); color: var(--danger-dark); }
+        .badge-warning { background: rgba(245,158,11,0.12); color: var(--warning-dark); }
+        .badge-primary { background: rgba(37,99,235,0.12); color: var(--primary); }
+        .badge-secondary { background: rgba(100,116,139,0.12); color: #475569; }
+        .badge-purple { background: rgba(124,58,237,0.12); color: var(--secondary); }
+
+        /* ====== Time Badge ====== */
+        .time-badge {
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 650;
+            direction: ltr;
+            display: inline-block;
+            letter-spacing: 0.5px;
+            border: 1px solid var(--border);
+        }
+
+        /* ====== Action Buttons ====== */
+        .action-btns {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        /* ====== Search Results ====== */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            left: 0;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 1050;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            margin-top: 4px;
+        }
+
+        .search-results div {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: var(--transition);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-results div:last-child { border-bottom: none; }
+
+        .search-results div:hover {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            transform: translateX(-3px);
+        }
+
+        .search-results div .result-code {
+            font-size: 0.72rem;
+            opacity: 0.75;
+            font-weight: 700;
+            background: rgba(255,255,255,0.18);
+            padding: 3px 8px;
+            border-radius: 15px;
+        }
+
+        .search-results .no-result {
+            color: var(--text-light);
+            cursor: default;
+            padding: 1.2rem !important;
+            text-align: center;
+            font-size: 0.88rem;
+        }
+
+        .no-result:hover { background: transparent !important; color: var(--text-light) !important; transform: none !important; }
+
+        /* ====== Modal ====== */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 1.2rem;
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show { opacity: 1; }
+
+        .modal-content {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 550px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: scaleIn 0.3s ease;
+            box-shadow: var(--shadow-xl);
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        .modal-header i { color: var(--primary); font-size: 1.2rem; }
+
+        .modal-close {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: var(--transition);
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid transparent;
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+            background: rgba(239,68,68,0.08);
+            border-color: var(--danger);
+        }
+
+        /* ====== Toast Notifications ====== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--bg-dark);
+            color: white;
+            padding: 0.9rem 1.8rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-xl);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.92rem;
+            min-width: 280px;
+            max-width: 420px;
+            animation: toastIn 0.4s cubic-bezier(0.68,-0.55,0.265,1.55);
+            pointer-events: auto;
+        }
+
+        .toast.removing { animation: toastOut 0.3s ease forwards; }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(30px) scale(0.9); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        }
+
+        @keyframes toastOut {
+            to { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.9); }
+        }
+
+        .toast.success { background: linear-gradient(135deg, var(--success), var(--success-dark)); }
+        .toast.error { background: linear-gradient(135deg, var(--danger), var(--danger-dark)); animation: toastIn 0.4s ease, shake 0.4s ease 0.4s; }
+        .toast.warning { background: linear-gradient(135deg, var(--warning), var(--warning-dark)); color: #1a202c; }
+
+        @keyframes shake {
+            0%,100% { transform: translateX(-50%) translateX(0); }
+            20%,60% { transform: translateX(-50%) translateX(-8px); }
+            40%,80% { transform: translateX(-50%) translateX(8px); }
+        }
+
+        /* ====== Confirm Dialog ====== */
+        .confirm-dialog {
+            background: var(--white);
+            padding: 2.2rem;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .confirm-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.2rem;
+            background: rgba(245,158,11,0.12);
+            color: var(--warning);
+        }
+
+        .confirm-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.7rem;
+        }
+
+        .confirm-message {
+            font-size: 0.92rem;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+            white-space: pre-line;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+        }
+
+        /* ====== Progress Bar ====== */
+        .progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.6s ease;
+        }
+
+        .progress-bar .fill.success { background: linear-gradient(90deg, var(--success), #34d399); }
+        .progress-bar .fill.warning { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+        .progress-bar .fill.danger { background: linear-gradient(90deg, var(--danger), #f87171); }
+
+        /* ====== Quick Actions ====== */
+        .quick-actions {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(37,99,235,0.03), rgba(124,58,237,0.03));
+            border-radius: var(--radius);
+            border: 1px solid rgba(37,99,235,0.08);
+        }
+
+        /* ====== Footer ====== */
+        .footer {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1e293b 100%);
+            padding: 2.2rem 1.5rem;
+            text-align: center;
+            margin-top: auto;
+            border-top: 3px solid rgba(255,255,255,0.08);
+        }
+
+        .footer p { color: #94a3b8; font-size: 0.84rem; line-height: 1.8; }
+
+        .qr-section {
+            margin-top: 1.4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .qr-section img {
+            width: 100px;
+            height: 100px;
+            border-radius: var(--radius-sm);
+            border: 3px solid rgba(255,255,255,0.15);
+            margin-bottom: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .qr-section img:hover {
+            transform: scale(1.08);
+            border-color: var(--primary);
+        }
+
+        .qr-section a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .qr-section a:hover { color: #93c5fd; }
+
+        /* ====== Empty State ====== */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            opacity: 0.25;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p { font-size: 0.92rem; }
+
+        /* ====== Responsive ====== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.7rem 1rem;
+                flex-wrap: wrap;
+                gap: 0.6rem;
+            }
+
+            .navbar-actions { width: 100%; justify-content: center; }
+
+            .tabs-nav { top: auto; position: relative; }
+
+            .tab-link { padding: 0.75rem 0.35rem; font-size: 0.75rem; }
+
+            .main-content { padding: 1rem; }
+
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+            .table-header { flex-direction: column; align-items: stretch; }
+
+            .quick-actions { flex-direction: column; }
+
+            .action-btns { flex-wrap: wrap; }
+
+            .modal-content { padding: 1.5rem; margin: 0.5rem; }
+        }
+
+        /* ====== Print Styles ====== */
+        @media print {
+            .navbar, .tabs-nav, .footer, .btn, .action-btns { display: none !important; }
+            .main-content { padding: 0; }
+            .table-box { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+<!-- ==================== LOADING OVERLAY ==================== -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loader"></div>
+    <div class="loading-text">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        جاري التحميل...
+    </div>
+</div>
+
+<!-- ==================== TOAST CONTAINER ==================== -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- LOGIN PAGE -->
-<div class="login-container" id="loginPage">
-<div class="login-card">
-<div class="login-logo">🏪</div>
-<h1 class="login-title">Axentro System</h1>
-<p class="login-subtitle">نظام إدارة التجار والمكن الاحترافي</p>
-<div class="login-input-group">
-<input type="password" class="login-input" id="loginPassword" placeholder="كلمة المرور" autofocus onkeypress="if(event.key==='Enter')handleLogin()">
-<i class="fas fa-lock login-input-icon"></i>
-</div>
-<button class="login-btn" onclick="handleLogin()"><i class="fas fa-sign-in-alt"></i> دخول</button>
-<p style="margin-top:18px;font-size:12px;color:#64748b">اضغط Enter أو اضغط الزر لتسجيل الدخول</p>
-<div style="margin-top:28px;padding-top:20px;border-top:1px solid #e2e8f0">
-<p style="font-size:11px;color:#64748b">© 2024 Axentro – All Rights Reserved</p>
-<p style="font-size:11px;color:#64748b">By Axentro Team</p>
-</div>
-<div style="margin-top:18px"><img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https://axentro-official.github.io/" alt="QR" style="width:90px;border-radius:12px"><p style="font-size:10px;color:#64748b;margin-top:8px">امسح للحصول على الروابط</p></div>
-</div>
+<!-- ==================== CONFIRM MODAL ==================== -->
+<div id="confirmModal" class="modal">
+    <div class="confirm-dialog">
+        <div class="confirm-icon" id="confirmIcon">
+            <i class="fas fa-question-circle"></i>
+        </div>
+        <h3 class="confirm-title" id="confirmTitle">تأكيد</h3>
+        <p class="confirm-message" id="confirmMessage">هل أنت متأكد؟</p>
+        <div class="confirm-buttons">
+            <button class="btn btn-secondary" onclick="closeConfirm()">إلغاء</button>
+            <button class="btn btn-danger" id="confirmBtn">تأكيد</button>
+        </div>
+    </div>
 </div>
 
-<!-- MAIN APP -->
-<div class="main-app" id="mainApp">
-<header class="app-header">
-<div class="header-brand"><div class="header-logo">A</div><span class="header-title">Axentro</span></div>
-<div class="status-badge"><span class="status-dot"></span> متصل</div>
-<div class="header-actions">
-<button class="header-btn" onclick="refreshData()"><i class="fas fa-sync-alt"></i> تحديث</button>
-<button class="header-btn" onclick="exportToExcel()"><i class="fas fa-file-export"></i> تصدير</button>
-<button class="header-btn" onclick="handleLogout()" style="background:rgba(239,68,68,.15);color:#ef4444"><i class="fas fa-sign-out-alt"></i> خروج</button>
-</div>
-</header>
-
-<nav class="sidebar-nav">
-<div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')"><i class="fas fa-home"></i> الرئيسية</div>
-<div class="nav-item" data-page="merchants" onclick="showPage('merchants')"><i class="fas fa-users"></i> التجار</div>
-<div class="nav-item" data-page="machines" onclick="showPage('machines')"><i class="fas fa-cash-register"></i> المكن</div>
-<div class="nav-item" data-page="transfers" onclick="showPage('transfers')"><i class="fas fa-exchange-alt"></i> التحويلات</div>
-<div class="nav-item" data-page="collections" onclick="showPage('collections')"><i class="fas fa-hand-holding-usd"></i> التحصيلات</div>
-<div class="nav-item" data-page="balance" onclick="showPage('balance')"><i class="fas fa-calculator"></i> كشف حساب</div>
-<div class="nav-item" data-page="requests" onclick="showPage('requests')"><i class="fas fa-bell"></i> الطلبات <span class="badge-count" id="requestBadge" style="background:rgba(239,68,68,.15);color:#ef4444;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700">0</span></div>
-<div class="nav-item" data-page="archive" onclick="showPage('archive')"><i class="fas fa-archive"></i> الأرشيف</div>
-</nav>
-
-<main class="main-content">
-
-<!-- DASHBOARD -->
-<div class="page" id="page-dashboard">
-<div class="section-card">
-<div class="section-header"><h3 class="section-title"><i class="fas fa-bolt"></i> إجراءات سريعة</h3></div>
-<div class="quick-actions">
-<div class="quick-action-btn" onclick="openTransferModal()"><i class="fas fa-exchange-alt"></i><span>تحويل جديد</span></div>
-<div class="quick-action-btn" onclick="openCollectionModal()"><i class="fas fa-hand-holding-usd"></i><span>تحصيل جديد</span></div>
-<div class="quick-action-btn" onclick="openMerchantModal()"><i class="fas fa-user-plus"></i><span>تاجر جديد</span></div>
-<div class="quick-action-btn" onclick="openMachineModal()"><i class="fas fa-plus-circle"></i><span>مكنة جديدة</span></div>
-</div>
+<!-- ==================== MAIN MODAL ==================== -->
+<div id="mainModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeMainModal()">&times;</span>
+        <div id="modalBodyContent"></div>
+    </div>
 </div>
 
-<div class="section-card">
-<div class="section-header"><h3 class="section-title"><i class="fas fa-users"></i> قائمة التجار</h3><button class="btn btn-primary btn-sm" onclick="openMerchantModal()"><i class="fas fa-plus"></i> إضافة</button></div>
-<div class="table-wrapper"><table class="data-table"><thead><tr><th>#</th><th>رقم التاجر</th><th>الاسم</th><th>الهاتف</th><th>المنطقة</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="merchantsTableBody"><tr><td colspan="7" style="text-align:center;color:#64748b;padding:30px">جاري التحميل...</td></tr></tbody></table></div>
-</div>
+<!-- ==================== LOGIN SECTION ==================== -->
+<div id="loginSection">
+    <div class="login-container">
+        <div class="login-logo">
+            <i class="fas fa-store"></i>
+        </div>
+        
+        <h1 class="login-title">Axentro System</h1>
+        <p class="login-subtitle">نظام إدارة التجار والمكن الاحترافي v3.0</p>
+        
+        <div class="form-group">
+            <label class="form-label">كلمة المرور <span class="required">*</span></label>
+            <div class="password-wrapper">
+                <input type="password" id="passwordInput" class="form-control" 
+                       placeholder="🔑 أدخل كلمة المرور" autocomplete="current-password"
+                       onkeypress="handleLoginKeypress(event)">
+                <button type="button" class="password-toggle" onclick="togglePassword()">
+                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                </button>
+            </div>
+        </div>
+        
+        <button class="btn btn-primary btn-block btn-lg" id="loginBtn" onclick="performLogin()">
+            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+        </button>
+        
+        <p style="margin-top: 1.3rem; font-size: 0.83rem; color: var(--text-light); text-align: center;">
+            <i class="fas fa-shield-alt"></i> اضغط Enter أو اضغط الزر للدخول
+        </p>
+    </div>
+
+    <footer style="background: transparent; margin-top: 2rem;">
+        <p style="color: var(--text-light); font-size: 0.82rem;">© 2024 Axentro – All Rights Reserved</p>
+        <div class="qr-section">
+            <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https://axentro-official.github.io/axentro-website/links.html" alt="QR Code">
+                <span><i class="fas fa-qrcode"></i> QR Scan Me</span>
+            </a>
+        </div>
+    </footer>
 </div>
 
-<!-- MERCHANTS -->
-<div class="page" id="page-merchants" style="display:none">
-<div class="section-card"><div class="section-header"><h3 class="section-title"><i class="fas fa-users"></i> إدارة التجار</h3><button class="btn btn-primary btn-sm" onclick="openMerchantModal()"><i class="fas fa-plus"></i> إضافة</button></div>
-<div class="table-wrapper"><table class="data-table"><thead><tr><th>#</th><th>رقم التاجر</th><th>الاسم</th><th>الهاتف</th><th>المنطقة</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="merchantsFullTableBody"><tr><td colspan="7" style="text-align:center;color:#64748b;padding:30px">جاري التحميل...</td></tr></tbody></table></div>
-</div>
-</div>
+<!-- ==================== APP CONTAINER ==================== -->
+<div id="appContainer">
 
-<!-- MACHINES -->
-<div class="page" id="page-machines" style="display:none">
-<div class="section-card"><div class="section-header"><h3 class="section-title"><i class="fas fa-cash-register"></i> إدارة المكن</h3><button class="btn btn-primary btn-sm" onclick="openMachineModal()"><i class="fas fa-plus"></i> إضافة</button></div>
-<div class="table-wrapper"><table class="data-table"><thead><tr><th>#</th><th>رقم المكنة</th><th>التاجر</th><th>التسلسلي</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="machinesTableBody"><tr><td colspan="6" style="text-align:center;color:#64748b;padding:30px">جاري التحميل...</td></tr></tbody></table></div>
-</div>
-</div>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <i class="fas fa-store"></i>
+            <span>Axentro</span>
+        </div>
+        <div class="navbar-actions">
+            <div id="connectionStatus" class="conn-status live">
+                <span class="conn-dot"></span>
+                <span>متصل</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="refreshAllData()" title="تحديث البيانات">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+            <button class="btn btn-success btn-sm" onclick="exportToExcel()" title="تصدير Excel">
+                <i class="fas fa-file-excel"></i> تصدير
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="confirmLogout()" title="تسجيل الخروج">
+                <i class="fas fa-sign-out-alt"></i> خروج
+            </button>
+        </div>
+    </nav>
 
-<!-- TRANSFERS -->
-<div class="page" id="page-transfers" style="display:none">
-<div class="section-card"><div class="section-header"><h3 class="section-title"><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3><button class="btn btn-primary btn-sm" onclick="openTransferModal()"><i class="fas fa-plus"></i> جديد</button></div>
-<div class="table-wrapper"><table class="data-table"><thead><tr><th>#</th><th>المرجعي</th><th>التاريخ</th><th>التاجر</th><th>القيمة</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="transfersTableBody"><tr><td colspan="7" style="text-align:center;color:#64748b;padding:30px">جاري التحميل...</td></tr></tbody></table></div>
-</div>
-</div>
+    <!-- Tabs -->
+    <div class="tabs-nav">
+        <div class="tab-link active" data-page="home" onclick="switchPage('home', this)">
+            <i class="fas fa-home"></i> الرئيسية
+        </div>
+        <div class="tab-link" data-page="merchants" onclick="switchPage('merchants', this)">
+            <i class="fas fa-users"></i> التجار
+        </div>
+        <div class="tab-link" data-page="machines" onclick="switchPage('machines', this)">
+            <i class="fas fa-cash-register"></i> المكن
+        </div>
+        <div class="tab-link" data-page="transfers" onclick="switchPage('transfers', this)">
+            <i class="fas fa-exchange-alt"></i> التحويلات
+        </div>
+        <div class="tab-link" data-page="collections" onclick="switchPage('collections', this)">
+            <i class="fas fa-hand-holding-usd"></i> التحصيلات
+        </div>
+        <div class="tab-link" data-page="statement" onclick="switchPage('statement', this)">
+            <i class="fas fa-file-invoice-dollar"></i> كشف حساب
+        </div>
+        <div class="tab-link" data-page="requests" onclick="switchPage('requests', this)">
+            <i class="fas fa-bell"></i> الطلبات
+            <span class="badge-count" id="pendingBadge">0</span>
+        </div>
+        <div class="tab-link" data-page="archive" onclick="switchPage('archive', this)">
+            <i class="fas fa-archive"></i> الأرشيف
+        </div>
+    </div>
 
-<!-- COLLECTIONS -->
-<div class="page" id="page-collections" style="display:none">
-<div class="section-card"><div class="section-header"><h3 class="section-title"><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3><button class="btn btn-primary btn-sm" onclick="openCollectionModal()"><i class="fas fa-plus"></i> جديد</button></div>
-<div class="table-wrapper"><table class="data-table"><thead><tr><th>#</th><th>المرجعي</th><th>التاريخ</th><th>التاجر</th><th>القيمة</th><th>النوع</th><th>إجراء</th></tr></thead><tbody id="collectionsTableBody"><tr><td colspan="7" style="text-align:center;color:#64748b;padding:30px">جاري التحميل...</td></tr></tbody></table></div>
-</div>
-</div>
+    <!-- Main Content -->
+    <div class="main-content">
 
-<!-- BALANCE -->
-<div class="page" id="page-balance" style="display:none">
-<div class="section-card"><div class="section-header"><h3 class="section-title"><i class="fas fa-calculator"></i> كشف حساب تاجر</h3></div>
-<div style="padding:22px">
-<div class="form-group" style="position:relative"><label class="form-label required">اختر التاجر</label>
-<input type="text" class="form-input" id="balanceMerchantSearch" placeholder="اكتب اسم أو رقم التاجر..." oninput="searchMerchantForBalance(this.value)">
-<div class="search-results" id="balanceSearchResults"></div>
-</div>
-<button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="loadMerchantBalance()"><i class="fas fa-search"></i> عرض</button>
-<div id="balanceResult" style="display:none;margin-top:22px">
-<div class="balance-display">
-<div class="balance-item"><label>إجمالي تحويلاته</label><value id="totalTransfers">0</value></div>
-<div class="balance-item"><label>إجمالي تحصيلاته</label><value id="totalCollections">0</value></div>
-<div class="balance-item negative"><label>المتبقي عليه</label><value id="remainingBalance">0</value></div>
-</div>
-<h4 style="margin:22px 0 14px;font-size:15px;color:#1d4ed8"><i class="fas fa-history"></i> الحركات</h4>
-<div class="table-wrapper" style="padding:0"><table class="data-table"><thead><tr><th>#</th><th>التاريخ</th><th>النوع</th><th>القيمة</th><th>المتبقي</th></tr></thead><tbody id="balanceTransactionsBody"><tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px">لا توجد حركات</td></tr></tbody></table></div>
-</div>
-</div>
-</div>
-</div>
+        <!-- ========== HOME PAGE ========== -->
+        <div id="page-home" class="page active">
+            <div class="stats-grid" id="dashboardStats"></div>
 
-<!-- REQUESTS -->
-<div class="page" id="page-requests" style="display:none">
-<div class="section-card"><div class="section-header"><h3 class="section-title"><i class="fas fa-bell"></i> طلبات التجار</h3><button class="btn btn-warning btn-sm" onclick="openRequestModal()"><i class="fas fa-plus"></i> طلب جديد</button></div>
-<div class="table-wrapper"><table class="data-table"><thead><tr><th>#</th><th>رقم الطلب</th><th>التاريخ</th><th>التاجر</th><th>النوع</th><th>المبلغ</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="requestsTableBody"><tr><td colspan="8" style="text-align:center;color:#64748b;padding:30px">جاري التحميل...</td></tr></tbody></table></div>
-</div>
-</div>
+            <div class="table-box">
+                <div class="table-header">
+                    <h3><i class="fas fa-bolt"></i> إجراءات سريعة</h3>
+                </div>
+                <div class="quick-actions">
+                    <button class="btn btn-success" onclick="openTransferModal()">
+                        <i class="fas fa-plus"></i> تحويل جديد
+                    </button>
+                    <button class="btn btn-primary" onclick="openCollectionModal()">
+                        <i class="fas fa-plus"></i> تحصيل جديد
+                    </button>
+                    <button class="btn btn-secondary" onclick="openMerchantModal()">
+                        <i class="fas fa-user-plus"></i> تاجر جديد
+                    </button>
+                    <button class="btn btn-secondary" onclick="openMachineModal()">
+                        <i class="fas fa-plus"></i> مكنة جديدة
+                    </button>
+                </div>
+            </div>
 
-<!-- ARCHIVE -->
-<div class="page" id="page-archive" style="display:none">
-<div class="section-card"><div class="section-header"><h3 class="section-title"><i class="fas fa-archive"></i> الأرشيف</h3><button class="btn btn-warning btn-sm" onclick="startNewMonthArchive()"><i class="fas fa-calendar-plus"></i> شهر جديد</button></div>
-<div class="table-wrapper"><table class="data-table"><thead><tr><th>#</th><th>الشهر</th><th>تحويلات</th><th>إجمالي</th><th>تحصيلات</th><th>إجمالي</th></tr></thead><tbody id="archiveTableBody"><tr><td colspan="6" style="text-align:center;color:#64748b;padding:30px">جاري التحميل...</td></tr></tbody></table></div>
-</div>
-</div>
+            <div class="table-box">
+                <div class="table-header">
+                    <h3><i class="fas fa-trophy"></i> أعلى المكن أداءً</h3>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>رقم المكنة</th>
+                                <th>التاجر</th>
+                                <th>النشاط</th>
+                                <th>التارجت</th>
+                                <th>التحقيق</th>
+                                <th>النسبة %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topMachinesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-</main>
-<footer class="app-footer"><p>© 2024 <a href="#">Axentro</a> – All Rights Reserved</p><p style="margin-top:5px">Powered by Axentro Engine v3.0</p></footer>
-</div>
+        <!-- ========== MERCHANTS PAGE ========== -->
+        <div id="page-merchants" class="page">
+            <div class="table-box">
+                <div class="table-header">
+                    <h3><i class="fas fa-users"></i> قائمة التجار</h3>
+                    <div class="table-actions">
+                        <input type="text" id="merchantSearch" class="form-control" placeholder="🔍 بحث..." 
+                               style="width:200px;" oninput="debounceSearch('merchant', this.value)">
+                        <select id="merchantStatusFilter" class="form-control" style="width:130px;" onchange="renderMerchants()">
+                            <option value="">كل الحالات</option>
+                            <option value="نشط">✅ نشط</option>
+                            <option value="غير نشط">⛔ غير نشط</option>
+                            <option value="موقوف">🚫 موقوف</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="openMerchantModal()">
+                            <i class="fas fa-plus"></i> إضافة
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>رقم التاجر</th>
+                                <th>الاسم</th>
+                                <th>النشاط</th>
+                                <th>الحساب</th>
+                                <th>الهاتف</th>
+                                <th>المنطقة</th>
+                                <th>الحالة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="merchantsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-<!-- MODALS -->
-<div class="modal-overlay" id="merchantModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-user-plus"></i> <span id="merchantModalTitle">إضافة تاجر</span></h3><button class="modal-close" onclick="closeModal('merchantModal')">&times;</button></div><div class="modal-body"><input type="hidden" id="merchantId"><div class="form-group"><label class="form-label required">رقم التاجر</label><input type="text" class="form-input" id="merchantCode" placeholder="T-001"></div><div class="form-group"><label class="form-label required">الاسم</label><input type="text" class="form-input" id="merchantName" placeholder="اسم التاجر"></div><div class="form-group"><label class="form-label">الهاتف</label><input type="tel" class="form-input" id="merchantPhone" placeholder="010xxxxxxxx"></div><div class="form-group"><label class="form-label">المنطقة</label><input type="text" class="form-input" id="merchantArea" placeholder="المنطقة"></div><div class="form-group"><label class="form-label">الحالة</label><select class="form-select" id="merchantStatus"><option value="نشط">نشط</option><option value="غير نشط">غير نشط</option></select></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('merchantModal')">إلغاء</button><button class="btn btn-primary" onclick="saveMerchant()">حفظ</button></div></div></div>
+        <!-- ========== MACHINES PAGE ========== -->
+        <div id="page-machines" class="page">
+            <div class="table-box">
+                <div class="table-header">
+                    <h3><i class="fas fa-cash-register"></i> المكن</h3>
+                    <div class="table-actions">
+                        <input type="text" id="machineSearch" class="form-control" placeholder="🔍 بحث..."
+                               style="width:200px;" oninput="debounceSearch('machine', this.value)">
+                        <select id="machineStatusFilter" class="form-control" style="width:130px;" onchange="renderMachines()">
+                            <option value="">كل الحالات</option>
+                            <option value="نشطة">✅ نشطة</option>
+                            <option value="متوقفة">⏸ متوقفة</option>
+                            <option value="صيانة">🔧 صيانة</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="openMachineModal()">
+                            <i class="fas fa-plus"></i> إضافة
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>رقم المكنة</th>
+                                <th>التاجر</th>
+                                <th>التسلسلي</th>
+                                <th>التارجت</th>
+                                <th>الحالة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="machinesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-<div class="modal-overlay" id="machineModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-cash-register"></i> <span id="machineModalTitle">إضافة مكنة</span></h3><button class="modal-close" onclick="closeModal('machineModal')">&times;</button></div><div class="modal-body"><input type="hidden" id="machineId"><div class="form-group"><label class="form-label required">التاجر</label><select class="form-select" id="machineMerchant"></select></div><div class="form-group"><label class="form-label required">رقم المكنة</label><input type="text" class="form-input" id="machineCode" placeholder="M-001"></div><div class="form-group"><label class="form-label">التسلسلي</label><input type="text" class="form-input" id="machineSerial" placeholder="SN123456"></div><div class="form-group"><label class="form-label">الحالة</label><select class="form-select" id="machineStatus"><option value="نشطة">نشطة</option><option value="صيانة">صيانة</option></select></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('machineModal')">إلغاء</button><button class="btn btn-primary" onclick="saveMachine()">حفظ</button></div></div></div>
+        <!-- ========== TRANSFERS PAGE ========== -->
+        <div id="page-transfers" class="page">
+            <div class="table-box">
+                <div class="table-header">
+                    <h3><i class="fas fa-exchange-alt"></i> سجل التحويلات</h3>
+                    <div class="table-actions">
+                        <input type="date" id="transferDateFrom" class="form-control" style="width:140px;" onchange="renderTransfers()">
+                        <input type="date" id="transferDateTo" class="form-control" style="width:140px;" onchange="renderTransfers()">
+                        <button class="btn btn-success btn-sm" onclick="openTransferModal()">
+                            <i class="fas fa-plus"></i> تحويل جديد
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>المرجعي</th>
+                                <th>التاريخ</th>
+                                <th>الوقت</th>
+                                <th>التاجر</th>
+                                <th>النوع</th>
+                                <th>القيمة</th>
+                                <th>ملاحظات</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transfersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-<div class="modal-overlay" id="transferModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-exchange-alt"></i> تحويل جديد</h3><button class="modal-close" onclick="closeModal('transferModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label required">التاجر</label><select class="form-select" id="transferMerchant"></select></div><div class="form-group"><label class="form-label required">القيمة</label><input type="number" class="form-input" id="transferAmount" placeholder="0.00" step="0.01"></div><div class="form-group"><label class="form-label">ملاحظات</label><textarea class="form-input" id="transferNotes" placeholder="ملاحظات..."></textarea></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('transferModal')">إلغاء</button><button class="btn btn-primary" onclick="saveTransfer()">حفظ</button></div></div></div>
+        <!-- ========== COLLECTIONS PAGE ========== -->
+        <div id="page-collections" class="page">
+            <div class="table-box">
+                <div class="table-header">
+                    <h3><i class="fas fa-hand-holding-usd"></i> سجل التحصيلات</h3>
+                    <button class="btn btn-primary btn-sm" onclick="openCollectionModal()">
+                        <i class="fas fa-plus"></i> تحصيل جديد
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>المرجعي</th>
+                                <th>التاريخ</th>
+                                <th>الوقت</th>
+                                <th>التاجر</th>
+                                <th>القيمة</th>
+                                <th>النوع</th>
+                                <th>المتبقي</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="collectionsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-<div class="modal-overlay" id="collectionModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-hand-holding-usd"></i> تحصيل جديد</h3><button class="modal-close" onclick="closeModal('collectionModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label required">التاجر</label><select class="form-select" id="collectionMerchant"></select></div><div class="form-group"><label class="form-label required">القيمة</label><input type="number" class="form-input" id="collectionAmount" placeholder="0.00" step="0.01"></div><div class="form-group"><label class="form-label">ملاحظات</label><textarea class="form-input" id="collectionNotes" placeholder="ملاحظات..."></textarea></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('collectionModal')">إلغاء</button><button class="btn btn-success" onclick="saveCollection()">حفظ</button></div></div></div>
+        <!-- ========== STATEMENT PAGE ========== -->
+        <div id="page-statement" class="page">
+            <div class="table-box">
+                <div class="table-header">
+                    <h3><i class="fas fa-file-invoice-dollar"></i> كشف حساب تاجر</h3>
+                    <div class="table-actions">
+                        <div style="position:relative;width:220px;">
+                            <input type="text" id="stmtMerchantSearch" class="form-control" placeholder="🔍 ابحث عن تاجر..."
+                                   autocomplete="off" oninput="handleMerchantLookup(this.value, 'stmtResults', 'stmtMerchantId')">
+                            <input type="hidden" id="stmtMerchantId">
+                            <div id="stmtResults" class="search-results"></div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="loadStatement()">
+                            <i class="fas fa-search"></i> عرض
+                        </button>
+                    </div>
+                </div>
 
-<div class="modal-overlay" id="requestModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-bell"></i> طلب جديد</h3><button class="modal-close" onclick="closeModal('requestModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label required">التاجر</label><select class="form-select" id="requestMerchant"></select></div><div class="form-group"><label class="form-label required">نوع الطلب</label><select class="form-select" id="requestType"><option value="رصيد خدمات">رصيد خدمات</option><option value="صيانة">صيانة</option><option value="تجديد">تجديد</option></select></div><div class="form-group"><label class="form-label required">المبلغ</label><input type="number" class="form-input" id="requestAmount" placeholder="0.00" step="0.01"></div><div class="form-group"><label class="form-label">ملاحظات</label><textarea class="form-input" id="requestNotes" placeholder="ملاحظات..."></textarea></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('requestModal')">إلغاء</button><button class="btn btn-warning" onclick="saveRequest()">إرسال</button></div></div></div>
+                <div style="padding:1.2rem;">
+                    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <span class="stat-card-title">إجمالي تحويلاته</span>
+                                <div class="stat-card-icon danger"><i class="fas fa-arrow-up"></i></div>
+                            </div>
+                            <div class="stat-card-value" id="stmtTotalTransfers">0 <span class="currency">جنيه</span></div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-card-header">
+                                <span class="stat-card-title">إجمالي تحصيلاته</span>
+                                <div class="stat-card-icon"><i class="fas fa-arrow-down"></i></div>
+                            </div>
+                            <div class="stat-card-value" id="stmtTotalCollections">0 <span class="currency">جنيه</span></div>
+                        </div>
+                        <div class="stat-card danger">
+                            <div class="stat-card-header">
+                                <span class="stat-card-title">الرصيد المتبقي</span>
+                                <div class="stat-card-icon"><i class="fas fa-coins"></i></div>
+                            </div>
+                            <div class="stat-card-value" id="stmtRemaining">0 <span class="currency">جنيه</span></div>
+                        </div>
+                    </div>
 
-<div class="confirm-overlay" id="confirmDialog"><div class="confirm-dialog"><div class="confirm-icon danger" id="confirmIcon"><i class="fas fa-trash-alt"></i></div><h3 id="confirmTitle">تأكيد</h3><p id="confirmMessage">هل أنت متأكد؟</p><div class="confirm-buttons"><button class="btn btn-outline" onclick="closeConfirm()">إلغاء</button><button class="btn btn-danger" id="confirmBtn" onclick="confirmAction()">تأكيد</button></div></div></div>
+                    <h4 style="margin:1.3rem 0 1rem;color:var(--text-light);font-size:0.9rem;">
+                        <i class="fas fa-history"></i> تفاصيل الحركات (الأقدم أولاً)
+                    </h4>
 
-<audio id="doneSound" src="done.mp3" preload="auto"></audio>
-<audio id="errorSound" src="login-error.mp3" preload="auto"></audio>
-<audio id="successSound" src="login-success.mp3" preload="auto"></audio>
+                    <div class="table-container">
+                        <table style="min-width:680px;">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>التاريخ</th>
+                                    <th>الوقت</th>
+                                    <th>النوع</th>
+                                    <th>المبلغ</th>
+                                    <th>الرصيد</th>
+                                    <th>ملاحظات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statementTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- ========== REQUESTS PAGE ========== -->
+        <div id="page-requests" class="page">
+            <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+                <div class="stat-card purple">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">إجمالي الطلبات</span>
+                        <div class="stat-card-icon"><i class="fas fa-inbox"></i></div>
+                    </div>
+                    <div class="stat-card-value" id="reqTotalCount">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">طلبات معلقة</span>
+                        <div class="stat-card-icon"><i class="fas fa-clock"></i></div>
+                    </div>
+                    <div class="stat-card-value" id="reqPendingCount">0</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">إجمالي المبالغ</span>
+                        <div class="stat-card-icon"><i class="fas fa-coins"></i></div>
+                    </div>
+                    <div class="stat-card-value" id="reqTotalAmount">0 <span class="currency">جنيه</span></div>
+                </div>
+            </div>
+
+            <div class="table-box">
+                <div class="table-header">
+                    <h3><i class="fas fa-bell"></i> طلبات التجار</h3>
+                    <div class="table-actions">
+                        <select id="requestStatusFilter" class="form-control" style="width:140px;" onchange="renderRequests()">
+                            <option value="">كل الحالات</option>
+                            <option value="pending">⏳ معلقة</option>
+                            <option value="محوّل">🔄 محوّل</option>
+                            <option value="مكتمل">✅ مكتمل</option>
+                            <option value="مرفوض">❌ مرفوض</option>
+                        </select>
+                        <input type="text" id="requestSearch" class="form-control" placeholder="بحث..." 
+                               style="width:170px;" oninput="debounceSearch('request', this.value)">
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>رقم الطلب</th>
+                                <th>التاريخ</th>
+                                <th>الوقت</th>
+                                <th>التاجر</th>
+                                <th>نوع الطلب</th>
+                                <th>المبلغ</th>
+                                <th>المديونية</th>
+                                <th>الحالة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== ARCHIVE PAGE ========== -->
+        <div id="page-archive" class="page">
+            <div class="table-box">
+                <div class="table-header">
+                    <h3><i class="fas fa-archive"></i> الأرشيف الشهري</h3>
+                    <button class="btn btn-danger btn-sm" onclick="confirmCloseMonth()">
+                        <i class="fas fa-calendar-check"></i> إغلاق شهر
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الشهر</th>
+                                <th>تحويلات</th>
+                                <th>إجمالي التحويلات</th>
+                                <th>تحصيلات</th>
+                                <th>إجمالي التحصيلات</th>
+                                <th>المتبقي</th>
+                                <th>حذف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="archiveTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- End Main Content -->
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2024 Axentro – All Rights Reserved</p>
+        <p style="font-size:0.78rem;margin-top:0.5rem;">Powered by Axentro Engine v3.0 Professional</p>
+        <div class="qr-section">
+            <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=105x105&data=https://axentro-official.github.io/axentro-website/links.html" alt="QR Code">
+                <span><i class="fas fa-qrcode"></i> QR Code Links</span>
+            </a>
+        </div>
+    </footer>
+
+</div><!-- End App Container -->
+
+<!-- ==================== JAVASCRIPT ==================== -->
 <script>
-// ============================================
-// CONFIGURATION
-// ============================================
-var CONFIG = {
-  SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
-  SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
-  EMAIL_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec',
-  SECRET_KEY: 'axentro2024secure',
-  PASSWORD: 'axentro'
+// ============================================================
+// ⚙️ CONFIGURATION & INITIALIZATION
+// ============================================================
+
+const CONFIG = {
+    SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
+    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
+    EMAIL_ENDPOINT: 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec',
+    SESSION_DURATION: 24 * 60 * 60 * 1000, // 24 hours
+    AUTO_REFRESH_INTERVAL: 300000, // 5 minutes
 };
 
-// Initialize Supabase
-var supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+let supabase = null;
+let DB = { merchants: [], machines: [], transfers: [], collections: [], requests: [], archives: [] };
+let searchTerms = { merchant: '', machine: '', request: '' };
+let confirmCallback = null;
 
-// State
-var state = {
-  merchants: [],
-  machines: [],
-  transfers: [],
-  collections: [],
-  requests: [],
-  selectedMerchant: null,
-  confirmCallback: null
-};
-
-// ============================================
-// UTILITIES
-// ============================================
-function showLoading(){document.getElementById('loadingOverlay').style.display='flex'}
-function hideLoading(){document.getElementById('loadingOverlay').style.display='none'}
-function playSound(n){try{var s=document.getElementById(n+'Sound');if(s){s.currentTime=0;s.play().catch(function(){})}}catch(e){}}
-function showToast(msg,type,title){type=type||'success';var c=document.getElementById('toastContainer');var d=document.createElement('div');d.className='toast '+type;var icons={success:'✅',error:'❌',warning:'⚠️'};d.innerHTML='<span class="toast-icon">'+icons[type]+'</span><div class="toast-message">'+(title?'<strong>'+title+'</strong>':'')+'<small>'+msg+'</small></div><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>';c.appendChild(d);setTimeout(function(){d.remove()},4000)}
-function generateRef(p){var n=new Date();return p+'-'+n.getFullYear()+String(n.getMonth()+1).padStart(2,'0')+n.getDate().toString().padStart(2,'0')+'-'+n.getHours().toString().padStart(2,'0')+n.getMinutes().toString().padStart(2,'0')+'-'+Math.floor(Math.random()*9000+1000)}
-function formatCurrency(n){return Number(n||0).toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
-function formatDate(d){if(!d)return'-';return new Date(d).toLocaleDateString('ar-EG',{year:'numeric',month:'short',day:'numeric'})}
-
-// ============================================
-// AUTH
-// ============================================
-function handleLogin(){
-  var p=document.getElementById('loginPassword').value;
-  if(p===CONFIG.PASSWORD){
-    playSound('success');
-    document.getElementById('loginPage').style.display='none';
-    document.getElementById('mainApp').style.display='flex';
-    initApp();
-  }else{
-    playSound('error');
-    document.getElementById('loginPassword').classList.add('shake');
-    setTimeout(function(){document.getElementById('loginPassword').classList.remove('shake')},500);
-    showToast('كلمة مرور غير صحيحة','error');
-  }
-}
-function handleLogout(){
-  document.getElementById('mainApp').style.display='none';
-  document.getElementById('loginPage').style.display='flex';
-  document.getElementById('loginPassword').value='';
-}
-
-// ============================================
-// NAVIGATION
-// ============================================
-function showPage(page){
-  state.currentPage=page;
-  document.querySelectorAll('.page').forEach(function(p){p.style.display='none'});
-  var el=document.getElementById('page-'+page);
-  if(el)el.style.display='block';
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.page===page)});
-  switch(page){
-    case'dashboard':loadDashboard();break;
-    case'merchants':loadMerchants();break;
-    case'machines':loadMachines();break;
-    case'transfers':loadTransfers();break;
-    case'collections':loadCollections();break;
-    case'requests':loadRequests();break;
-    case'archive':loadArchives();break;
-  }
-}
-
-// ============================================
-// MODALS
-// ============================================
-function openModal(id){document.getElementById(id).classList.add('active');document.body.style.overflow='hidden'}
-function closeModal(id){document.getElementById(id).classList.remove('active');document.body.style.overflow=''}
-document.querySelectorAll('.modal-overlay').forEach(function(m){m.addEventListener('click',function(e){if(e.target===this)closeModal(this.id)})});
-function openMerchantModal(id){
-  document.getElementById('merchantModalTitle').textContent=id?'تعديل تاجر':'إضافة تاجر';
-  document.getElementById('merchantId').value='';
-  document.getElementById('merchantCode').value='';
-  document.getElementById('merchantName').value='';
-  document.getElementById('merchantPhone').value='';
-  document.getElementById('merchantArea').value='';
-  document.getElementById('merchantStatus').value='نشط';
-  if(id){
-    var m=state.merchants.find(function(x){return x.id===id});
-    if(m){
-      document.getElementById('merchantId').value=m.id;
-      document.getElementById('merchantCode').value=m.code||'';
-      document.getElementById('merchantName').value=m.name||'';
-      document.getElementById('merchantPhone').value=m.phone||'';
-      document.getElementById('merchantArea').value=m.area||'';
-      document.getElementById('merchantStatus').value=m.status||'نشط';
+// Initialize Supabase Client
+function initSupabase() {
+    try {
+        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        console.log('✅ Supabase client initialized successfully');
+        return true;
+    } catch (e) {
+        console.error('❌ Supabase initialization error:', e);
+        return false;
     }
-  }
-  openModal('merchantModal');
 }
-function openMachineModal(id){
-  populateMerchants('machineMerchant');
-  document.getElementById('machineModalTitle').textContent=id?'تعديل مكنة':'إضافة مكنة';
-  document.getElementById('machineId').value='';
-  document.getElementById('machineCode').value='';
-  document.getElementById('machineSerial').value='';
-  document.getElementById('machineStatus').value='نشطة';
-  if(id){
-    var m=state.machines.find(function(x){return x.id===id});
-    if(m){
-      document.getElementById('machineId').value=m.id;
-      document.getElementById('machineMerchant').value=m.merchant_id||'';
-      document.getElementById('machineCode').value=m.code||'';
-      document.getElementById('machineSerial').value=m.serial||'';
-      document.getElementById('machineStatus').value=m.status||'نشطة';
+
+// ============================================================
+// 🔐 AUTHENTICATION SYSTEM
+// ============================================================
+
+async function performLogin() {
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const password = passwordInput?.value?.trim();
+
+    if (!password) {
+        showToast('⚠️ يرجى إدخال كلمة المرور', 'warning');
+        shakeElement(passwordInput);
+        return;
     }
-  }
-  openModal('machineModal');
-}
-function openTransferModal(){populateMerchants('transferMerchant');document.getElementById('transferAmount').value='';document.getElementById('transferNotes').value='';openModal('transferModal')}
-function openCollectionModal(){populateMerchants('collectionMerchant');document.getElementById('collectionAmount').value='';document.getElementById('collectionNotes').value='';openModal('collectionModal')}
-function openRequestModal(){populateMerchants('requestMerchant');document.getElementById('requestType').value='رصيد خدمات';document.getElementById('requestAmount').value='';document.getElementById('requestNotes').value='';openModal('requestModal')}
-function populateMerchants(selId){
-  var sel=document.getElementById(selId);
-  sel.innerHTML='<option value="">اختر التاجر...</option>';
-  state.merchants.forEach(function(m){sel.innerHTML+='<option value="'+m.id+'">'+(m.code||'')+' - '+(m.name||'')+'</option>'});
-}
-function showConfirm(title,msg,cb){
-  document.getElementById('confirmTitle').textContent=title;
-  document.getElementById('confirmMessage').textContent=msg;
-  state.confirmCallback=cb;
-  document.getElementById('confirmDialog').classList.add('active');
-}
-function closeConfirm(){document.getElementById('confirmDialog').classList.remove('active');state.confirmCallback=null}
-function confirmAction(){if(state.confirmCallback)state.confirmCallback();closeConfirm()}
 
-// Search
-function searchMerchantForBalance(q){
-  var r=document.getElementById('balanceSearchResults');
-  if(!q||q.length<2){r.classList.remove('active');r.innerHTML='';return}
-  var f=state.merchants.filter(function(m){return(m.name||'').includes(q)||(m.code||'').includes(q)});
-  if(!f.length){r.innerHTML='<div class="no-result">لا توجد نتائج</div>'}
-  else{r.innerHTML=f.map(function(m){return'<div onclick="selectMerchantForBalance(\''+m.id+'\')"><span>'+m.name+'</span><span style="font-size:11px;opacity:.7;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px">'+m.code+'</span></div>'}).join('')}
-  r.classList.add('active');
-}
-function selectMerchantForBalance(id){
-  state.selectedMerchant=id;
-  var m=state.merchants.find(function(x){return x.id===id});
-  document.getElementById('balanceMerchantSearch').value=m?m.name+' ('+m.code+')':'';
-  document.getElementById('balanceSearchResults').classList.remove('active');
-}
-document.addEventListener('click',function(e){if(!e.target.closest('#balanceMerchantSearch')&&!e.target.closest('#balanceSearchResults'))document.getElementById('balanceSearchResults').classList.remove('active')});
+    // Disable button and show loading
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+    showLoading(true);
 
-// ============================================
-// DATA LOADING
-// ============================================
-async function initApp(){
-  showLoading();
-  try{
-    await Promise.all([loadMerchantsData(),loadMachinesData(),loadTransfersData(),loadCollectionsData(),loadRequestsData(),loadArchivesData()]);
-    loadDashboard();
-  }catch(e){console.error('Init error:',e);showToast('خطأ في تحميل البيانات','error')}
-  hideLoading();
-}
-function refreshData(){playSound('scan');showToast('جاري التحديث...','warning');initApp()}
+    try {
+        const { data, error } = await supabase.rpc('check_admin_login', { p_password: password });
 
-async function loadMerchantsData(){
-  var r=await supabase.from('merchants').select('*').order('created_at',{ascending:false});
-  if(r.error){console.error('Merchants:',r.error);return}
-  state.merchants=r.data||[];
-}
-async function loadMachinesData(){
-  var r=await supabase.from('machines').select('*,merchants(name,code)').order('created_at',{ascending:false});
-  if(r.error){console.error('Machines:',r.error);return}
-  state.machines=r.data||[];
-}
-async function loadTransfersData(){
-  var r=await supabase.from('transfers').select('*,merchants(name,code)').order('created_at',{ascending:false});
-  if(r.error){console.error('Transfers:',r.error);return}
-  state.transfers=r.data||[];
-}
-async function loadCollectionsData(){
-  var r=await supabase.from('collections').select('*,merchants(name,code)').order('created_at',{ascending:false});
-  if(r.error){console.error('Collections:',r.error);return}
-  state.collections=r.data||[];
-}
-async function loadRequestsData(){
-  var r=await supabase.from('requests').select('*,merchants(name,code,phone,area,status)').order('created_at',{ascending:false});
-  if(r.error){console.error('Requests:',r.error);return}
-  state.requests=r.data||[];
-  var pending=(state.requests||[]).filter(function(r){return r.status==='معلق'||r.status==='pending'}).length;
-  document.getElementById('requestBadge').textContent=pending;
-}
-async function loadArchivesData(){
-  var r=await supabase.from('archives').select('*').order('month',{ascending:false});
-  if(r.error){console.error('Archives:',r.error);return}
-  state.archives=r.data||[];
+        if (error) throw new Error(error.message);
+
+        if (data && data.success) {
+            // Success
+            localStorage.setItem('axentro_auth', JSON.stringify({
+                loggedIn: true,
+                timestamp: Date.now(),
+                sessionExpiry: Date.now() + CONFIG.SESSION_DURATION
+            }));
+
+            showToast('🎉 مرحباً بك في النظام!', 'success');
+
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'flex';
+
+            await refreshAllData();
+        } else {
+            showToast(data?.message || '❌ كلمة المرور غير صحيحة', 'error');
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+    } catch (err) {
+        console.error('❌ Login error:', err);
+        showToast('❌ ' + err.message, 'error');
+    } finally {
+        showLoading(false);
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+    }
 }
 
-// ============================================
-// MERCHANTS CRUD
-// ============================================
-async function loadMerchants(){
-  showLoading();await loadMerchantsData();
-  var tb=document.getElementById('merchantsTableBody');
-  var tb2=document.getElementById('merchantsFullTableBody');
-  if(!state.merchants.length){
-    tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:30px">لا يوجد تجار</td></tr>';
-    tb2.innerHTML=tb.innerHTML;
-    hideLoading();return;
-  }
-  var html=state.merchants.map(function(m,i){
-    return'<tr><td><span class="table-number">'+(i+1)+'</span></td><td><strong>'+(m.code||'-')+'</strong></td><td>'+(m.name||'-')+'</td><td>'+(m.phone||'-')+'</td><td>'+(m.area||'-')+'</td><td>'+(m.status==='نشط'?'<span class="status-active">✅ نشط</span>':'<span class="status-inactive">⚠️ '+(m.status||'-')+'</span>')+'</td><td><div class="action-btns"><button class="action-btn action-btn-edit" onclick="openMerchantModal(\''+m.id+'\')" title="تعديل"><i class="fas fa-edit"></i></button><button class="action-btn action-btn-delete" onclick="deleteMerchant(\''+m.id+'\')" title="حذف"><i class="fas fa-trash"></i></button></div></td></tr>';
-  }).join('');
-  tb.innerHTML=html;tb2.innerHTML=html;
-  hideLoading();
-}
-async function saveMerchant(){
-  var id=document.getElementById('merchantId').value;
-  var data={code:document.getElementById('merchantCode').value.trim(),name:document.getElementById('merchantName').value.trim(),phone:document.getElementById('merchantPhone').value.trim(),area:document.getElementById('merchantArea').value.trim(),status:document.getElementById('merchantStatus').value};
-  if(!data.code||!data.name){showToast('الرمز والاسم مطلوبان','error');return}
-  showLoading();
-  var r;
-  if(id){r=await supabase.from('merchants').update(data).eq('id',id).select()}
-  else{data.created_at=new Date().toISOString();r=await supabase.from('merchants').insert(data).select()}
-  if(r.error){hideLoading();showToast(r.error.message,'error');return}
-  playSound('done');closeModal('merchantModal');showToast(id?'تم التعديل':'تم الإضافة','success');loadMerchants();loadDashboard();
-}
-async function deleteMerchant(id){
-  showConfirm('حذف تاجر','هل أنت متأكد؟',async function(){
-    showLoading();
-    var r=await supabase.from('merchants').delete().eq('id',id);
-    hideLoading();
-    if(r.error){showToast(r.error.message,'error');return}
-    playSound('done');showToast('تم الحذف','success');loadMerchants();loadDashboard();
-  });
+function handleLoginKeypress(e) {
+    if (e.key === 'Enter') e.preventDefault(), performLogin();
 }
 
-// ============================================
-// MACHINES CRUD
-// ============================================
-async function loadMachines(){
-  showLoading();await loadMachinesData();
-  var tb=document.getElementById('machinesTableBody');
-  if(!state.machines.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#64748b;padding:30px">لا توجد مكنات</td></tr>';hideLoading();return}
-  tb.innerHTML=state.machines.map(function(m,i){
-    return'<tr><td><span class="table-number">'+(i+1)+'</span></td><td><strong>'+(m.code||'-')+'</strong></td><td>'+(m.merchants?.name||'-')+'</td><td><code style="font-size:11px;background:#f1f5f9;padding:2px 6px;border-radius:4px">'+(m.serial||'-')+'</code></td><td>'+(m.status==='نشطة'||m.status==='نشط'?'<span class="status-active">✅ نشطة</span>':'<span class="status-inactive">⚠️ '+(m.status||'-')+'</span>')+'</td><td><div class="action-btns"><button class="action-btn action-btn-edit" onclick="openMachineModal(\''+m.id+'\')"><i class="fas fa-edit"></i></button><button class="action-btn action-btn-delete" onclick="deleteMachine(\''+m.id+'\')"><i class="fas fa-trash"></i></button></div></td></tr>';
-  }).join('');
-  hideLoading();
-}
-async function saveMachine(){
-  var id=document.getElementById('machineId').value;
-  var data={merchant_id:document.getElementById('machineMerchant').value,code:document.getElementById('machineCode').value.trim(),serial:document.getElementById('machineSerial').value.trim(),status:document.getElementById('machineStatus').value};
-  if(!data.merchant_id||!data.code){showToast('التاجر ورقم المكنة مطلوبان','error');return}
-  showLoading();
-  var r;
-  if(id){r=await supabase.from('machines').update(data).eq('id',id).select()}
-  else{data.created_at=new Date().toISOString();r=await supabase.from('machines').insert(data).select()}
-  if(r.error){hideLoading();showToast(r.error.message,'error');return}
-  playSound('done');closeModal('machineModal');showToast(id?'تم التعديل':'تم الإضافة','success');loadMachines();loadDashboard();
-}
-async function deleteMachine(id){
-  showConfirm('حذف مكنة','هل أنت متأكد؟',async function(){
-    showLoading();
-    var r=await supabase.from('machines').delete().eq('id',id);
-    hideLoading();
-    if(r.error){showToast(r.error.message,'error');return}
-    playSound('done');showToast('تم الحذف','success');loadMachines();loadDashboard();
-  });
+function togglePassword() {
+    const input = document.getElementById('passwordInput');
+    const icon = document.getElementById('togglePasswordIcon');
+    if (!input || !icon) return;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+    setTimeout(() => input.focus(), 100);
 }
 
-// ============================================
-// TRANSFERS CRUD
-// ============================================
-async function loadTransfers(){
-  showLoading();await loadTransfersData();
-  var tb=document.getElementById('transfersTableBody');
-  if(!state.transfers.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:30px">لا توجد تحويلات</td></tr>';hideLoading();return}
-  tb.innerHTML=state.transfers.map(function(t,i){
-    return'<tr><td><span class="table-number">'+(i+1)+'</span></td><td><code style="font-size:11px;background:#f1f5f9;padding:2px 6px;border-radius:4px">'+(t.ref||'-')+'</code></td><td>'+formatDate(t.created_at)+'</td><td>'+(t.merchants?.name||'-')+'</td><td class="amount-negative">'+formatCurrency(t.amount)+' ج.م</td><td>'+(t.notes||'-')+'</td><td><button class="action-btn action-btn-delete" onclick="deleteTransfer(\''+t.id+'\')"><i class="fas fa-trash"></i></button></td></tr>';
-  }).join('');
-  hideLoading();
-}
-async function saveTransfer(){
-  var data={merchant_id:document.getElementById('transferMerchant').value,ref:generateRef('TRN'),amount:parseFloat(document.getElementById('transferAmount').value)||0,notes:document.getElementById('transferNotes').value.trim()};
-  if(!data.merchant_id||!data.amount||data.amount<=0){showToast('اختر التاجر وأدخل المبلغ','error');return}
-  showLoading();data.created_at=new Date().toISOString();
-  var r=await supabase.from('transfers').insert(data).select();
-  if(r.error){hideLoading();showToast(r.error.message,'error');return}
-  playSound('done');closeModal('transferModal');showToast('تم إضافة التحويل','success');loadTransfers();loadDashboard();hideLoading();
-}
-async function deleteTransfer(id){
-  showConfirm('حذف تحويل','هل أنت متأكد؟',async function(){
-    showLoading();
-    var r=await supabase.from('transfers').delete().eq('id',id);
-    hideLoading();
-    if(r.error){showToast(r.error.message,'error');return}
-    playSound('done');showToast('تم الحذف','success');loadTransfers();loadDashboard();
-  });
+function checkSession() {
+    const authData = localStorage.getItem('axentro_auth');
+    if (!authData) return false;
+
+    try {
+        const { loggedIn, sessionExpiry } = JSON.parse(authData);
+        if (loggedIn && Date.now() < sessionExpiry) return true;
+    } catch (e) {}
+
+    localStorage.removeItem('axentro_auth');
+    return false;
 }
 
-// ============================================
-// COLLECTIONS CRUD
-// ============================================
-async function loadCollections(){
-  showLoading();await loadCollectionsData();
-  var tb=document.getElementById('collectionsTableBody');
-  if(!state.collections.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:30px">لا توجد تحصيلات</td></tr>';hideLoading();return}
-  tb.innerHTML=state.collections.map(function(c,i){
-    return'<tr><td><span class="table-number">'+(i+1)+'</span></td><td><code style="font-size:11px;background:#f1f5f9;padding:2px 6px;border-radius:4px">'+(c.ref||'-')+'</code></td><td>'+formatDate(c.created_at)+'</td><td>'+(c.merchants?.name||'-')+'</td><td class="amount-positive">'+formatCurrency(c.amount)+' ج.م</td><td>'+(c.type||'-')+'</td><td><button class="action-btn action-btn-delete" onclick="deleteCollection(\''+c.id+'\')"><i class="fas fa-trash"></i></button></td></tr>';
-  }).join('');
-  hideLoading();
-}
-async function saveCollection(){
-  var data={merchant_id:document.getElementById('collectionMerchant').value,ref:generateRef('COL'),amount:parseFloat(document.getElementById('collectionAmount').value)||0,notes:document.getElementById('collectionNotes').value.trim()};
-  if(!data.merchant_id||!data.amount||data.amount<=0){showToast('اختر التاجر وأدخل المبلغ','error');return}
-  showLoading();data.created_at=new Date().toISOString();
-  var r=await supabase.from('collections').insert(data).select();
-  if(r.error){hideLoading();showToast(r.error.message,'error');return}
-  playSound('done');closeModal('collectionModal');showToast('تم إضافة التحصيل','success');loadCollections();loadDashboard();hideLoading();
-}
-async function deleteCollection(id){
-  showConfirm('حذف تحصيل','هل أنت متأكد؟',async function(){
-    showLoading();
-    var r=await supabase.from('collections').delete().eq('id',id);
-    hideLoading();
-    if(r.error){showToast(r.error.message,'error');return}
-    playSound('done');showToast('تم الحذف','success');loadCollections();loadDashboard();
-  });
+function confirmLogout() {
+    showConfirm('هل تريد تسجيل الخروج من النظام؟', async () => {
+        localStorage.removeItem('axentro_auth');
+        showToast('👋 تم تسجيل الخروج بنجاح', 'success');
+        setTimeout(() => location.reload(), 500);
+    }, 'نعم، سجل خروجي');
 }
 
-// ============================================
-// REQUESTS CRUD + EMAIL
-// ============================================
-async function loadRequests(){
-  showLoading();await loadRequestsData();
-  var tb=document.getElementById('requestsTableBody');
-  if(!state.requests.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:#64748b;padding:30px">لا توجد طلبات</td></tr>';hideLoading();return}
-  tb.innerHTML=state.requests.map(function(r,i){
-    return'<tr><td><span class="table-number">'+(i+1)+'</span></td><td><code style="font-size:11px;background:#f1f5f9;padding:2px 6px;border-radius:4px">'+(r.code||'-')+'</code></td><td>'+formatDate(r.created_at)+'</td><td>'+(r.merchants?.name||'-')+'</td><td>'+(r.request_type||r.type||'-')+'</td><td class="amount-negative">'+formatCurrency(r.amount)+' ج.م</td><td>'+(r.status==='مكتمل'||r.status==='approved'?'<span class="status-active">✅ مكتمل</span>':r.status==='ملغي'?'<span class="status-inactive">❌ ملغي</span>':'<span class="status-pending">⏰ معلق</span>')+'</td><td><div class="action-btns"><button class="action-btn action-btn-view" onclick="approveRequest(\''+r.id+'\')" title="موافقة"><i class="fas fa-check"></i></button><button class="action-btn action-btn-delete" onclick="deleteRequest(\''+r.id+'\')"><i class="fas fa-trash"></i></button></div></td></tr>';
-  }).join('');
-  hideLoading();
-}
-async function saveRequest(){
-  var merchantId=document.getElementById('requestMerchant').value;
-  var amount=parseFloat(document.getElementById('requestAmount').value);
-  if(!merchantId||!amount||amount<=0){showToast('اختر التاجر وأدخل المبلغ','error');return}
-  var merchant=state.merchants.find(function(m){return m.id===merchantId});
-  
-  // Calculate balance
-  var balance=0;
-  try{var b=await supabase.rpc('get_balance',{p_merchant_id:merchantId});balance=b.data||0}catch(e){}
-  
-  var requestData={merchant_id:merchantId,code:generateRef('REQ'),request_type:document.getElementById('requestType').value,amount:amount,notes:document.getElementById('requestNotes').value.trim(),remaining_balance:balance,status:'معلق',created_at:new Date().toISOString()};
-  
-  showLoading();
-  var r=await supabase.from('requests').insert(requestData).select();
-  if(r.error){hideLoading();showToast(r.error.message,'error');return}
-  playSound('done');closeModal('requestModal');showToast('تم إنشاء الطلب وإرسال الإشعار','success');
-  
-  // Send Email
-  sendEmailNotification({merchant:merchant,request:requestData,machines:state.machines.filter(function(m){return m.merchant_id===merchantId}),remainingBalance:balance});
-  
-  loadRequests();loadDashboard();hideLoading();
-}
-async function approveRequest(id){
-  showLoading();
-  var r=await supabase.from('requests').update({status:'مكتمل'}).eq('id',id);
-  hideLoading();
-  if(r.error){showToast(r.error.message,'error');return}
-  playSound('done');showToast('تمت الموافقة','success');loadRequests();
-}
-async function deleteRequest(id){
-  showConfirm('حذف طلب','هل أنت متأكد؟',async function(){
-    showLoading();
-    var r=await supabase.from('requests').delete().eq('id',id);
-    hideLoading();
-    if(r.error){showToast(r.error.message,'error');return}
-    playSound('done');showToast('تم الحذف','success');loadRequests();
-  });
+// ============================================================
+// 📊 DATA OPERATIONS
+// ============================================================
+
+async function refreshAllData() {
+    showLoading(true);
+    setConnectionStatus('connecting');
+
+    try {
+        const [mRes, macRes, tRes, cRes, rRes, aRes] = await Promise.all([
+            supabase.from('merchants').select('*').order('created_at', { ascending: true }),
+            supabase.from('machines').select('*').order('created_at', { ascending: true }),
+            supabase.from('transfers').select('*').order('created_at', { ascending: true }),
+            supabase.from('collections').select('*').order('created_at', { ascending: true }),
+            supabase.from('requests').select('*').order('created_at', { ascending: true }),
+            supabase.from('archives').select('*').order('created_at', { ascending: false })
+        ]);
+
+        DB.merchants = mRes.data || [];
+        DB.machines = macRes.data || [];
+        DB.transfers = tRes.data || [];
+        DB.collections = cRes.data || [];
+        DB.requests = rRes.data || [];
+        DB.archives = aRes.data || [];
+
+        renderAllPages();
+        updatePendingBadge();
+        setConnectionStatus('live');
+        showToast('✅ تم تحديث البيانات بنجاح', 'success');
+    } catch (e) {
+        console.error('❌ Data refresh error:', e);
+        setConnectionStatus('offline');
+        showToast('❌ فشل تحميل البيانات: ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
 }
 
-// Email Notification
-async function sendEmailNotification(data){
-  try{
-    var r=await fetch(CONFIG.EMAIL_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'sendRequestEmail',secret:CONFIG.SECRET_KEY,payload:{merchant:data.merchant,request:data.request,machines:data.machines||[],remainingBalance:data.remainingBalance||0}})
-    });
-    var result=await r.json();
-    console.log('Email:',result);
-  }catch(e){console.warn('Email failed:',e)}
+function renderAllPages() {
+    renderDashboard();
+    renderMerchants();
+    renderMachines();
+    renderTransfers();
+    renderCollections();
+    renderRequests();
+    renderArchive();
 }
 
-// ============================================
-// BALANCE
-// ============================================
-async function loadMerchantBalance(){
-  if(!state.selectedMerchant){showToast('اختر التاجر أولاً','warning');return}
-  showLoading();
-  var merchantId=state.selectedMerchant;
-  
-  var balance=0;
-  try{var b=await supabase.rpc('get_balance',{p_merchant_id:merchantId});balance=b.data||0}catch(e){}
-  
-  var tR=await supabase.from('transfers').select('*').eq('merchant_id',merchantId).order('created_at',{ascending:true});
-  var cR=await supabase.from('collections').select('*').eq('merchant_id',merchantId).order('created_at',{ascending:true});
-  
-  var transfers=tR.data||[];
-  var collections=cR.data||[];
-  var totalT=transfers.reduce(function(s,t){return s+(parseFloat(t.amount)||0)},0);
-  var totalC=collections.reduce(function(s,c){return s+(parseFloat(c.amount)||0)},0);
-  
-  document.getElementById('totalTransfers').textContent=formatCurrency(totalT)+' ج.م';
-  document.getElementById('totalCollections').textContent=formatCurrency(totalC)+' ج.م';
-  document.getElementById('remainingBalance').textContent=formatCurrency(balance)+' ج.م';
-  
-  var all=[].concat(transfers.map(function(t){return{...t,txn_type:'تحويل',txn_amt:-parseFloat(t.amount)}})).concat(collections.map(function(c){return{...c,txn_type:'تحصيل',txn_amt:parseFloat(c.amount)}}));
-  all.sort(function(a,b){return new Date(a.created_at)-new Date(b.created_at)});
-  
-  var runBal=0;
-  var tb=document.getElementById('balanceTransactionsBody');
-  if(!all.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px">لا توجد حركات</td></tr>'}
-  else{
-    tb.innerHTML=all.map(function(x,i){
-      runBal+=x.txn_amt;
-      return'<tr><td><span class="table-number">'+(i+1)+'</span></td><td>'+formatDate(x.created_at)+'</td><td>'+x.txn_type+'</td><td class="'+(x.txn_amt>=0?'amount-positive':'amount-negative')+'">'+formatCurrency(Math.abs(x.txn_amt))+' ج.م</td><td class="'+(runBal>=0?'amount-negative':'amount-positive')+'">'+formatCurrency(Math.abs(runBal))+' ج.م</td></tr>';
+// ============================================================
+// 📈 DASHBOARD
+// ============================================================
+
+function renderDashboard() {
+    const now = new Date();
+    const currentMonth = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
+    const today = now.toISOString().split('T')[0];
+
+    const monthTransfers = DB.transfers.filter(t => t['الشهر'] === currentMonth);
+    const totalTransfersVal = monthTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+    const totalCollectionsVal = DB.collections.filter(c => c['شهر'] === currentMonth).reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+    const todayTransfers = DB.transfers.filter(t => t['التاريخ'] === today).reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+
+    const stats = [
+        { label: 'عدد التجار', value: DB.merchants.length, icon: 'fa-users', type: '' },
+        { label: 'عدد المكن', value: DB.machines.length, icon: 'fa-cash-register', type: 'purple' },
+        { label: 'تحويلات الشهر', value: totalTransfersVal, icon: 'fa-exchange-alt', type: 'danger', isMoney: true },
+        { label: 'تحصيلات الشهر', value: totalCollectionsVal, icon: 'fa-hand-holding-usd', type: 'success', isMoney: true },
+        { label: 'صافي الشهر', value: totalTransfersVal - totalCollectionsVal, icon: 'fa-balance-scale', type: 'warning', isMoney: true },
+        { label: 'تحويلات اليوم', value: todayTransfers, icon: 'fa-calendar-day', type: '', isMoney: true }
+    ];
+
+    const container = document.getElementById('dashboardStats');
+    container.innerHTML = stats.map(s => `
+        <div class="stat-card ${s.type}">
+            <div class="stat-card-header">
+                <span class="stat-card-title">${s.label}</span>
+                <div class="stat-card-icon"><i class="fas ${s.icon}"></i></div>
+            </div>
+            <div class="stat-card-value">${s.isMoney ? formatMoney(s.value) : formatNumber(s.value)}</div>
+        </div>
+    `).join('');
+
+    renderTopMachines();
+}
+
+function renderTopMachines() {
+    const tbody = document.getElementById('topMachinesTable');
+    const now = new Date();
+    const currentMonth = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
+    const monthTransfers = DB.transfers.filter(t => t['الشهر'] === currentMonth);
+
+    const machinePerformance = DB.machines
+        .filter(m => Number(m['التارجت الشهري']) > 0)
+        .map(m => {
+            const achieved = monthTransfers
+                .filter(t => String(t['رقم المكنة']).trim() === String(m['رقم المكنة']).trim())
+                .reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+            const merchant = DB.merchants.find(mer => mer['رقم التاجر'] == m['رقم التاجر']);
+            return {
+                ...m,
+                achieved,
+                merchantName: merchant?.['اسم التاجر'] || '-',
+                activity: merchant?.['اسم النشاط'] || '-',
+                percentage: Math.min(Math.floor((achieved / Number(m['التارجت الشهري'])) * 100), 100)
+            };
+        })
+        .sort((a, b) => b.percentage - a.percentage)
+        .slice(0, 10);
+
+    if (!machinePerformance.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد بيانات</p></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = machinePerformance.map((m, i) => {
+        const pctClass = m.percentage >= 80 ? 'success' : m.percentage >= 50 ? 'warning' : 'danger';
+        return `
+            <tr>
+                <td>${i + 1}</td>
+                <td><strong>${m['رقم المكنة']}</strong></td>
+                <td>${m.merchantName}</td>
+                <td>${m.activity}</td>
+                <td>${formatMoney(m['التارجت الشهري'])}</td>
+                <td>${formatMoney(m.achieved)}</td>
+                <td>
+                    <span class="badge badge-${pctClass}">${m.percentage}%</span>
+                    <div class="progress-bar"><div class="fill ${pctClass}" style="width:${m.percentage}%"></div></div>
+                </td>
+            </tr>
+        `;
     }).join('');
-  }
-  document.getElementById('balanceResult').style.display='block';
-  hideLoading();
 }
 
-// ============================================
-// ARCHIVE
-// ============================================
-async function loadArchives(){
-  showLoading();await loadArchivesData();
-  var tb=document.getElementById('archiveTableBody');
-  if(!state.archives.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#64748b;padding:30px">لا يوجد أرشفة</td></tr>';hideLoading();return}
-  tb.innerHTML=state.archives.map(function(a,i){
-    return'<tr><td><span class="table-number">'+(i+1)+'</span></td><td><strong>'+(a.month||'-')+'</strong></td><td>'+(a.transfers_count||0)+'</td><td class="amount-negative">'+formatCurrency(a.transfers_total||0)+' ج.م</td><td>'+(a.collections_count||0)+'</td><td class="amount-positive">'+formatCurrency(a.collections_total||0)+' ج.م</td></tr>';
-  }).join('');
-  hideLoading();
-}
-async function startNewMonthArchive(){
-  var m=new Date().toLocaleDateString('ar-EG',{year:'numeric',month:'long'});
-  showConfirm('أرشفة شهر جديد','هل تريد أرشفة بيانات شهر "'+m+'"؟',async function(){
-    showLoading();
-    var tCount=(state.transfers||[]).length;
-    var cCount=(state.collections||[]).length;
-    var tTotal=state.transfers.reduce(function(s,t){return s+(parseFloat(t.amount)||0)},0);
-    var cTotal=state.collections.reduce(function(s,c){return s+(parseFloat(c.amount)||0)},0);
-    
-    var r=await supabase.from('archives').insert({month:m,year:new Date().getFullYear(),transfers_count:tCount,transfers_total:tTotal,collections_count:cCount,collections_total:cTotal,created_at:new Date().toISOString()});
-    if(r.error){hideLoading();showToast(r.error.message,'error');return}
-    playSound('done');showToast('تمت الأرشفة','success');loadArchives();hideLoading();
-  },'warning');
+// ============================================================
+// 👥 MERCHANTS CRUD
+// ============================================================
+
+function renderMerchants() {
+    let list = [...DB.merchants];
+    const term = searchTerms.merchant.toLowerCase();
+
+    if (term) {
+        list = list.filter(m =>
+            normalizeText(m['اسم التاجر']).includes(term) ||
+            m['رقم التاجر']?.toString().includes(term)
+        );
+    }
+
+    const statusFilter = document.getElementById('merchantStatusFilter')?.value;
+    if (statusFilter) list = list.filter(m => m['الحالة'] === statusFilter);
+
+    const tbody = document.getElementById('merchantsTable');
+    if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fas fa-users"></i><p>لا يوجد تجار</p></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((m, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td><code style="color:var(--secondary);font-weight:700;">${m['رقم التاجر']}</code></td>
+            <td><strong>${m['اسم التاجر']}</strong></td>
+            <td>${m['اسم النشاط'] || '-'}</td>
+            <td dir="ltr">${m['رقم الحساب'] || '-'}</td>
+            <td dir="ltr">${m['رقم الهاتف'] ? `<a href="tel:${m['رقم الهاتف']}" style="color:var(--primary);">${m['رقم الهاتف']}</a>` : '-'}</td>
+            <td>${m['المنطقة'] || '-'}</td>
+            <td><span class="badge ${m['الحالة'] === 'نشط' ? 'badge-success' : 'badge-danger'}">${m['الحالة'] || '-'}</span></td>
+            <td><div class="action-btns">
+                <button class="btn btn-primary btn-sm" onclick="editMerchant('${m['رقم التاجر']}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="deleteMerchant('${m['رقم التاجر']}')" title="حذف"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>
+    `).join('');
 }
 
-// ============================================
-// DASHBOARD
-// ============================================
-async function loadDashboard(){
-  var tb=document.getElementById('merchantsTableBody');
-  if(state.merchants.length){
-    tb.innerHTML=state.merchants.slice(0,8).map(function(m,i){
-      return'<tr><td><span class="table-number">'+(i+1)+'</span></td><td><strong>'+(m.code||'-')+'</strong></td><td>'+(m.name||'-')+'</td><td>'+(m.phone||'-')+'</td><td>'+(m.area||'-')+'</td><td>'+(m.status==='نشط'?'<span class="status-active">✅ نشط</span>':'<span class="status-inactive">⚠️ '+(m.status||'-')+'</span>')+'</td><td><div class="action-btns"><button class="action-btn action-btn-edit" onclick="openMerchantModal(\''+m.id+'\')"><i class="fas fa-edit"></i></button></div></td></tr>';
+function openMerchantModal(data = null) {
+    const isEdit = !!data;
+    const content = `
+        <div class="modal-header">
+            <h3><i class="fas ${isEdit ? 'fa-edit' : 'fa-user-plus'}"></i> ${isEdit ? 'تعديل تاجر' : 'إضافة تاجر جديد'}</h3>
+        </div>
+        <div class="form-group">
+            <label class="form-label">اسم التاجر <span class="required">*</span></label>
+            <input type="text" id="m_name" class="form-control" placeholder="الاسم الكامل" value="${isEdit ? data['اسم التاجر'] || '' : ''}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">اسم النشاط التجاري</label>
+            <input type="text" id="m_activity" class="form-control" placeholder="نشاط المتجر" value="${isEdit ? data['اسم النشاط'] || '' : ''}">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group">
+                <label class="form-label">رقم الحساب <span class="required">*</span></label>
+                <input type="text" id="m_account" class="form-control" dir="ltr" value="${isEdit ? data['رقم الحساب'] || '' : ''}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">رقم الهاتف</label>
+                <input type="text" id="m_phone" class="form-control" dir="ltr" value="${isEdit ? data['رقم الهاتف'] || '' : ''}">
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group">
+                <label class="form-label">المنطقة</label>
+                <input type="text" id="m_area" class="form-control" value="${isEdit ? data['المنطقة'] || '' : ''}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">الحالة</label>
+                <select id="m_status" class="form-control">
+                    <option value="نشط" ${!isEdit || data['الحالة']==='نشط'?'selected':''}>✅ نشط</option>
+                    <option value="غير نشط" ${isEdit && data['الحالة']==='غير نشط'?'selected':''}>⛔ غير نشط</option>
+                    <option value="موقوف" ${isEdit && data['الحالة']==='موقوف'?'selected':''}>🚫 موقوف</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">ملاحظات</label>
+            <textarea id="m_notes" class="form-control" rows="3">${isEdit ? data['ملاحظات'] || '' : ''}</textarea>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="saveMerchant(${isEdit ? `'${data['رقم التاجر']}'` : 'null'})">
+            <i class="fas fa-save"></i> ${isEdit ? 'تحديث البيانات' : 'إضافة تاجر'}
+        </button>
+    `;
+    showModal(content);
+}
+
+async function saveMerchant(editId) {
+    const name = document.getElementById('m_name')?.value?.trim();
+    if (!name) { showToast('⚠️ اسم التاجر مطلوب', 'warning'); return; }
+
+    showLoading(true);
+    try {
+        let merchantId = editId;
+        if (!editId) {
+            const maxId = DB.merchants.reduce((max, m) => Math.max(max, parseInt(m['رقم التاجر']) || 0), 0);
+            merchantId = String(maxId + 1).padStart(4, '0');
+        }
+
+        const merchantData = {
+            "رقم التاجر": merchantId,
+            "اسم التاجر": name,
+            "اسم النشاط": document.getElementById('m_activity')?.value?.trim(),
+            "رقم الحساب": document.getElementById('m_account')?.value?.trim(),
+            "رقم الهاتف": document.getElementById('m_phone')?.value?.trim(),
+            "المنطقة": document.getElementById('m_area')?.value?.trim(),
+            "الحالة": document.getElementById('m_status')?.value || 'نشط',
+            "ملاحظات": document.getElementById('m_notes')?.value?.trim(),
+            "updated_at": new Date().toISOString()
+        };
+
+        if (editId) {
+            await supabase.from('merchants').update(merchantData).eq('رقم التاجر', editId);
+            showToast('✅ تم تحديث التاجر', 'success');
+        } else {
+            merchantData.created_at = new Date().toISOString();
+            await supabase.from('merchants').insert([merchantData]);
+            showToast('✅ تم إضافة التاجر', 'success');
+        }
+
+        closeMainModal();
+        await refreshAllData();
+    } catch (e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function editMerchant(id) {
+    const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
+    if (merchant) openMerchantModal(merchant);
+    else showToast('❌ لم يتم العثور على التاجر', 'error');
+}
+
+async function deleteMerchant(id) {
+    const merchant = DB.merchants.find(m => m['رقم التاجر'] == id);
+    if (!merchant) return;
+
+    showConfirm(`هل تريد حذف التاجر "${merchant['اسم التاجر']}"؟`, async () => {
+        showLoading(true);
+        try {
+            await supabase.from('merchants').delete().eq('رقم التاجر', id);
+            showToast('✅ تم حذف التاجر', 'success');
+            await refreshAllData();
+        } catch (e) {
+            showToast('❌ ' + e.message, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }, 'نعم، احذف');
+}
+
+// ============================================================
+// 🖨️ MACHINES CRUD
+// ============================================================
+
+function renderMachines() {
+    let list = [...DB.machines];
+    const term = searchTerms.machine.toLowerCase();
+
+    if (term) {
+        list = list.filter(m =>
+            m['رقم المكنة']?.includes(term) ||
+            normalizeText(m['اسم التاجر']).includes(term) ||
+            m['الرقم التسلسلي']?.includes(term)
+        );
+    }
+
+    const statusFilter = document.getElementById('machineStatusFilter')?.value;
+    if (statusFilter) list = list.filter(m => m['الحالة'] === statusFilter);
+
+    const tbody = document.getElementById('machinesTable');
+    if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fas fa-cash-register"></i><p>لا توجد مكن</p></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((m, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td><code style="color:var(--secondary);font-weight:700;">${m['رقم المكنة']}</code></td>
+            <td>${m['اسم التاجر'] || '-'}</td>
+            <td><code style="color:#dc2626;font-size:0.82rem;">${m['الرقم التسلسلي']||'-'}</code></td>
+            <td>${formatMoney(m['التارجت الشهري'])}</td>
+            <td><span class="badge ${m['الحالة']==='نشطة'?'badge-success':'badge-danger'}">${m['الحالة']||'-'}</span></td>
+            <td><div class="action-btns">
+                <button class="btn btn-primary btn-sm" onclick="editMachine('${m['رقم المكنة']}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="deleteMachine('${m['رقم المكنة']}')" title="حذف"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>
+    `).join('');
+}
+
+function openMachineModal(data = null) {
+    const isEdit = !!data;
+    const content = `
+        <div class="modal-header">
+            <h3><i class="fas ${isEdit ? 'fa-edit' : 'fa-plus-circle'}"></i> ${isEdit ? 'تعديل مكنة' : 'إضافة مكنة جديدة'}</h3>
+        </div>
+        <div class="form-group">
+            <label class="form-label">التاجر <span class="required">*</span></label>
+            <div style="position:relative;">
+                <input type="text" id="mc_merchant_search" class="form-control" placeholder="🔍 ابحث عن تاجر..." autocomplete="off"
+                       oninput="handleMerchantLookup(this.value, 'mc_merchant_list', 'mc_merchant_id')"
+                       value="${isEdit ? data?.['اسم التاجر'] || '' : ''}">
+                <input type="hidden" id="mc_merchant_id" value="${isEdit ? data?.['رقم التاجر'] || '' : ''}">
+                <div id="mc_merchant_list" class="search-results"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">الرقم التسلسلي <span class="required">*</span></label>
+            <input type="text" id="mc_serial" class="form-control" dir="ltr" placeholder="SN-XXXXX" value="${isEdit ? data?.['الرقم التسلسلي'] || '' : ''}">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group">
+                <label class="form-label">التارجت الشهري</label>
+                <input type="number" id="mc_target" class="form-control" min="0" value="${isEdit ? data?.['التارجت الشهري'] || '' : ''}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">الحالة</label>
+                <select id="mc_status" class="form-control">
+                    <option value="نشطة" ${!isEdit || data?.['الحالة']==='نشطة'?'selected':''}>✅ نشطة</option>
+                    <option value="متوقفة" ${isEdit && data?.['الحالة']=='متوقفة'?'selected':''}>⏸ متوقفة</option>
+                    <option value="صيانة" ${isEdit && data?.['الحالة']=='صيانة'?'selected':''}>🔧 صيانة</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">ملاحظات</label>
+            <textarea id="mc_notes" class="form-control" rows="3">${isEdit ? data?.['ملاحظات'] || '' : ''}</textarea>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="saveMachine(${isEdit ? `'${data?.['رقم المكنة']}'` : 'null'})">
+            <i class="fas fa-save"></i> ${isEdit ? 'تحديث المكنة' : 'إضافة مكنة'}
+        </button>
+    `;
+    showModal(content);
+}
+
+async function saveMachine(editId) {
+    const merchId = document.getElementById('mc_merchant_id')?.value;
+    const serial = document.getElementById('mc_serial')?.value?.trim();
+
+    if (!merchId) { showToast('⚠️ يجب اختيار التاجر', 'warning'); return; }
+    if (!serial) { showToast('⚠️ الرقم التسلسلي مطلوب', 'warning'); return; }
+
+    showLoading(true);
+    try {
+        const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchId);
+        let machineId = editId;
+
+        if (!editId) {
+            const maxId = DB.machines.reduce((max, m) => Math.max(max, parseInt(m['رقم المكنة']) || 0), 0);
+            machineId = String(maxId + 1).padStart(4, '0');
+        }
+
+        const machineData = {
+            "رقم المكنة": machineId,
+            "رقم التاجر": merchId,
+            "اسم التاجر": merchant?.['اسم التاجر'] || '',
+            "الرقم التسلسلي": serial,
+            "رقم الحساب": merchant?.['رقم الحساب'] || '',
+            "التارجت الشهري": Number(document.getElementById('mc_target')?.value) || 0,
+            "الحالة": document.getElementById('mc_status')?.value || 'نشطة',
+            "ملاحظات": document.getElementById('mc_notes')?.value?.trim(),
+            "updated_at": new Date().toISOString()
+        };
+
+        if (editId) {
+            await supabase.from('machines').update(machineData).eq('رقم المكنة', editId);
+            showToast('✅ تم تحديث المكنة', 'success');
+        } else {
+            machineData.created_at = new Date().toISOString();
+            await supabase.from('machines').insert([machineData]);
+            showToast('✅ تم إضافة المكنة', 'success');
+        }
+
+        closeMainModal();
+        await refreshAllData();
+    } catch (e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function editMachine(id) {
+    const machine = DB.machines.find(m => m['رقم المكنة'] == id);
+    if (machine) openMachineModal(machine);
+    else showToast('❌ لم يتم العثور على المكنة', 'error');
+}
+
+async function deleteMachine(id) {
+    showConfirm(`هل تريد حذف المكنة "${id}"؟`, async () => {
+        showLoading(true);
+        try {
+            await supabase.from('machines').delete().eq('رقم المكنة', id);
+            showToast('✅ تم حذف المكنة', 'success');
+            await refreshAllData();
+        } catch (e) {
+            showToast('❌ ' + e.message, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }, 'نعم، احذف');
+}
+
+// ============================================================
+// 💱 TRANSFERS CRUD
+// ============================================================
+
+function renderTransfers() {
+    let list = [...DB.transfers];
+    const dateFrom = document.getElementById('transferDateFrom')?.value;
+    const dateTo = document.getElementById('transferDateTo')?.value;
+
+    if (dateFrom) list = list.filter(t => t['التاريخ'] >= dateFrom);
+    if (dateTo) list = list.filter(t => t['التاريخ'] <= dateTo);
+
+    const tbody = document.getElementById('transfersTable');
+    if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fas fa-exchange-alt"></i><p>لا توجد تحويلات</p></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((t, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td><code style="color:var(--secondary);font-size:0.82rem;">${t['الرقم المرجعي']}</code></td>
+            <td>${formatDate(t['التاريخ'])}</td>
+            <td>${formatTime(t['وقت'])}</td>
+            <td><strong>${t['اسم التاجر'] || '-'}</strong></td>
+            <td><span class="badge badge-primary">${t['نوع التحويل']||'-'}</span></td>
+            <td><strong style="color:var(--danger);">${formatMoney(t['قيمة التحويل'])}</strong></td>
+            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${t['ملاحظات']||'-'}">${t['ملاحظات']||'-'}</td>
+            <td><div class="action-btns">
+                <button class="btn btn-primary btn-sm" onclick="editTransfer('${t['الرقم المرجعي']}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="deleteTransfer('${t['الرقم المرجعي']}')" title="حذف"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>
+    `).join('');
+}
+
+function openTransferModal(data = null) {
+    const isEdit = !!data;
+    const content = `
+        <div class="modal-header">
+            <h3><i class="fas fa-exchange-alt"></i> ${isEdit ? 'تعديل تحويل' : 'تحويل جديد'}</h3>
+        </div>
+        <div class="form-group">
+            <label class="form-label">التاجر <span class="required">*</span></label>
+            <div style="position:relative;">
+                <input type="text" id="tr_merchant_search" class="form-control" placeholder="🔍 ابحث عن تاجر..." autocomplete="off"
+                       oninput="handleMerchantLookup(this.value, 'tr_merchant_list', 'tr_merchant_id')"
+                       value="${isEdit ? data?.['اسم التاجر'] || '' : ''}">
+                <input type="hidden" id="tr_merchant_id" value="${isEdit ? data?.['رقم التاجر'] || '' : ''}">
+                <div id="tr_merchant_list" class="search-results"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">نوع التحويل</label>
+            <select id="tr_type" class="form-control">
+                <option value="رصيد خدمات" ${!isEdit || data?.['نوع التحويل']==='رصيد خدمات'?'selected':''}>💳 رصيد خدمات</option>
+                <option value="رصيد كاش" ${isEdit && data?.['نوع التحويل']==='رصيد كاش'?'selected':''}>💵 رصيد كاش</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">المبلغ <span class="required">*</span></label>
+            <input type="number" id="tr_amount" class="form-control" step="any" min="0.01" dir="ltr"
+                   placeholder="0.00" value="${isEdit ? data?.['قيمة التحويل'] || '' : ''}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">ملاحظات</label>
+            <textarea id="tr_notes" class="form-control" rows="3">${isEdit ? data?.['ملاحظات'] || '' : ''}</textarea>
+        </div>
+        <button class="btn btn-success btn-block" onclick="saveTransfer(${isEdit ? `'${data?.['الرقم المرجعي']}'` : 'null'})">
+            <i class="fas fa-check"></i> تأكيد التحويل
+        </button>
+    `;
+    showModal(content);
+}
+
+async function saveTransfer(editId) {
+    const merchId = document.getElementById('tr_merchant_id')?.value;
+    const amount = parseFloat(document.getElementById('tr_amount')?.value);
+
+    if (!merchId) { showToast('⚠️ يجب اختيار التاجر', 'warning'); return; }
+    if (!amount || amount <= 0) { showToast('⚠️ المبلغ غير صحيح', 'error'); return; }
+
+    showLoading(true);
+    try {
+        const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchId);
+        const now = new Date();
+
+        let refCode = editId;
+        if (!editId) {
+            const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
+            refCode = `TRF-${datePart}-${String(Math.floor(Math.random()*10000)).padStart(4,'0')}`;
+        }
+
+        const transferData = {
+            "الرقم المرجعي": refCode,
+            "رقم التاجر": merchId,
+            "اسم التاجر": merchant?.['اسم التاجر'] || '',
+            "رقم الحساب": merchant?.['رقم الحساب'] || '',
+            "نوع التحويل": document.getElementById('tr_type')?.value || 'رصيد خدمات',
+            "قيمة التحويل": Math.round(amount * 100) / 100,
+            "التاريخ": now.toISOString().split('T')[0],
+            "الوقت": formatTimeForDB(now),
+            "ملاحظات": document.getElementById('tr_notes')?.value?.trim(),
+            "الشهر": now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' }),
+            "updated_at": now.toISOString()
+        };
+
+        if (editId) {
+            await supabase.from('transfers').update(transferData).eq('الرقم المرجعي', editId);
+            showToast('✅ تم تحديث التحويل', 'success');
+        } else {
+            transferData.created_at = now.toISOString();
+            await supabase.from('transfers').insert([transferData]);
+            showToast('✅ تم إضافة التحويل', 'success');
+            await logAction('تحويل جديد', refCode, `تحويل: ${amount} جنيه - ${merchant?.['اسم التاجر']}`);
+        }
+
+        closeMainModal();
+        await refreshAllData();
+    } catch (e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function editTransfer(ref) {
+    const transfer = DB.transfers.find(t => t['الرقم المرجعي'] == ref);
+    if (transfer) openTransferModal(transfer);
+    else showToast('❌ لم يتم العثور على التحويل', 'error');
+}
+
+async function deleteTransfer(ref) {
+    showConfirm(`هل تريد حذف التحويل "${ref}"؟`, async () => {
+        showLoading(true);
+        try {
+            await supabase.from('transfers').delete().eq('الرقم المرجعي', ref);
+            showToast('✅ تم حذف التحويل', 'success');
+            await refreshAllData();
+        } catch (e) {
+            showToast('❌ ' + e.message, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }, 'نعم، احذف');
+}
+
+// ============================================================
+// 💰 COLLECTIONS CRUD
+// ============================================================
+
+function renderCollections() {
+    const list = [...DB.collections];
+    const tbody = document.getElementById('collectionsTable');
+
+    if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fas fa-hand-holding-usd"></i><p>لا توجد تحصيلات</p></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((c, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td><code style="color:var(--secondary);font-size:0.82rem;">${c['الرقم المرجعي']}</code></td>
+            <td>${formatDate(c['التاريخ'])}</td>
+            <td>${formatTime(c['وقت'])}</td>
+            <td><strong>${c['اسم التاجر'] || '-'}</strong></td>
+            <td><strong style="color:var(--success);">${formatMoney(c['قيمة التحصيل'])}</strong></td>
+            <td><span class="badge ${c['نوع التحصيل']==='كلي'?'badge-success':'badge-warning'}">${c['نوع التحصيل']||'-'}</span></td>
+            <td><strong style="color:var(--danger);">${formatMoney(c['المتبقي بعد التحصيل'])}</strong></td>
+            <td><div class="action-btns">
+                <button class="btn btn-primary btn-sm" onclick="editCollection('${c['الرقم المرجعي']}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCollection('${c['الرقم المرجعي']}')" title="حذف"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>
+    `).join('');
+}
+
+function openCollectionModal(data = null) {
+    const isEdit = !!data;
+    const content = `
+        <div class="modal-header">
+            <h3><i class="fas fa-hand-holding-usd"></i> ${isEdit ? 'تعديل تحصيل' : 'تحصيل جديد'}</h3>
+        </div>
+        <div class="form-group">
+            <label class="form-label">التاجر <span class="required">*</span></label>
+            <div style="position:relative;">
+                <input type="text" id="col_merchant_search" class="form-control" placeholder="🔍 ابحث عن تاجر..." autocomplete="off"
+                       oninput="handleMerchantLookup(this.value, 'col_merchant_list', 'col_merchant_id')"
+                       value="${isEdit ? data?.['اسم التاجر'] || '' : ''}">
+                <input type="hidden" id="col_merchant_id" value="${isEdit ? data?.['رقم التاجر'] || '' : ''}">
+                <div id="col_merchant_list" class="search-results"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">المبلغ <span class="required">*</span></label>
+            <input type="number" id="col_amount" class="form-control" step="any" min="0.01" dir="ltr"
+                   placeholder="0.00" value="${isEdit ? data?.['قيمة التحصيل'] || '' : ''}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">نوع التحصيل</label>
+            <select id="col_type" class="form-control">
+                <option value="جزئي" ${isEdit && data?.['نوع التحصيل']==='جزئي'?'selected':''}>📊 جزئي</option>
+                <option value="كلي" ${!isEdit || data?.['نوع التحصيل']==='كلي'?'selected':''}>✅ كامل</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">ملاحظات</label>
+            <textarea id="col_notes" class="form-control" rows="3">${isEdit ? data?.['ملاحظات'] || '' : ''}</textarea>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="saveCollection(${isEdit ? `'${data?.['الرقم المرجعي']}'` : 'null'})">
+            <i class="fas fa-check"></i> تأكيد التحصيل
+        </button>
+    `;
+    showModal(content);
+}
+
+async function saveCollection(editId) {
+    const merchId = document.getElementById('col_merchant_id')?.value;
+    const amount = parseFloat(document.getElementById('col_amount')?.value);
+
+    if (!merchId) { showToast('⚠️ يجب اختيار التاجر', 'warning'); return; }
+    if (!amount || amount <= 0) { showToast('⚠️ المبلغ غير صحيح', 'error'); return; }
+
+    showLoading(true);
+    try {
+        const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchId);
+        const now = new Date();
+
+        // Calculate remaining balance
+        const merchantTransfers = DB.transfers.filter(t => t['رقم التاجر'] == merchId);
+        const merchantCollections = DB.collections.filter(c => c['رقم التاجر'] == merchId && c['الرقم المرجعي'] !== editId);
+        const totalTransfers = merchantTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+        const totalCollections = merchantCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+        const remaining = Math.max(0, totalTransfers - totalCollections - amount);
+
+        let refCode = editId;
+        if (!editId) {
+            const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
+            refCode = `COL-${datePart}-${String(Math.floor(Math.random()*10000)).padStart(4,'0')}`;
+        }
+
+        const collectionData = {
+            "الرقم المرجعي": refCode,
+            "رقم التاجر": merchId,
+            "اسم التاجر": merchant?.['اسم التاجر'] || '',
+            "رقم الحساب": merchant?.['رقم الحساب'] || '',
+            "قيمة التحصيل": Math.round(amount * 100) / 100,
+            "نوع التحصيل": document.getElementById('col_type')?.value || 'جزئي',
+            "المتبقي بعد التحصيل": remaining,
+            "التاريخ": now.toISOString().split('T')[0],
+            "الوقت": formatTimeForDB(now),
+            "ملاحظات": document.getElementById('col_notes')?.value?.trim(),
+            "شهر": now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' }),
+            "updated_at": now.toISOString()
+        };
+
+        if (editId) {
+            await supabase.from('collections').update(collectionData).eq('الرقم المرجعي', editId);
+            showToast('✅ تم تحديث التحصيل', 'success');
+        } else {
+            collectionData.created_at = now.toISOString();
+            await supabase.from('collections').insert([collectionData]);
+            showToast('✅ تم إضافة التحصيل', 'success');
+            await logAction('تحصيل جديد', refCode, `تحصيل: ${amount} جنيه - ${merchant?.['اسم التاجر']}`);
+        }
+
+        closeMainModal();
+        await refreshAllData();
+    } catch (e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function editCollection(ref) {
+    const collection = DB.collections.find(c => c['الرقم المرجعي'] == ref);
+    if (collection) openCollectionModal(collection);
+    else showToast('❌ لم يتم العثور على التحصيل', 'error');
+}
+
+async function deleteCollection(ref) {
+    showConfirm(`هل تريد حذف التحصيل "${ref}"؟`, async () => {
+        showLoading(true);
+        try {
+            await supabase.from('collections').delete().eq('الرقم المرجعي', ref);
+            showToast('✅ تم حذف التحصيل', 'success');
+            await refreshAllData();
+        } catch (e) {
+            showToast('❌ ' + e.message, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }, 'نعم، احذف');
+}
+
+// ============================================================
+// 📋 STATEMENT
+// ============================================================
+
+function loadStatement() {
+    const merchantId = document.getElementById('stmtMerchantId')?.value;
+    if (!merchantId) { showToast('⚠️ اختر تاجراً أولاً', 'warning'); return; }
+
+    const merchant = DB.merchants.find(m => m['رقم التاجر'] == merchantId);
+    if (!merchant) { showToast('❌ لم يتم العثور على التاجر', 'error'); return; }
+
+    // Calculate totals
+    const transfers = DB.transfers.filter(t => t['رقم التاجر'] == merchantId)
+        .sort((a, b) => new Date(a['التاريخ']) - new Date(b['التاريخ']));
+    const collections = DB.collections.filter(c => c['رقم التاجر'] == merchantId)
+        .sort((a, b) => new Date(a['التاريخ']) - new Date(b['التاريخ']));
+
+    const totalTransfers = transfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+    const totalCollections = collections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+    const remaining = totalTransfers - totalCollections;
+
+    document.getElementById('stmtTotalTransfers').innerHTML = formatMoney(totalTransfers);
+    document.getElementById('stmtTotalCollections').innerHTML = formatMoney(totalCollections);
+    document.getElementById('stmtRemaining').innerHTML = formatMoney(remaining);
+
+    // Build movements
+    const movements = [
+        ...transfers.map(t => ({ ...t, _type: 'transfer', _sort: `${t['التاريخ']} ${t['وقت']}` })),
+        ...collections.map(c => ({ ...c, _type: 'collection', _sort: `${c['التاريخ']} ${c['وقت']}` }))
+    ].sort((a, b) => a._sort.localeCompare(b._sort));
+
+    const tbody = document.getElementById('statementTable');
+    if (!movements.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><p>لا توجد حركات</p></td></tr>`;
+        return;
+    }
+
+    let runningBalance = 0;
+    tbody.innerHTML = movements.map((m, i) => {
+        const isTransfer = m._type === 'transfer';
+        runningBalance += isTransfer ? (Number(m['قيمة التحويل']) || 0) : -(Number(m['قيمة التحصيل']) || 0);
+
+        return `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${formatDate(m['التاريخ'])}</td>
+                <td>${formatTime(m['وقت'])}</td>
+                <td><span class="badge ${isTransfer ? 'badge-danger' : 'badge-success'}">${isTransfer ? '📤 تحويل' : '📥 تحصيل'}</span></td>
+                <td style="color:${isTransfer ? 'var(--danger)' : 'var(--success)'};font-weight:700;">
+                    ${isTransfer ? '+' : '-'}${formatMoney(isTransfer ? m['قيمة التحويل'] : m['قيمة التحصيل'])}
+                </td>
+                <td><strong>${formatMoney(runningBalance)}</strong></td>
+                <td>${m['ملاحظات'] || '-'}</td>
+            </tr>
+        `;
     }).join('');
-  }else{tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:30px">لا توجد بيانات</td></tr>'}
 }
 
-// ============================================
-// EXPORT
-// ============================================
-function exportToExcel(){
-  try{
-    var data=[];
-    state.transfers.forEach(function(t){data.push({'النوع':'تحويل','المرجعي':t.ref||'','التاريخ':formatDate(t.created_at),'التاجر':t.merchants?.name||'','القيمة':t.amount||0,'ملاحظات':t.notes||''})});
-    state.collections.forEach(function(c){data.push({'النوع':'تحصيل','المرجعي':c.ref||'','التاريخ':formatDate(c.created_at),'التاجر':c.merchants?.name||'','القيمة':-(c.amount||0),'ملاحظات':c.notes||''})});
-    
-    var ws=XLSX.utils.json_to_sheet(data);
-    var wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,'الحركات');
-    XLSX.writeFile(wb,'Axentro-'+new Date().toISOString().split('T')[0]+'.xlsx');
-    playSound('done');showToast('تم التصدير بنجاح','success');
-  }catch(e){console.error(e);showToast('فشل التصدير','error')}
+// ============================================================
+// 🔔 REQUESTS
+// ============================================================
+
+function renderRequests() {
+    let list = [...DB.requests];
+    const term = searchTerms.request.toLowerCase();
+
+    if (term) {
+        list = list.filter(r =>
+            normalizeText(r['اسم التاجر']).includes(term) ||
+            r['رقم الطلب']?.toString().includes(term)
+        );
+    }
+
+    const statusFilter = document.getElementById('requestStatusFilter')?.value;
+    if (statusFilter) list = list.filter(r => r['الحالة'] === statusFilter);
+
+    const pendingCount = DB.requests.filter(r => r['الحالة'] === 'pending').length;
+    const totalAmount = list.reduce((s, r) => s + (Number(r['المبلغ']) || 0), 0);
+
+    document.getElementById('reqTotalCount').textContent = list.length;
+    document.getElementById('reqPendingCount').textContent = pendingCount;
+    document.getElementById('reqTotalAmount').innerHTML = formatMoney(totalAmount);
+
+    const tbody = document.getElementById('requestsTable');
+    if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><i class="fas fa-bell"></i><p>لا توجد طلبات</p></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((r, i) => {
+        const statusMap = { 'pending': ['معلق', 'warning'], 'محوّل': ['محوّل', 'primary'], 'مكتمل': ['مكتمل', 'success'], 'مرفوض': ['مرفوض', 'danger'] };
+        const [statusText, statusClass] = statusMap[r['الحالة']] || [r['الحالة'], 'secondary'];
+        const convertBtn = r['الحالة'] === 'pending' ?
+            `<button class="btn btn-success btn-sm" onclick="convertRequest('${r['رقم الطلب']}')" title="تحويل تلقائي"><i class="fas fa-exchange-alt"></i></button>` : '';
+
+        return `
+            <tr>
+                <td>${i + 1}</td>
+                <td><strong>${r['رقم الطلب']}</strong></td>
+                <td>${formatDate(r['التاريخ'])}</td>
+                <td>${formatTime(r['وقت'])}</td>
+                <td>${r['اسم التاجر']}</td>
+                <td>${r['نوع الطلب']}</td>
+                <td><strong style="color:var(--danger);">${formatMoney(r['المبلغ'])}</strong></td>
+                <td>${formatMoney(r['المديونية الحالية'])}</td>
+                <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                <td><div class="action-btns">${convertBtn}
+                    <button class="btn btn-danger btn-sm" onclick="deleteRequest('${r['رقم الطلب']}')" title="حذف"><i class="fas fa-trash"></i></button>
+                </div></td>
+            </tr>
+        `;
+    }).join('');
 }
 
-// Init
-document.addEventListener('DOMContentLoaded',function(){
-  console.log('%c🏪 Axentro v3.0 Loaded','color:#2563eb;font-size:16px;font-weight:bold');
+function updatePendingBadge() {
+    const count = DB.requests.filter(r => r['الحالة'] === 'pending').length;
+    const badge = document.getElementById('pendingBadge');
+    if (count > 0) {
+        badge.textContent = count;
+        badge.classList.add('show');
+    } else {
+        badge.classList.remove('show');
+    }
+}
+
+async function convertRequest(requestId) {
+    const request = DB.requests.find(r => r['رقم الطلب'] == requestId);
+    if (!request) return;
+
+    showConfirm(`تحويل الطلب "${requestId}" تلقائياً؟\nالمبلغ: ${formatMoney(request['المبلغ'])}`, async () => {
+        showLoading(true);
+        try {
+            const now = new Date();
+            const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
+            const refCode = `TRF-REQ-${datePart}-${String(Math.floor(Math.random()*10000)).padStart(4,'0')}`;
+
+            // Create transfer
+            await supabase.from('transfers').insert([{
+                "الرقم المرجعي": refCode,
+                "رقم التاجر": request['رقم التاجر'],
+                "اسم التاجر": request['اسم التاجر'],
+                "رقم الحساب": request['رقم الحساب'] || '',
+                "نوع التحويل": 'رصيد خدمات',
+                "قيمة التحويل": Number(request['المبلغ']),
+                "التاريخ": now.toISOString().split('T')[0],
+                "الوقت": formatTimeForDB(now),
+                "ملاحظات": `تحويل تلقائي من طلب: ${requestId}`,
+                "الشهر": now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' }),
+                created_at: now.toISOString()
+            }]);
+
+            // Update request status
+            await supabase.from('requests').update({ "الحالة": 'محوّل' }).eq('رقم الطلب', requestId);
+
+            showToast('✅ تم تحويل الطلب بنجاح', 'success');
+            await refreshAllData();
+        } catch (e) {
+            showToast('❌ ' + e.message, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }, 'نعم، حول');
+}
+
+async function deleteRequest(requestId) {
+    showConfirm(`حذف الطلب "${requestId}"؟`, async () => {
+        showLoading(true);
+        try {
+            await supabase.from('requests').delete().eq('رقم الطلب', requestId);
+            showToast('✅ تم حذف الطلب', 'success');
+            await refreshAllData();
+        } catch (e) {
+            showToast('❌ ' + e.message, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }, 'نعم، احذف');
+}
+
+// ============================================================
+// 📦 ARCHIVE
+// ============================================================
+
+function renderArchive() {
+    const list = [...DB.archives];
+    const tbody = document.getElementById('archiveTable');
+
+    if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fas fa-archive"></i><p>لا يوجد أرشيف</p></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((a, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td><strong>${a["الشهر"]}</strong></td>
+            <td>${a["عدد التحويلات"] || 0}</td>
+            <td>${formatMoney(a["إجمالي التحويلات"])}</td>
+            <td>${a["عدد التحصيلات"] || 0}</td>
+            <td>${formatMoney(a["إجمالي التحصيلات"])}</td>
+            <td><strong style="color:var(--danger);">${formatMoney(a["إجمالي المتبقي"])}</strong></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteArchive('${a["رقم الأرشيف"]}')" title="حذف"><i class="fas fa-trash"></i></button></td>
+        </tr>
+    `).join('');
+}
+
+function confirmCloseMonth() {
+    const monthName = new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
+    showConfirm(`إغلاق شهر "${monthName}"؟\n\nسيتم:\n• أرشفة جميع التحويلات والتحصيلات\n• بدء شهر جديد نظيف`, async () => {
+        showLoading(true);
+        try {
+            const now = new Date();
+            const currentMonth = now.toLocaleString('ar-EG', { month: 'long', year: 'numeric' });
+
+            const monthTransfers = DB.transfers.filter(t => t['الشهر'] === currentMonth);
+            const monthCollections = DB.collections.filter(c => c['شهر'] === currentMonth);
+
+            const totalTransfers = monthTransfers.reduce((s, t) => s + (Number(t['قيمة التحويل']) || 0), 0);
+            const totalCollections = monthCollections.reduce((s, c) => s + (Number(c['قيمة التحصيل']) || 0), 0);
+
+            await supabase.from('archives').insert([{
+                "رقم الأرشيف": `ARCH-${now.toISOString().slice(0,10).replace(/-/g,'')}`,
+                "الشهر": currentMonth,
+                "عدد التحويلات": monthTransfers.length,
+                "إجمالي التحويلات": totalTransfers,
+                "عدد التحصيلات": monthCollections.length,
+                "إجمالي التحصيلات": totalCollections,
+                "إجمالي المتبقي": totalTransfers - totalCollections,
+                created_at: now.toISOString()
+            }]);
+
+            showToast(`✅ تم إغلاق "${monthName}" بنجاح`, 'success');
+            await refreshAllData();
+        } catch (e) {
+            showToast('❌ ' + e.message, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }, 'نعم، أغلق');
+}
+
+async function deleteArchive(archiveId) {
+    showConfirm('حذف هذا الأرشيف؟ لا يمكن التراجع!', async () => {
+        showLoading(true);
+        try {
+            await supabase.from('archives').delete().eq('رقم الأرشيف', archiveId);
+            showToast('✅ تم حذف الأرشيف', 'success');
+            await refreshAllData();
+        } catch (e) {
+            showToast('❌ ' + e.message, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }, 'نعم، احذف');
+}
+
+// ============================================================
+// 🔍 SEARCH & LOOKUP
+// ============================================================
+
+function handleMerchantLookup(query, resultsListId, hiddenInputId) {
+    const resultsEl = document.getElementById(resultsListId);
+    const hiddenEl = document.getElementById(hiddenInputId);
+    if (!resultsEl || !hiddenEl) return;
+
+    if (!query || query.length < 1) {
+        resultsEl.style.display = 'none';
+        return;
+    }
+
+    const normalizedQuery = normalizeText(query);
+    const results = DB.merchants.filter(m =>
+        normalizeText(m['اسم التاجر']).includes(normalizedQuery) ||
+        m['رقم التاجر']?.toString().includes(query) ||
+        normalizeText(m['اسم النشاط']).includes(normalizedQuery)
+    ).slice(0, 8);
+
+    if (!results.length) {
+        resultsEl.innerHTML = '<div class="no-result"><i class="fas fa-search"></i> لا توجد نتائج</div>';
+        resultsEl.style.display = 'block';
+        return;
+    }
+
+    resultsEl.innerHTML = results.map(m => `
+        <div onclick="selectMerchant('${m['رقم التاجر']}','${escapeHtml(m['اسم التاجر'])}','${resultsListId}','${hiddenInputId}')">
+            <div><strong>${m['اسم التاجر']}</strong><small style="display:block;color:inherit;opacity:0.7;font-size:0.75rem;">${m['رقم التاجر']} - ${m['اسم النشاط']||'-'}</small></div>
+            <span class="result-code">${m['رقم التاجر']}</span>
+        </div>
+    `).join('');
+
+    resultsEl.style.display = 'block';
+}
+
+function selectMerchant(id, name, listId, inputId) {
+    const input = document.querySelector(`#${listId.replace('_list','_search')}`);
+    const hidden = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+
+    if (input) input.value = name;
+    if (hidden) hidden.value = id;
+    if (list) list.style.display = 'none';
+}
+
+const debounceTimers = {};
+function debounceSearch(type, value) {
+    searchTerms[type] = value;
+    clearTimeout(debounceTimers[type]);
+    debounceTimers[type] = setTimeout(() => {
+        if (type === 'merchant') renderMerchants();
+        else if (type === 'machine') renderMachines();
+        else if (type === 'request') renderRequests();
+    }, 300);
+}
+
+// Close search results when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-results') && !e.target.closest('[id*="_search"]')) {
+        document.querySelectorAll('.search-results').forEach(el => el.style.display = 'none');
+    }
 });
 
-// Keyboard shortcuts
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.active').forEach(function(m){m.classList.remove('active')});closeConfirm()}
-  if(e.ctrlKey&&e.key==='s'){e.preventDefault();var activeModal=document.querySelector('.modal-overlay.active');if(activeModal){switch(activeModal.id){case'merchantModal':saveMerchant();break;case'machineModal':saveMachine();break;case'transferModal':saveTransfer();break;case'collectionModal':saveCollection();break;case'requestModal':saveRequest();break}}}
+// ============================================================
+// 📤 EXPORT TO EXCEL
+// ============================================================
+
+function exportToExcel() {
+    try {
+        const wb = XLSX.utils.book_new();
+
+        const addSheet = (name, data, mapper) => {
+            if (!data.length) return;
+            const wsData = data.map(mapper);
+            const ws = XLSX.utils.json_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, name);
+        };
+
+        addSheet('التجار', DB.merchants, (m, i) => ({ '#': i+1, 'رقم التاجر': m['رقم التاجر'], 'الاسم': m['اسم التاجر'], 'النشاط': m['اسم النشاط'], 'الحساب': m['رقم الحساب'], 'الهاتف': m['رقم الهاتف'], 'المنطقة': m['المنطقة'], 'الحالة': m['الحالة'] }));
+        addSheet('المكن', DB.machines, (m, i) => ({ '#': i+1, 'رقم المكنة': m['رقم المكنة'], 'التاجر': m['اسم التاجر'], 'التسلسلي': m['الرقم التسلسلي'], 'التارجت': m['التارجت الشهري'], 'الحالة': m['الحالة'] }));
+        addSheet('التحويلات', DB.transfers, (t, i) => ({ '#': i+1, 'المرجعي': t['الرقم المرجعي'], 'التاريخ': t['التاريخ'], 'التاجر': t['اسم التاجر'], 'النوع': t['نوع التحويل'], 'القيمة': t['قيمة التحويل'] }));
+        addSheet('التحصيلات', DB.collections, (c, i) => ({ '#': i+1, 'المرجعي': c['الرقم المرجعي'], 'التاريخ': c['التاريخ'], 'التاجر': c['اسم التاجر'], 'القيمة': c['قيمة التحصيل'], 'النوع': c['نوع التحصيل'], 'المتبقي': c['المتبقي بعد التحصيل'] }));
+
+        XLSX.writeFile(wb, `Axentro_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+        showToast('✅ تم التصدير بنجاح', 'success');
+    } catch (e) {
+        showToast('❌ فشل التصدير: ' + e.message, 'error');
+    }
+}
+
+// ============================================================
+// 📝 LOGGING
+// ============================================================
+
+async function logAction(type, ref, details) {
+    try {
+        const now = new Date();
+        await supabase.from('logs').insert([{
+            "التاريخ": now.toISOString().split('T')[0],
+            "الوقت": formatTimeForDB(now),
+            "النوع": type,
+            "الرقم المرجعي": ref,
+            "التفاصيل": details,
+            "المستخدم": 'مدير',
+            created_at: now.toISOString()
+        }]);
+    } catch (e) {
+        console.warn('⚠️ Log error:', e);
+    }
+}
+
+// ============================================================
+// 🎨 UI HELPERS
+// ============================================================
+
+function switchPage(pageName, element) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+
+    const page = document.getElementById('page-' + pageName);
+    if (page) page.classList.add('active');
+    if (element) element.classList.add('active');
+}
+
+function showModal(content) {
+    document.getElementById('modalBodyContent').innerHTML = content;
+    const modal = document.getElementById('mainModal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function closeMainModal() {
+    const modal = document.getElementById('mainModal');
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+}
+
+function showConfirm(message, callback, btnText = 'تأكيد', iconType = 'question') {
+    const icons = { question: 'fa-question-circle', warning: 'fa-exclamation-triangle', danger: 'fa-times-circle' };
+    const colors = { question: 'var(--warning)', warning: 'var(--warning)', danger: 'var(--danger)' };
+
+    document.getElementById('confirmIcon').innerHTML = `<i class="fas ${icons[iconType]}"></i>`;
+    document.getElementById('confirmIcon').style.background = `${colors[iconType]}20`;
+    document.getElementById('confirmIcon').style.color = colors[iconType];
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmBtn').textContent = btnText;
+
+    confirmCallback = callback;
+    const modal = document.getElementById('confirmModal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function closeConfirm() {
+    const modal = document.getElementById('confirmModal');
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+    confirmCallback = null;
+}
+
+document.getElementById('confirmBtn').addEventListener('click', () => {
+    if (confirmCallback) confirmCallback();
+    closeConfirm();
 });
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const icons = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle' };
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="fas ${icons[type]}"></i> ${message}`;
+    container.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('removing'), 3500);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+function showLoading(show) {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.toggle('hidden', !show);
+}
+
+function setConnectionStatus(status) {
+    const el = document.getElementById('connectionStatus');
+    el.className = `conn-status ${status}`;
+    el.querySelector('span').textContent = status === 'live' ? 'متصل' : status === 'offline' ? 'غير متصل' : 'جاري الاتصال...';
+}
+
+function shakeElement(el) {
+    if (!el) return;
+    el.style.animation = 'shake 0.5s ease';
+    setTimeout(() => el.style.animation = '', 500);
+}
+
+// ============================================================
+// 📅 FORMATTERS
+// ============================================================
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch { return dateStr; }
+}
+
+function formatTime(timeStr) {
+    if (!timeStr) return '-';
+    try {
+        // If already has AM/PM
+        if (typeof timeStr === 'string' && (timeStr.includes('AM') || timeStr.includes('PM'))) {
+            return `<span class="time-badge">${timeStr}</span>`;
+        }
+        // Parse HH:mm:ss format
+        if (typeof timeStr === 'string' && timeStr.includes(':')) {
+            const parts = timeStr.split(':');
+            let hours = parseInt(parts[0]) || 0;
+            const minutes = parts[1] || '00';
+            const seconds = parts[2] || '00';
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `<span class="time-badge">${String(hours).padStart(2,'0')}:${minutes}:${seconds} ${ampm}</span>`;
+        }
+        return `<span class="time-badge">${timeStr}</span>`;
+    } catch { return `<span class="time-badge">${timeStr}</span>`; }
+}
+
+function formatTimeForDB(date) {
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+}
+
+function formatNumber(num) {
+    if (num === null || num === undefined || num === '') return '0';
+    n = typeof num === 'string' ? parseFloat(num.replace(/[^\d.-]/g, '')) || 0 : Number(num);
+    if (isNaN(n)) return '0';
+    return n.toLocaleString('ar-EG', { maximumFractionDigits: 2 });
+}
+
+function formatMoney(num) {
+    if (num === null || num === undefined || num === '') return '0 <span class="currency">جنيه</span>';
+    n = typeof num === 'string' ? parseFloat(num.replace(/[^\d.-]/g, '')) || 0 : Number(num);
+    if (isNaN(n)) return '0 <span class="currency">جنيه</span>';
+    return `${Math.abs(n).toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="currency">جنيه</span>`;
+}
+
+function normalizeText(str) {
+    return (str || '').toString().trim()
+        .replace(/[إأآا]/g, 'ا')
+        .replace(/[ة]/g, 'ه')
+        .replace(/[يى]/g, 'ي')
+        .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '')
+        .toLowerCase();
+}
+
+function escapeHtml(str) {
+    return str?.replace(/'/g, "\\'").replace(/"/g, '&quot;') || '';
+}
+
+// ============================================================
+// ⌨️ KEYBOARD SHORTCUTS
+// ============================================================
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeMainModal();
+        closeConfirm();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        showToast('💡 استخدم أزرار النظام للحفظ', 'warning');
+    }
+});
+
+// ============================================================
+// 🚀 INITIALIZATION
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Axentro System v3.0 Initializing...');
+
+    if (!initSupabase()) {
+        showToast('❌ فشل تهيئة الاتصال بقاعدة البيانات', 'error');
+        return;
+    }
+
+    if (checkSession()) {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'flex';
+        await refreshAllData();
+    }
+
+    // Auto-refresh every 5 minutes
+    setInterval(async () => {
+        if (checkSession() && document.getElementById('appContainer').style.display === 'flex') {
+            await refreshAllData();
+        }
+    }, CONFIG.AUTO_REFRESH_INTERVAL);
+
+    console.log('✅ Axentro System v3.0 Ready!');
+});
+
+console.log('%c🎉 Axentro System v3.0 Professional Edition', 'color:#2563eb;font-size:18px;font-weight:bold;');
+console.log('%c⚡ Developed by Axentro Team | © 2024', 'color:#64748b;font-size:12px;');
+
 </script>
 </body>
 </html>
