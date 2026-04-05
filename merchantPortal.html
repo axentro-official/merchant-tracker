@@ -816,7 +816,6 @@ const CONFIG = {
 
 let supabase = null;
 let currentMerchant = null;
-let currentDebt = 0; // ✅ يخزن المديونية الحالية لاستخدامها في الإيميل
 
 // ============================================================
 // 🔐 INITIALIZATION
@@ -950,7 +949,7 @@ async function loadMerchantData() {
         
         const totalTransfersVal = (allTransfers.data || []).reduce((sum, t) => sum + (Number(t['قيمة التحويل']) || 0), 0);
         const totalCollectionsVal = (allCollections.data || []).reduce((sum, c) => sum + (Number(c['قيمة التحصيل']) || 0), 0);
-        currentDebt = totalTransfersVal - totalCollectionsVal;
+        const debt = totalTransfersVal - totalCollectionsVal;
         
         // Update UI
         document.getElementById('merchantNameDisplay').textContent = currentMerchant['اسم التاجر'] || '-';
@@ -960,7 +959,7 @@ async function loadMerchantData() {
         document.getElementById('machinesCount').textContent = machines?.length || 0;
         document.getElementById('debtAmount').innerHTML = `${formatMoney(debt)} <span class="currency">جنيه</span>`;
         document.getElementById('totalCollections').innerHTML = `${formatMoney(totalCollectionsVal)} <span class="currency">جنيه</span>`;
-        document.getElementById('debtAmount').innerHTML = `${formatMoney(currentDebt)} <span class="currency">جنيه</span>`;
+        document.getElementById('totalTransfers').innerHTML = `${formatMoney(totalTransfersVal)} <span class="currency">جنيه</span>`;
         
         // Render tables
         renderLastTransfers(transfers || []);
@@ -1096,43 +1095,7 @@ async function submitRequest(e) {
         const { error } = await supabase.from('requests').insert([requestData]);
         
         if (error) throw error;
-    // ================== EMAIL NOTIFICATION ==================
-try {
-    await fetch("https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            action: "sendRequestEmail",
-            secret: "PUT_REAL_SECRET_HERE", // ✅ مهم
-
-            payload: {
-                merchant: {
-                    code: currentMerchant['رقم التاجر'],
-                    name: currentMerchant['اسم التاجر'],
-                    phone: currentMerchant['رقم الهاتف'] || '',
-                    area: currentMerchant['المنطقة'] || '',
-                    status: currentMerchant['الحالة'] || '',
-                    accountNumber: currentMerchant['رقم الحساب']
-                },
-                request: {
-                    code: requestRef,
-                    requestType: requestType,
-                    amount: amount,
-                    notes: notes
-                },
-                machines: [],
-                remainingBalance: currentDebt || 0
-            }
-        })
-    });
-
-    console.log("Email sent successfully");
-
-} catch (emailError) {
-    console.error("Email Error:", emailError);
-}
+        
         playSound('doneSound');
         closeRequestModal();
         
