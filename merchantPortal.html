@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3"></script>
     
     <style>
-        /* جميع الأنماط كما هي، لم نغيرها */
+        /* ====== CSS VARIABLES ====== */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
@@ -64,7 +64,7 @@
         ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--text-light); }
 
-        /* ====== Loading Overlay ====== */
+        /* ====== LOADING OVERLAY ====== */
         .loading-overlay {
             position: fixed;
             inset: 0;
@@ -107,7 +107,7 @@
         .loading-text i { animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-        /* ====== Header ====== */
+        /* ====== HEADER ====== */
         .portal-header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
@@ -149,14 +149,14 @@
             animation: pulse 2s infinite;
         }
 
-        /* ====== Main Container ====== */
+        /* ====== MAIN CONTAINER ====== */
         .portal-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem 1.5rem;
         }
 
-        /* ====== Auth Section ====== */
+        /* ====== AUTH SECTION ====== */
         .auth-section {
             background: var(--white);
             border-radius: var(--radius-xl);
@@ -206,7 +206,7 @@
             margin-bottom: 1.5rem;
         }
 
-        /* ====== Form Controls ====== */
+        /* ====== FORM CONTROLS ====== */
         .form-group { margin-bottom: 1.25rem; text-align: right; }
         .form-label { display: block; margin-bottom: 0.5rem; font-size: 0.88rem; font-weight: 600; color: var(--text); }
         .form-label .required { color: var(--danger); margin-left: 2px; }
@@ -225,7 +225,7 @@
         }
         .form-control::placeholder { color: var(--muted); }
 
-        /* ====== Buttons ====== */
+        /* ====== BUTTONS ====== */
         .btn {
             display: inline-flex;
             align-items: center; justify-content: center;
@@ -244,7 +244,7 @@
         .btn-block { width: 100%; }
         .btn-lg { padding: 1rem 2rem; font-size: 1.05rem; }
 
-        /* ====== Cards Grid ====== */
+        /* ====== STATS GRID ====== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -276,7 +276,7 @@
         .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--text); }
         .currency { font-size: 0.72rem; color: var(--text-light); font-weight: 400; margin-right: 3px; }
 
-        /* ====== Table Box ====== */
+        /* ====== TABLE BOX ====== */
         .table-box {
             background: var(--white);
             border-radius: var(--radius);
@@ -302,14 +302,14 @@
         tr:hover td { background: rgba(37,99,235,0.02); }
         tr:last-child td { border-bottom: none; }
 
-        /* ====== Badges ====== */
+        /* ====== BADGES ====== */
         .badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.28rem 0.7rem; border-radius: 50px; font-size: 0.73rem; font-weight: 600; }
         .badge-success { background: rgba(16,185,129,0.12); color: var(--success-dark); }
         .badge-danger { background: rgba(239,68,68,0.12); color: var(--danger-dark); }
         .badge-warning { background: rgba(245,158,11,0.12); color: var(--warning-dark); }
         .badge-primary { background: rgba(37,99,235,0.12); color: var(--primary); }
 
-        /* ====== Time Badge ====== */
+        /* ====== TIME BADGE ====== */
         .time-badge {
             font-family: 'SF Mono', Monaco, Consolas, monospace;
             background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
@@ -319,7 +319,7 @@
             letter-spacing: 0.5px; border: 1px solid var(--border);
         }
 
-        /* ====== Merchant Info Card ====== */
+        /* ====== MERCHANT INFO CARD ====== */
         .merchant-info {
             background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(124,58,237,0.05));
             border: 2px solid var(--primary);
@@ -347,7 +347,7 @@
             border-top: 1px dashed var(--border);
         }
 
-        /* ====== Modal ====== */
+        /* ====== MODAL ====== */
         .modal {
             position: fixed; inset: 0;
             background: rgba(15,23,42,0.75);
@@ -373,7 +373,7 @@
         .modal-close { position: absolute; top: 14px; left: 14px; font-size: 1.6rem; cursor: pointer; color: var(--text-light); transition: var(--transition); width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid transparent; }
         .modal-close:hover { color: var(--danger); background: rgba(239,68,68,0.08); border-color: var(--danger); }
 
-        /* ====== Toast Notifications ====== */
+        /* ====== TOAST NOTIFICATIONS ====== */
         .toast-container {
             position: fixed; bottom: 24px; left: 50%;
             transform: translateX(-50%); z-index: 99999;
@@ -397,12 +397,12 @@
         .toast.warning { background: linear-gradient(135deg, var(--warning), var(--warning-dark)); color: #1a202c; }
         @keyframes shake { 0%,100% { transform: translateX(-50%) translateX(0); } 20%,60% { transform: translateX(-50%) translateX(-8px); } 40%,80% { transform: translateX(-50%) translateX(8px); } }
 
-        /* ====== Empty State ====== */
+        /* ====== EMPTY STATE ====== */
         .empty-state { text-align: center; padding: 3rem 2rem; color: var(--text-light); }
         .empty-state i { font-size: 3rem; opacity: 0.25; margin-bottom: 1rem; }
         .empty-state p { font-size: 0.92rem; }
 
-        /* ====== Footer ====== */
+        /* ====== FOOTER ====== */
         .footer {
             background: linear-gradient(135deg, var(--bg-dark) 0%, #1e293b 100%);
             padding: 2.2rem 1.5rem; text-align: center;
@@ -587,10 +587,8 @@ const CONFIG = {
 };
 
 // ==================== EMAIL SERVICE CONFIG ====================
-// ⚠️ IMPORTANT: Replace with your actual Web App URL and Secret Key
+// ✅ تمت إزالة الـ Secret Key - لم يعد مطلوباً
 const EMAIL_SERVICE_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
-const EMAIL_SECRET_KEY = 'ecb83e1c-f3d3-4b9c-a76c-488980c7a88d_1775365269643
-';  // <- Run setup() in Apps Script to get this
 
 let supabase = null;
 let currentMerchant = null;
@@ -743,6 +741,7 @@ function renderLastCollections(data) {
 
 // ============================================================
 // 📝 REQUEST SUBMISSION (with email via Apps Script)
+// ✅ تمت إزالة الـ Secret Key من Payload
 // ============================================================
 function openRequestModal() {
     if (!currentMerchant) {
@@ -817,9 +816,8 @@ async function submitRequest(e) {
         const totalCollections = (collectionsRes.data || []).reduce((sum, c) => sum + (Number(c['قيمة التحصيل']) || 0), 0);
         const remainingBalance = totalTransfers - totalCollections;
         
-        // Send email via Apps Script Web App
+        // ✅ Send email via Apps Script Web App - WITHOUT SECRET KEY
         const emailPayload = {
-            secret: EMAIL_SECRET_KEY,
             action: 'sendRequestEmail',
             payload: {
                 merchant: {
@@ -920,7 +918,6 @@ function formatTimeForDB(date) {
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
 }
 
-// FIXED: added let n
 function formatMoney(num) {
     if (num === null || num === undefined || num === '') return '0 <span class="currency">جنيه</span>';
     let n = typeof num === 'string' ? parseFloat(num.replace(/[^\d.-]/g, '')) || 0 : Number(num);
