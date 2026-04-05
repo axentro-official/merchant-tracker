@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>بوابة التاجر - Axentro System v4.0</title>
+    <title>بوابة التاجر - Axentro System v4.1</title>
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
@@ -567,7 +567,7 @@
 
 <footer class="footer">
     <p>© 2024 Axentro – All Rights Reserved</p>
-    <p style="font-size:0.78rem;margin-top:0.5rem;">Powered by Axentro Engine v4.0 Professional</p>
+    <p style="font-size:0.78rem;margin-top:0.5rem;">Powered by Axentro Engine v4.1 Professional</p>
     <div class="qr-section">
         <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://axentro-official.github.io/axentro-website/links.html" alt="QR Code">
@@ -594,27 +594,22 @@ const CONFIG = {
 // ============================================================
 // 🔄 AUTO-DISCOVER DATABASE SCHEMA (الاكتشاف التلقائي)
 // ============================================================
-let DB_SCHEMA = null; // سيتم تخزين مخطط قاعدة البيانات هنا
+let DB_SCHEMA = null;
 let supabase = null;
 let currentMerchant = null;
 
 /**
  * 🔍 دالة اكتشاف مخطط قاعدة البيانات تلقائياً
- * تقوم بجلب أسماء الجداول والأعمدة من Supabase
  */
 async function discoverDatabaseSchema() {
     console.log('🔍 Starting database schema discovery...');
     
     try {
-        // محاولة جلب معلومات الجداول المتاحة
-        // ملاحظة: هذه الطريقة تعتمد على استعلامات تجريبية لاكتشاف الهيكل
-        
         const tablesToCheck = ['merchants', 'machines', 'transfers', 'collections', 'requests'];
         const schema = {};
         
         for (const tableName of tablesToCheck) {
             try {
-                // محاولة قراءة صف واحد لاكتشاف الأعمدة
                 const { data, error } = await supabase
                     .from(tableName)
                     .select('*')
@@ -627,7 +622,6 @@ async function discoverDatabaseSchema() {
                     };
                     console.log(`✅ Discovered table: ${tableName}`, schema[tableName].columns);
                 } else if (!error) {
-                    // الجدول موجود لكنه فارغ
                     schema[tableName] = { columns: [], sampleData: null, isEmpty: true };
                     console.log(`⚠️ Table ${tableName} exists but is empty`);
                 } else {
@@ -651,12 +645,10 @@ async function discoverDatabaseSchema() {
 
 /**
  * 🎯 دالة مطابقة أسماء الأعمدة تلقائياً
- * تحاول إيجاد العمود المناسب بناءً على أسماء بديلة
  */
 function findColumn(tableName, possibleNames) {
     if (!DB_SCHEMA || !DB_SCHEMA[tableName]) {
-        console.warn(`⚠️ No schema info for table: ${tableName}`);
-        return possibleNames[0]; // ارجاع الاسم الأول كافتراضي
+        return possibleNames[0];
     }
     
     const columns = DB_SCHEMA[tableName].columns;
@@ -667,7 +659,7 @@ function findColumn(tableName, possibleNames) {
         }
     }
     
-    // إذا لم يتم العثور على أي اسم، حاول بحث جزئي
+    // بحث جزئي
     for (const name of possibleNames) {
         const found = columns.find(col => 
             col.toLowerCase().includes(name.toLowerCase()) || 
@@ -683,126 +675,80 @@ function findColumn(tableName, possibleNames) {
 // ============================================================
 // ✅ DB_COLUMNS - ستتم تحديثها بعد الاكتشاف التلقائي
 // ============================================================
-let DB_COLUMNS = {
-    merchants: {
-        table: 'merchants',
-        accountNumber: 'رقم الحساب',
-        merchantId: 'رقم التاجر',
-        merchantName: 'اسم التاجر',
-        activityName: 'اسم النشاط',
-        phone: 'رقم الهاتف',
-        area: 'المنطقة',
-        status: 'الحالة'
-    },
-    machines: {
-        table: 'machines',
-        merchantId: 'رقم التاجر',
-        code: 'code',
-        serial: 'serial',
-        status: 'status',
-        location: 'location'
-    },
-    transfers: {
-        table: 'transfers',
-        merchantId: 'رقم التاجر',
-        amount: 'قيمة التحويل',
-        date: 'التاريخ',
-        type: 'نوع التحويل',
-        notes: 'ملاحظات'
-    },
-    collections: {
-        table: 'collections',
-        merchantId: 'رقم التاجر',
-        amount: 'قيمة التحصيل',
-        remaining: 'المتبقي بعد التحصيل',
-        date: 'التاريخ',
-        type: 'نوع التحصيل'
-    },
-    requests: {
-        table: 'requests',
-        requestId: 'رقم الطلب',
-        merchantId: 'رقم التاجر',
-        merchantName: 'اسم التاجر',
-        accountNumber: 'رقم الحساب',
-        requestType: 'نوع الطلب',
-        amount: 'المبلغ',
-        debt: 'رصيد خدمات',
-        date: 'التاريخ',
-        time: 'الوقت',
-        notes: 'ملاحظات',
-        status: 'الحالة'
-    }
-};
+let DB_COLUMNS = {};
 
 /**
- * 🔧 تحديث DB_COLUMNS بناءً على المخطط المكتشف
+ * 🔧 تهيئة وتحديث DB_COLUMNS بناءً على المخطط المكتشف
  */
-function updateDBColumnsFromSchema() {
-    if (!DB_SCHEMA) return;
+function initializeDBColumns() {
+    console.log('🔧 Initializing DB_COLUMNS...');
     
-    console.log('🔧 Updating DB_COLUMNS based on discovered schema...');
+    // ✅ أعمدة التجار - بناءً على ما اكتشفناه
+    DB_COLUMNS.merchants = {
+        table: 'merchants',
+        accountNumber: findColumn('merchants', ['رقم الحساب']),
+        merchantId: findColumn('merchants', ['رقم التاجر', 'id']),
+        merchantName: findColumn('merchants', ['اسم التاجر', 'التاجر اسم']),
+        activityName: findColumn('merchants', ['اسم النشاط', 'النشاط']),
+        phone: findColumn('merchants', ['رقم الهاتف']),
+        area: findColumn('merchants', ['المنطقة']),
+        status: findColumn('merchants', ['الحالة'])
+    };
     
-    // تحديث أعمدة التجار
-    if (DB_SCHEMA.merchants && DB_SCHEMA.merchants.columns.length > 0) {
-        DB_COLUMNS.merchants.accountNumber = findColumn('merchants', ['رقم الحساب', 'account_number', 'accountNumber']);
-        DB_COLUMNS.merchants.merchantId = findColumn('merchants', ['رقم التاجر', 'merchant_id', 'merchantId', 'code']);
-        DB_COLUMNS.merchants.merchantName = findColumn('merchants', ['اسم التاجر', 'merchant_name', 'name']);
-        DB_COLUMNS.merchants.activityName = findColumn('merchants', ['اسم النشاط', 'activity_name', 'activity']);
-        DB_COLUMNS.merchants.phone = findColumn('merchants', ['رقم الهاتف', 'phone', 'tel']);
-        DB_COLUMNS.merchants.area = findColumn('merchants', ['المنطقة', 'area']);
-        DB_COLUMNS.merchants.status = findColumn('merchants', ['الحالة', 'status']);
-    }
+    // ✅ أعمدة المكن
+    DB_COLUMNS.machines = {
+        table: 'machines',
+        merchantId: findColumn('machines', ['رقم التاجر']),
+        code: findColumn('machines', ['code', 'كود المكنة']),
+        serial: findColumn('machines', ['serial', 'الرقم التسلسلي']),
+        status: findColumn('machines', ['status', 'الحالة'])
+        // ❌ location غير موجودة - تمت إزالتها
+    };
     
-    // تحديث أعمدة المكن
-    if (DB_SCHEMA.machines && DB_SCHEMA.machines.columns.length > 0) {
-        DB_COLUMNS.machines.merchantId = findColumn('machines', ['رقم التاجر', 'merchant_id', 'merchantId']);
-        DB_COLUMNS.machines.code = findColumn('machines', ['code', 'رقم المكنة']);
-        DB_COLUMNS.machines.serial = findColumn('machines', ['serial', 'الرقم التسلسلي']);
-        DB_COLUMNS.machines.status = findColumn('machines', ['status', 'الحالة']);
-        DB_COLUMNS.machines.location = findColumn('machines', ['location', 'الموقع']);
-    }
+    // ✅ أعمدة التحويلات
+    DB_COLUMNS.transfers = {
+        table: 'transfers',
+        merchantId: findColumn('transfers', ['رقم التاجر']),
+        amount: findColumn('transfers', ['amount', 'قيمة التحويل', 'المبلغ']),
+        date: findColumn('transfers', ['date', 'التاريخ', 'created_at']),
+        type: findColumn('transfers', ['type', 'نوع التحويل', 'نوع']),
+        notes: findColumn('transfers', ['notes', 'ملاحظات'])
+    };
     
-    // تحديث أعمدة التحويلات
-    if (DB_SCHEMA.transfers && DB_SCHEMA.transfers.columns.length > 0) {
-        DB_COLUMNS.transfers.merchantId = findColumn('transfers', ['رقم التاجر', 'merchant_id', 'merchantId']);
-        DB_COLUMNS.transfers.amount = findColumn('transfers', ['قيمة التحويل', 'amount', 'value']);
-        DB_COLUMNS.transfers.date = findColumn('transfers', ['التاريخ', 'date', 'created_at']);
-        DB_COLUMNS.transfers.type = findColumn('transfers', ['نوع التحويل', 'type']);
-        DB_COLUMNS.transfers.notes = findColumn('transfers', ['ملاحظات', 'notes', 'note']);
-    }
+    // ✅ أعمدة التحصيلات
+    DB_COLUMNS.collections = {
+        table: 'collections',
+        merchantId: findColumn('collections', ['رقم التاجر']),
+        amount: findColumn('collections', ['amount', 'قيمة التحصيل', 'المبلغ']),
+        remaining: findColumn('collections', ['remaining', 'المتبقي', 'المتبقي بعد التحصيل']),
+        date: findColumn('collections', ['date', 'التاريخ', 'created_at']),
+        type: findColumn('collections', ['type', 'نوع التحصيل', 'نوع'])
+    };
     
-    // تحديث أعمدة التحصيلات
-    if (DB_SCHEMA.collections && DB_SCHEMA.collections.columns.length > 0) {
-        DB_COLUMNS.collections.merchantId = findColumn('collections', ['رقم التاجر', 'merchant_id', 'merchantId']);
-        DB_COLUMNS.collections.amount = findColumn('collections', ['قيمة التحصيل', 'amount', 'value']);
-        DB_COLUMNS.collections.remaining = findColumn('collections', ['المتبقي بعد التحصيل', 'remaining', 'balance']);
-        DB_COLUMNS.collections.date = findColumn('collections', ['التاريخ', 'date', 'created_at']);
-        DB_COLUMNS.collections.type = findColumn('collections', ['نوع التحصيل', 'type']);
-    }
+    // ✅ أعمدة الطلبات - مصححة بناءً على الاكتشاف
+    DB_COLUMNS.requests = {
+        table: 'requests',
+        requestId: findColumn('requests', ['رقم الطلب', 'id']),
+        merchantId: findColumn('requests', ['رقم التاجر']),
+        merchantName: findColumn('requests', ['اسم التاجر', 'التاجر اسم']),
+        accountNumber: findColumn('requests', ['رقم الحساب', 'التاجر حساب']),
+        requestType: findColumn('requests', ['نوع الطلب', 'نوع']),
+        amount: findColumn('requests', ['المبلغ', 'amount']),
+        debt: findColumn('requests', ['رصيد خدمات']), // ✅ التصحيح هنا
+        date: findColumn('requests', ['التاريخ', 'date']),
+        time: findColumn('requests', ['الوقت', 'time']),
+        notes: findColumn('requests', ['ملاحظات', 'notes']),
+        status: findColumn('requests', ['الحالة', 'status'])
+    };
     
-    // تحديث أعمدة الطلبات
-    if (DB_SCHEMA.requests && DB_SCHEMA.requests.columns.length > 0) {
-        DB_COLUMNS.requests.requestId = findColumn('requests', ['رقم الطلب', 'request_id', 'id']);
-        DB_COLUMNS.requests.merchantId = findColumn('requests', ['رقم التاجر', 'merchant_id', 'merchantId']);
-        DB_COLUMNS.requests.merchantName = findColumn('requests', ['اسم التاجر', 'merchant_name', 'name']);
-        DB_COLUMNS.requests.accountNumber = findColumn('requests', ['رقم الحساب', 'account_number', 'accountNumber']);
-        DB_COLUMNS.requests.requestType = findColumn('requests', ['نوع الطلب', 'request_type', 'type']);
-        DB_COLUMNS.requests.amount = findColumn('requests', ['المبلغ', 'amount']);
-        DB_COLUMNS.requests.debt = findColumn('requests', ['رصيد خدمات', 'debt', 'balance']);
-        DB_COLUMNS.requests.date = findColumn('requests', ['التاريخ', 'date']);
-        DB_COLUMNS.requests.time = findColumn('requests', ['الوقت', 'time']);
-        DB_COLUMNS.requests.notes = findColumn('requests', ['ملاحظات', 'notes']);
-        DB_COLUMNS.requests.status = findColumn('requests', ['الحالة', 'status']);
-    }
-    
-    console.log('✅ DB_COLUMNS updated:', DB_COLUMNS);
+    console.log('✅ DB_COLUMNS initialized:', DB_COLUMNS);
 }
 
 // ============================================================
 // 🔐 INITIALIZATION
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🏪 Merchant Portal v4.0 Initializing...');
+    console.log('🏪 Merchant Portal v4.1 Initializing...');
     updateLoadingText('جاري الاتصال بقاعدة البيانات...');
     
     if (!initSupabase()) {
@@ -816,8 +762,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ✅ اكتشاف مخطط قاعدة البيانات تلقائياً
     await discoverDatabaseSchema();
     
-    // ✅ تحديث أسماء الأعمدة بناءً على المخطط المكتشف
-    updateDBColumnsFromSchema();
+    // ✅ تهيئة أسماء الأعمدة بناءً على المخطط المكتشف
+    initializeDBColumns();
     
     hideLoading();
     console.log('✅ Merchant Portal Ready!');
@@ -840,7 +786,7 @@ function showLoading() { document.getElementById('loadingOverlay').classList.rem
 function updateLoadingText(text) { document.getElementById('loadingText').textContent = text; }
 
 // ============================================================
-// 🔍 ACCOUNT SEARCH - محسنة مع معالجة أخطاء أفضل
+// 🔍 ACCOUNT SEARCH - محسنة بالكامل
 // ============================================================
 function handleAccountKeypress(e) { 
     if (e.key === 'Enter') {
@@ -865,7 +811,6 @@ async function searchByAccount() {
     console.log(`🔍 Searching for account: ${accountNumber}`);
     
     try {
-        // ✅ استخدام اسم العمود المحدث من الاكتشاف التلقائي
         const accountCol = DB_COLUMNS.merchants.accountNumber;
         console.log(`📌 Using column "${accountCol}" for account search`);
         
@@ -894,7 +839,6 @@ async function searchByAccount() {
             return;
         }
         
-        // ✅ حفظ بيانات التاجر
         currentMerchant = merchants[0];
         console.log('✅ Merchant found:', currentMerchant);
         console.log('📊 Merchant data keys:', Object.keys(currentMerchant));
@@ -917,19 +861,18 @@ async function searchByAccount() {
 }
 
 // ============================================================
-// 📊 LOAD MERCHANT DATA - محسنة بالكامل
+// 📊 LOAD MERCHANT DATA - ✅ مصححة بدون .catch()
 // ============================================================
 async function loadMerchantData() {
     if (!currentMerchant) return;
     
-    // ✅ استخدام العمود الصحيح لـ merchantId
     const merchIdCol = DB_COLUMNS.merchants.merchantId;
     const merchId = currentMerchant[merchIdCol];
     
     console.log(`📊 Loading data for merchant ID: ${merchId} (column: ${merchIdCol})`);
     
     try {
-        // ✅ تحميل البيانات بشكل متوازي مع معالجة أخطاء منفصلة
+        // ✅ تحميل البيانات بشكل متوازي - بدون .catch() الخاطئ
         const results = await Promise.allSettled([
             // المكن
             supabase
@@ -937,19 +880,13 @@ async function loadMerchantData() {
                 .select('*')
                 .eq(DB_COLUMNS.machines.merchantId, merchId),
             
-            // آخر 5 تحويلات - باستخدام عمود التاريخ الصحيح
+            // آخر 5 تحويلات - استخدام created_at كعمود ترتيب افتراضي
             supabase
                 .from(DB_COLUMNS.transfers.table)
                 .select('*')
                 .eq(DB_COLUMNS.transfers.merchantId, merchId)
                 .order('created_at', { ascending: false })
-                .limit(5)
-                .catch(() => supabase
-                    .from(DB_COLUMNS.transfers.table)
-                    .select('*')
-                    .eq(DB_COLUMNS.transfers.merchantId, merchId)
-                    .order(DB_COLUMNS.transfers.date, { ascending: false })
-                    .limit(5)),
+                .limit(5),
             
             // آخر 5 تحصيلات
             supabase
@@ -957,13 +894,7 @@ async function loadMerchantData() {
                 .select('*')
                 .eq(DB_COLUMNS.collections.merchantId, merchId)
                 .order('created_at', { ascending: false })
-                .limit(5)
-                .catch(() => supabase
-                    .from(DB_COLUMNS.collections.table)
-                    .select('*')
-                    .eq(DB_COLUMNS.collections.merchantId, merchId)
-                    .order(DB_COLUMNS.collections.date, { ascending: false })
-                    .limit(5)),
+                .limit(5),
             
             // إجمالي التحويلات
             supabase
@@ -985,7 +916,7 @@ async function loadMerchantData() {
         const allTransfers = results[3].status === 'fulfilled' ? results[3].value.data : [];
         const allCollections = results[4].status === 'fulfilled' ? results[4].value.data : [];
         
-        // ✅ تسجيل الأخطاء في الكونسول
+        // ✅ تسجيل الأخطاء
         results.forEach((result, index) => {
             if (result.status === 'rejected') {
                 const tableNames = ['machines', 'transfers', 'collections', 'allTransfers', 'allCollections'];
@@ -993,7 +924,7 @@ async function loadMerchantData() {
             }
         });
         
-        // ✅ حساب المجاميع مع التعامل مع القيم الفارغة
+        // ✅ حساب المجاميع
         const totalTransfersVal = (allTransfers || []).reduce((sum, t) => {
             const val = Number(t[DB_COLUMNS.transfers.amount]) || 0;
             return sum + val;
@@ -1006,7 +937,7 @@ async function loadMerchantData() {
         
         const debt = totalTransfersVal - totalCollectionsVal;
         
-        // ✅ تحديث الواجهة - استخدام الأعمدة الصحيحة
+        // ✅ تحديث الواجهة
         const nameCol = DB_COLUMNS.merchants.merchantName;
         const activityCol = DB_COLUMNS.merchants.activityName;
         
@@ -1030,7 +961,7 @@ async function loadMerchantData() {
         
     } catch (err) {
         console.error('❌ Load data error:', err);
-        showToast('⚠️ تم تحميل部分 البيانات فقط', 'warning');
+        showToast('⚠️ تم تحميل بعض البيانات فقط', 'warning');
     }
 }
 
@@ -1093,7 +1024,7 @@ function renderLastCollections(data) {
 }
 
 // ============================================================
-// 📝 REQUEST SUBMISSION - محسنة بالكامل
+// 📝 REQUEST SUBMISSION - محسنة
 // ============================================================
 function openRequestModal() {
     if (!currentMerchant) {
@@ -1148,7 +1079,7 @@ async function submitRequest(e) {
         const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
         const requestRef = `REQ-${datePart}-${String(Math.floor(Math.random()*10000)).padStart(4,'0')}`;
         
-        // ✅ إعداد بيانات الطلب باستخدام الأعمدة المكتشفة تلقائياً
+        // ✅ إعداد بيانات الطلب - فقط الأعمدة الموجودة فعلياً
         const requestData = {};
         requestData[DB_COLUMNS.requests.requestId] = requestRef;
         requestData[DB_COLUMNS.requests.merchantId] = currentMerchant[DB_COLUMNS.merchants.merchantId];
@@ -1156,7 +1087,12 @@ async function submitRequest(e) {
         requestData[DB_COLUMNS.requests.accountNumber] = currentMerchant[DB_COLUMNS.merchants.accountNumber];
         requestData[DB_COLUMNS.requests.requestType] = requestType;
         requestData[DB_COLUMNS.requests.amount] = Math.round(amount * 100) / 100;
-        requestData[DB_COLUMNS.requests.debt] = 0;
+        
+        // ✅ إضافة رصيد الخدمات فقط إذا كان العمود موجود
+        if (DB_SCHEMA?.requests?.columns?.includes('رصيد خدمات')) {
+            requestData['رصيد خدمات'] = 0;
+        }
+        
         requestData[DB_COLUMNS.requests.date] = now.toISOString().split('T')[0];
         requestData[DB_COLUMNS.requests.time] = formatTimeForDB(now);
         requestData[DB_COLUMNS.requests.notes] = notes || '';
@@ -1164,7 +1100,6 @@ async function submitRequest(e) {
         requestData['created_at'] = now.toISOString();
         
         console.log('📤 Submitting request with data:', requestData);
-        console.log('📌 Using columns:', DB_COLUMNS.requests);
         
         // ✅ إدخال الطلب في Supabase
         const { data: insertedData, error: insertError } = await supabase
@@ -1179,7 +1114,7 @@ async function submitRequest(e) {
                 error: insertError,
                 requestData: requestData,
                 usedColumns: DB_COLUMNS.requests,
-                schemaInfo: DB_SCHEMA?.requests
+                availableColumns: DB_SCHEMA?.requests?.columns
             });
             throw new Error(insertError.message || 'فشل حفظ الطلب');
         }
@@ -1222,8 +1157,7 @@ async function submitRequest(e) {
                 machines: (machinesRes.data || []).map(m => ({
                     code: m[DB_COLUMNS.machines.code] || m['code'] || '',
                     serial: m[DB_COLUMNS.machines.serial] || m['serial'] || '',
-                    status: m[DB_COLUMNS.machines.status] || m['status'] || '',
-                    location: m[DB_COLUMNS.machines.location] || m['location'] || ''
+                    status: m[DB_COLUMNS.machines.status] || m['status'] || ''
                 })),
                 remainingBalance: remainingBalance
             }
@@ -1358,8 +1292,8 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-console.log('%c🏪 Merchant Portal - Axentro System v4.0', 'color:#7c3aed;font-size:18px;font-weight:bold;');
-console.log('%c⚡ Auto-Discovery Enabled | © 2024', 'color:#64748b;font-size:12px;');
+console.log('%c🏪 Merchant Portal - Axentro System v4.1', 'color:#7c3aed;font-size:18px;font-weight:bold;');
+console.log('%c✅ Fixed: No more .catch() errors | Auto-Discovery Enabled', 'color:#10b981;font-size:12px;');
 console.log('%c💡 Press F12 and check Console for debug info', 'color:#f59e0b;font-size:11px;');
 </script>
 </body>
