@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>بوابة التاجر - Axentro System v4.2</title>
+    <title>بوابة التاجر - Axentro System v4.3</title>
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
@@ -567,7 +567,7 @@
 
 <footer class="footer">
     <p>© 2024 Axentro – All Rights Reserved</p>
-    <p style="font-size:0.78rem;margin-top:0.5rem;">Powered by Axentro Engine v4.2 Professional</p>
+    <p style="font-size:0.78rem;margin-top:0.5rem;">Powered by Axentro Engine v4.3 Professional</p>
     <div class="qr-section">
         <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://axentro-official.github.io/axentro-website/links.html" alt="QR Code">
@@ -597,7 +597,6 @@ const CONFIG = {
 let DB_SCHEMA = null;
 let supabase = null;
 let currentMerchant = null;
-let isSoundPlaying = false; // ✅ منع تشغيل صوتين مع بعض
 
 // ============================================================
 // 🔄 AUTO-DISCOVER DATABASE SCHEMA
@@ -672,7 +671,6 @@ function findColumn(tableName, possibleNames, silent = false) {
     
     if (!silent) {
         console.warn(`⚠️ Column not found in ${tableName}. Tried:`, possibleNames);
-        console.warn(`   Available columns:`, columns);
     }
     return possibleNames[0];
 }
@@ -683,7 +681,7 @@ function findColumn(tableName, possibleNames, silent = false) {
 let DB_COLUMNS = {};
 
 /**
- * 🔧 تهيئة DB_COLUMNS - استخدام أسماء إنجليزية للجداول الفارغة
+ * 🔧 تهيئة DB_COLUMNS
  */
 function initializeDBColumns() {
     console.log('🔧 Initializing DB_COLUMNS...');
@@ -709,7 +707,7 @@ function initializeDBColumns() {
         status: findColumn('machines', ['status', 'الحالة'], true)
     };
     
-    // ✅ جدول التحويلات - إنجليزي (لأنه فارغ أو يستخدم أسماء إنجليزية)
+    // ✅ جدول التحويلات - إنجليزي
     DB_COLUMNS.transfers = {
         table: 'transfers',
         merchantId: findColumn('transfers', ['merchant_id', 'رقم التاجر', 'merchantId'], true),
@@ -752,7 +750,7 @@ function initializeDBColumns() {
 // 🔐 INITIALIZATION
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🏪 Merchant Portal v4.2 Initializing...');
+    console.log('🏪 Merchant Portal v4.3 Initializing...');
     updateLoadingText('جاري الاتصال بقاعدة البيانات...');
     
     if (!initSupabase()) {
@@ -768,7 +766,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     hideLoading();
     console.log('✅ Merchant Portal Ready!');
-    showToast('✅ تم تحميل النظام بنجاح', 'success');
 });
 
 function initSupabase() {
@@ -787,7 +784,7 @@ function showLoading() { document.getElementById('loadingOverlay').classList.rem
 function updateLoadingText(text) { document.getElementById('loadingText').textContent = text; }
 
 // ============================================================
-// 🔍 ACCOUNT SEARCH
+// 🔍 ACCOUNT SEARCH - ✅ صوت واحد فقط هنا
 // ============================================================
 function handleAccountKeypress(e) { 
     if (e.key === 'Enter') {
@@ -813,7 +810,6 @@ async function searchByAccount() {
     
     try {
         const accountCol = DB_COLUMNS.merchants.accountNumber;
-        console.log(`📌 Using column "${accountCol}" for account search`);
         
         const { data: merchants, error: mError } = await supabase
             .from(DB_COLUMNS.merchants.table)
@@ -822,7 +818,6 @@ async function searchByAccount() {
             .limit(1);
             
         if (mError) {
-            console.error('❌ Supabase query error:', mError);
             throw new Error(mError.message || 'خطأ في البحث عن التاجر');
         }
         
@@ -836,13 +831,15 @@ async function searchByAccount() {
         currentMerchant = merchants[0];
         console.log('✅ Merchant found:', currentMerchant);
         
-        playSound('doneSound');
-        showToast('✅ تم العثور على بياناتك!', 'success');
-        
         document.getElementById('authSection').style.display = 'none';
         document.getElementById('merchantData').style.display = 'block';
         
-        await loadMerchantData(true); // ✅ true = تشغيل الصوت
+        // ✅ تحميل البيانات أولاً (بدون صوت)
+        await loadMerchantData();
+        
+        // ✅ ثم شغل الصوت مرة واحدة فقط!
+        playSound('doneSound');
+        showToast('✅ تم العثور على بياناتك!', 'success');
         
     } catch (err) {
         console.error('❌ Search error:', err);
@@ -854,9 +851,9 @@ async function searchByAccount() {
 }
 
 // ============================================================
-// 📊 LOAD MERCHANT DATA - ✅ مع تحكم في الصوت
+// 📊 LOAD MERCHANT DATA - ✅ بدون أي أصوات!
 // ============================================================
-async function loadMerchantData(playSoundOnSuccess = false) {
+async function loadMerchantData() {
     if (!currentMerchant) return;
     
     const merchIdCol = DB_COLUMNS.merchants.merchantId;
@@ -879,14 +876,6 @@ async function loadMerchantData(playSoundOnSuccess = false) {
         const allTransfers = results[3].status === 'fulfilled' ? results[3].value.data : [];
         const allCollections = results[4].status === 'fulfilled' ? results[4].value.data : [];
         
-        // تسجيل الأخطاء بصمت
-        results.forEach((result, index) => {
-            if (result.status === 'rejected') {
-                const tableNames = ['machines', 'transfers', 'collections', 'allTransfers', 'allCollections'];
-                console.log(`⚠️ ${tableNames[index]}: Error or empty`);
-            }
-        });
-        
         const totalTransfersVal = (allTransfers || []).reduce((sum, t) => sum + (Number(t[DB_COLUMNS.transfers.amount]) || 0), 0);
         const totalCollectionsVal = (allCollections || []).reduce((sum, c) => sum + (Number(c[DB_COLUMNS.collections.amount]) || 0), 0);
         const debt = totalTransfersVal - totalCollectionsVal;
@@ -906,21 +895,16 @@ async function loadMerchantData(playSoundOnSuccess = false) {
         
         console.log('✅ Data loaded successfully');
         
-        // ✅ تشغيل الصوت فقط إذا كان مسموحاً
-        if (playSoundOnSuccess && !isSoundPlaying) {
-            playSound('doneSound');
-        }
-        
     } catch (err) {
         console.error('❌ Load data error:', err);
-        showToast('⚠️ تم تحميل بعض البيانات فقط', 'warning');
     }
 }
 
 async function refreshMerchantData() {
     showLoading();
     updateLoadingText('جاري تحديث البيانات...');
-    await loadMerchantData(false); // ✅ false = لا تشغل صوت
+    await loadMerchantData();
+    playSound('doneSound'); // ✅ صوت واحد عند التحديث
     showToast('✅ تم تحديث البيانات', 'success');
     hideLoading();
 }
@@ -963,7 +947,7 @@ function renderLastCollections(data) {
 }
 
 // ============================================================
-// 📝 REQUEST SUBMISSION - ✅ منع الصوت المزدوج
+// 📝 REQUEST SUBMISSION - ✅ صوت واحد فقط هنا أيضاً
 // ============================================================
 function openRequestModal() {
     if (!currentMerchant) {
@@ -1027,7 +1011,6 @@ async function submitRequest(e) {
         requestData[DB_COLUMNS.requests.requestType] = requestType;
         requestData[DB_COLUMNS.requests.amount] = Math.round(amount * 100) / 100;
         
-        // إضافة رصيد الخدمات إذا كان موجود
         if (DB_SCHEMA?.requests?.columns?.includes('رصيد خدمات')) {
             requestData['رصيد خدمات'] = 0;
         }
@@ -1053,7 +1036,7 @@ async function submitRequest(e) {
         
         console.log('✅ Request inserted successfully:', insertedData);
         
-        // ✅ تحميل بيانات للإيميل
+        // ✅ تحميل بيانات للإيميل (بدون صوت)
         updateLoadingText('جاري إعداد الإيميل...');
         const merchId = currentMerchant[DB_COLUMNS.merchants.merchantId];
         
@@ -1106,8 +1089,10 @@ async function submitRequest(e) {
             console.warn('⚠️ Email failed (non-critical):', emailErr);
         }
         
-        // ✅ النجاح - تشغيل الصوت مرة واحدة فقط
-        isSoundPlaying = true; // ✅ قفل الصوت
+        // ✅ تحديث البيانات (بدون صوت)
+        await loadMerchantData();
+        
+        // ✅ النجاح - شغل الصوت مرة واحدة فقط!
         playSound('doneSound');
         
         closeRequestModal();
@@ -1122,14 +1107,6 @@ async function submitRequest(e) {
         
         showToast('✅ تم إرسال الطلب بنجاح!', 'success');
         
-        // ✅ تحديث البيانات بدون صوت
-        await loadMerchantData(false);
-        
-        // ✅ فتح الصوت بعد ثانية
-        setTimeout(() => {
-            isSoundPlaying = false;
-        }, 1000);
-        
     } catch (err) {
         console.error('❌ Submit error:', err);
         showToast('❌ فشل الإرسال: ' + err.message, 'error');
@@ -1142,7 +1119,7 @@ async function submitRequest(e) {
 }
 
 // ============================================================
-// 🎨 UI HELPERS - ✅ مع تحكم في الصوت
+// 🎨 UI HELPERS - ✅ بسيطة وواضحة
 // ============================================================
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
@@ -1156,12 +1133,6 @@ function showToast(message, type = 'success') {
 }
 
 function playSound(soundName) {
-    // ✅ لا تشغل الصوت إذا كان هناك صوت آخر يعمل
-    if (isSoundPlaying && soundName === 'doneSound') {
-        console.log('🔇 Sound blocked to prevent double playback');
-        return;
-    }
-    
     try {
         const soundElement = document.getElementById(soundName);
         if (soundElement) {
@@ -1236,8 +1207,9 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-console.log('%c🏪 Merchant Portal - Axentro System v4.2', 'color:#7c3aed;font-size:18px;font-weight:bold;');
-console.log('%c✅ Fixed: Double sound issue | Smart column matching | Silent errors', 'color:#10b981;font-size:12px;');
+console.log('%c🏪 Merchant Portal - Axentro System v4.3', 'color:#7c3aed;font-size:18px;font-weight:bold;');
+console.log('%c✅ FINAL FIX: Sound plays exactly ONCE per action', 'color:#10b981;font-size:12px;');
+console.log('%c💡 No more double sounds! Clean & simple logic', 'color:#f59e0b;font-size:11px;');
 </script>
 </body>
 </html>
