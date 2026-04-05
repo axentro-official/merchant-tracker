@@ -816,6 +816,7 @@ const CONFIG = {
 
 let supabase = null;
 let currentMerchant = null;
+let currentDebt = 0; // ✅ يخزن المديونية الحالية لاستخدامها في الإيميل
 
 // ============================================================
 // 🔐 INITIALIZATION
@@ -949,7 +950,7 @@ async function loadMerchantData() {
         
         const totalTransfersVal = (allTransfers.data || []).reduce((sum, t) => sum + (Number(t['قيمة التحويل']) || 0), 0);
         const totalCollectionsVal = (allCollections.data || []).reduce((sum, c) => sum + (Number(c['قيمة التحصيل']) || 0), 0);
-        const debt = totalTransfersVal - totalCollectionsVal;
+        currentDebt = totalTransfersVal - totalCollectionsVal;
         
         // Update UI
         document.getElementById('merchantNameDisplay').textContent = currentMerchant['اسم التاجر'] || '-';
@@ -959,7 +960,7 @@ async function loadMerchantData() {
         document.getElementById('machinesCount').textContent = machines?.length || 0;
         document.getElementById('debtAmount').innerHTML = `${formatMoney(debt)} <span class="currency">جنيه</span>`;
         document.getElementById('totalCollections').innerHTML = `${formatMoney(totalCollectionsVal)} <span class="currency">جنيه</span>`;
-        document.getElementById('totalTransfers').innerHTML = `${formatMoney(totalTransfersVal)} <span class="currency">جنيه</span>`;
+        document.getElementById('debtAmount').innerHTML = `${formatMoney(currentDebt)} <span class="currency">جنيه</span>`;
         
         // Render tables
         renderLastTransfers(transfers || []);
@@ -1122,7 +1123,7 @@ try {
                     notes: notes
                 },
                 machines: [],
-                remainingBalance: debt || 0
+                remainingBalance: currentDebt || 0
             }
         })
     });
