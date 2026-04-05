@@ -5,24 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>بوابة التاجر - Axentro System</title>
     
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
-    
-    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3"></script>
     
     <style>
-        /* ====== CSS VARIABLES ====== */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
-            --primary-light: #3b82f6;
             --secondary: #7c3aed;
-            --secondary-dark: #6d28d9;
             --accent: #06b6d4;
             --success: #10b981;
             --success-dark: #059669;
@@ -77,25 +69,21 @@
             backdrop-filter: blur(12px);
             transition: opacity 0.4s ease, visibility 0.4s ease;
         }
-
         .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
         .loader {
             width: 60px; height: 60px; position: relative;
         }
-
         .loader::before, .loader::after {
             content: ''; position: absolute; inset: 0;
             border-radius: 50%; border: 4px solid transparent;
             border-top-color: var(--primary);
             animation: spin 1s linear infinite;
         }
-
         .loader::after {
             inset: 6px; border-top-color: var(--secondary);
             animation-duration: 0.8s; animation-direction: reverse;
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .loading-text {
@@ -103,7 +91,6 @@
             font-weight: 600; font-size: 0.95rem;
             display: flex; align-items: center; gap: 0.6rem;
         }
-
         .loading-text i { animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
@@ -120,7 +107,6 @@
             top: 0;
             z-index: 100;
         }
-
         .portal-brand {
             display: flex;
             align-items: center;
@@ -128,9 +114,7 @@
             font-weight: 800;
             font-size: 1.4rem;
         }
-
         .portal-brand i { font-size: 1.6rem; }
-
         .header-badge {
             background: rgba(255,255,255,0.2);
             padding: 0.4rem 1rem;
@@ -141,7 +125,6 @@
             align-items: center;
             gap: 0.45rem;
         }
-
         .status-dot {
             width: 8px; height: 8px;
             border-radius: 50%;
@@ -167,7 +150,6 @@
             position: relative;
             overflow: hidden;
         }
-
         .auth-section::before {
             content: '';
             position: absolute;
@@ -175,7 +157,6 @@
             height: 5px;
             background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
         }
-
         .auth-icon {
             width: 80px; height: 80px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -187,19 +168,16 @@
             box-shadow: 0 10px 30px rgba(37,99,235,0.35);
             animation: float 4s ease-in-out infinite;
         }
-
         @keyframes float {
             0%,100% { transform: translateY(0) rotate(0deg); }
             50% { transform: translateY(-10px) rotate(3deg); }
         }
-
         .auth-title {
             font-size: 1.5rem;
             font-weight: 800;
             color: var(--text);
             margin-bottom: 1.5rem;
         }
-
         .auth-subtitle {
             color: var(--text-light);
             font-size: 0.92rem;
@@ -244,13 +222,35 @@
         .btn-block { width: 100%; }
         .btn-lg { padding: 1rem 2rem; font-size: 1.05rem; }
 
-        /* ====== STATS GRID ====== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+        /* ====== MERCHANT INFO CARD ====== */
+        .merchant-info {
+            background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(124,58,237,0.05));
+            border: 2px solid var(--primary);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
             margin-bottom: 2rem;
         }
+        .merchant-info-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .merchant-avatar {
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.8rem;
+            box-shadow: 0 4px 15px rgba(37,99,235,0.3);
+        }
+        .merchant-details h3 { font-size: 1.3rem; color: var(--primary); margin-bottom: 0.25rem; }
+        .merchant-details p { font-size: 0.88rem; color: var(--text-light); margin: 0; }
+        .merchant-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border);
+        }
+
+        /* ====== STAT CARDS ====== */
         .stat-card {
             background: var(--white);
             padding: 1.5rem;
@@ -308,44 +308,6 @@
         .badge-danger { background: rgba(239,68,68,0.12); color: var(--danger-dark); }
         .badge-warning { background: rgba(245,158,11,0.12); color: var(--warning-dark); }
         .badge-primary { background: rgba(37,99,235,0.12); color: var(--primary); }
-
-        /* ====== TIME BADGE ====== */
-        .time-badge {
-            font-family: 'SF Mono', Monaco, Consolas, monospace;
-            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-            padding: 3px 10px; border-radius: 6px;
-            font-size: 0.82rem; font-weight: 650;
-            direction: ltr; display: inline-block;
-            letter-spacing: 0.5px; border: 1px solid var(--border);
-        }
-
-        /* ====== MERCHANT INFO CARD ====== */
-        .merchant-info {
-            background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(124,58,237,0.05));
-            border: 2px solid var(--primary);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .merchant-info-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-        .merchant-avatar {
-            width: 70px; height: 70px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 1.8rem;
-            box-shadow: 0 4px 15px rgba(37,99,235,0.3);
-        }
-        .merchant-details h3 { font-size: 1.3rem; color: var(--primary); margin-bottom: 0.25rem; }
-        .merchant-details p { font-size: 0.88rem; color: var(--text-light); margin: 0; }
-        .merchant-stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px dashed var(--border);
-        }
 
         /* ====== MODAL ====== */
         .modal {
@@ -415,11 +377,28 @@
         .qr-section a { color: #60a5fa; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: var(--transition); }
         .qr-section a:hover { color: #93c5fd; }
 
+        /* ====== DEBUG PANEL (اختياري) ====== */
+        .debug-panel {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.75rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        .debug-panel.show { display: block; }
+        .debug-panel pre { 
+            white-space: pre-wrap; 
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
         @media (max-width: 768px) {
             .portal-header { padding: 1rem; flex-wrap: wrap; gap: 0.75rem; }
             .portal-container { padding: 1rem; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .table-header { flex-direction: column; align-items: stretch; }
             .auth-section { padding: 1.5rem; }
             .merchant-info-header { flex-direction: column; text-align: center; }
         }
@@ -501,6 +480,12 @@
             <input type="text" id="accountSearch" class="form-control" placeholder="🔍 أدخل رقم حسابك..." dir="ltr" onkeypress="handleAccountKeypress(event)">
         </div>
         <button class="btn btn-primary btn-block btn-lg" onclick="searchByAccount()"><i class="fas fa-search"></i> عرض بياناتي</button>
+        
+        <!-- Debug Panel -->
+        <div class="debug-panel" id="debugPanel">
+            <strong>🔍 Debug Info:</strong>
+            <pre id="debugContent"></pre>
+        </div>
     </section>
 
     <section id="merchantData" style="display: none;">
@@ -565,7 +550,7 @@
 
 <footer class="footer">
     <p>© 2024 Axentro – All Rights Reserved</p>
-    <p style="font-size:0.78rem;margin-top:0.5rem;">Powered by Axentro Engine v3.0 Professional</p>
+    <p style="font-size:0.78rem;margin-top:0.5rem;">Powered by Axentro Engine v3.1 Professional</p>
     <div class="qr-section">
         <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://axentro-official.github.io/axentro-website/links.html" alt="QR Code">
@@ -579,16 +564,74 @@
 
 <script>
 // ============================================================
-// ⚙️ CONFIGURATION - MODIFY THESE VALUES
+// ⚙️ CONFIGURATION
 // ============================================================
 const CONFIG = {
     SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
-    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY'
+    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
+    
+    // ✅ Email Service URL (بدون Secret Key)
+    EMAIL_SERVICE_URL: 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec'
 };
 
-// ==================== EMAIL SERVICE CONFIG ====================
-// ✅ تمت إزالة الـ Secret Key - لم يعد مطلوباً
-const EMAIL_SERVICE_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
+// ============================================================
+// ✅ أسماء الأعمدة في Supabase - تأكد من مطابقتها مع قاعدة البيانات
+// ============================================================
+const DB_COLUMNS = {
+    // جدول التجار
+    merchants: {
+        table: 'merchants',
+        accountNumber: 'رقم الحساب',       // غيّر هذا إذا كان الاسم مختلفاً
+        merchantId: 'رقم التاجر',          // غيّر هذا إذا كان الاسم مختلفاً
+        merchantName: 'اسم التاجر',         // غيّر هذا إذا كان الاسم مختلفاً
+        activityName: 'اسم النشاط',         // غيّر هذا إذا كان الاسم مختلفاً
+        phone: 'رقم الهاتف',               // غيّر هذا إذا كان الاسم مختلفاً
+        area: 'المنطقة',                   // غيّر هذا إذا كان الاسم مختلفاً
+        status: 'الحالة'                   // غيّر هذا إذا كان الاسم مختلفاً
+    },
+    // جدول المكن
+    machines: {
+        table: 'machines',
+        merchantId: 'رقم التاجر',
+        code: 'code',                      // أو 'رقم المكنة'
+        serial: 'serial',                  // أو 'الرقم التسلسلي'
+        status: 'status',                  // أو 'الحالة'
+        location: 'location'               // أو 'الموقع'
+    },
+    // جدول التحويلات
+    transfers: {
+        table: 'transfers',
+        merchantId: 'رقم التاجر',
+        amount: 'قيمة التحويل',            // غيّر هذا إذا كان الاسم مختلفاً
+        date: 'التاريخ',                   // غيّر هذا إذا كان الاسم مختلفاً
+        type: 'نوع التحويل',               // غيّر هذا إذا كان الاسم مختلفاً
+        notes: 'ملاحظات'
+    },
+    // جدول التحصيلات
+    collections: {
+        table: 'collections',
+        merchantId: 'رقم التاجر',
+        amount: 'قيمة التحصيل',            // غيّر هذا إذا كان الاسم مختلفاً
+        remaining: 'المتبقي بعد التحصيل',   // غيّر هذا إذا كان الاسم مختلفاً
+        date: 'التاريخ',
+        type: 'نوع التحصيل'
+    },
+    // جدول الطلبات
+    requests: {
+        table: 'requests',
+        requestId: 'رقم الطلب',
+        merchantId: 'رقم التاجر',
+        merchantName: 'اسم التاجر',
+        accountNumber: 'رقم الحساب',
+        requestType: 'نوع الطلب',
+        amount: 'المبلغ',
+        debt: 'المديونية الحالية',
+        date: 'التاريخ',
+        time: 'الوقت',
+        notes: 'ملاحظات',
+        status: 'الحالة'
+    }
+};
 
 let supabase = null;
 let currentMerchant = null;
@@ -597,11 +640,13 @@ let currentMerchant = null;
 // 🔐 INITIALIZATION
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🏪 Merchant Portal Initializing...');
+    console.log('🏪 Merchant Portal v3.1 Initializing...');
+    
     if (!initSupabase()) {
-        showToast('❌ فشل الاتصال بالنظام', 'error');
+        showToast('❌ فشل الاتصال بقاعدة البيانات', 'error');
         return;
     }
+    
     hideLoading();
     console.log('✅ Merchant Portal Ready!');
 });
@@ -609,9 +654,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 function initSupabase() {
     try {
         supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        console.log('✅ Supabase client initialized');
         return true;
     } catch (e) {
-        console.error('Supabase error:', e);
+        console.error('❌ Supabase initialization error:', e);
         return false;
     }
 }
@@ -620,40 +666,63 @@ function hideLoading() { document.getElementById('loadingOverlay').classList.add
 function showLoading() { document.getElementById('loadingOverlay').classList.remove('hidden'); }
 
 // ============================================================
-// 🔍 ACCOUNT SEARCH
+// 🔍 ACCOUNT SEARCH - مع معالجة أفضل للأخطاء
 // ============================================================
-function handleAccountKeypress(e) { if (e.key === 'Enter') e.preventDefault(), searchByAccount(); }
+function handleAccountKeypress(e) { 
+    if (e.key === 'Enter') {
+        e.preventDefault(); 
+        searchByAccount();
+    }
+}
 
 async function searchByAccount() {
     const accountInput = document.getElementById('accountSearch');
     const accountNumber = accountInput?.value?.trim();
+    
     if (!accountNumber) {
-        showToast('⚠️ يرجى إدخل رقم الحساب', 'warning');
+        showToast('⚠️ يرجى إدخال رقم الحساب', 'warning');
         shakeElement(accountInput);
         playSound('errorSound');
         return;
     }
+    
     showLoading();
+    console.log(`🔍 Searching for account: ${accountNumber}`);
+    
     try {
+        // ✅ استخدام اسم العمود من الإعدادات
         const { data: merchants, error: mError } = await supabase
-            .from('merchants')
+            .from(DB_COLUMNS.merchants.table)
             .select('*')
-            .eq('رقم الحساب', accountNumber)
+            .eq(DB_COLUMNS.merchants.accountNumber, accountNumber)
             .limit(1);
-        if (mError) throw mError;
+            
+        if (mError) {
+            console.error('❌ Supabase query error:', mError);
+            showDebugInfo({ error: mError, query: 'merchants search', accountNumber });
+            throw new Error(mError.message || 'خطأ في البحث عن التاجر');
+        }
+        
         if (!merchants || merchants.length === 0) {
             showToast('❌ لم يتم العثور على هذا الرقم', 'error');
             playSound('errorSound');
             return;
         }
+        
+        // ✅ حفظ بيانات التاجر
         currentMerchant = merchants[0];
+        console.log('✅ Merchant found:', currentMerchant[DB_COLUMNS.merchants.merchantName]);
+        
         playSound('doneSound');
         showToast('✅ تم العثور على بياناتك!', 'success');
+        
         document.getElementById('authSection').style.display = 'none';
         document.getElementById('merchantData').style.display = 'block';
+        
         await loadMerchantData();
+        
     } catch (err) {
-        console.error('Search error:', err);
+        console.error('❌ Search error:', err);
         showToast('❌ حدث خطأ: ' + err.message, 'error');
         playSound('errorSound');
     } finally {
@@ -662,35 +731,104 @@ async function searchByAccount() {
 }
 
 // ============================================================
-// 📊 LOAD MERCHANT DATA
+// 📊 LOAD MERCHANT DATA - مع معالجة أخطاء محسنة
 // ============================================================
 async function loadMerchantData() {
     if (!currentMerchant) return;
-    const merchId = currentMerchant['رقم التاجر'];
+    
+    const merchId = currentMerchant[DB_COLUMNS.merchants.merchantId];
+    console.log(`📊 Loading data for merchant ID: ${merchId}`);
+    
     try {
-        const { data: machines } = await supabase.from('machines').select('*').eq('رقم التاجر', merchId);
-        const { data: transfers } = await supabase.from('transfers').select('*').eq('رقم التاجر', merchId).order('created_at', { ascending: false }).limit(5);
-        const { data: collections } = await supabase.from('collections').select('*').eq('رقم التاجر', merchId).order('created_at', { ascending: false }).limit(5);
+        // ✅ تحميل البيانات بشكل متوازي مع معالجة أخطاء منفصلة
+        const [machinesResult, transfersResult, collectionsResult, allTransfersResult, allCollectionsResult] = await Promise.allSettled([
+            // المكن
+            supabase
+                .from(DB_COLUMNS.machines.table)
+                .select('*')
+                .eq(DB_COLUMNS.machines.merchantId, merchId),
+            
+            // آخر 5 تحويلات
+            supabase
+                .from(DB_COLUMNS.transfers.table)
+                .select('*')
+                .eq(DB_COLUMNS.transfers.merchantId, merchId)
+                .order('created_at', { ascending: false })
+                .limit(5),
+            
+            // آخر 5 تحصيلات
+            supabase
+                .from(DB_COLUMNS.collections.table)
+                .select('*')
+                .eq(DB_COLUMNS.collections.merchantId, merchId)
+                .order('created_at', { ascending: false })
+                .limit(5),
+            
+            // إجمالي التحويلات
+            supabase
+                .from(DB_COLUMNS.transfers.table)
+                .select(DB_COLUMNS.transfers.amount)
+                .eq(DB_COLUMNS.transfers.merchantId, merchId),
+            
+            // إجمالي التحصيلات
+            supabase
+                .from(DB_COLUMNS.collections.table)
+                .select(DB_COLUMNS.collections.amount)
+                .eq(DB_COLUMNS.collections.merchantId, merchId)
+        ]);
         
-        const allTransfers = await supabase.from('transfers').select('قيمة التحويل').eq('رقم التاجر', merchId);
-        const allCollections = await supabase.from('collections').select('قيمة التحصيل').eq('رقم التاجر', merchId);
-        const totalTransfersVal = (allTransfers.data || []).reduce((sum, t) => sum + (Number(t['قيمة التحويل']) || 0), 0);
-        const totalCollectionsVal = (allCollections.data || []).reduce((sum, c) => sum + (Number(c['قيمة التحصيل']) || 0), 0);
+        // ✅ استخراج البيانات مع معالجة الأخطاء
+        const machines = machinesResult.status === 'fulfilled' ? machinesResult.value.data : [];
+        const transfers = transfersResult.status === 'fulfilled' ? transfersResult.value.data : [];
+        const collections = collectionsResult.status === 'fulfilled' ? collectionsResult.value.data : [];
+        const allTransfers = allTransfersResult.status === 'fulfilled' ? allTransfersResult.value.data : [];
+        const allCollections = allCollectionsResult.status === 'fulfilled' ? allCollectionsResult.value.data : [];
+        
+        // ✅ تسجيل الأخطاء في الكونسول فقط (بدون إظهارها للمستخدم)
+        if (machinesResult.status === 'rejected') {
+            console.warn('⚠️ Failed to load machines:', machinesResult.reason);
+        }
+        if (transfersResult.status === 'rejected') {
+            console.warn('⚠️ Failed to load transfers:', transfersResult.reason);
+        }
+        if (collectionsResult.status === 'rejected') {
+            console.warn('⚠️ Failed to load collections:', collectionsResult.reason);
+        }
+        
+        // ✅ حساب المجاميع
+        const totalTransfersVal = (allTransfers || []).reduce((sum, t) => {
+            const val = Number(t[DB_COLUMNS.transfers.amount]) || 0;
+            return sum + val;
+        }, 0);
+        
+        const totalCollectionsVal = (allCollections || []).reduce((sum, c) => {
+            const val = Number(c[DB_COLUMNS.collections.amount]) || 0;
+            return sum + val;
+        }, 0);
+        
         const debt = totalTransfersVal - totalCollectionsVal;
         
-        document.getElementById('merchantNameDisplay').textContent = currentMerchant['اسم التاجر'] || '-';
-        document.getElementById('merchantActivityDisplay').textContent = currentMerchant['اسم النشاط'] || '-';
-        document.getElementById('merchantAvatarIcon').innerHTML = currentMerchant['اسم التاجر']?.charAt(0)?.toUpperCase() || '👤';
+        // ✅ تحديث الواجهة
+        document.getElementById('merchantNameDisplay').textContent = 
+            currentMerchant[DB_COLUMNS.merchants.merchantName] || '-';
+        document.getElementById('merchantActivityDisplay').textContent = 
+            currentMerchant[DB_COLUMNS.merchants.activityName] || '-';
+        document.getElementById('merchantAvatarIcon').innerHTML = 
+            (currentMerchant[DB_COLUMNS.merchants.merchantName] || '👤').charAt(0).toUpperCase();
+        
         document.getElementById('machinesCount').textContent = machines?.length || 0;
-        document.getElementById('debtAmount').innerHTML = `${formatMoney(debt)}`;
-        document.getElementById('totalCollections').innerHTML = `${formatMoney(totalCollectionsVal)}`;
-        document.getElementById('totalTransfers').innerHTML = `${formatMoney(totalTransfersVal)}`;
+        document.getElementById('debtAmount').innerHTML = formatMoney(debt);
+        document.getElementById('totalCollections').innerHTML = formatMoney(totalCollectionsVal);
+        document.getElementById('totalTransfers').innerHTML = formatMoney(totalTransfersVal);
         
         renderLastTransfers(transfers || []);
         renderLastCollections(collections || []);
+        
+        console.log('✅ Data loaded successfully');
+        
     } catch (err) {
-        console.error('Load data error:', err);
-        showToast('❌ خطأ في تحميل البيانات', 'error');
+        console.error('❌ Load data error:', err);
+        showToast('⚠️ تم تحميل部分 البيانات فقط', 'warning');
     }
 }
 
@@ -714,10 +852,10 @@ function renderLastTransfers(data) {
     tbody.innerHTML = data.map((t, i) => `
         <tr>
             <td>${i + 1}</td>
-            <td>${formatDate(t['التاريخ'])}</td>
-            <td><span class="badge badge-primary">${t['نوع التحويل'] || '-'}</span></td>
-            <td><strong style="color:var(--danger);">${formatMoney(t['قيمة التحويل'])}</strong></td>
-            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${t['ملاحظات'] || '-'}">${t['ملاحظات'] || '-'}</td>
+            <td>${formatDate(t[DB_COLUMNS.transfers.date])}</td>
+            <td><span class="badge badge-primary">${t[DB_COLUMNS.transfers.type] || '-'}</span></td>
+            <td><strong style="color:var(--danger);">${formatMoney(t[DB_COLUMNS.transfers.amount])}</strong></td>
+            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${t[DB_COLUMNS.transfers.notes] || '-'}">${t[DB_COLUMNS.transfers.notes] || '-'}</td>
         </tr>
     `).join('');
 }
@@ -731,17 +869,16 @@ function renderLastCollections(data) {
     tbody.innerHTML = data.map((c, i) => `
         <tr>
             <td>${i + 1}</td>
-            <td>${formatDate(c['التاريخ'])}</td>
-            <td><span class="badge badge-success">${c['نوع التحصيل'] === 'كلي' ? '✅ كامل' : '📊 جزئي'}</span></td>
-            <td><strong style="color:var(--success);">${formatMoney(c['قيمة التحصيل'])}</strong></td>
-            <td><strong style="color:var(--danger);">${formatMoney(c['المتبقي بعد التحصيل'])}</strong></td>
+            <td>${formatDate(c[DB_COLUMNS.collections.date])}</td>
+            <td><span class="badge badge-success">${c[DB_COLUMNS.collections.type] === 'كلي' ? '✅ كامل' : '📊 جزئي'}</span></td>
+            <td><strong style="color:var(--success);">${formatMoney(c[DB_COLUMNS.collections.amount])}</strong></td>
+            <td><strong style="color:var(--danger);">${formatMoney(c[DB_COLUMNS.collections.remaining])}</strong></td>
         </tr>
     `).join('');
 }
 
 // ============================================================
-// 📝 REQUEST SUBMISSION (with email via Apps Script)
-// ✅ تمت إزالة الـ Secret Key من Payload
+// 📝 REQUEST SUBMISSION
 // ============================================================
 function openRequestModal() {
     if (!currentMerchant) {
@@ -771,11 +908,19 @@ async function submitRequest(e) {
         showToast('⚠️ يجب البحث عن حسابك أولاً', 'warning');
         return;
     }
+    
     const requestType = document.getElementById('requestType').value;
     const amount = parseFloat(document.getElementById('requestAmount')?.value);
     const notes = document.getElementById('requestNotes')?.value?.trim();
-    if (!requestType) { showToast('⚠️ اختر نوع الطلب', 'warning'); return; }
-    if (!amount || amount <= 0) { showToast('⚠️ أدخل مبلغ صحيح', 'error'); return; }
+    
+    if (!requestType) { 
+        showToast('⚠️ اختر نوع الطلب', 'warning'); 
+        return; 
+    }
+    if (!amount || amount <= 0) { 
+        showToast('⚠️ أدخل مبلغ صحيح', 'error'); 
+        return; 
+    }
     
     const submitBtn = document.querySelector('#requestForm button[type="submit"]');
     submitBtn.disabled = true;
@@ -787,46 +932,57 @@ async function submitRequest(e) {
         const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
         const requestRef = `REQ-${datePart}-${String(Math.floor(Math.random()*10000)).padStart(4,'0')}`;
         
-        // Insert request into Supabase
-        const requestData = {
-            "رقم الطلب": requestRef,
-            "رقم التاجر": currentMerchant['رقم التاجر'],
-            "اسم التاجر": currentMerchant['اسم التاجر'],
-            "رقم الحساب": currentMerchant['رقم الحساب'],
-            "نوع الطلب": requestType,
-            "المبلغ": Math.round(amount * 100) / 100,
-            "المديونية الحالية": 0,
-            "التاريخ": now.toISOString().split('T')[0],
-            "الوقت": formatTimeForDB(now),
-            "ملاحظات": notes,
-            "الحالة": 'pending',
-            created_at: now.toISOString()
-        };
-        const { error: insertError } = await supabase.from('requests').insert([requestData]);
-        if (insertError) throw insertError;
+        // ✅ إعداد بيانات الطلب باستخدام أسماء الأعمدة الصحيحة
+        const requestData = {};
+        requestData[DB_COLUMNS.requests.requestId] = requestRef;
+        requestData[DB_COLUMNS.requests.merchantId] = currentMerchant[DB_COLUMNS.merchants.merchantId];
+        requestData[DB_COLUMNS.requests.merchantName] = currentMerchant[DB_COLUMNS.merchants.merchantName];
+        requestData[DB_COLUMNS.requests.accountNumber] = currentMerchant[DB_COLUMNS.merchants.accountNumber];
+        requestData[DB_COLUMNS.requests.requestType] = requestType;
+        requestData[DB_COLUMNS.requests.amount] = Math.round(amount * 100) / 100;
+        requestData[DB_COLUMNS.requests.debt] = 0;
+        requestData[DB_COLUMNS.requests.date] = now.toISOString().split('T')[0];
+        requestData[DB_COLUMNS.requests.time] = formatTimeForDB(now);
+        requestData[DB_COLUMNS.requests.notes] = notes;
+        requestData[DB_COLUMNS.requests.status] = 'pending';
+        requestData['created_at'] = now.toISOString();
         
-        // Fetch additional data for email (machines + balance)
-        const merchId = currentMerchant['رقم التاجر'];
-        const { data: machines } = await supabase.from('machines').select('code, serial, status, location').eq('رقم التاجر', merchId);
-        const [transfersRes, collectionsRes] = await Promise.all([
-            supabase.from('transfers').select('قيمة التحويل').eq('رقم التاجر', merchId),
-            supabase.from('collections').select('قيمة التحصيل').eq('رقم التاجر', merchId)
+        console.log('📤 Submitting request:', requestData);
+        
+        // ✅ إدخال الطلب في Supabase
+        const { error: insertError } = await supabase
+            .from(DB_COLUMNS.requests.table)
+            .insert([requestData]);
+            
+        if (insertError) {
+            console.error('❌ Insert error:', insertError);
+            throw new Error(insertError.message || 'فشل حفظ الطلب');
+        }
+        
+        // ✅ تحميل بيانات إضافية للإيميل
+        const merchId = currentMerchant[DB_COLUMNS.merchants.merchantId];
+        
+        const [machinesRes, transfersRes, collectionsRes] = await Promise.all([
+            supabase.from(DB_COLUMNS.machines.table).select('*').eq(DB_COLUMNS.machines.merchantId, merchId),
+            supabase.from(DB_COLUMNS.transfers.table).select(DB_COLUMNS.transfers.amount).eq(DB_COLUMNS.transfers.merchantId, merchId),
+            supabase.from(DB_COLUMNS.collections.table).select(DB_COLUMNS.collections.amount).eq(DB_COLUMNS.collections.merchantId, merchId)
         ]);
-        const totalTransfers = (transfersRes.data || []).reduce((sum, t) => sum + (Number(t['قيمة التحويل']) || 0), 0);
-        const totalCollections = (collectionsRes.data || []).reduce((sum, c) => sum + (Number(c['قيمة التحصيل']) || 0), 0);
+        
+        const totalTransfers = (transfersRes.data || []).reduce((sum, t) => sum + (Number(t[DB_COLUMNS.transfers.amount]) || 0), 0);
+        const totalCollections = (collectionsRes.data || []).reduce((sum, c) => sum + (Number(c[DB_COLUMNS.collections.amount]) || 0), 0);
         const remainingBalance = totalTransfers - totalCollections;
         
-        // ✅ Send email via Apps Script Web App - WITHOUT SECRET KEY
+        // ✅ إعداد بيانات الإيميل
         const emailPayload = {
             action: 'sendRequestEmail',
             payload: {
                 merchant: {
-                    code: currentMerchant['رقم التاجر'] || '',
-                    name: currentMerchant['اسم التاجر'] || '',
-                    phone: currentMerchant['رقم الهاتف'] || '',
-                    area: currentMerchant['المنطقة'] || '',
-                    status: currentMerchant['الحالة'] || 'نشط',
-                    accountNumber: currentMerchant['رقم الحساب'] || ''
+                    code: currentMerchant[DB_COLUMNS.merchants.merchantId] || '',
+                    name: currentMerchant[DB_COLUMNS.merchants.merchantName] || '',
+                    phone: currentMerchant[DB_COLUMNS.merchants.phone] || '',
+                    area: currentMerchant[DB_COLUMNS.merchants.area] || '',
+                    status: currentMerchant[DB_COLUMNS.merchants.status] || 'نشط',
+                    accountNumber: currentMerchant[DB_COLUMNS.merchants.accountNumber] || ''
                 },
                 request: {
                     code: requestRef,
@@ -835,35 +991,45 @@ async function submitRequest(e) {
                     notes: notes,
                     date: now.toISOString().split('T')[0]
                 },
-                machines: (machines || []).map(m => ({
-                    code: m.code || m['code'] || '',
-                    serial: m.serial || m['serial'] || '',
-                    status: m.status || m['status'] || '',
-                    location: m.location || m['location'] || ''
+                machines: (machinesRes.data || []).map(m => ({
+                    code: m[DB_COLUMNS.machines.code] || m['code'] || '',
+                    serial: m[DB_COLUMNS.machines.serial] || m['serial'] || '',
+                    status: m[DB_COLUMNS.machines.status] || m['status'] || '',
+                    location: m[DB_COLUMNS.machines.location] || m['location'] || ''
                 })),
                 remainingBalance: remainingBalance
             }
         };
         
-        // Use no-cors to avoid CORS issues; response cannot be read but request is sent
-        await fetch(EMAIL_SERVICE_URL, {
+        // ✅ إرسال الإيميل عبر Apps Script
+        console.log('📧 Sending email notification...');
+        await fetch(CONFIG.EMAIL_SERVICE_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(emailPayload)
+        }).catch(err => {
+            // ✅ لا نفشل الطلب إذا فشل الإيميل
+            console.warn('⚠️ Email notification failed (non-critical):', err);
         });
         
+        // ✅ النجاح
         playSound('doneSound');
         closeRequestModal();
-        document.getElementById('successMessage').textContent = `شكراً ${currentMerchant['اسم التاجر']}! تم استلام طلبك وسيتم إرسال إيميل تأكيد للإدارة.`;
+        
+        document.getElementById('successMessage').textContent = 
+            `شكراً ${currentMerchant[DB_COLUMNS.merchants.merchantName]}! تم استلام طلبك وسيتم إرسال إيميل تأكيد للإدارة.`;
         document.getElementById('requestNumber').textContent = requestRef;
+        
         const successModal = document.getElementById('successModal');
         successModal.style.display = 'flex';
         setTimeout(() => successModal.classList.add('show'), 10);
-        showToast('✅ تم إرسال الطلب والإيميل بنجاح!', 'success');
+        
+        showToast('✅ تم إرسال الطلب بنجاح!', 'success');
         await refreshMerchantData();
+        
     } catch (err) {
-        console.error('Submit error:', err);
+        console.error('❌ Submit error:', err);
         showToast('❌ فشل الإرسال: ' + err.message, 'error');
         playSound('errorSound');
     } finally {
@@ -892,15 +1058,27 @@ function playSound(soundName) {
         const soundElement = document.getElementById(soundName);
         if (soundElement) {
             soundElement.currentTime = 0;
-            soundElement.play().catch(e => console.log('Audio note:', e.message));
+            soundElement.play().catch(e => console.log('🔈 Audio note:', e.message));
         }
-    } catch (error) { console.log('Sound error:', error.message); }
+    } catch (error) { 
+        console.log('🔈 Sound error:', error.message); 
+    }
 }
 
 function shakeElement(el) {
     if (!el) return;
     el.style.animation = 'shake 0.5s ease';
     setTimeout(() => el.style.animation = '', 500);
+}
+
+// ✅ Debug Helper - لعرض معلومات التصحيح
+function showDebugInfo(info) {
+    const panel = document.getElementById('debugPanel');
+    const content = document.getElementById('debugContent');
+    if (panel && content) {
+        panel.classList.add('show');
+        content.textContent = JSON.stringify(info, null, 2);
+    }
 }
 
 // ============================================================
@@ -915,14 +1093,24 @@ function formatDate(dateStr) {
 }
 
 function formatTimeForDB(date) {
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: true 
+    });
 }
 
 function formatMoney(num) {
-    if (num === null || num === undefined || num === '') return '0 <span class="currency">جنيه</span>';
+    if (num === null || num === undefined || num === '') {
+        return '0 <span class="currency">جنيه</span>';
+    }
     let n = typeof num === 'string' ? parseFloat(num.replace(/[^\d.-]/g, '')) || 0 : Number(num);
     if (isNaN(n)) return '0 <span class="currency">جنيه</span>';
-    return `${Math.abs(n).toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="currency">جنيه</span>`;
+    return `${Math.abs(n).toLocaleString('ar-EG', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+    })} <span class="currency">جنيه</span>`;
 }
 
 // ============================================================
@@ -935,8 +1123,9 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-console.log('%c🏪 Merchant Portal - Axentro System v3.0', 'color:#7c3aed;font-size:18px;font-weight:bold;');
+console.log('%c🏪 Merchant Portal - Axentro System v3.1', 'color:#7c3aed;font-size:18px;font-weight:bold;');
 console.log('%c⚡ Connected to Main Database | © 2024', 'color:#64748b;font-size:12px;');
+console.log('%c💡 Tips: Check DB_COLUMNS config if you see 400 errors', 'color:#f59e0b;font-size:11px;');
 </script>
 </body>
 </html>
