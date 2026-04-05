@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>بوابة التاجر - Axentro System</title>
+    <title>بوابة التاجر - Axentro System v4.0</title>
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
     
     <style>
         :root {
@@ -377,7 +377,7 @@
         .qr-section a { color: #60a5fa; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: var(--transition); }
         .qr-section a:hover { color: #93c5fd; }
 
-        /* ====== DEBUG PANEL (اختياري) ====== */
+        /* ====== DEBUG PANEL ====== */
         .debug-panel {
             background: #1e293b;
             color: #e2e8f0;
@@ -387,14 +387,28 @@
             font-size: 0.75rem;
             margin-top: 1rem;
             display: none;
+            max-height: 300px;
+            overflow-y: auto;
         }
         .debug-panel.show { display: block; }
         .debug-panel pre { 
             white-space: pre-wrap; 
             word-break: break-all;
-            max-height: 200px;
-            overflow-y: auto;
         }
+        .debug-toggle {
+            background: rgba(37,99,235,0.1);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .debug-toggle:hover { background: rgba(37,99,235,0.2); }
 
         @media (max-width: 768px) {
             .portal-header { padding: 1rem; flex-wrap: wrap; gap: 0.75rem; }
@@ -411,7 +425,7 @@
     <div class="loader"></div>
     <div class="loading-text">
         <i class="fas fa-circle-notch fa-spin"></i>
-        جاري تحميل البيانات...
+        <span id="loadingText">جاري تحميل النظام...</span>
     </div>
 </div>
 
@@ -482,6 +496,9 @@
         <button class="btn btn-primary btn-block btn-lg" onclick="searchByAccount()"><i class="fas fa-search"></i> عرض بياناتي</button>
         
         <!-- Debug Panel -->
+        <button class="debug-toggle" onclick="toggleDebug()">
+            <i class="fas fa-bug"></i> عرض معلومات التصحيح
+        </button>
         <div class="debug-panel" id="debugPanel">
             <strong>🔍 Debug Info:</strong>
             <pre id="debugContent"></pre>
@@ -550,7 +567,7 @@
 
 <footer class="footer">
     <p>© 2024 Axentro – All Rights Reserved</p>
-    <p style="font-size:0.78rem;margin-top:0.5rem;">Powered by Axentro Engine v3.1 Professional</p>
+    <p style="font-size:0.78rem;margin-top:0.5rem;">Powered by Axentro Engine v4.0 Professional</p>
     <div class="qr-section">
         <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://axentro-official.github.io/axentro-website/links.html" alt="QR Code">
@@ -570,53 +587,137 @@ const CONFIG = {
     SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
     
-    // ✅ Email Service URL (بدون Secret Key)
+    // Email Service URL
     EMAIL_SERVICE_URL: 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec'
 };
 
 // ============================================================
-// ✅ أسماء الأعمدة في Supabase - تأكد من مطابقتها مع قاعدة البيانات
+// 🔄 AUTO-DISCOVER DATABASE SCHEMA (الاكتشاف التلقائي)
 // ============================================================
-const DB_COLUMNS = {
-    // جدول التجار
+let DB_SCHEMA = null; // سيتم تخزين مخطط قاعدة البيانات هنا
+let supabase = null;
+let currentMerchant = null;
+
+/**
+ * 🔍 دالة اكتشاف مخطط قاعدة البيانات تلقائياً
+ * تقوم بجلب أسماء الجداول والأعمدة من Supabase
+ */
+async function discoverDatabaseSchema() {
+    console.log('🔍 Starting database schema discovery...');
+    
+    try {
+        // محاولة جلب معلومات الجداول المتاحة
+        // ملاحظة: هذه الطريقة تعتمد على استعلامات تجريبية لاكتشاف الهيكل
+        
+        const tablesToCheck = ['merchants', 'machines', 'transfers', 'collections', 'requests'];
+        const schema = {};
+        
+        for (const tableName of tablesToCheck) {
+            try {
+                // محاولة قراءة صف واحد لاكتشاف الأعمدة
+                const { data, error } = await supabase
+                    .from(tableName)
+                    .select('*')
+                    .limit(1);
+                
+                if (!error && data && data.length > 0) {
+                    schema[tableName] = {
+                        columns: Object.keys(data[0]),
+                        sampleData: data[0]
+                    };
+                    console.log(`✅ Discovered table: ${tableName}`, schema[tableName].columns);
+                } else if (!error) {
+                    // الجدول موجود لكنه فارغ
+                    schema[tableName] = { columns: [], sampleData: null, isEmpty: true };
+                    console.log(`⚠️ Table ${tableName} exists but is empty`);
+                } else {
+                    console.warn(`❌ Cannot access table: ${tableName}`, error.message);
+                }
+            } catch (err) {
+                console.warn(`⚠️ Error checking table ${tableName}:`, err.message);
+            }
+        }
+        
+        DB_SCHEMA = schema;
+        console.log('📊 Database schema discovered:', schema);
+        
+        return schema;
+        
+    } catch (error) {
+        console.error('❌ Schema discovery failed:', error);
+        return null;
+    }
+}
+
+/**
+ * 🎯 دالة مطابقة أسماء الأعمدة تلقائياً
+ * تحاول إيجاد العمود المناسب بناءً على أسماء بديلة
+ */
+function findColumn(tableName, possibleNames) {
+    if (!DB_SCHEMA || !DB_SCHEMA[tableName]) {
+        console.warn(`⚠️ No schema info for table: ${tableName}`);
+        return possibleNames[0]; // ارجاع الاسم الأول كافتراضي
+    }
+    
+    const columns = DB_SCHEMA[tableName].columns;
+    
+    for (const name of possibleNames) {
+        if (columns.includes(name)) {
+            return name;
+        }
+    }
+    
+    // إذا لم يتم العثور على أي اسم، حاول بحث جزئي
+    for (const name of possibleNames) {
+        const found = columns.find(col => 
+            col.toLowerCase().includes(name.toLowerCase()) || 
+            name.toLowerCase().includes(col.toLowerCase())
+        );
+        if (found) return found;
+    }
+    
+    console.warn(`❌ Column not found in ${tableName}. Tried:`, possibleNames);
+    return possibleNames[0];
+}
+
+// ============================================================
+// ✅ DB_COLUMNS - ستتم تحديثها بعد الاكتشاف التلقائي
+// ============================================================
+let DB_COLUMNS = {
     merchants: {
         table: 'merchants',
-        accountNumber: 'رقم الحساب',       // غيّر هذا إذا كان الاسم مختلفاً
-        merchantId: 'رقم التاجر',          // غيّر هذا إذا كان الاسم مختلفاً
-        merchantName: 'اسم التاجر',         // غيّر هذا إذا كان الاسم مختلفاً
-        activityName: 'اسم النشاط',         // غيّر هذا إذا كان الاسم مختلفاً
-        phone: 'رقم الهاتف',               // غيّر هذا إذا كان الاسم مختلفاً
-        area: 'المنطقة',                   // غيّر هذا إذا كان الاسم مختلفاً
-        status: 'الحالة'                   // غيّر هذا إذا كان الاسم مختلفاً
+        accountNumber: 'رقم الحساب',
+        merchantId: 'رقم التاجر',
+        merchantName: 'اسم التاجر',
+        activityName: 'اسم النشاط',
+        phone: 'رقم الهاتف',
+        area: 'المنطقة',
+        status: 'الحالة'
     },
-    // جدول المكن
     machines: {
         table: 'machines',
         merchantId: 'رقم التاجر',
-        code: 'code',                      // أو 'رقم المكنة'
-        serial: 'serial',                  // أو 'الرقم التسلسلي'
-        status: 'status',                  // أو 'الحالة'
-        location: 'location'               // أو 'الموقع'
+        code: 'code',
+        serial: 'serial',
+        status: 'status',
+        location: 'location'
     },
-    // جدول التحويلات
     transfers: {
         table: 'transfers',
         merchantId: 'رقم التاجر',
-        amount: 'قيمة التحويل',            // غيّر هذا إذا كان الاسم مختلفاً
-        date: 'التاريخ',                   // غيّر هذا إذا كان الاسم مختلفاً
-        type: 'نوع التحويل',               // غيّر هذا إذا كان الاسم مختلفاً
+        amount: 'قيمة التحويل',
+        date: 'التاريخ',
+        type: 'نوع التحويل',
         notes: 'ملاحظات'
     },
-    // جدول التحصيلات
     collections: {
         table: 'collections',
         merchantId: 'رقم التاجر',
-        amount: 'قيمة التحصيل',            // غيّر هذا إذا كان الاسم مختلفاً
-        remaining: 'المتبقي بعد التحصيل',   // غيّر هذا إذا كان الاسم مختلفاً
+        amount: 'قيمة التحصيل',
+        remaining: 'المتبقي بعد التحصيل',
         date: 'التاريخ',
         type: 'نوع التحصيل'
     },
-    // جدول الطلبات
     requests: {
         table: 'requests',
         requestId: 'رقم الطلب',
@@ -625,7 +726,7 @@ const DB_COLUMNS = {
         accountNumber: 'رقم الحساب',
         requestType: 'نوع الطلب',
         amount: 'المبلغ',
-        debt: 'المديونية الحالية',
+        debt: 'رصيد خدمات',
         date: 'التاريخ',
         time: 'الوقت',
         notes: 'ملاحظات',
@@ -633,22 +734,94 @@ const DB_COLUMNS = {
     }
 };
 
-let supabase = null;
-let currentMerchant = null;
+/**
+ * 🔧 تحديث DB_COLUMNS بناءً على المخطط المكتشف
+ */
+function updateDBColumnsFromSchema() {
+    if (!DB_SCHEMA) return;
+    
+    console.log('🔧 Updating DB_COLUMNS based on discovered schema...');
+    
+    // تحديث أعمدة التجار
+    if (DB_SCHEMA.merchants && DB_SCHEMA.merchants.columns.length > 0) {
+        DB_COLUMNS.merchants.accountNumber = findColumn('merchants', ['رقم الحساب', 'account_number', 'accountNumber']);
+        DB_COLUMNS.merchants.merchantId = findColumn('merchants', ['رقم التاجر', 'merchant_id', 'merchantId', 'code']);
+        DB_COLUMNS.merchants.merchantName = findColumn('merchants', ['اسم التاجر', 'merchant_name', 'name']);
+        DB_COLUMNS.merchants.activityName = findColumn('merchants', ['اسم النشاط', 'activity_name', 'activity']);
+        DB_COLUMNS.merchants.phone = findColumn('merchants', ['رقم الهاتف', 'phone', 'tel']);
+        DB_COLUMNS.merchants.area = findColumn('merchants', ['المنطقة', 'area']);
+        DB_COLUMNS.merchants.status = findColumn('merchants', ['الحالة', 'status']);
+    }
+    
+    // تحديث أعمدة المكن
+    if (DB_SCHEMA.machines && DB_SCHEMA.machines.columns.length > 0) {
+        DB_COLUMNS.machines.merchantId = findColumn('machines', ['رقم التاجر', 'merchant_id', 'merchantId']);
+        DB_COLUMNS.machines.code = findColumn('machines', ['code', 'رقم المكنة']);
+        DB_COLUMNS.machines.serial = findColumn('machines', ['serial', 'الرقم التسلسلي']);
+        DB_COLUMNS.machines.status = findColumn('machines', ['status', 'الحالة']);
+        DB_COLUMNS.machines.location = findColumn('machines', ['location', 'الموقع']);
+    }
+    
+    // تحديث أعمدة التحويلات
+    if (DB_SCHEMA.transfers && DB_SCHEMA.transfers.columns.length > 0) {
+        DB_COLUMNS.transfers.merchantId = findColumn('transfers', ['رقم التاجر', 'merchant_id', 'merchantId']);
+        DB_COLUMNS.transfers.amount = findColumn('transfers', ['قيمة التحويل', 'amount', 'value']);
+        DB_COLUMNS.transfers.date = findColumn('transfers', ['التاريخ', 'date', 'created_at']);
+        DB_COLUMNS.transfers.type = findColumn('transfers', ['نوع التحويل', 'type']);
+        DB_COLUMNS.transfers.notes = findColumn('transfers', ['ملاحظات', 'notes', 'note']);
+    }
+    
+    // تحديث أعمدة التحصيلات
+    if (DB_SCHEMA.collections && DB_SCHEMA.collections.columns.length > 0) {
+        DB_COLUMNS.collections.merchantId = findColumn('collections', ['رقم التاجر', 'merchant_id', 'merchantId']);
+        DB_COLUMNS.collections.amount = findColumn('collections', ['قيمة التحصيل', 'amount', 'value']);
+        DB_COLUMNS.collections.remaining = findColumn('collections', ['المتبقي بعد التحصيل', 'remaining', 'balance']);
+        DB_COLUMNS.collections.date = findColumn('collections', ['التاريخ', 'date', 'created_at']);
+        DB_COLUMNS.collections.type = findColumn('collections', ['نوع التحصيل', 'type']);
+    }
+    
+    // تحديث أعمدة الطلبات
+    if (DB_SCHEMA.requests && DB_SCHEMA.requests.columns.length > 0) {
+        DB_COLUMNS.requests.requestId = findColumn('requests', ['رقم الطلب', 'request_id', 'id']);
+        DB_COLUMNS.requests.merchantId = findColumn('requests', ['رقم التاجر', 'merchant_id', 'merchantId']);
+        DB_COLUMNS.requests.merchantName = findColumn('requests', ['اسم التاجر', 'merchant_name', 'name']);
+        DB_COLUMNS.requests.accountNumber = findColumn('requests', ['رقم الحساب', 'account_number', 'accountNumber']);
+        DB_COLUMNS.requests.requestType = findColumn('requests', ['نوع الطلب', 'request_type', 'type']);
+        DB_COLUMNS.requests.amount = findColumn('requests', ['المبلغ', 'amount']);
+        DB_COLUMNS.requests.debt = findColumn('requests', ['رصيد خدمات', 'debt', 'balance']);
+        DB_COLUMNS.requests.date = findColumn('requests', ['التاريخ', 'date']);
+        DB_COLUMNS.requests.time = findColumn('requests', ['الوقت', 'time']);
+        DB_COLUMNS.requests.notes = findColumn('requests', ['ملاحظات', 'notes']);
+        DB_COLUMNS.requests.status = findColumn('requests', ['الحالة', 'status']);
+    }
+    
+    console.log('✅ DB_COLUMNS updated:', DB_COLUMNS);
+}
 
 // ============================================================
 // 🔐 INITIALIZATION
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🏪 Merchant Portal v3.1 Initializing...');
+    console.log('🏪 Merchant Portal v4.0 Initializing...');
+    updateLoadingText('جاري الاتصال بقاعدة البيانات...');
     
     if (!initSupabase()) {
         showToast('❌ فشل الاتصال بقاعدة البيانات', 'error');
+        hideLoading();
         return;
     }
     
+    updateLoadingText('جاري اكتشاف هيكل قاعدة البيانات...');
+    
+    // ✅ اكتشاف مخطط قاعدة البيانات تلقائياً
+    await discoverDatabaseSchema();
+    
+    // ✅ تحديث أسماء الأعمدة بناءً على المخطط المكتشف
+    updateDBColumnsFromSchema();
+    
     hideLoading();
     console.log('✅ Merchant Portal Ready!');
+    showToast('✅ تم تحميل النظام بنجاح', 'success');
 });
 
 function initSupabase() {
@@ -664,9 +837,10 @@ function initSupabase() {
 
 function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
 function showLoading() { document.getElementById('loadingOverlay').classList.remove('hidden'); }
+function updateLoadingText(text) { document.getElementById('loadingText').textContent = text; }
 
 // ============================================================
-// 🔍 ACCOUNT SEARCH - مع معالجة أفضل للأخطاء
+// 🔍 ACCOUNT SEARCH - محسنة مع معالجة أخطاء أفضل
 // ============================================================
 function handleAccountKeypress(e) { 
     if (e.key === 'Enter') {
@@ -687,31 +861,43 @@ async function searchByAccount() {
     }
     
     showLoading();
+    updateLoadingText('جاري البحث عن الحساب...');
     console.log(`🔍 Searching for account: ${accountNumber}`);
     
     try {
-        // ✅ استخدام اسم العمود من الإعدادات
+        // ✅ استخدام اسم العمود المحدث من الاكتشاف التلقائي
+        const accountCol = DB_COLUMNS.merchants.accountNumber;
+        console.log(`📌 Using column "${accountCol}" for account search`);
+        
         const { data: merchants, error: mError } = await supabase
             .from(DB_COLUMNS.merchants.table)
             .select('*')
-            .eq(DB_COLUMNS.merchants.accountNumber, accountNumber)
+            .eq(accountCol, accountNumber)
             .limit(1);
             
         if (mError) {
             console.error('❌ Supabase query error:', mError);
-            showDebugInfo({ error: mError, query: 'merchants search', accountNumber });
+            showDebugInfo({ 
+                error: mError, 
+                query: 'merchants search', 
+                accountNumber,
+                usedColumn: accountCol,
+                availableColumns: DB_SCHEMA?.merchants?.columns || 'N/A'
+            });
             throw new Error(mError.message || 'خطأ في البحث عن التاجر');
         }
         
         if (!merchants || merchants.length === 0) {
             showToast('❌ لم يتم العثور على هذا الرقم', 'error');
             playSound('errorSound');
+            hideLoading();
             return;
         }
         
         // ✅ حفظ بيانات التاجر
         currentMerchant = merchants[0];
-        console.log('✅ Merchant found:', currentMerchant[DB_COLUMNS.merchants.merchantName]);
+        console.log('✅ Merchant found:', currentMerchant);
+        console.log('📊 Merchant data keys:', Object.keys(currentMerchant));
         
         playSound('doneSound');
         showToast('✅ تم العثور على بياناتك!', 'success');
@@ -731,30 +917,39 @@ async function searchByAccount() {
 }
 
 // ============================================================
-// 📊 LOAD MERCHANT DATA - مع معالجة أخطاء محسنة
+// 📊 LOAD MERCHANT DATA - محسنة بالكامل
 // ============================================================
 async function loadMerchantData() {
     if (!currentMerchant) return;
     
-    const merchId = currentMerchant[DB_COLUMNS.merchants.merchantId];
-    console.log(`📊 Loading data for merchant ID: ${merchId}`);
+    // ✅ استخدام العمود الصحيح لـ merchantId
+    const merchIdCol = DB_COLUMNS.merchants.merchantId;
+    const merchId = currentMerchant[merchIdCol];
+    
+    console.log(`📊 Loading data for merchant ID: ${merchId} (column: ${merchIdCol})`);
     
     try {
         // ✅ تحميل البيانات بشكل متوازي مع معالجة أخطاء منفصلة
-        const [machinesResult, transfersResult, collectionsResult, allTransfersResult, allCollectionsResult] = await Promise.allSettled([
+        const results = await Promise.allSettled([
             // المكن
             supabase
                 .from(DB_COLUMNS.machines.table)
                 .select('*')
                 .eq(DB_COLUMNS.machines.merchantId, merchId),
             
-            // آخر 5 تحويلات
+            // آخر 5 تحويلات - باستخدام عمود التاريخ الصحيح
             supabase
                 .from(DB_COLUMNS.transfers.table)
                 .select('*')
                 .eq(DB_COLUMNS.transfers.merchantId, merchId)
                 .order('created_at', { ascending: false })
-                .limit(5),
+                .limit(5)
+                .catch(() => supabase
+                    .from(DB_COLUMNS.transfers.table)
+                    .select('*')
+                    .eq(DB_COLUMNS.transfers.merchantId, merchId)
+                    .order(DB_COLUMNS.transfers.date, { ascending: false })
+                    .limit(5)),
             
             // آخر 5 تحصيلات
             supabase
@@ -762,7 +957,13 @@ async function loadMerchantData() {
                 .select('*')
                 .eq(DB_COLUMNS.collections.merchantId, merchId)
                 .order('created_at', { ascending: false })
-                .limit(5),
+                .limit(5)
+                .catch(() => supabase
+                    .from(DB_COLUMNS.collections.table)
+                    .select('*')
+                    .eq(DB_COLUMNS.collections.merchantId, merchId)
+                    .order(DB_COLUMNS.collections.date, { ascending: false })
+                    .limit(5)),
             
             // إجمالي التحويلات
             supabase
@@ -778,24 +979,21 @@ async function loadMerchantData() {
         ]);
         
         // ✅ استخراج البيانات مع معالجة الأخطاء
-        const machines = machinesResult.status === 'fulfilled' ? machinesResult.value.data : [];
-        const transfers = transfersResult.status === 'fulfilled' ? transfersResult.value.data : [];
-        const collections = collectionsResult.status === 'fulfilled' ? collectionsResult.value.data : [];
-        const allTransfers = allTransfersResult.status === 'fulfilled' ? allTransfersResult.value.data : [];
-        const allCollections = allCollectionsResult.status === 'fulfilled' ? allCollectionsResult.value.data : [];
+        const machines = results[0].status === 'fulfilled' ? results[0].value.data : [];
+        const transfers = results[1].status === 'fulfilled' ? results[1].value.data : [];
+        const collections = results[2].status === 'fulfilled' ? results[2].value.data : [];
+        const allTransfers = results[3].status === 'fulfilled' ? results[3].value.data : [];
+        const allCollections = results[4].status === 'fulfilled' ? results[4].value.data : [];
         
-        // ✅ تسجيل الأخطاء في الكونسول فقط (بدون إظهارها للمستخدم)
-        if (machinesResult.status === 'rejected') {
-            console.warn('⚠️ Failed to load machines:', machinesResult.reason);
-        }
-        if (transfersResult.status === 'rejected') {
-            console.warn('⚠️ Failed to load transfers:', transfersResult.reason);
-        }
-        if (collectionsResult.status === 'rejected') {
-            console.warn('⚠️ Failed to load collections:', collectionsResult.reason);
-        }
+        // ✅ تسجيل الأخطاء في الكونسول
+        results.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                const tableNames = ['machines', 'transfers', 'collections', 'allTransfers', 'allCollections'];
+                console.warn(`⚠️ Failed to load ${tableNames[index]}:`, result.reason);
+            }
+        });
         
-        // ✅ حساب المجاميع
+        // ✅ حساب المجاميع مع التعامل مع القيم الفارغة
         const totalTransfersVal = (allTransfers || []).reduce((sum, t) => {
             const val = Number(t[DB_COLUMNS.transfers.amount]) || 0;
             return sum + val;
@@ -808,13 +1006,16 @@ async function loadMerchantData() {
         
         const debt = totalTransfersVal - totalCollectionsVal;
         
-        // ✅ تحديث الواجهة
+        // ✅ تحديث الواجهة - استخدام الأعمدة الصحيحة
+        const nameCol = DB_COLUMNS.merchants.merchantName;
+        const activityCol = DB_COLUMNS.merchants.activityName;
+        
         document.getElementById('merchantNameDisplay').textContent = 
-            currentMerchant[DB_COLUMNS.merchants.merchantName] || '-';
+            currentMerchant[nameCol] || '-';
         document.getElementById('merchantActivityDisplay').textContent = 
-            currentMerchant[DB_COLUMNS.merchants.activityName] || '-';
+            currentMerchant[activityCol] || '-';
         document.getElementById('merchantAvatarIcon').innerHTML = 
-            (currentMerchant[DB_COLUMNS.merchants.merchantName] || '👤').charAt(0).toUpperCase();
+            (currentMerchant[nameCol] || '👤').charAt(0).toUpperCase();
         
         document.getElementById('machinesCount').textContent = machines?.length || 0;
         document.getElementById('debtAmount').innerHTML = formatMoney(debt);
@@ -825,6 +1026,7 @@ async function loadMerchantData() {
         renderLastCollections(collections || []);
         
         console.log('✅ Data loaded successfully');
+        console.log(`📈 Stats: Transfers=${totalTransfersVal}, Collections=${totalCollectionsVal}, Debt=${debt}`);
         
     } catch (err) {
         console.error('❌ Load data error:', err);
@@ -834,6 +1036,7 @@ async function loadMerchantData() {
 
 async function refreshMerchantData() {
     showLoading();
+    updateLoadingText('جاري تحديث البيانات...');
     await loadMerchantData();
     playSound('doneSound');
     showToast('✅ تم تحديث البيانات', 'success');
@@ -841,44 +1044,56 @@ async function refreshMerchantData() {
 }
 
 // ============================================================
-// 📋 RENDER TABLES
+// 📋 RENDER TABLES - محسنة
 // ============================================================
 function renderLastTransfers(data) {
     const tbody = document.getElementById('lastTransfersTable');
-    if (!data.length) {
+    if (!data || data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></td></tr>`;
         return;
     }
-    tbody.innerHTML = data.map((t, i) => `
+    tbody.innerHTML = data.map((t, i) => {
+        const dateVal = t[DB_COLUMNS.transfers.date] || t['created_at'] || '-';
+        const typeVal = t[DB_COLUMNS.transfers.type] || '-';
+        const amountVal = t[DB_COLUMNS.transfers.amount] || 0;
+        const notesVal = t[DB_COLUMNS.transfers.notes] || '-';
+        
+        return `
         <tr>
             <td>${i + 1}</td>
-            <td>${formatDate(t[DB_COLUMNS.transfers.date])}</td>
-            <td><span class="badge badge-primary">${t[DB_COLUMNS.transfers.type] || '-'}</span></td>
-            <td><strong style="color:var(--danger);">${formatMoney(t[DB_COLUMNS.transfers.amount])}</strong></td>
-            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${t[DB_COLUMNS.transfers.notes] || '-'}">${t[DB_COLUMNS.transfers.notes] || '-'}</td>
+            <td>${formatDate(dateVal)}</td>
+            <td><span class="badge badge-primary">${typeVal}</span></td>
+            <td><strong style="color:var(--danger);">${formatMoney(amountVal)}</strong></td>
+            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${notesVal}">${notesVal}</td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 function renderLastCollections(data) {
     const tbody = document.getElementById('lastCollectionsTable');
-    if (!data.length) {
+    if (!data || data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></td></tr>`;
         return;
     }
-    tbody.innerHTML = data.map((c, i) => `
+    tbody.innerHTML = data.map((c, i) => {
+        const dateVal = c[DB_COLUMNS.collections.date] || c['created_at'] || '-';
+        const typeVal = c[DB_COLUMNS.collections.type] || '-';
+        const amountVal = c[DB_COLUMNS.collections.amount] || 0;
+        const remainingVal = c[DB_COLUMNS.collections.remaining] || 0;
+        
+        return `
         <tr>
             <td>${i + 1}</td>
-            <td>${formatDate(c[DB_COLUMNS.collections.date])}</td>
-            <td><span class="badge badge-success">${c[DB_COLUMNS.collections.type] === 'كلي' ? '✅ كامل' : '📊 جزئي'}</span></td>
-            <td><strong style="color:var(--success);">${formatMoney(c[DB_COLUMNS.collections.amount])}</strong></td>
-            <td><strong style="color:var(--danger);">${formatMoney(c[DB_COLUMNS.collections.remaining])}</strong></td>
+            <td>${formatDate(dateVal)}</td>
+            <td><span class="badge badge-success">${typeVal === 'كلي' ? '✅ كامل' : '📊 جزئي'}</span></td>
+            <td><strong style="color:var(--success);">${formatMoney(amountVal)}</strong></td>
+            <td><strong style="color:var(--danger);">${formatMoney(remainingVal)}</strong></td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 // ============================================================
-// 📝 REQUEST SUBMISSION
+// 📝 REQUEST SUBMISSION - محسنة بالكامل
 // ============================================================
 function openRequestModal() {
     if (!currentMerchant) {
@@ -926,13 +1141,14 @@ async function submitRequest(e) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
     showLoading();
+    updateLoadingText('جاري حفظ الطلب...');
     
     try {
         const now = new Date();
         const datePart = now.toISOString().split('T')[0].replace(/-/g, '');
         const requestRef = `REQ-${datePart}-${String(Math.floor(Math.random()*10000)).padStart(4,'0')}`;
         
-        // ✅ إعداد بيانات الطلب باستخدام أسماء الأعمدة الصحيحة
+        // ✅ إعداد بيانات الطلب باستخدام الأعمدة المكتشفة تلقائياً
         const requestData = {};
         requestData[DB_COLUMNS.requests.requestId] = requestRef;
         requestData[DB_COLUMNS.requests.merchantId] = currentMerchant[DB_COLUMNS.merchants.merchantId];
@@ -943,23 +1159,35 @@ async function submitRequest(e) {
         requestData[DB_COLUMNS.requests.debt] = 0;
         requestData[DB_COLUMNS.requests.date] = now.toISOString().split('T')[0];
         requestData[DB_COLUMNS.requests.time] = formatTimeForDB(now);
-        requestData[DB_COLUMNS.requests.notes] = notes;
+        requestData[DB_COLUMNS.requests.notes] = notes || '';
         requestData[DB_COLUMNS.requests.status] = 'pending';
         requestData['created_at'] = now.toISOString();
         
-        console.log('📤 Submitting request:', requestData);
+        console.log('📤 Submitting request with data:', requestData);
+        console.log('📌 Using columns:', DB_COLUMNS.requests);
         
         // ✅ إدخال الطلب في Supabase
-        const { error: insertError } = await supabase
+        const { data: insertedData, error: insertError } = await supabase
             .from(DB_COLUMNS.requests.table)
-            .insert([requestData]);
+            .insert([requestData])
+            .select();
             
         if (insertError) {
-            console.error('❌ Insert error:', insertError);
+            console.error('❌ Insert error details:', insertError);
+            console.error('❌ Request data that failed:', requestData);
+            showDebugInfo({
+                error: insertError,
+                requestData: requestData,
+                usedColumns: DB_COLUMNS.requests,
+                schemaInfo: DB_SCHEMA?.requests
+            });
             throw new Error(insertError.message || 'فشل حفظ الطلب');
         }
         
+        console.log('✅ Request inserted successfully:', insertedData);
+        
         // ✅ تحميل بيانات إضافية للإيميل
+        updateLoadingText('جاري إعداد الإيميل...');
         const merchId = currentMerchant[DB_COLUMNS.merchants.merchantId];
         
         const [machinesRes, transfersRes, collectionsRes] = await Promise.all([
@@ -1003,15 +1231,17 @@ async function submitRequest(e) {
         
         // ✅ إرسال الإيميل عبر Apps Script
         console.log('📧 Sending email notification...');
-        await fetch(CONFIG.EMAIL_SERVICE_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(emailPayload)
-        }).catch(err => {
-            // ✅ لا نفشل الطلب إذا فشل الإيميل
-            console.warn('⚠️ Email notification failed (non-critical):', err);
-        });
+        try {
+            await fetch(CONFIG.EMAIL_SERVICE_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(emailPayload)
+            });
+            console.log('✅ Email notification sent');
+        } catch (emailErr) {
+            console.warn('⚠️ Email notification failed (non-critical):', emailErr);
+        }
         
         // ✅ النجاح
         playSound('doneSound');
@@ -1071,7 +1301,11 @@ function shakeElement(el) {
     setTimeout(() => el.style.animation = '', 500);
 }
 
-// ✅ Debug Helper - لعرض معلومات التصحيح
+function toggleDebug() {
+    const panel = document.getElementById('debugPanel');
+    panel.classList.toggle('show');
+}
+
 function showDebugInfo(info) {
     const panel = document.getElementById('debugPanel');
     const content = document.getElementById('debugContent');
@@ -1088,6 +1322,7 @@ function formatDate(dateStr) {
     if (!dateStr) return '-';
     try {
         const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
         return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
     } catch { return dateStr; }
 }
@@ -1123,9 +1358,9 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-console.log('%c🏪 Merchant Portal - Axentro System v3.1', 'color:#7c3aed;font-size:18px;font-weight:bold;');
-console.log('%c⚡ Connected to Main Database | © 2024', 'color:#64748b;font-size:12px;');
-console.log('%c💡 Tips: Check DB_COLUMNS config if you see 400 errors', 'color:#f59e0b;font-size:11px;');
+console.log('%c🏪 Merchant Portal - Axentro System v4.0', 'color:#7c3aed;font-size:18px;font-weight:bold;');
+console.log('%c⚡ Auto-Discovery Enabled | © 2024', 'color:#64748b;font-size:12px;');
+console.log('%c💡 Press F12 and check Console for debug info', 'color:#f59e0b;font-size:11px;');
 </script>
 </body>
 </html>
