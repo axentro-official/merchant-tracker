@@ -11,10 +11,35 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif}
 body{background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f8fafc 100%);color:#1e293b;min-height:100vh;line-height:1.6}
-.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.98);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:99999}
+
+/* ============================================
+   PROFESSIONAL LOADING SCREEN STYLES
+   ============================================ */
+.loading-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:99999;transition:opacity .5s ease,visibility .5s ease}
+.loading-overlay.fade-out{opacity:0;visibility:hidden}
+.loading-content{text-align:center;color:#fff}
+.loading-logo-container{position:relative;width:120px;height:120px;margin:0 auto 30px}
+.loading-logo{width:100%;height:100%;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:logoFloat 3s ease-in-out infinite;box-shadow:0 20px 60px rgba(0,0,0,.3);border:3px solid rgba(255,255,255,.2)}
+.logo-icon{font-size:50px;animation:logoPulse 2s ease-in-out infinite}
+.logo-pulse{position:absolute;inset:-10px;border-radius:50%;border:3px solid rgba(255,255,255,.3);animation:pulseRing 2s ease-out infinite}
+.loading-title{font-size:2.5rem;font-weight:900;margin-bottom:10px;text-shadow:0 4px 20px rgba(0,0,0,.3);letter-spacing:2px}
+.loading-subtitle{font-size:1rem;opacity:.9;margin-bottom:40px;font-weight:300}
+.progress-container{width:300px;margin:0 auto 20px;position:relative}
+.progress-bar{width:100%;height:8px;background:rgba(255,255,255,.2);border-radius:10px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.1)}
+.progress-fill{height:100%;background:linear-gradient(90deg,#00d2ff,#3a7bd5,#00d2ff);background-size:200% 100%;border-radius:10px;width:0%;transition:width .3s ease;animation:shimmer 2s linear infinite;box-shadow:0 0 20px rgba(0,210,255,.5)}
+.progress-text{position:absolute;right:-40px;top:50%;transform:translateY(-50%);font-weight:700;font-size:.9rem;color:#fff}
+.loading-status{font-size:.95rem;opacity:.8;animation:statusBlink 1.5s ease-in-out infinite}
+@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+@keyframes logoPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes pulseRing{0%{transform:scale(1);opacity:1}100%{transform:scale(1.5);opacity:0}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes statusBlink{0%,100%{opacity:.8}50%{opacity:.5}}
+
+/* Original Loading (kept for fallback) */
 .loader{width:60px;height:60px;border:4px solid transparent;border-top-color:#2563eb;border-radius:50%;animation:spin 1s linear infinite}
 .loader::after{content:'';position:absolute;inset:6px;border:3px solid transparent;border-top-color:#7c3aed;border-radius:50%;animation:spin .8s linear infinite reverse}
 @keyframes spin{to{transform:rotate(360deg)}}
+
 .hidden{display:none!important}
 #loginSection{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
 .login-box{background:#fff;padding:3rem 2.5rem;border-radius:24px;box-shadow:0 25px 50px rgba(0,0,0,.25);max-width:420px;width:100%}
@@ -59,16 +84,54 @@ th{background:#f8fafc;color:#64748b;font-weight:700;font-size:.78rem}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:1rem 1.5rem;border-radius:10px;z-index:9999;animation:slideUp .3s ease}
 @keyframes slideUp{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translateX(-50%,0)}}
 .footer{text-align:center;padding:2rem;background:#1e293b;color:#94a3b8;margin-top:auto}
+
+/* ============================================
+   QR CODE STYLES
+   ============================================ */
+.qr-code-section{text-align:center;margin-top:30px;padding:20px}
+.qr-link{display:inline-block;text-decoration:none;transition:transform .3s ease}
+.qr-link:hover{transform:scale(1.05)}
+.qr-image{width:120px;height:120px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+.qr-text{margin-top:10px;color:#64748b;font-size:.85rem}
+.app-footer{position:fixed;bottom:15px;left:15px;z-index:50}
+.qr-footer-link{display:block;transition:transform .3s ease}
+.qr-footer-link:hover{transform:scale(1.1)}
+.qr-footer-image{width:80px;height:80px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.15);cursor:pointer}
+
 @media(max-width:768px){.tabs{top:auto;position:relative}.nav-btns{width:100%;justify-content:center}}
 </style>
 </head>
 <body>
 
+<!-- PROFESSIONAL LOADING SCREEN -->
 <div id="loadingOverlay" class="loading-overlay">
-    <div class="loader"></div>
-    <div style="margin-top:1rem;color:#64748b;font-weight:600">جاري التحميل...</div>
+    <div class="loading-content">
+        <!-- Animated Logo -->
+        <div class="loading-logo-container">
+            <div class="loading-logo">
+                <span class="logo-icon">🏪</span>
+            </div>
+            <div class="logo-pulse"></div>
+        </div>
+        
+        <!-- Title -->
+        <h1 class="loading-title">Axentro System</h1>
+        <p class="loading-subtitle">نظام إدارة التجار والمكن v3.0</p>
+        
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-text" id="progressText">0%</span>
+        </div>
+        
+        <!-- Status -->
+        <p class="loading-status" id="loadingStatus">جاري تهيئة النظام...</p>
+    </div>
 </div>
 
+<!-- LOGIN SECTION WITH QR CODE -->
 <div id="loginSection">
     <div class="login-box">
         <div class="login-logo">🏪</div>
@@ -77,9 +140,18 @@ th{background:#f8fafc;color:#64748b;font-weight:700;font-size:.78rem}
         <div class="form-group"><label class="form-label">🔑 كلمة المرور</label>
             <input type="password" id="pwd" class="form-input" placeholder="أدخل كلمة المرور"></div>
         <button class="btn btn-primary btn-block btn-lg" onclick="login()">تسجل دخول</button>
+        
+        <!-- QR Code in Login Page -->
+        <div class="qr-code-section">
+            <a href="https://your-link-here.com" target="_blank" class="qr-link">
+                <img src="src/assets/qr-links.png" alt="QR Code" class="qr-image">
+                <p class="qr-text">امسح للوصول السريع</p>
+            </a>
+        </div>
     </div>
 </div>
 
+<!-- APP CONTAINER WITH FOOTER QR -->
 <div id="appContainer">
     <nav class="navbar">
         <h1>🏪 Axentro</h1>
@@ -93,7 +165,7 @@ th{background:#f8fafc;color:#64748b;font-weight:700;font-size:.78rem}
     <div class="tabs">
         <div class="tab active" onclick="showPage('home',this)">🏠 الرئيسية</div>
         <div class="tab" onclick="showPage('merchants',this)">👥 التجار</div>
-        <div class="tab" onclick="showPage('machines',this">🖨️ المكن</div>
+        <div class="tab" onclick="showPage('machines',this)">🖨️ المكن</div>
         <div class="tab" onclick="showPage('transfers',this)">💱 التحويلات</div>
         <div class="tab" onclick="showPage('collections',this)">💰 التحصيلات</div>
         <div class="tab" onclick="showPage('archive',this)">📦 الأرشيف</div>
@@ -164,11 +236,25 @@ th{background:#f8fafc;color:#64748b;font-weight:700;font-size:.78rem}
         <p>© 2024 Axentro – All Rights Reserved</p>
         <p style="font-size:.78rem;margin-top:.5rem">Powered by Supabase</p>
     </footer>
+
+    <!-- Floating QR Code Footer -->
+    <div class="app-footer">
+        <a href="https://your-link-here.com" target="_blank" class="qr-footer-link">
+            <img src="src/assets/qr-links.png" alt="QR Code" class="qr-footer-image">
+        </a>
+    </div>
 </div>
 
 <!-- MODALS -->
 <div id="modal" class="modal"><div class="modal-content" id="modalContent"></div></div>
 <div id="toast" class="toast" id="toastEl"></div>
+
+<!-- AUDIO ELEMENTS -->
+<audio id="soundLoginSuccess" preload="auto"><source src="src/assets/login-success.mp3" type="audio/mpeg"></audio>
+<audio id="soundLoginError" preload="auto"><source src="src/assets/login-error.mp3" type="audio/mpeg"></audio>
+<audio id="soundLogoutSuccess" preload="auto"><source src="src/assets/logout-success.mp3" type="audio/mpeg"></audio>
+<audio id="soundDone" preload="auto"><source src="src/assets/done.mp3" type="audio/mpeg"></audio>
+<audio id="soundScan" preload="auto"><source src="src/assets/scan.mp3" type="audio/mpeg"></audio>
 
 <script>
 // ===== CONFIG =====
@@ -178,43 +264,121 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let supabase = null;
 let DB = { merchants:[], machines:[], transfers:[], collections:[], archives:[] };
 
-// ===== INIT =====
+// ===== SOUND MANAGEMENT =====
+function playSound(soundName) {
+    try {
+        const soundMap = {
+            'loginSuccess': 'soundLoginSuccess',
+            'loginError': 'soundLoginError',
+            'logoutSuccess': 'soundLogoutSuccess',
+            'done': 'soundDone',
+            'scan': 'soundScan'
+        };
+        
+        const audioId = soundMap[soundName];
+        if (!audioId) return;
+        
+        const audio = document.getElementById(audioId);
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('Audio blocked:', e.message));
+        }
+    } catch (error) {
+        console.error('Sound error:', error);
+    }
+}
+
+// ===== INIT WITH ANIMATED LOADING =====
 window.onload = async function() {
     try {
         console.log('🚀 Initializing...');
         
+        // Get loading elements
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const loadingStatus = document.getElementById('loadingStatus');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        // Animate progress bar
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            if (progress < 90) {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `${Math.round(progress)}%`;
+                
+                // Update status messages
+                if (progress >= 30 && progress < 60) {
+                    loadingStatus.textContent = 'جاري تحميل الوحدات...';
+                } else if (progress >= 60 && progress < 85) {
+                    loadingStatus.textContent = 'جاري الاتصال بقاعدة البيانات...';
+                }
+            }
+        }, 200);
+        
+        // Initialize Supabase
+        loadingStatus.textContent = 'جاري تهيئة الاتصال...';
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         console.log('✅ Supabase connected');
         
-        // Check session
-        const auth = localStorage.getItem('axentro_auth');
-        if(auth) {
-            try {
-                const data = JSON.parse(auth);
-                if (data.t && data.t > Date.now()) {
-                    $('loginSection').classList.add('hidden');
-                    $('appContainer').style.display = 'block';
-                    await refreshAll();
-                } else {
-                    localStorage.removeItem('axentro_auth');
-                    showLoading(false);
-                }
-            } catch(e) {
-                localStorage.removeItem('axentro_auth');
-                showLoading(false);
-            }
-        } else {
-            showLoading(false);
-        }
+        progressFill.style.width = '95%';
+        progressText.textContent = '95%';
+        loadingStatus.textContent = 'جاري تهيئة واجهة المستخدم...';
+        
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         // Setup event listeners
         setupListeners();
         
-        console.log('✅ Ready!');
+        progressFill.style.width = '100%';
+        progressText.textContent = '100%';
+        loadingStatus.textContent = 'تم التحميل بنجاح! ✅';
+        
+        clearInterval(progressInterval);
+        
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Fade out loading screen
+        loadingOverlay.classList.add('fade-out');
+        
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+            
+            // Check session
+            const auth = localStorage.getItem('axentro_auth');
+            if(auth) {
+                try {
+                    const data = JSON.parse(auth);
+                    if (data.t && data.t > Date.now()) {
+                        $('loginSection').classList.add('hidden');
+                        $('appContainer').style.display = 'block';
+                        await refreshAll();
+                    } else {
+                        localStorage.removeItem('axentro_auth');
+                        playSound('scan'); // Subtle ready sound
+                    }
+                } catch(e) {
+                    localStorage.removeItem('axentro_auth');
+                    playSound('scan');
+                }
+            } else {
+                playSound('scan');
+            }
+            
+            console.log('✅ Ready!');
+        }, 500);
+        
     } catch(e) {
         console.error('❌ Init error:', e);
         showToast('❌ خطأ: ' + e.message, 'error');
-        showLoading(false);
+        playSound('loginError');
+        
+        // Hide loading anyway
+        setTimeout(() => {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }, 1000);
     }
 };
 
@@ -241,7 +405,7 @@ function setStatus(s) {
     el.innerHTML = s === 'live' ? '● متصل' : '⚠ غير متصل';
 }
 
-// ===== AUTH =====
+// ===== AUTH WITH SOUNDS =====
 async function login() {
     const pwd = $('pwd').value.trim();
     if(!pwd) { showToast('⚠️ أدخل كلمة المرور', 'warning'); return; }
@@ -252,14 +416,21 @@ async function login() {
         
         if(data?.success) {
             localStorage.setItem('axentro_auth', JSON.stringify({t: Date.now() + 86400000 }));
+            
+            // ✅ Play success sound
+            playSound('loginSuccess');
+            
             showToast('🎉 مرحباً!', 'success');
             $('loginSection').classList.add('hidden');
             $('appContainer').style.display = 'block';
             await refreshAll();
         } else {
+            // ❌ Play error sound
+            playSound('loginError');
             showToast(data?.message || '❌ كلمة مرور خاطئة', 'error');
         }
     } catch(e) {
+        playSound('loginError');
         showToast('❌ ' + e.message, 'error');
     } finally {
         showLoading(false);
@@ -267,8 +438,13 @@ async function login() {
 }
 
 function logout() {
+    // ✅ Play logout sound
+    playSound('logoutSuccess');
     localStorage.removeItem('axentro_auth');
-    location.reload();
+    
+    setTimeout(() => {
+        location.reload();
+    }, 500);
 }
 
 // ===== DATA =====
@@ -286,7 +462,7 @@ async function refreshAll() {
         ]);
         
         DB.merchants = m.data || [];
-        DB.machines =  mac.data || [];
+        DB.machines = mac.data || [];
         DB.transfers = t.data || [];
         DB.collections = c.data || [];
         DB.archives = a.data || [];
@@ -299,6 +475,9 @@ async function refreshAll() {
         renderArchive();
         
         setStatus('live');
+        
+        // ✅ Play done sound on successful refresh
+        playSound('done');
         showToast('✅ تم التحديث', 'success');
     } catch(e) {
         console.error('❌ Refresh error:', e);
@@ -413,6 +592,9 @@ async function saveMerchant() {
         if(error) throw error;
         
         closeModal();
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast('✅ تمت الإضافة بنجاح', 'success');
         await refreshAll();
     } catch(e) {
@@ -448,6 +630,9 @@ async function updateMerchant(i) {
         const { error } = await supabase.from('merchants').update(data).eq('id', DB.merchants[i].id);
         if(error) throw error;
         closeModal();
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast('✅ تم التحديث', 'success');
         await refreshAll();
     } catch(e) {
@@ -464,6 +649,9 @@ async function delMerchant(id) {
     try {
         const { error } = await supabase.from('merchants').delete().eq('id', id);
         if(error) throw error;
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast('✅ تم الحذف', 'success');
         await refreshAll();
     } catch(e) {
@@ -508,6 +696,9 @@ async function saveMachine() {
         const { error } = await supabase.from('machines').insert([data]);
         if(error) throw error;
         closeModal();
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast('✅ تمت الإضافة', 'success');
         await refreshAll();
     } catch(e) {
@@ -547,6 +738,9 @@ async function updateMachine(i) {
         const { error } = await supabase.from('machines').update(data).eq('id', DB.machines[i].id);
         if(error) throw error;
         closeModal();
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast('✅ تم التحديث', 'success');
         await refreshAll();
     } catch(e) {
@@ -562,6 +756,9 @@ async function delMachine(id) {
     try {
         const { error } = await supabase.from('machines').delete().eq('id', id);
         if(error) throw error;
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast('✅ تم الحذف', 'success');
         await refreshAll();
     } catch(e) {
@@ -604,9 +801,12 @@ async function saveTransfer() {
             "created_at": now.toISOString()
         };
         
-        const { error } = await supabase.from('transfers').insert([data));
+        const { error } = await supabase.from('transfers').insert([data]);
         if(error) throw error;
         closeModal();
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast('✅ تم التحويل بنجاح', 'success');
         await refreshAll();
     } catch(e) {
@@ -622,6 +822,9 @@ async function delTransfer(id) {
     try {
         const { error } = await supabase.from('transfers').delete().eq('id', id);
         if(error) throw error;
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast('✅ تم الحذف', 'success');
         await refreshAll();
     } catch(e) {
@@ -670,9 +873,12 @@ async function saveCollection() {
             "created_at": now.toISOString()
         };
         
-        const { error } = await supabase.from('collections').insert([data));
+        const { error } = await supabase.from('collections').insert([data]);
         if(error) throw error;
         closeModal();
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast('✅ تم التحصيل', 'success');
         await refreshAll();
     } catch(e) {
@@ -688,6 +894,9 @@ async function delCollection(id) {
     try {
         const { error } = await supabase.from('collections').delete().eq('id', id);
         if(error) throw error;
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast('✅ تم الحذف', 'success');
         await refreshAll();
     } catch(e) {
@@ -720,10 +929,13 @@ async function closeMonth() {
         
         const { error } = await supabase.from('archives').insert([data]);
         if(error) throw error;
+        
+        // ✅ Play success sound
+        playSound('done');
         showToast(`✅ تم إغلاق "${month}"`, 'success');
         await refreshAll();
     } catch(e) {
-        showToast('❌ ' + e.message, 'error);
+        showToast('❌ ' + e.message, 'error');
     } finally {
         showLoading(false);
     }
@@ -737,6 +949,11 @@ function generateRef(prefix) {
 function generateId(arr) {
     const max = arr.reduce((max,item)=>Math.max(max,(parseInt(item.id)||0),0),0);
     return String(max+1).padStart(4,'0');
+}
+
+function setupListeners() {
+    // Add any additional event listeners here
+    console.log('🎧 Event listeners initialized with sounds enabled');
 }
 
 function $(id) { return document.getElementById(id); }
@@ -754,7 +971,7 @@ function confirm(msg, callback, yesText='نعم، تأكيد', icon='question') 
     if(confirm(msg)) callback();
 }
 
-console.log('%c🎉 Axentro Ready!', 'color:#2563eb;font-size:18px;font-weight:bold;');
+console.log('%c🎉 Axentro Ready! | 🔊 Sounds Enabled | 📱 QR Active', 'color:#2563eb;font-size:18px;font-weight:bold;');
 </script>
 </body>
 </html>
