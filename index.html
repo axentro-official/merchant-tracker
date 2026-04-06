@@ -2,82 +2,759 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Axentro System v3.0 Professional</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
-    
-    <!-- External Libraries -->
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=yes">
+    <title>Axentro System v3.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3"></script>
-    
-    <!-- Styles (انسخ كل الـ CSS من الرد السابق - الجزء الأول) -->
-    <style>
-        /* انسخ كل الـ styles من ردي السابق */
-        :root { --primary: #2563eb; /* ... */ }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%); min-height: 100vh; }
-        /* ... باقي الـ styles */
-        
-        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.98); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 99999; backdrop-filter: blur(12px); transition: opacity 0.4s ease, visibility 0.4s ease; }
-        .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .loader { width: 60px; height: 60px; position: relative; }
-        .loader::before, .loader::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 4px solid transparent; border-top-color: var(--primary); animation: spin 1s linear infinite; }
-        .loader::after { inset: 6px; border-top-color: var(--secondary); animation-duration: 0.8s; animation-direction: reverse; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        /* ... انسخ كل الـ styles الأخرى من ردي الأول */
-        /* (أو احتفظ بالملف القديم واحذف فقط الـ <script> الأخير واستبدله) */
-    </style>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif}
+body{background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f8fafc 100%);color:#1e293b;min-height:100vh;line-height:1.6}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.98);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:99999}
+.loader{width:60px;height:60px;border:4px solid transparent;border-top-color:#2563eb;border-radius:50%;animation:spin 1s linear infinite}
+.loader::after{content:'';position:absolute;inset:6px;border:3px solid transparent;border-top-color:#7c3aed;border-radius:50%;animation:spin .8s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+#loginSection{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.login-box{background:#fff;padding:3rem 2.5rem;border-radius:24px;box-shadow:0 25px 50px rgba(0,0,0,.25);max-width:420px;width:100%}
+.login-logo{width:80px;height:80px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;color:#fff;font-size:2rem}
+.login-title{font-size:1.75rem;font-weight:900;background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
+.login-subtitle{color:#64748b;margin-bottom:2rem;font-size:.9rem}
+.form-group{margin-bottom:1.25rem;text-align:right}
+.form-label{display:block;margin-bottom:.5rem;font-weight:600;font-size:.88rem}
+.form-input{width:100%;padding:.85rem 1rem;border:2px solid #e2e8f0;border-radius:8px;font-size:.95rem;background:#f8fafc;color:#1e293b}
+.form-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.btn{padding:.85rem 1.6rem;border:none;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .3s}
+.btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;box-shadow:0 4px 15px rgba(37,99,235,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(37,99,235,.45)}
+.btn-block{width:100%}.btn-lg{padding:1rem 2rem;font-size:1.05rem}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff}.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.btn-sm{padding:.55rem 1rem;font-size:.85rem}
+#appContainer{display:none;min-height:100vh}
+.navbar{background:#fff;padding:.85rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 15px rgba(0,0,0,.1);position:sticky;top:0;z-index:100}
+.navbar h1{font-size:1.35rem;color:#2563eb;display:flex;align-items:center;gap:.5rem}
+.nav-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;overflow-x:auto;position:sticky;top:64px}
+.tab{padding:.9rem 1rem;cursor:pointer;color:#64748b;border-bottom:3px solid transparent;font-weight:600;font-size:.82rem;white-space:nowrap;transition:all .3s}
+.tab:hover{color:#2563eb;background:rgba(37,99,235,.05)}
+.tab.active{color:#2563eb;border-bottom-color:#2563eb;background:rgba(37,99,235,.08)}
+.main{padding:1.5rem;padding-bottom:3rem}
+.page{display:none}.page.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:#fff;padding:1.2rem;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08);border-right:4px solid #2563eb}
+.stat-card h3{font-size:.78rem;color:#64748b;font-weight:600}.stat-card .num{font-size:1.6rem;font-weight:800;color:#1e293b;margin-top:.5rem}
+.table-box{background:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08);margin-bottom:1.5rem;overflow:hidden}
+.table-header{padding:1rem 1.5rem;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;gap:.5rem}
+table{width:100%;border-collapse:collapse}
+th,td{padding:.75rem;text-align:right;border-bottom:1px solid #e2e8f0;font-size:.88rem}
+th{background:#f8fafc;color:#64748b;font-weight:700;font-size:.78rem}
+.badge{padding:.3rem .7rem;border-radius:20px;font-size:.73rem;font-weight:600;display:inline-flex;align-items:center;gap:.3rem}
+.badge-success{background:rgba(16,185,129,.12);color:#059669}.badge-danger{background:rgba(239,68,68,.12);color:#dc2626}.badge-warning{background:rgba(245,158,11,.12);color:#d97706}.badge-primary{background:rgba(37,99,235,.12);color:#1d4ed8}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;justify-content:center;align-items:center;z-index:1000;padding:1rem}
+.modal.show{display:flex}
+.modal-content{background:#fff;padding:2rem;border-radius:16px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #e2e8f0}
+.close{font-size:1.8rem;cursor:pointer;color:#94a3b8;background:none;border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:1rem 1.5rem;border-radius:10px;z-index:9999;animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translateX(-50%,0)}}
+.footer{text-align:center;padding:2rem;background:#1e293b;color:#94a3b8;margin-top:auto}
+@media(max-width:768px){.tabs{top:auto;position:relative}.nav-btns{width:100%;justify-content:center}}
+</style>
 </head>
 <body>
 
-<!-- === HTML STRUCTURE (نفس الهيكل تماماً) === -->
-
-<!-- Loading Overlay -->
 <div id="loadingOverlay" class="loading-overlay">
     <div class="loader"></div>
-    <div class="loading-text"><i class="fas fa-circle-notch fa-spin"></i><span id="loadingText">جاري التحميل...</span></div>
+    <div style="margin-top:1rem;color:#64748b;font-weight:600">جاري التحميل...</div>
 </div>
 
-<!-- Toast Container -->
-<div class="toast-container" id="toastContainer"></div>
-
-<!-- Confirm Modal -->
-<div id="confirmModal" class="modal">...نفس المحتوى...</div>
-
-<!-- Scanner Modal -->
-<div id="scannerModal" class="modal">...نفس المحتوى...</div>
-
-<!-- Main Modal -->
-<div id="mainModal" class="modal">...نفس المحتوى...</div>
-
-<!-- Login Section -->
-<div id="loginSection">...نفس المحتوى...</div>
-
-<!-- App Container -->
-<div id="appContainer">
-    <nav class="navbar">...</nav>
-    <div class="tabs-nav">...</div>
-    <div class="main-content">
-        <!-- كل الـ pages بنفس الهيكل -->
-        <div id="page-home" class="page active">...</div>
-        <div id="page-merchants" class="page">...</div>
-        <!-- ... باقي الصفحات -->
+<div id="loginSection">
+    <div class="login-box">
+        <div class="login-logo">🏪</div>
+        <h1 class="login-title">Axentro System</h1>
+        <p class="login-subtitle">نظام إدارة التجار والمكن v3.0</p>
+        <div class="form-group"><label class="form-label">🔑 كلمة المرور</label>
+            <input type="password" id="pwd" class="form-input" placeholder="أدخل كلمة المرور"></div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="login()">تسجل دخول</button>
     </div>
-    <footer class="footer">...</footer>
 </div>
 
-<!-- Audio Elements -->
-<audio id="doneSound" preload="auto"><source src="done.mp3" type="audio/mpeg"></audio>
-<audio id="loginErrorSound" preload="auto"><source src="login-error.mp3" type="audio/mpeg"></audio>
-<!-- ... باقي الأصوات -->
+<div id="appContainer">
+    <nav class="navbar">
+        <h1>🏪 Axentro</h1>
+        <div class="nav-btns">
+            <span id="status" style="padding:.4rem .8rem;border-radius:20px;background:rgba(16,185,129,.1);color:#059669;font-size:.78rem">● متصل</span>
+            <button class="btn btn-primary btn-sm" onclick="refreshData()">🔄 تحديث</button>
+            <button class="btn btn-danger btn-sm" onclick="logout()">🚪 خروج</button>
+        </div>
+    </nav>
 
-<!-- ⭐⭐⭐ THIS IS THE IMPORTANT PART ⭐⭐⭐ -->
-<script type="module" src="./src/core/app.js"></script>
+    <div class="tabs">
+        <div class="tab active" onclick="showPage('home',this)">🏠 الرئيسية</div>
+        <div class="tab" onclick="showPage('merchants',this)">👥 التجار</div>
+        <div class="tab" onclick="showPage('machines',this">🖨️ المكن</div>
+        <div class="tab" onclick="showPage('transfers',this)">💱 التحويلات</div>
+        <div class="tab" onclick="showPage('collections',this)">💰 التحصيلات</div>
+        <div class="tab" onclick="showPage('archive',this)">📦 الأرشيف</div>
+    </div>
 
+    <div class="main">
+        <!-- HOME -->
+        <div id="page-home" class="page active">
+            <div class="stats" id="homeStats"></div>
+            <div class="table-box">
+                <div class="table-header"><h3>📊 الإحصائيات</h3></div>
+                <table><thead><tr><th>عدد التجار</th><th>عدد المكن</th><th>تحويلات الشهر</th><th>تحصيلات الشهر</th></tr></thead>
+                    <tbody id="statsBody"></tbody></table>
+            </div>
+        </div>
+
+        <!-- MERCHANTS -->
+        <div id="page-merchants" class="page">
+            <div class="table-box">
+                <div class="table-header"><h3>👥 التجار</h3>
+                    <button class="btn btn-primary btn-sm" onclick="addMerchant()">+ إضافة</button></div>
+                <table><thead><tr><th>#</th><th>الاسم</th><th>الهاتف</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+                    <tbody id="merchantsTable"></tbody></table>
+            </div>
+        </div>
+
+        <!-- MACHINES -->
+        <div id="page-machines" class="page">
+            <div class="table-box">
+                <div class="table-header"><h3>🖨️ المكن</h3>
+                    <button class="btn btn-primary btn-sm" onclick="addMachine()">+ إضافة</button></div>
+                <table><thead><tr><th>#</th><th>رقم المكنة</th><th>التاجر</th><th>التسلسلي</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+                    <tbody id="machinesTable"></tbody></table>
+            </div>
+        </div>
+
+        <!-- TRANSFERS -->
+        <div id="page-transfers" class="page">
+            <div class="table-box">
+                <div class="table-header"><h3>💱 التحويلات</h3>
+                    <button class="btn btn-success btn-sm" onclick="addTransfer()">+ تحويل جديد</button></div>
+                <table><thead><tr><th>#</th><th>التاريخ</th><th>التاجر</th><th>المبلغ</th><th>إجراءات</th></tr></thead>
+                    <tbody id="transfersTable"></tbody></table>
+            </div>
+        </div>
+
+        <!-- COLLECTIONS -->
+        <div id="page-collections" class="page">
+            <div class="table-box">
+                <div class="table-header"><h3>💰 التحصيلات</h3>
+                    <button class="btn btn-primary btn-sm" onclick="addCollection()">+ تحصيل</button></div>
+                <table><thead><tr><th>#</th><th>التاريخ</th><th>التاجر</th><th>المبلغ</th><th>إجراءات</th></tr></thead>
+                    <tbody id="collectionsTable"></tbody></table>
+            </div>
+        </div>
+
+        <!-- ARCHIVE -->
+        <div id="page-archive" class="page">
+            <div class="table-box">
+                <div class="table-header"><h3>📦 الأرشيف</h3></div>
+                <table><thead><tr><th>#</th><th>الشهر</th><th>تحويلات</th><th>تحصيلات</th><th>المتبقي</th></tr></thead>
+                    <tbody id="archiveTable"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2024 Axentro – All Rights Reserved</p>
+        <p style="font-size:.78rem;margin-top:.5rem">Powered by Supabase</p>
+    </footer>
+</div>
+
+<!-- MODALS -->
+<div id="modal" class="modal"><div class="modal-content" id="modalContent"></div></div>
+<div id="toast" class="toast" id="toastEl"></div>
+
+<script>
+// ===== CONFIG =====
+const SUPABASE_URL = 'https://bwcrdcudpnxkmcyyhzhe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY';
+
+let supabase = null;
+let DB = { merchants:[], machines:[], transfers:[], collections:[], archives:[] };
+
+// ===== INIT =====
+window.onload = async function() {
+    try {
+        console.log('🚀 Initializing...');
+        
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log('✅ Supabase connected');
+        
+        // Check session
+        const auth = localStorage.getItem('axentro_auth');
+        if(auth) {
+            try {
+                const data = JSON.parse(auth);
+                if (data.t && data.t > Date.now()) {
+                    $('loginSection').classList.add('hidden');
+                    $('appContainer').style.display = 'block';
+                    await refreshAll();
+                } else {
+                    localStorage.removeItem('axentro_auth');
+                    showLoading(false);
+                }
+            } catch(e) {
+                localStorage.removeItem('axentro_auth');
+                showLoading(false);
+            }
+        } else {
+            showLoading(false);
+        }
+        
+        // Setup event listeners
+        setupListeners();
+        
+        console.log('✅ Ready!');
+    } catch(e) {
+        console.error('❌ Init error:', e);
+        showToast('❌ خطأ: ' + e.message, 'error');
+        showLoading(false);
+    }
+};
+
+function $(id) { return document.getElementById(id); }
+
+function showLoading(show) {
+    if(show) $('loadingOverlay').classList.remove('hidden');
+    else $('loadingOverlay').classList.add('hidden');
+}
+
+function showToast(msg, type='success') {
+    const el = document.getElementById('toastEl');
+    el.textContent = msg;
+    el.className = `toast ${type}`;
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = 'slideUp .3s ease forwards';
+    setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+function setStatus(s) {
+    const el = document.getElementById('status');
+    el.className = s === 'live' ? 'badge badge-success' : 'badge badge-danger';
+    el.innerHTML = s === 'live' ? '● متصل' : '⚠ غير متصل';
+}
+
+// ===== AUTH =====
+async function login() {
+    const pwd = $('pwd').value.trim();
+    if(!pwd) { showToast('⚠️ أدخل كلمة المرور', 'warning'); return; }
+    
+    showLoading(true);
+    try {
+        const { data } = await supabase.rpc('check_admin_login', { p_password: pwd });
+        
+        if(data?.success) {
+            localStorage.setItem('axentro_auth', JSON.stringify({t: Date.now() + 86400000 }));
+            showToast('🎉 مرحباً!', 'success');
+            $('loginSection').classList.add('hidden');
+            $('appContainer').style.display = 'block';
+            await refreshAll();
+        } else {
+            showToast(data?.message || '❌ كلمة مرور خاطئة', 'error');
+        }
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function logout() {
+    localStorage.removeItem('axentro_auth');
+    location.reload();
+}
+
+// ===== DATA =====
+async function refreshAll() {
+    showLoading(true);
+    setStatus('connecting');
+    
+    try {
+        const [m, mac, t, c, a] = await Promise.all([
+            supabase.from('merchants').select('*'),
+            supabase.from('machines').select('*'),
+            supabase.from('transfers').select('*'),
+            supabase.from('collections').select('*'),
+            supabase.from('archives').select('*')
+        ]);
+        
+        DB.merchants = m.data || [];
+        DB.machines =  mac.data || [];
+        DB.transfers = t.data || [];
+        DB.collections = c.data || [];
+        DB.archives = a.data || [];
+        
+        renderHome();
+        renderMerchants();
+        renderMachines();
+        renderTransfers();
+        renderCollections();
+        renderArchive();
+        
+        setStatus('live');
+        showToast('✅ تم التحديث', 'success');
+    } catch(e) {
+        console.error('❌ Refresh error:', e);
+        setStatus('offline');
+        showToast('❌ خطأ: ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// ===== PAGES =====
+function showPage(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    $(`page-${name}`).classList.add('active');
+    if(el) el.classList.add('active');
+}
+
+function renderHome() {
+    const month = new Date().toLocaleDateString('ar-EG',{month:'long',year:'numeric'});
+    const tVal = DB.transfers.filter(x=>x['الشهر']===month).reduce((s,x)=>s+(+x['قيمة التحويل']||0),0);
+    const cVal = DB.collections.filter(x=>x['شهر']===month).reduce((s,x)=>s+(+x['قيمة التحصيل']||0),0);
+    
+    $('statsBody').innerHTML = `
+        <tr><td>${DB.merchants.length}</td><td>${DB.machines.length}</td>
+            <td>${tVal.toLocaleString('ar-EG')} جنيه</td><td>${cVal.toLocaleString('ar-EG')} جنيه</td></tr>`;
+}
+
+function renderMerchants() {
+    const tbody = $('merchantsTable');
+    tbody.innerHTML = DB.merchants.map((m,i) => `
+        <tr><td>${i+1}</td><td><strong>${m['اسم التاجر']}</strong></td>
+            <td dir="ltr">${m['رقم الهاتف']||'-'}</td>
+            <td><span class="badge ${m['الحالة']==='نشط'?'badge-success':'badge-danger'}">${m['الحالة']||'-'}</span></td>
+            <td><div class="actionBtns">
+                <button class="btn btnSm btnPrimary" onclick="editMerchant(${i})">✏️</button>
+                <button class="btn btnSm btnDanger" onclick="delMerchant('${m['id']}')}>🗑️</button>
+            </div></td></tr>
+    `).join('');
+}
+
+function renderMachines() {
+    const tbody = $('machinesTable');
+    tbody.innerHTML = DB.machines.map((m,i) => `
+        <tr><td>${i+1}</td><td><code>${m['رقم المكنة']}</code></td>
+            <td>${m['اسم التاجر']||'-'}</td>
+            <td><code>${m['التسلسلي']||'-'}</code></td>
+            <td><span class="badge ${m['الحالة']=='نشطة'?'badge-success':'badge-danger'}">${m['الحالة']||'-'}</span></td>
+            <td><div class="actionBtns">
+                <button class="btn btnSm btnPrimary" onclick="editMachine(${i})">✏️</button>
+                <button class="btn btnSm btnDanger" onclick="delMachine('${m['id']}')}>🗑️</button>
+            </div></td></tr>
+    `).join('');
+}
+
+function renderTransfers() {
+    const tbody = $('transfersTable');
+    tbody.innerHTML = DB.transfers.slice(-20).reverse().map((t,i) => `
+        <tr><td>${i+1}</td><td>${t['التاريخ']||'-'}</td>
+            <td>${t['اسم التاجر']||'-'}</td>
+            <td><strong>${(+t['قيمة التحويل'])?.toLocaleString('ar-EG')} جنيه</strong></td>
+            <td><button class="btn btnSm btnDanger" onclick="delTransfer('${t['id']}')">🗑️ حذف</button></td></tr>
+    `).join('');
+}
+
+function renderCollections() {
+    const tbody = $('collectionsTable');
+    tbody.innerHTML = DB.collections.slice(-20).reverse().map((c,i) => `
+        <tr><td>${i+1}</td><td>${c['التاريخ']||'-'}</td>
+            <td>${c['اسم التاجر']||'-'}</td>
+            <td><strong>${(+c['قيمة التحصيل'])?.toLocaleString('ar-EG')} جنيه</strong></td>
+            <td><button class="btn btnSm btnDanger" onclick="delCollection('${c['id']}')">🗑️ حذف</button></td></tr>
+    `).join('');
+}
+
+function renderArchive() {
+    const tbody = $('archiveTable');
+    tbody.innerHTML = DB.archives.map((a,i) => `
+        <tr><td>${i+1}</td><td>${a['الشهر']||'-'}</td>
+            <td>${a['تحويلات']||0}</td><td>${a['تحصيلات']||0}</td>
+            <td><strong>${(+a['متبقي']||0)?.toLocaleString('ar-EG')}</strong></td></tr>
+    `).join('');
+}
+
+// ===== CRUD - MERCHANTS =====
+function addMerchant() {
+    openModal('تاجر جديد', `
+        <div class="form-group"><label>الاسم *</label><input class="form-input" id="mName" placeholder="اسم التاجر"></div>
+        <div class="form-group"><label>الهاتف</label><input class="form-input" id="mPhone" dir="ltr" placeholder="رقم الهاتف"></div>
+        <div class="form-group"><label>العنوان</label><input class="form-input" id="mAddress" placeholder="العنوان"></div>
+        <div class="form-group"><label>الحالة</label>
+            <select class="form-input" id="mStatus"><option value="نشط">نشط</option><option value="غير نشط">غير نشط</option></select></div>
+        <button class="btn btnPrimary btnBlock" onclick="saveMerchant()">💾 حفظ التاجر</button>
+    `);
+}
+
+async function saveMerchant() {
+    const name = $('mName').value.trim();
+    if(!name) { showToast('⚠️ الاسم مطلوب', 'warning'); return; }
+    
+    showLoading(true);
+    try {
+        const data = {
+            "اسم التاجر": name,
+            "رقم الهاتف": $('mPhone').value,
+            "العنوان": $('mAddress').value,
+            "الحالة": $('mStatus').value,
+            "created_at": new Date().toISOString()
+        };
+        
+        const { error } = await supabase.from('merchants').insert([data]);
+        if(error) throw error;
+        
+        closeModal();
+        showToast('✅ تمت الإضافة بنجاح', 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function editMerchant(i) {
+    const m = DB.merchants[i];
+    openModal('تعديل تاجر', `
+        <div class="form-group"><label>الاسم *</label><input class="form-input" id="mName" value="${m['اسم التاجر']}"></div>
+        <div class="form-group"><label>الهاتف</label><input class="form-input" id="mPhone" value="${m['رقم الهاتف']||''}" dir="ltr"></div>
+        <div class="form-group"><label>العنوان</label><input class="form-input" id="mAddress" value="${m['العنوان']||''}"></div>
+        <div class="form-group"><label>الحالة</label>
+            <select class="form-input" id="mStatus"><option value="نشط" ${m['الحالة']=='نشط'?'selected':''}>نشط</option><option value="غير نشط" ${m['الحالة']=='غير نشط'?'selected':''}>غير نشط</option></select></div>
+        <button class="btn btnPrimary btnBlock" onclick="updateMerchant(${i})">💾 تحديث</button>
+    `);
+}
+
+async function updateMerchant(i) {
+    const data = {
+        "اسم التاجر": $('mName').value,
+        "رقم الهاتف": $('mPhone').value,
+        "العنوان": $('mAddress').value,
+        "الحالة": $('mStatus').value,
+        "updated_at": new Date().toISOString()
+    };
+    
+    showLoading(true);
+    try {
+        const { error } = await supabase.from('merchants').update(data).eq('id', DB.merchants[i].id);
+        if(error) throw error;
+        closeModal();
+        showToast('✅ تم التحديث', 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function delMerchant(id) {
+    if(!confirm('هل تريد الحذف هذا التاجر؟')) return;
+    
+    showLoading(true);
+    try {
+        const { error } = await supabase.from('merchants').delete().eq('id', id);
+        if(error) throw error;
+        showToast('✅ تم الحذف', 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// ===== CRUD - MACHINES =====
+function addMachine() {
+    openModal('مكنة جديدة', `
+        <div class="form-group"><label>التاجر</label>
+            <select class="form-input" id="macMerch">${DB.merchants.map(m=>`<option value="${m.id}">${m['اسم التاجر']}</option>`).join('')}</select></div>
+        <div class="form-group"><label>التسلسلي *</label><input class="form-input" id="macSerial" dir="ltr" placeholder="SN-XXXXX"></div>
+        <div class="form-group"><label>التارجت</label><input type="number" class="form-input" id="macTarget" min="0"></div>
+        <div class="form-group"><label>الحالة</label>
+            <select class="form-input" id="macStatus"><option value="نشطة">نشطة</option><option value="متوقفة">متوقفة</option></select></div>
+        <button class="btn btnPrimary btnBlock" onclick="saveMachine()">💾 حفظ المكنة</button>
+    `);
+}
+
+async function saveMachine() {
+    const merchId = parseInt($('macMerch').value);
+    const merch = DB.merchants.find(m => m.id === merchId);
+    
+    if(!$('macSerial').value) { showToast('⚠️ التسلسلي مطلوب', 'warning'); return; }
+    
+    showLoading(true);
+    try {
+        const maxId = DB.machines.reduce((max,m)=>Math.max(max,(parseInt(m.id)||0),0),0);
+        const data = {
+            "id": String(maxId+1).padStart(4,'0'),
+            "رقم التاجر": merchId,
+            "اسم التاجر": merch?.['اسم التاجر'],
+            "التسلسلي": $('macSerial').value,
+            "التارجت": parseFloat($('macTarget').value)||0,
+            "الحالة": $('macStatus').value,
+            "created_at": new Date().toISOString()
+        };
+        
+        const { error } = await supabase.from('machines').insert([data]);
+        if(error) throw error;
+        closeModal();
+        showToast('✅ تمت الإضافة', 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function editMachine(i) {
+    const m = DB.machines[i];
+    openModal('تعديل مكنة', `
+        <div class="form-group"><label>التاجر</label>
+            <select class="form-input" id="macMerch">${DB.merchants.map(m=>`<option value="${m.id}" ${m.id==m['رقم التاجر']?'selected':''}>${m['اسم التاجر']}</option>`).join('')}</select></div>
+        <div class="form-group"><label>التسلسلي</label><input class="form-input" id="macSerial" value="${m['التسلسلي']}" dir="ltr"></div>
+        <div class="form-group"><label>التارجت</label><input type="number" class="form-input" id="macTarget" value="${m['التارجت']||''}"></div>
+        <div class="form-group"><label>الحالة</label>
+            <select class="form-input" id="macStatus"><option value="نشطة" ${m['الحالة']=='نشطة'?'selected':''}>نشطة</option><option value="متوقفة" ${m['الحالة']=='متوقفة'?'selected':''}>متوقفة</option></select></div>
+        <button class="btn btnPrimary btnBlock" onclick="updateMachine(${i})">💾 تحديث</button>
+    `);
+}
+
+async function updateMachine(i) {
+    const merchId = parseInt($('macMerch').value);
+    const merch = DB.merchants.find(m => m.id === merchId);
+    const data = {
+        "رقم التاجر": merchId,
+        "اسم التاجر": merch?.['اسم التاجر'],
+        "التسلسلي": $('macSerial').value,
+        "التارجت": parseFloat($('macTarget').value)||0,
+        "الحالة": $('macStatus').value,
+        "updated_at": new Date().toISOString()
+    };
+    
+    showLoading(true);
+    try {
+        const { error } = await supabase.from('machines').update(data).eq('id', DB.machines[i].id);
+        if(error) throw error;
+        closeModal();
+        showToast('✅ تم التحديث', 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function delMachine(id) {
+    if(!confirm('هل تريد حذف هذه المكنة؟')) return;
+    showLoading(true);
+    try {
+        const { error } = await supabase.from('machines').delete().eq('id', id);
+        if(error) throw error;
+        showToast('✅ تم الحذف', 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// ===== CRUD - TRANSFERS =====
+function addTransfer() {
+    openModal('تحويل جديد', `
+        <div class="form-group"><label>التاجر</label>
+            <select class="form-input" id="trMerch">${DB.merchants.map(m=>`<option value="${m.id}">${m['اسم التاجر']}</option>`).join('')}</select></div>
+        <div class="form-group"><label>المبلغ *</label><input type="number" class="form-input" id="trAmount" step="any" min="0"></div>
+        <div class="form-group"><label>النوع</label>
+            <select class="form-input" id="trType"><option value="خدمات">خدمات</option><option value="كاش">كاش</option></select></div>
+        <button class="btn btnSuccess btnBlock" onclick="saveTransfer()">💾 حفظ التحويل</button>
+    `);
+}
+
+async function saveTransfer() {
+    const merch = DB.merchants.find(m => m.id === parseInt($('trMerch').value));
+    const amount = parseFloat($('trAmount').value);
+    
+    if(!amount || amount <= 0) { showToast('⚠️ المبلغ مطلوب', 'warning'); return; }
+    
+    showLoading(true);
+    try {
+        const now = new Date();
+        const data = {
+            "id": generateRef('TRF'),
+            "رقم التاجر": parseInt($('trMerch').value),
+            "اسم التاجر": merch?.['اسم التاجر'],
+            "قيمة التحويل": Math.round(amount * 100) / 100,
+            "نوع التحويل": $('trType').value,
+            "التاريخ": now.toISOString().split('T')[0],
+            "الوقت": now.toLocaleTimeString(),
+            "الشهر": now.toLocaleDateString('ar-EG',{month:'long'}),
+            "created_at": now.toISOString()
+        };
+        
+        const { error } = await supabase.from('transfers').insert([data));
+        if(error) throw error;
+        closeModal();
+        showToast('✅ تم التحويل بنجاح', 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function delTransfer(id) {
+    if(!confirm('هل تريد حذف هذا التحويل؟')) return;
+    showLoading(true);
+    try {
+        const { error } = await supabase.from('transfers').delete().eq('id', id);
+        if(error) throw error;
+        showToast('✅ تم الحذف', 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// ===== CRUD - COLLECTIONS =====
+function addCollection() {
+    openModal('تحصيل جديد', `
+        <div class="form-group"><label>التاجر</label>
+            <select class="form-input" id="colMerch">${DB.merchants.map(m=>`<option value="${m.id}">${m['اسم التاجر']}</option>`).join('')}</select></div>
+        <div class="form-group"><label>المبلغ *</label><input type="number" class="form-input" id="colAmount" step="any" min="0"></div>
+        <div class="form-group"><label>نوع</label>
+            <select class="form-input" id="colType"><option value="جزئي">جزئي</option><option value="كامل">كامل</option></select></div>
+        <button class="btn btnPrimary btnBlock" onclick="saveCollection()">💾 حفظ التحصيل</button>
+    `);
+}
+
+async function saveCollection() {
+    const merch = DB.merchants.find(m => m.id === parseInt($('colMerch').value));
+    const amount = parseFloat($('colAmount').value);
+    
+    if(!amount || amount <= 0) { showToast('⚠️ المبلغ مطلوب', 'warning'); return; }
+    
+    showLoading(true);
+    try {
+        const now = new Date();
+        const transfers = DB.transfers.filter(t => t['رقم التاجر'] === parseInt($('colMerch').value));
+        const collections = DB.collections.filter(c => c['رقم التاجر'] === parseInt($('colMerch').value));
+        const totalT = transfers.reduce((s,t) => s+(+t['قيمة التحويل']||0),0);
+        const totalC = collections.reduce((s,c) => s+(+c['قيمة التحصيل']||0),0);
+        
+        const data = {
+            "id": generateRef('COL'),
+            "رقم التاجر": parseInt($('colMerch').value),
+            "اسم التاجر": merch?.['اسم التاجر'],
+            "قيمة التحصيل": Math.round(amount * 100) / 100,
+            "نوع التحصيل": $('colType').value,
+            "المتبقي": Math.max(0, totalT - totalC - amount),
+            "التاريخ": now.toISOString().split('T')[0],
+            "الوقت": now.toLocaleTimeString(),
+            "شهر": now.toLocaleDateString('ar-EG',{month:'long'}),
+            "created_at": now.toISOString()
+        };
+        
+        const { error } = await supabase.from('collections').insert([data));
+        if(error) throw error;
+        closeModal();
+        showToast('✅ تم التحصيل', 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function delCollection(id) {
+    if(!confirm('هل تريد حذف هذا التحصيل؟')) return;
+    showLoading(true);
+    try {
+        const { error } = await supabase.from('collections').delete().eq('id', id);
+        if(error) throw error;
+        showToast('✅ تم الحذف', 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// ===== ARCHIVE =====
+async function closeMonth() {
+    if(!confirm('هل تريد إغلاق الشهر الحالي؟\nسيتم أرشفة جميع البيانات.')) return;
+    
+    showLoading(true);
+    try {
+        const now = new Date();
+        const month = now.toLocaleDateString('ar-EG',{month:'long',year:'numeric'});
+        const tMonth = DB.transfers.filter(t => t['الشهر'] === month);
+        const cMonth = DB.collections.filter(c => c['شهر'] === month);
+        
+        const data = {
+            "id": `ARCH-${now.toISOString().slice(0,10).replace(/-/g,'')}`,
+            "الشهر": month,
+            "تحويلات": tMonth.length,
+            "إجمالي التحويلات": tMonth.reduce((s,t)=>s+(+t['قيمة التحويل']||0),0),
+            "تحصيلات": cMonth.length,
+            "إجمالي المتبقي": tMonth.reduce((s,t)=>s+(+t['قيمة التحويل']||0),0)-cMonth.reduce((s,c)=>s+(+c['قيمة التحصيل']||0),0),
+            "created_at": now.toISOString()
+        };
+        
+        const { error } = await supabase.from('archives').insert([data]);
+        if(error) throw error;
+        showToast(`✅ تم إغلاق "${month}"`, 'success');
+        await refreshAll();
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// ===== HELPERS =====
+function generateRef(prefix) {
+    return prefix+'-'+new Date().toISOString().replace(/[-:T]/g,'')+'-'+String(Math.floor(Math.random()*10000)).toString().padStart(4,'0');
+}
+
+function generateId(arr) {
+    const max = arr.reduce((max,item)=>Math.max(max,(parseInt(item.id)||0),0),0);
+    return String(max+1).padStart(4,'0');
+}
+
+function $(id) { return document.getElementById(id); }
+
+function openModal(title, content) {
+    $('modalContent').innerHTML = `<div class="modal-header"><h3>${title}</h3><button class="close" onclick="closeModal()">×</button></div>${content}`;
+    $('modal').classList.add('show');
+}
+
+function closeModal() {
+    $('modal').classList.remove('show');
+}
+
+function confirm(msg, callback, yesText='نعم، تأكيد', icon='question') {
+    if(confirm(msg)) callback();
+}
+
+console.log('%c🎉 Axentro Ready!', 'color:#2563eb;font-size:18px;font-weight:bold;');
+</script>
 </body>
 </html>
