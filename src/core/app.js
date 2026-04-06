@@ -1,6 +1,7 @@
 /**
  * Application Core - Complete Version
  * Main entry point, orchestration, and global utilities
+ * 🔊 Enhanced with Sound System & Professional Loading
  */
 
 // ============================================================
@@ -70,46 +71,190 @@ import { logAction } from '../services/logService.js';
 window.App = {};
 
 // ============================================================
-// INITIALIZATION
+// SOUND MANAGEMENT SYSTEM 🎵
 // ============================================================
 
 /**
- * Initialize the complete application
+ * Play sound effect
+ * @param {string} soundName - Sound identifier (loginSuccess, loginError, logoutSuccess, done, scan)
+ */
+function playSound(soundName) {
+    try {
+        const soundMap = {
+            'loginSuccess': 'soundLoginSuccess',
+            'loginError': 'soundLoginError',
+            'logoutSuccess': 'soundLogoutSuccess',
+            'done': 'soundDone',
+            'scan': 'soundScan'
+        };
+        
+        const audioId = soundMap[soundName];
+        if (!audioId) {
+            console.warn(`⚠️ Sound not found: ${soundName}`);
+            return;
+        }
+        
+        const audio = document.getElementById(audioId);
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('🔊 Audio play blocked:', e.message));
+        } else {
+            console.warn(`⚠️ Audio element not found: ${audioId}`);
+        }
+    } catch (error) {
+        console.error('❌ Error playing sound:', error);
+    }
+}
+
+// Expose globally for use in other modules
+window.playSound = playSound;
+
+// ============================================================
+// INITIALIZATION WITH PROFESSIONAL LOADING SCREEN ⚡
+// ============================================================
+
+/**
+ * Initialize the complete application with animated loading screen
  */
 async function initializeApp() {
     console.log('🚀 Axentro System v3.0 Professional Initializing...');
     console.log('⚡ Developed by Axentro Team | © 2024');
-
-    // Initialize Supabase connection
-    if (!initSupabase()) {
-        showError('❌ فشل تهيئة الاتصال بقاعدة البيانات');
-        setLoading(false);
-        return;
-    }
-
-    // Initialize UI components
-    initModals();
-    initEventListeners();
-
-    // Check authentication session
-    if (checkSession()) {
-        document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('appContainer').style.display = 'flex';
-        await refreshAllData();
-    } else {
-        document.getElementById('loginSection').style.display = 'flex';
-    }
-
-    setLoading(false);
-
-    // Auto-refresh every 5 minutes
-    setInterval(async () => {
-        if (checkSession() && document.getElementById('appContainer').style.display === 'flex') {
-            await refreshAllData();
+    
+    // Get loading screen elements
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const loadingStatus = document.getElementById('loadingStatus');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    // Animate progress bar
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        if (progress < 90) {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            
+            if (progressFill) progressFill.style.width = `${progress}%`;
+            if (progressText) progressText.textContent = `${Math.round(progress)}%`;
+            
+            // Update status messages based on progress
+            if (loadingStatus) {
+                if (progress >= 30 && progress < 60) {
+                    loadingStatus.textContent = 'جاري تحميل الوحدات...';
+                } else if (progress >= 60 && progress < 85) {
+                    loadingStatus.textContent = 'جاري الاتصال بقاعدة البيانات...';
+                }
+            }
         }
-    }, CONFIG.AUTO_REFRESH_INTERVAL);
+    }, 200);
 
-    console.log('✅ Axentro System v3.0 Ready!');
+    try {
+        // Step 1: Initialize Supabase connection
+        if (loadingStatus) loadingStatus.textContent = 'جاري تهيئة الاتصال...';
+        
+        if (!initSupabase()) {
+            clearInterval(progressInterval);
+            showError('❌ فشل تهيئة الاتصال بقاعدة البيانات');
+            
+            // Play error sound
+            playSound('loginError');
+            
+            // Still hide loading and show login
+            if (progressFill) progressFill.style.width = '100%';
+            if (progressText) progressText.textContent = '100%';
+            if (loadingStatus) loadingStatus.textContent = 'حدث خطأ!';
+            
+            setTimeout(() => {
+                if (loadingOverlay) loadingOverlay.classList.add('fade-out');
+                setTimeout(() => {
+                    if (loadingOverlay) loadingOverlay.style.display = 'none';
+                    document.getElementById('loginSection').style.display = 'flex';
+                }, 500);
+            }, 500);
+            
+            setLoading(false);
+            return;
+        }
+        
+        // Update progress for Supabase connection
+        if (progressFill) progressFill.style.width = '95%';
+        if (progressText) progressText.textContent = '95%';
+        if (loadingStatus) loadingStatus.textContent = 'جاري تهيئة واجهة المستخدم...';
+        
+        // Small delay for visual effect
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Step 2: Initialize UI components
+        initModals();
+        initEventListeners();
+        
+        // Complete the progress bar
+        if (progressFill) progressFill.style.width = '100%';
+        if (progressText) progressText.textContent = '100%';
+        if (loadingStatus) loadingStatus.textContent = 'تم التحميل بنجاح! ✅';
+        
+        // Clear interval and finish loading
+        clearInterval(progressInterval);
+        
+        // Wait a moment then hide loading screen
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Fade out loading overlay
+        if (loadingOverlay) loadingOverlay.classList.add('fade-out');
+        
+        setTimeout(() => {
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            
+            // Check authentication session
+            if (checkSession()) {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'flex';
+                
+                // Play subtle ready sound
+                playSound('scan');
+                
+                refreshAllData();
+            } else {
+                document.getElementById('loginSection').style.display = 'flex';
+                
+                // Play subtle sound to indicate readiness
+                playSound('scan');
+            }
+
+            setLoading(false);
+        }, 500);
+        
+        // Auto-refresh every 5 minutes
+        setInterval(async () => {
+            if (checkSession() && document.getElementById('appContainer').style.display === 'flex') {
+                await refreshAllData();
+            }
+        }, CONFIG.AUTO_REFRESH_INTERVAL);
+
+        console.log('✅ Axentro System v3.0 Ready!');
+        
+    } catch (error) {
+        console.error('❌ Initialization error:', error);
+        clearInterval(progressInterval);
+        
+        // Update UI to show error
+        if (progressFill) progressFill.style.width = '100%';
+        if (progressText) progressText.textContent = '100%';
+        if (loadingStatus) loadingStatus.textContent = 'حدث خطأ أثناء التحميل';
+        
+        // Play error sound
+        playSound('loginError');
+        
+        setTimeout(() => {
+            if (loadingOverlay) loadingOverlay.classList.add('fade-out');
+            setTimeout(() => {
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+                document.getElementById('loginSection').style.display = 'flex';
+                showError('حدث خطأ أثناء تحميل النظام');
+            }, 500);
+        }, 1000);
+        
+        setLoading(false);
+    }
 }
 
 // ============================================================
@@ -187,6 +332,8 @@ function initEventListeners() {
 
     // Expose all necessary methods globally for inline handlers
     exposeGlobalMethods();
+    
+    console.log('🎧 Event listeners initialized | 🔊 Sounds enabled');
 }
 
 /**
@@ -249,11 +396,11 @@ function exposeGlobalMethods() {
 }
 
 // ============================================================
-// AUTHENTICATION SYSTEM
+// AUTHENTICATION SYSTEM WITH SOUNDS 🔐🎵
 // ============================================================
 
 /**
- * Perform user login
+ * Perform user login with sound effects
  */
 async function performLogin() {
     const passwordInput = document.getElementById('passwordInput');
@@ -263,6 +410,9 @@ async function performLogin() {
     if (!password) {
         showWarning('⚠️ يرجى إدخال كلمة المرور');
         shakeElement(passwordInput);
+        
+        // Play warning sound
+        playSound('scan');
         return;
     }
 
@@ -280,6 +430,9 @@ async function performLogin() {
                 sessionExpiry: Date.now() + CONFIG.SESSION_DURATION
             }));
 
+            // ✅ Play success sound on successful login
+            playSound('loginSuccess');
+            
             showSuccess('🎉 مرحباً بك في النظام!');
             
             await logLoginAttempt(true, 'تم تسجيل الدخول بنجاح');
@@ -289,6 +442,9 @@ async function performLogin() {
 
             await refreshAllData();
         } else {
+            // ❌ Play error sound on failed login
+            playSound('loginError');
+            
             showError(data?.message || '❌ كلمة المرور غير صحيحة');
             passwordInput.value = '';
             passwordInput.focus();
@@ -297,6 +453,10 @@ async function performLogin() {
         }
     } catch (error) {
         console.error('❌ Login error:', error);
+        
+        // ❌ Play error sound on exception
+        playSound('loginError');
+        
         showError('❌ ' + error.message);
     } finally {
         setLoading(false);
@@ -332,6 +492,9 @@ function togglePassword() {
         icon.className = 'fas fa-eye';
     }
     
+    // Play subtle click sound
+    playSound('scan');
+    
     setTimeout(() => input.focus(), 100);
 }
 
@@ -353,13 +516,17 @@ function checkSession() {
 }
 
 /**
- * Confirm and perform logout
+ * Confirm and perform logout with sound effect
  */
 function confirmLogout() {
     showConfirm(
         'هل تريد تسجيل الخروج من النظام؟',
         async () => {
             localStorage.removeItem('axentro_auth');
+            
+            // ✅ Play logout success sound
+            playSound('logoutSuccess');
+            
             showSuccess('👋 تم تسجيل الخروج بنجاح');
             
             await logAction('تسجيل خروج', '-', 'تم تسجيل الخروج');
@@ -371,11 +538,11 @@ function confirmLogout() {
 }
 
 // ============================================================
-// DATA OPERATIONS
+// DATA OPERATIONS WITH SOUNDS 💾🎵
 // ============================================================
 
 /**
- * Refresh all data from database
+ * Refresh all data from database with success sound
  */
 async function refreshAllData() {
     setLoading(true);
@@ -390,7 +557,7 @@ async function refreshAllData() {
             import('../services/machineService.js').then(m => m.getAllMachines()),
             import('../services/transactionService.js').then(t => t.getAllTransfers()),
             import('../services/collectionService.js').then(c => c.getAllCollections()),
-            import('../services/requestService.js').then(r => r.getAllRequests()), // Using inline
+            import('../services/requestService.js').then(r => r.getAllRequests()),
             import('../services/archiveService.js').then(a => a.getAllArchives())
         ]);
 
@@ -407,11 +574,19 @@ async function refreshAllData() {
         updatePendingBadge();
         
         setConnectionStatus('live');
+        
+        // ✅ Play done sound on successful data refresh
+        playSound('done');
+        
         showSuccess('✅ تم تحديث البيانات بنجاح');
         
     } catch (error) {
         console.error('❌ Data refresh error:', error);
         setConnectionStatus('offline');
+        
+        // ❌ Play error sound on refresh failure
+        playSound('loginError');
+        
         showError('❌ فشل تحميل البيانات: ' + error.message);
     } finally {
         setLoading(false);
@@ -535,6 +710,9 @@ function selectMerchantResult(id, name, listId, inputId) {
     if (hidden) hidden.value = id;
     if (list) list.classList.remove('show');
     
+    // Play selection sound
+    playSound('done');
+    
     // Auto-fill machine form if applicable
     if (inputId === 'mc_merchant_id') {
         autoFillMerchantData(id);
@@ -545,7 +723,7 @@ function selectMerchantResult(id, name, listId, inputId) {
 window.App.selectMerchantResult = selectMerchantResult;
 
 // ============================================================
-// SCANNER FUNCTIONS
+// SCANNER FUNCTIONS WITH SOUNDS 📷🎵
 // ============================================================
 
 let scannerStream = null;
@@ -560,8 +738,6 @@ let scannedValueTemp = '';
 function openScannerForInput(inputId) {
     window.currentScannerInput = inputId;
     
-    const { openScanner } = require('../ui/modals.js'); // Dynamic import handled differently
-    // Actually call the modal opener directly
     const modal = document.getElementById('scannerModal');
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('show'), 10);
@@ -594,8 +770,15 @@ async function startCamera() {
         flashState = false;
         updateFlashIcon();
         
+        // Play camera start sound
+        playSound('scan');
+        
     } catch (err) {
         console.error('Camera error:', err);
+        
+        // Play error sound
+        playSound('loginError');
+        
         showError('❌ لا يمكن الوصول للكاميرا');
         closeScanner();
     }
@@ -642,6 +825,9 @@ async function toggleFlash() {
             });
             flashState = !flashState;
             updateFlashIcon();
+            
+            // Play toggle sound
+            playSound('scan');
         } else {
             showWarning('⚠️ الفلاش غير مدعوم في هذا الجهاز');
         }
@@ -671,6 +857,9 @@ function captureScan() {
     document.getElementById('scannedValue').textContent = mockSerial;
     document.getElementById('scanResult').style.display = 'block';
     
+    // ✅ Play scan success sound
+    playSound('scan');
+    
     showSuccess('📸 تم المسح بنجاح!');
 }
 
@@ -685,12 +874,16 @@ function useScannedValue() {
             input.dispatchEvent(new Event('input'));
         }
         closeScanner();
+        
+        // ✅ Play done sound
+        playSound('done');
+        
         showSuccess('✅ تم استخدام الرقم المسوح');
     }
 }
 
 // ============================================================
-// EXPORT TO EXCEL
+// EXPORT TO EXCEL WITH SOUND 📊🎵
 // ============================================================
 
 /**
@@ -763,10 +956,18 @@ function exportToExcel() {
         const filename = `Axentro_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
         
         XLSX.writeFile(wb, filename);
+        
+        // ✅ Play done sound on successful export
+        playSound('done');
+        
         showSuccess('✅ تم التصدير بنجاح');
         
     } catch (error) {
         console.error('Export error:', error);
+        
+        // ❌ Play error sound on export failure
+        playSound('loginError');
+        
         showError('❌ فشل التصدير: ' + error.message);
     }
 }
@@ -847,12 +1048,13 @@ setConnectionStatus = (status) => {
 };
 
 // ============================================================
-// APPLICATION BOOTSTRAP
+// APPLICATION BOOTSTRAP 🚀
 // ============================================================
 
 // Start application when DOM is ready
 document.addEventListener('DOMContentLoaded', initializeApp);
 
-// Console branding
+// Console branding with sound system indicator
 console.log('%c🎉 Axentro System v3.0 Professional Edition', 'color:#2563eb;font-size:18px;font-weight:bold;');
 console.log('%c⚡ Developed by Axentro Team | © 2024', 'color:#64748b;font-size:12px;');
+console.log('%c🔊 Sound System: ENABLED ✅', 'color:#10b981;font-size:14px;font-weight:bold;');
