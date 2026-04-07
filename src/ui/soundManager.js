@@ -9,12 +9,12 @@
 // SOUND CONFIGURATION
 // ============================================================
 
-const SOUND_MAP = {
-    'loginSuccess': 'soundLoginSuccess',
-    'loginError': 'soundLoginError',
-    'logoutSuccess': 'soundLogoutSuccess',
-    'done': 'soundDone',
-    'scan': 'soundScan'
+const soundMap = {
+    loginSuccess: 'sndSuccess',
+    loginError: 'sndError',
+    logoutSuccess: 'sndLogout',
+    done: 'sndDone',
+    scan: 'sndScan'
 };
 
 // Track if user has interacted with page (needed for autoplay)
