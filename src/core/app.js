@@ -1,7 +1,14 @@
 /**
  * Application Core - Complete Version
  * Main entry point, orchestration, and global utilities
- * 🔊 Enhanced with Sound System & Professional Loading
+ * @version 4.5.0 - Production Ready
+ * 
+ * Features:
+ * - Enhanced Sound System
+ * - Professional Loading Screen
+ * - Error Handling
+ * - Performance Optimization
+ * - AI Assistant Integration
  */
 
 // ============================================================
@@ -18,12 +25,14 @@ import {
     setMerchants, setMachines, setTransfers, setCollections, 
     setRequests, setArchives, setLoading, setConnectionStatus,
     getMerchants, getMachines, getTransfers, getCollections, 
-    getRequests, getArchives, setSearchTerm, getSearchTerm
+    getRequests, getArchives, setSearchTerm, getSearchTerm,
+    setCurrentPage
 } from '../ui/stateManager.js';
 
 // UI Components
 import { showToast, showSuccess, showError, showWarning } from '../ui/toast.js';
 import { initModals, showModal, closeMainModal, showConfirm, closeConfirm, handleConfirmClick } from '../ui/modals.js';
+import { playSound } from './soundManager.js';
 
 // Utilities
 import { 
@@ -67,57 +76,379 @@ import {
 import { findMerchantById } from '../services/merchantService.js';
 import { logAction } from '../services/logService.js';
 
+// AI Assistant
+import { initializeAiAssistant, sendAiMessage, toggleAiPanel } from '../ui/aiAssistant.js';
+
 // Global App namespace
 window.App = {};
 
 // ============================================================
-// SOUND MANAGEMENT SYSTEM 🎵
+// GLOBAL LOADING STATE MANAGEMENT
 // ============================================================
 
 /**
- * Play sound effect
- * @param {string} soundName - Sound identifier (loginSuccess, loginError, logoutSuccess, done, scan)
+ * Show/hide global loading overlay
+ * @param {boolean} show - Whether to show loading
+ * @param {string} message - Optional loading message
  */
-function playSound(soundName) {
-    try {
-        const soundMap = {
-            'loginSuccess': 'soundLoginSuccess',
-            'loginError': 'soundLoginError',
-            'logoutSuccess': 'soundLogoutSuccess',
-            'done': 'soundDone',
-            'scan': 'soundScan'
-        };
-        
-        const audioId = soundMap[soundName];
-        if (!audioId) {
-            console.warn(`⚠️ Sound not found: ${soundName}`);
-            return;
-        }
-        
-        const audio = document.getElementById(audioId);
-        if (audio) {
-            audio.currentTime = 0;
-            audio.play().catch(e => console.log('🔊 Audio play blocked:', e.message));
+export function showLoading(show, message = 'جاري التحميل...') {
+    const loadingEl = document.getElementById('globalLoading');
+    const loadingText = loadingEl?.querySelector('.loading-text');
+    
+    if (loadingEl) {
+        if (show) {
+            if (loadingText) loadingText.textContent = message;
+            loadingEl.classList.add('show');
         } else {
-            console.warn(`⚠️ Audio element not found: ${audioId}`);
+            loadingEl.classList.remove('show');
         }
+    }
+    
+    setLoading(show);
+}
+
+// ============================================================
+// SESSION MANAGEMENT
+// ============================================================
+
+/**
+ * Check if user has valid session
+ * @returns {boolean} Session validity
+ */
+export function checkSession() {
+    try {
+        const sessionData = localStorage.getItem('axentro_session');
+        if (!sessionData) return false;
+        
+        const session = JSON.parse(sessionData);
+        const now = Date.now();
+        
+        // Check if session expired
+        if (now > session.expiry) {
+            clearSession();
+            return false;
+        }
+        
+        return session.isLoggedIn === true;
     } catch (error) {
-        console.error('❌ Error playing sound:', error);
+        console.warn('Session check error:', error.message);
+        return false;
     }
 }
 
-// Expose globally for use in other modules
-window.playSound = playSound;
+/**
+ * Create new session
+ */
+function createSession() {
+    const session = {
+        isLoggedIn: true,
+        loginTime: Date.now(),
+        expiry: Date.now() + CONFIG.SESSION_DURATION
+    };
+    
+    localStorage.setItem('axentro_session', JSON.stringify(session));
+}
+
+/**
+ * Clear session data
+ */
+export function clearSession() {
+    localStorage.removeItem('axentro_session');
+}
 
 // ============================================================
-// INITIALIZATION WITH PROFESSIONAL LOADING SCREEN ⚡
+// DATA FETCHING & REFRESH
+// ============================================================
+
+/** Cache timestamp to prevent excessive refreshes */
+let lastRefreshTime = 0;
+const MIN_REFRESH_INTERVAL = 2000; // 2 seconds minimum between refreshes
+
+/**
+ * Fetch all data from database with error handling
+ * @param {boolean} force - Force refresh even if recently refreshed
+ * @returns {Promise<boolean>} Success status
+ */
+export async function refreshAllData(force = false) {
+    // Prevent excessive calls
+    const now = Date.now();
+    if (!force && (now - lastRefreshTime) < MIN_REFRESH_INTERVAL) {
+        console.log('⏭️ Skipping refresh (too recent)');
+        return true;
+    }
+    
+    lastRefreshTime = now;
+    
+    try {
+        // Fetch all data concurrently for performance
+        const [
+            merchantsData,
+            machinesData,
+            transfersData,
+            collectionsData,
+            requestsData,
+            archivesData
+        ] = await Promise.allSettled([
+            import('../services/merchantService.js').then(m => m.getAllMerchants()),
+            import('../services/machineService.js').then(m => m.getAllMachines()),
+            import('../services/transactionService.js').then(t => t.getAllTransfers()),
+            import('../services/collectionService.js').then(c => c.getAllCollections()),
+            import('../services/requestService.js').then(r => r.getAllRequests()),
+            import('../services/archiveService.js').then(a => a.getAllArchives())
+        ]);
+        
+        // Process results with error handling
+        setMerchants(merchantsData.status === 'fulfilled' ? merchantsData.value : []);
+        setMachines(machinesData.status === 'fulfilled' ? machinesData.value : []);
+        setTransfers(transfersData.status === 'fulfilled' ? transfersData.value : []);
+        setCollections(collectionsData.status === 'fulfilled' ? collectionsData.value : []);
+        setRequests(requestsData.status === 'fulfilled' ? requestsData.value : []);
+        setArchives(archivesData.status === 'fulfilled' ? archivesData.value : []);
+        
+        // Log any errors
+        [merchantsData, machinesData, transfersData, collectionsData, requestsData, archivesData].forEach((result, index) => {
+            if (result.status === 'rejected') {
+                console.warn(`⚠️ Failed to fetch ${['merchants', 'machines', 'transfers', 'collections', 'requests', 'archives'][index]}:`, result.reason?.message);
+            }
+        });
+        
+        // Update UI after data is set
+        updateAllViews();
+        updatePendingBadge();
+        
+        setConnectionStatus('live');
+        
+        console.log('✅ All data refreshed successfully');
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Error refreshing data:', error);
+        setConnectionStatus('error');
+        showError('فشل تحديث البيانات: ' + error.message);
+        return false;
+    }
+}
+
+/**
+ * Update all view components with current data
+ */
+function updateAllViews() {
+    try {
+        renderDashboard();
+        renderMerchants();
+        renderMachines();
+        renderTransfers();
+        renderCollections();
+        renderArchive();
+        renderRequests();
+    } catch (error) {
+        console.error('Error updating views:', error);
+    }
+}
+
+// ============================================================
+// AUTHENTICATION
+// ============================================================
+
+/**
+ * Perform login action
+ */
+async function performLogin() {
+    const passwordInput = document.getElementById('passwordInput');
+    const errorMsg = document.getElementById('loginErrorMsg');
+    const password = passwordInput?.value?.trim();
+    
+    if (!password) {
+        errorMsg.classList.add('show');
+        shakeElement(passwordInput);
+        playSound('loginError');
+        return;
+    }
+    
+    // Validate password
+    if (password !== CONFIG.PASSWORD) {
+        errorMsg.classList.add('show');
+        shakeElement(passwordInput);
+        playSound('loginError');
+        
+        // Log failed attempt
+        await logLoginAttempt(false, 'Wrong password attempt');
+        return;
+    }
+    
+    // Success
+    errorMsg.classList.remove('show');
+    playSound('loginSuccess');
+    
+    // Create session
+    createSession();
+    
+    // Log successful login
+    await logLoginAttempt(true, 'Admin logged in');
+    
+    // Show application
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('appContainer').style.display = 'flex';
+    
+    // Load data
+    showLoading(true, 'جاري تحميل البيانات...');
+    await refreshAllData(true);
+    showLoading(false);
+    
+    showToast('🎉 مرحباً بك!', 'success');
+}
+
+/**
+ * Perform logout action
+ */
+async function performLogout() {
+    showConfirm(
+        'هل تريد تسجيل الخروج؟',
+        async () => {
+            playSound('logoutSuccess');
+            
+            // Clear session
+            clearSession();
+            
+            // Reset state
+            resetAppState();
+            
+            // Hide app, show login
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'flex';
+            
+            // Clear password field
+            const passwordInput = document.getElementById('passwordInput');
+            if (passwordInput) passwordInput.value = '';
+            
+            showToast('تم تسجيل الخروج بنجاح', 'success');
+        },
+        'نعم، خروج'
+    );
+}
+
+/**
+ * Reset application state
+ */
+function resetAppState() {
+    setMerchants([]);
+    setMachines([]);
+    setTransfers([]);
+    setCollections([]);
+    setRequests([]);
+    setArchives([]);
+    setCurrentPage('home');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+
+/**
+ * Navigate to a specific page
+ * @param {string} pageName - Page identifier
+ */
+function navigateTo(pageName) {
+    // Hide all pages
+    document.querySelectorAll('.page-section').forEach(page => {
+        page.classList.remove('active');
+    });
+    
+    // Deactivate all nav items
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Show target page
+    const targetPage = document.getElementById(`page${pageName.charAt(0).toUpperCase() + pageName.slice(1)}`);
+    if (targetPage) {
+        targetPage.classList.add('active');
+    }
+    
+    // Activate nav item
+    const targetNav = document.querySelector(`[data-page="${pageName}"]`);
+    if (targetNav) {
+        targetNav.classList.add('active');
+    }
+    
+    setCurrentPage(pageName);
+    playSound('done');
+}
+
+// ============================================================
+// EVENT LISTENERS SETUP
+// ============================================================
+
+/**
+ * Initialize all application event listeners
+ */
+function initEventListeners() {
+    // ===== LOGIN SECTION =====
+    const loginBtn = document.getElementById('loginBtn');
+    const passwordInput = document.getElementById('passwordInput');
+    
+    loginBtn?.addEventListener('click', performLogin);
+    passwordInput?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performLogin();
+    });
+    
+    // Hide error on input
+    passwordInput?.addEventListener('input', () => {
+        document.getElementById('loginErrorMsg')?.classList.remove('show');
+    });
+    
+    // ===== HEADER ACTIONS =====
+    document.getElementById('refreshBtn')?.addEventListener('click', async () => {
+        playSound('scan');
+        showLoading(true, 'جاري التحديث...');
+        await refreshAllData(true);
+        showLoading(false);
+        showToast('✅ تم التحديث', 'success');
+    });
+    
+    document.getElementById('logoutBtn')?.addEventListener('click', performLogout);
+    
+    // ===== SIDEBAR NAVIGATION =====
+    document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+        item.addEventListener('click', () => {
+            navigateTo(item.dataset.page);
+        });
+    });
+    
+    // ===== FILTER CHANGES =====
+    document.getElementById('merchantStatusFilter')?.addEventListener('change', () => {
+        renderMerchants();
+    });
+    
+    document.getElementById('machineStatusFilter')?.addEventListener('change', () => {
+        renderMachines();
+    });
+    
+    // ===== DATE FILTERS =====
+    document.getElementById('transferDateFrom')?.addEventListener('change', () => {
+        renderTransfers();
+    });
+    
+    document.getElementById('transferDateTo')?.addEventListener('change', () => {
+        renderTransfers();
+    });
+    
+    // ===== AI ASSISTANT =====
+    document.getElementById('aiToggleBtn')?.addEventListener('click', toggleAiPanel);
+    document.getElementById('aiCloseBtn')?.addEventListener('click', toggleAiPanel);
+    
+    console.log('✅ Event listeners initialized');
+}
+
+// ============================================================
+// INITIALIZATION WITH PROFESSIONAL LOADING SCREEN
 // ============================================================
 
 /**
  * Initialize the complete application with animated loading screen
  */
 async function initializeApp() {
-    console.log('🚀 Axentro System v3.0 Professional Initializing...');
+    console.log(`🚀 ${CONFIG.APP_NAME} v${CONFIG.APP_VERSION} Initializing...`);
     console.log('⚡ Developed by Axentro Team | © 2024');
     
     // Get loading screen elements
@@ -154,49 +485,33 @@ async function initializeApp() {
         if (!initSupabase()) {
             clearInterval(progressInterval);
             showError('❌ فشل تهيئة الاتصال بقاعدة البيانات');
-            
-            // Play error sound
             playSound('loginError');
             
-            // Still hide loading and show login
-            if (progressFill) progressFill.style.width = '100%';
-            if (progressText) progressText.textContent = '100%';
-            if (loadingStatus) loadingStatus.textContent = 'حدث خطأ!';
-            
-            setTimeout(() => {
-                if (loadingOverlay) loadingOverlay.classList.add('fade-out');
-                setTimeout(() => {
-                    if (loadingOverlay) loadingOverlay.style.display = 'none';
-                    document.getElementById('loginSection').style.display = 'flex';
-                }, 500);
-            }, 500);
-            
+            finishLoadingWithError(loadingOverlay, progressFill, progressText, loadingStatus);
             setLoading(false);
             return;
         }
         
         // Update progress for Supabase connection
-        if (progressFill) progressFill.style.width = '95%';
-        if (progressText) progressText.textContent = '95%';
-        if (loadingStatus) loadingStatus.textContent = 'جاري تهيئة واجهة المستخدم...';
+        updateProgress(progressFill, progressText, loadingStatus, 95, 'جاري تهيئة واجهة المستخدم...');
         
-        // Small delay for visual effect
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await delay(300);
         
         // Step 2: Initialize UI components
         initModals();
         initEventListeners();
         
-        // Complete the progress bar
-        if (progressFill) progressFill.style.width = '100%';
-        if (progressText) progressText.textContent = '100%';
-        if (loadingStatus) loadingStatus.textContent = 'تم التحميل بنجاح! ✅';
+        // Step 3: Initialize AI Assistant
+        if (CONFIG.AI_CONFIG.ENABLED) {
+            initializeAiAssistant();
+        }
         
-        // Clear interval and finish loading
+        // Complete the progress bar
+        updateProgress(progressFill, progressText, loadingStatus, 100, 'تم التحميل بنجاح! ✅');
+        
         clearInterval(progressInterval);
         
-        // Wait a moment then hide loading screen
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await delay(800);
         
         // Fade out loading overlay
         if (loadingOverlay) loadingOverlay.classList.add('fade-out');
@@ -208,15 +523,10 @@ async function initializeApp() {
             if (checkSession()) {
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'flex';
-                
-                // Play subtle ready sound
                 playSound('scan');
-                
-                refreshAllData();
+                refreshAllData(true);
             } else {
                 document.getElementById('loginSection').style.display = 'flex';
-                
-                // Play subtle sound to indicate readiness
                 playSound('scan');
             }
 
@@ -230,831 +540,116 @@ async function initializeApp() {
             }
         }, CONFIG.AUTO_REFRESH_INTERVAL);
 
-        console.log('✅ Axentro System v3.0 Ready!');
+        console.log(`✅ ${CONFIG.APP_NAME} v${CONFIG.APP_VERSION} Ready!`);
         
     } catch (error) {
         console.error('❌ Initialization error:', error);
         clearInterval(progressInterval);
         
-        // Update UI to show error
-        if (progressFill) progressFill.style.width = '100%';
-        if (progressText) progressText.textContent = '100%';
-        if (loadingStatus) loadingStatus.textContent = 'حدث خطأ أثناء التحميل';
-        
-        // Play error sound
+        updateProgress(progressFill, progressText, loadingStatus, 100, 'حدث خطأ أثناء التحميل');
         playSound('loginError');
         
-        setTimeout(() => {
-            if (loadingOverlay) loadingOverlay.classList.add('fade-out');
-            setTimeout(() => {
-                if (loadingOverlay) loadingOverlay.style.display = 'none';
-                document.getElementById('loginSection').style.display = 'flex';
-                showError('حدث خطأ أثناء تحميل النظام');
-            }, 500);
-        }, 1000);
-        
-        setLoading(false);
-    }
-}
-
-// ============================================================
-// EVENT LISTENERS SETUP
-// ============================================================
-
-/**
- * Initialize all application event listeners
- */
-function initEventListeners() {
-    // ===== LOGIN SECTION =====
-    document.getElementById('loginBtn')?.addEventListener('click', performLogin);
-    document.getElementById('passwordInput')?.addEventListener('keypress', handleLoginKeypress);
-    document.getElementById('togglePasswordBtn')?.addEventListener('click', togglePassword);
-    
-    // ===== NAVBAR ACTIONS =====
-    document.getElementById('refreshDataBtn')?.addEventListener('click', refreshAllData);
-    document.getElementById('exportExcelBtn')?.addEventListener('click', exportToExcel);
-    document.getElementById('logoutBtn')?.addEventListener('click', confirmLogout);
-    
-    // ===== TAB NAVIGATION =====
-    document.querySelectorAll('.tab-link').forEach(tab => {
-        tab.addEventListener('click', () => switchPage(tab.dataset.page, tab));
-    });
-    
-    // ===== QUICK ACTION BUTTONS =====
-    document.getElementById('quickTransferBtn')?.addEventListener('click', () => openTransferModal());
-    document.getElementById('quickCollectionBtn')?.addEventListener('click', () => openCollectionModal());
-    document.getElementById('quickMerchantBtn')?.addEventListener('click', () => openMerchantModal());
-    document.getElementById('quickMachineBtn')?.addEventListener('click', () => openMachineModal());
-    
-    // ===== PAGE-SPECIFIC BUTTONS =====
-    document.getElementById('addMerchantBtn')?.addEventListener('click', () => openMerchantModal());
-    document.getElementById('addMachineBtn')?.addEventListener('click', () => openMachineModal());
-    document.getElementById('addTransferBtn')?.addEventListener('click', () => openTransferModal());
-    document.getElementById('addCollectionBtn')?.addEventListener('click', () => openCollectionModal());
-    document.getElementById('loadStatementBtn')?.addEventListener('click', loadStatement);
-    document.getElementById('closeMonthBtn')?.addEventListener('click', confirmCloseMonth);
-    document.getElementById('discoverDbBtn')?.addEventListener('click', discoverDatabase);
-    document.getElementById('refreshTableBtn')?.addEventListener('click', refreshSelectedTable);
-    
-    // ===== SEARCH INPUTS WITH DEBOUNCE =====
-    setupDebouncedSearch('merchantSearch', 'merchant', renderMerchants);
-    setupDebouncedSearch('machineSearch', 'machine', renderMachines);
-    setupDebouncedSearch('requestSearch', 'request', renderRequests);
-    
-    // ===== FILTER CHANGES =====
-    document.getElementById('merchantStatusFilter')?.addEventListener('change', renderMerchants);
-    document.getElementById('machineStatusFilter')?.addEventListener('change', renderMachines);
-    document.getElementById('requestStatusFilter')?.addEventListener('change', renderRequests);
-    document.getElementById('transferDateFrom')?.addEventListener('change', renderTransfers);
-    document.getElementById('transferDateTo')?.addEventListener('change', renderTransfers);
-    
-    // ===== STATEMENT SEARCH =====
-    document.getElementById('stmtMerchantSearch')?.addEventListener('input', 
-        (e) => handleMerchantLookup(e.target.value, 'stmtResults', 'stmtMerchantId')
-    );
-    
-    // ===== SCANNER CONTROLS =====
-    document.getElementById('toggleFlashBtn')?.addEventListener('click', toggleFlash);
-    document.getElementById('captureScanBtn')?.addEventListener('click', captureScan);
-    document.getElementById('useScannedValueBtn')?.addEventListener('click', useScannedValue);
-    
-    // ===== KEYBOARD SHORTCUTS =====
-    document.addEventListener('keydown', handleKeyboardShortcuts);
-    
-    // ===== CLICK OUTSIDE TO CLOSE SEARCH RESULTS =====
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-wrapper')) {
-            document.querySelectorAll('.search-results').forEach(el => {
-                el.classList.remove('show');
-            });
-        }
-    });
-
-    // Expose all necessary methods globally for inline handlers
-    exposeGlobalMethods();
-    
-    console.log('🎧 Event listeners initialized | 🔊 Sounds enabled');
-}
-
-/**
- * Setup debounced search input
- * @param {string} elementId - Input element ID
- * @param {string} searchType - Search type key
- * @param {Function} renderFn - Render function to call
- */
-function setupDebouncedSearch(elementId, searchType, renderFn) {
-    const input = document.getElementById(elementId);
-    if (!input) return;
-    
-    input.addEventListener('input', debounce((e) => {
-        setSearchTerm(searchType, e.target.value);
-        renderFn();
-    }, 200));
-}
-
-/**
- * Expose methods to window.App for global access
- */
-function exposeGlobalMethods() {
-    Object.assign(window.App, {
-        // Merchants
-        editMerchant,
-        deleteMerchant,
-        saveMerchant,
-        
-        // Machines
-        editMachine,
-        deleteMachine,
-        saveMachine,
-        autoFillMerchantData,
-        
-        // Transfers
-        editTransfer,
-        deleteTransfer,
-        saveTransfer,
-        
-        // Collections
-        editCollection,
-        deleteCollection,
-        saveCollection,
-        
-        // Requests
-        convertRequest,
-        deleteRequest,
-        
-        // Archive
-        deleteArchive,
-        
-        // Utilities
-        handleMerchantLookup,
-        openScannerForInput,
-        
-        // Database Explorer
-        selectTable,
-        refreshSelectedTable
-    });
-}
-
-// ============================================================
-// AUTHENTICATION SYSTEM WITH SOUNDS 🔐🎵
-// ============================================================
-
-/**
- * Perform user login with sound effects
- */
-async function performLogin() {
-    const passwordInput = document.getElementById('passwordInput');
-    const loginBtn = document.getElementById('loginBtn');
-    const password = passwordInput?.value?.trim();
-
-    if (!password) {
-        showWarning('⚠️ يرجى إدخال كلمة المرور');
-        shakeElement(passwordInput);
-        
-        // Play warning sound
-        playSound('scan');
-        return;
-    }
-
-    loginBtn.disabled = true;
-    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
-    setLoading(true);
-
-    try {
-        const data = await rpcCall('check_admin_login', { p_password: password });
-
-        if (data && data.success) {
-            localStorage.setItem('axentro_auth', JSON.stringify({
-                loggedIn: true,
-                timestamp: Date.now(),
-                sessionExpiry: Date.now() + CONFIG.SESSION_DURATION
-            }));
-
-            // ✅ Play success sound on successful login
-            playSound('loginSuccess');
-            
-            showSuccess('🎉 مرحباً بك في النظام!');
-            
-            await logLoginAttempt(true, 'تم تسجيل الدخول بنجاح');
-
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'flex';
-
-            await refreshAllData();
-        } else {
-            // ❌ Play error sound on failed login
-            playSound('loginError');
-            
-            showError(data?.message || '❌ كلمة المرور غير صحيحة');
-            passwordInput.value = '';
-            passwordInput.focus();
-            
-            await logLoginAttempt(false, 'محاولة فاشلة');
-        }
-    } catch (error) {
-        console.error('❌ Login error:', error);
-        
-        // ❌ Play error sound on exception
-        playSound('loginError');
-        
-        showError('❌ ' + error.message);
-    } finally {
-        setLoading(false);
-        loginBtn.disabled = false;
-        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
-    }
-}
-
-/**
- * Handle Enter key press on login form
- * @param {KeyboardEvent} e - Keyboard event
- */
-function handleLoginKeypress(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        performLogin();
-    }
-}
-
-/**
- * Toggle password visibility
- */
-function togglePassword() {
-    const input = document.getElementById('passwordInput');
-    const icon = document.getElementById('togglePasswordIcon');
-    if (!input || !icon) return;
-
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.className = 'fas fa-eye-slash';
-    } else {
-        input.type = 'password';
-        icon.className = 'fas fa-eye';
-    }
-    
-    // Play subtle click sound
-    playSound('scan');
-    
-    setTimeout(() => input.focus(), 100);
-}
-
-/**
- * Check if user has valid session
- * @returns {boolean}
- */
-function checkSession() {
-    const authData = localStorage.getItem('axentro_auth');
-    if (!authData) return false;
-
-    try {
-        const { loggedIn, sessionExpiry } = JSON.parse(authData);
-        if (loggedIn && Date.now() < sessionExpiry) return true;
-    } catch (e) {}
-
-    localStorage.removeItem('axentro_auth');
-    return false;
-}
-
-/**
- * Confirm and perform logout with sound effect
- */
-function confirmLogout() {
-    showConfirm(
-        'هل تريد تسجيل الخروج من النظام؟',
-        async () => {
-            localStorage.removeItem('axentro_auth');
-            
-            // ✅ Play logout success sound
-            playSound('logoutSuccess');
-            
-            showSuccess('👋 تم تسجيل الخروج بنجاح');
-            
-            await logAction('تسجيل خروج', '-', 'تم تسجيل الخروج');
-            
-            setTimeout(() => location.reload(), 500);
-        },
-        'نعم، سجل خروجي'
-    );
-}
-
-// ============================================================
-// DATA OPERATIONS WITH SOUNDS 💾🎵
-// ============================================================
-
-/**
- * Refresh all data from database with success sound
- */
-async function refreshAllData() {
-    setLoading(true);
-    setConnectionStatus('connecting');
-
-    try {
-        // Fetch all data in parallel
-        const [
-            mRes, macRes, tRes, cRes, rRes, aRes
-        ] = await Promise.all([
-            import('../services/merchantService.js').then(m => m.getAllMerchants()),
-            import('../services/machineService.js').then(m => m.getAllMachines()),
-            import('../services/transactionService.js').then(t => t.getAllTransfers()),
-            import('../services/collectionService.js').then(c => c.getAllCollections()),
-            import('../services/requestService.js').then(r => r.getAllRequests()),
-            import('../services/archiveService.js').then(a => a.getAllArchives())
-        ]);
-
-        // Update state
-        setMerchants(mRes);
-        setMachines(macRes);
-        setTransfers(tRes);
-        setCollections(cRes);
-        setRequests(rRes);
-        setArchives(aRes);
-
-        // Render all pages
-        renderAllPages();
-        updatePendingBadge();
-        
-        setConnectionStatus('live');
-        
-        // ✅ Play done sound on successful data refresh
-        playSound('done');
-        
-        showSuccess('✅ تم تحديث البيانات بنجاح');
-        
-    } catch (error) {
-        console.error('❌ Data refresh error:', error);
-        setConnectionStatus('offline');
-        
-        // ❌ Play error sound on refresh failure
-        playSound('loginError');
-        
-        showError('❌ فشل تحميل البيانات: ' + error.message);
-    } finally {
+        finishLoadingWithError(loadingOverlay, progressFill, progressText, loadingStatus);
         setLoading(false);
     }
 }
 
 /**
- * Render all pages with current data
+ * Helper: Update progress bar
  */
-function renderAllPages() {
-    renderDashboard();
-    renderMerchants();
-    renderMachines();
-    renderTransfers();
-    renderCollections();
-    renderRequests();
-    renderArchive();
-}
-
-// ============================================================
-// PAGE NAVIGATION
-// ============================================================
-
-/**
- * Switch between pages/tabs
- * @param {string} pageName - Page identifier
- * @param {HTMLElement} element - Tab element clicked
- */
-function switchPage(pageName, element) {
-    // Hide all pages
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    
-    // Deactivate all tabs
-    document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-
-    // Activate selected page
-    const page = document.getElementById('page-' + pageName);
-    if (page) page.classList.add('active');
-    
-    // Activate selected tab
-    if (element) element.classList.add('active');
-    
-    // Auto-discover database when switching to database page
-    if (pageName === 'database') {
-        // Only discover if not already done
-        const dbTables = document.getElementById('dbTablesList');
-        if (dbTables && !dbTables.children.length) {
-            discoverDatabase();
-        }
-    }
-}
-
-// ============================================================
-// SEARCH & LOOKUP
-// ============================================================
-
-/**
- * Handle merchant lookup in search inputs
- * @param {string} query - Search query
- * @param {string} resultsListId - Results container ID
- * @param {string} hiddenInputId - Hidden input ID for storing selection
- */
-function handleMerchantLookup(query, resultsListId, hiddenInputId) {
-    const resultsEl = document.getElementById(resultsListId);
-    const hiddenEl = document.getElementById(hiddenInputId);
-    
-    if (!resultsEl || !hiddenEl) return;
-
-    if (!query || query.length < 1) {
-        resultsEl.classList.remove('show');
-        return;
-    }
-
-    const normalizedQuery = normalizeText(query);
-    const results = getMerchants().filter(m =>
-        normalizeText(m['اسم التاجر']).includes(normalizedQuery) ||
-        m['رقم التاجر']?.toString().includes(query) ||
-        normalizeText(m['اسم النشاط']).includes(normalizedQuery) ||
-        m['رقم الحساب']?.includes(query)
-    ).slice(0, 10);
-
-    if (!results.length) {
-        resultsEl.innerHTML = `
-            <div class="no-result">
-                <i class="fas fa-search"></i> لا توجد نتائج
-            </div>
-        `;
-        resultsEl.classList.add('show');
-        return;
-    }
-
-    resultsEl.innerHTML = results.map(m => `
-        <div class="search-result-item" 
-             onclick="window.App.selectMerchantResult('${m['رقم التاجر']}','${escapeHtml(m['اسم التاجر'])}','${resultsListId}','${hiddenInputId}')">
-            <div>
-                <strong>${m['اسم التاجر']}</strong>
-                <small style="display:block;color:inherit;opacity:0.7;font-size:0.75rem;margin-top:2px;">
-                    ${m['رقم التاجر']} - ${m['اسم النشاط']||'-'} - ${m['رقم الحساب']||'-'}
-                </small>
-            </div>
-            <span class="result-code">${m['رقم التاجر']}</span>
-        </div>
-    `).join('');
-
-    resultsEl.classList.add('show');
+function updateProgress(fill, text, status, value, statusMsg) {
+    if (fill) fill.style.width = `${value}%`;
+    if (text) text.textContent = `${value}%`;
+    if (status) status.textContent = statusMsg;
 }
 
 /**
- * Select merchant from lookup results
- * @param {string} id - Merchant ID
- * @param {string} name - Merchant name
- * @param {string} listId - Results list ID
- * @param {string} inputId - Input ID
+ * Helper: Finish loading with error state
  */
-function selectMerchantResult(id, name, listId, inputId) {
-    const input = document.querySelector('#' + listId.replace('_list','_search'));
-    const hidden = document.getElementById(inputId);
-    const list = document.getElementById(listId);
-
-    if (input) input.value = name;
-    if (hidden) hidden.value = id;
-    if (list) list.classList.remove('show');
+function finishLoadingWithError(overlay, fill, text, status) {
+    if (fill) fill.style.width = '100%';
+    if (text) text.textContent = '100%';
+    if (status) status.textContent = 'حدث خطأ!';
     
-    // Play selection sound
-    playSound('done');
-    
-    // Auto-fill machine form if applicable
-    if (inputId === 'mc_merchant_id') {
-        autoFillMerchantData(id);
-    }
-}
-
-// Add to global App
-window.App.selectMerchantResult = selectMerchantResult;
-
-// ============================================================
-// SCANNER FUNCTIONS WITH SOUNDS 📷🎵
-// ============================================================
-
-let scannerStream = null;
-let flashState = false;
-window.currentScannerInput = null;
-let scannedValueTemp = '';
-
-/**
- * Open scanner for specific input field
- * @param {string} inputId - Target input field ID
- */
-function openScannerForInput(inputId) {
-    window.currentScannerInput = inputId;
-    
-    const modal = document.getElementById('scannerModal');
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('show'), 10);
-    
-    document.getElementById('scanResult').style.display = 'none';
-    
-    startCamera();
-}
-
-/**
- * Start camera stream
- */
-async function startCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            } 
-        });
-        
-        scannerStream = stream;
-        window.scannerStream = stream; // Store globally
-        
-        const video = document.getElementById('scannerVideo');
-        video.srcObject = stream;
-        video.play();
-        
-        flashState = false;
-        updateFlashIcon();
-        
-        // Play camera start sound
-        playSound('scan');
-        
-    } catch (err) {
-        console.error('Camera error:', err);
-        
-        // Play error sound
-        playSound('loginError');
-        
-        showError('❌ لا يمكن الوصول للكاميرا');
-        closeScanner();
-    }
-}
-
-/**
- * Stop camera stream
- */
-function stopScanner() {
-    if (scannerStream) {
-        scannerStream.getTracks().forEach(track => track.stop());
-        scannerStream = null;
-        window.scannerStream = null;
-    }
-    
-    const video = document.getElementById('scannerVideo');
-    if (video) video.srcObject = null;
-}
-
-/**
- * Close scanner modal
- */
-function closeScanner() {
-    const modal = document.getElementById('scannerModal');
-    modal.classList.remove('show');
     setTimeout(() => {
-        modal.style.display = 'none';
-        stopScanner();
-    }, 300);
+        if (overlay) overlay.classList.add('fade-out');
+        setTimeout(() => {
+            if (overlay) overlay.style.display = 'none';
+            document.getElementById('loginSection').style.display = 'flex';
+            showError('حدث خطأ أثناء تحميل النظام');
+        }, 500);
+    }, 1000);
 }
 
 /**
- * Toggle camera flash
+ * Helper: Delay promise
+ * @param {number} ms - Milliseconds to wait
+ * @returns {Promise}
  */
-async function toggleFlash() {
-    if (!scannerStream) return;
-    
-    try {
-        const track = scannerStream.getVideoTracks()[0];
-        
-        if ('torch' in track.getSettings()) {
-            await track.applyConstraints({
-                advanced: [{ torch: !flashState }]
-            });
-            flashState = !flashState;
-            updateFlashIcon();
-            
-            // Play toggle sound
-            playSound('scan');
-        } else {
-            showWarning('⚠️ الفلاش غير مدعوم في هذا الجهاز');
-        }
-    } catch (err) {
-        console.error('Flash error:', err);
-        showError('❌ لا يمكن تشغيل الفلاش');
-    }
-}
-
-/**
- * Update flash icon based on state
- */
-function updateFlashIcon() {
-    const icon = document.getElementById('flashIcon');
-    if (icon) {
-        icon.className = flashState ? 'fas fa-lightbulb' : 'fas fa-bolt';
-    }
-}
-
-/**
- * Capture scan result (mock implementation)
- */
-function captureScan() {
-    const mockSerial = 'SN-' + Date.now().toString(36).toUpperCase();
-    scannedValueTemp = mockSerial;
-    
-    document.getElementById('scannedValue').textContent = mockSerial;
-    document.getElementById('scanResult').style.display = 'block';
-    
-    // ✅ Play scan success sound
-    playSound('scan');
-    
-    showSuccess('📸 تم المسح بنجاح!');
-}
-
-/**
- * Use scanned value in target input
- */
-function useScannedValue() {
-    if (window.currentScannerInput && scannedValueTemp) {
-        const input = document.getElementById(window.currentScannerInput);
-        if (input) {
-            input.value = scannedValueTemp;
-            input.dispatchEvent(new Event('input'));
-        }
-        closeScanner();
-        
-        // ✅ Play done sound
-        playSound('done');
-        
-        showSuccess('✅ تم استخدام الرقم المسوح');
-    }
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // ============================================================
-// EXPORT TO EXCEL WITH SOUND 📊🎵
+// EXPOSE GLOBAL FUNCTIONS
 // ============================================================
 
-/**
- * Export current data to Excel file
- */
-function exportToExcel() {
-    try {
-        const XLSX = window.XLSX; // From CDN
-        const wb = XLSX.utils.book_new();
-
-        /**
-         * Add worksheet helper
-         * @param {string} name - Sheet name
-         * @param {Array} data - Data array
-         * @param {Function} mapper - Row mapping function
-         */
-        const addSheet = (name, data, mapper) => {
-            if (!data.length) return;
-            const wsData = data.map(mapper);
-            const ws = XLSX.utils.json_to_sheet(wsData);
-            XLSX.utils.book_append_sheet(wb, ws, name);
-        };
-
-        // Merchants sheet
-        addSheet('التجار', getMerchants(), (m, i) => ({ 
-            '#': i+1, 
-            'رقم التاجر': m['رقم التاجر'], 
-            'الاسم': m['اسم التاجر'], 
-            'النشاط': m['اسم النشاط'], 
-            'الحساب': m['رقم الحساب'], 
-            'الهاتف': m['رقم الهاتف'], 
-            'العنوان': m['العنوان'], 
-            'المنطقة': m['المنطقة'], 
-            'الحالة': m['الحالة'] 
-        }));
-        
-        // Machines sheet
-        addSheet('المكن', getMachines(), (m, i) => ({ 
-            '#': i+1, 
-            'رقم المكنة': m['رقم المكنة'], 
-            'التاجر': m['اسم التاجر'], 
-            'النشاط': m['اسم النشاط'], 
-            'التسلسلي': m['الرقم التسلسلي'], 
-            'التارجت': m['التارجت الشهري'], 
-            'الحالة': m['الحالة'] 
-        }));
-        
-        // Transfers sheet
-        addSheet('التحويلات', getTransfers(), (t, i) => ({ 
-            '#': i+1, 
-            'المرجعي': t['الرقم المرجعي'], 
-            'التاريخ': t['التاريخ'], 
-            'التاجر': t['اسم التاجر'], 
-            'النوع': t['نوع التحويل'], 
-            'القيمة': t['قيمة التحويل'] 
-        }));
-        
-        // Collections sheet
-        addSheet('التحصيلات', getCollections(), (c, i) => ({ 
-            '#': i+1, 
-            'المرجعي': c['الرقم المرجعي'], 
-            'التاريخ': c['التاريخ'], 
-            'التاجر': c['اسم التاجر'], 
-            'القيمة': c['قيمة التحصيل'], 
-            'النوع': c['نوع التحصيل'], 
-            'المتبقي': c['المتبقي بعد التحصيل'] 
-        }));
-
-        // Generate filename with date
-        const filename = `Axentro_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
-        
-        XLSX.writeFile(wb, filename);
-        
-        // ✅ Play done sound on successful export
-        playSound('done');
-        
-        showSuccess('✅ تم التصدير بنجاح');
-        
-    } catch (error) {
-        console.error('Export error:', error);
-        
-        // ❌ Play error sound on export failure
-        playSound('loginError');
-        
-        showError('❌ فشل التصدير: ' + error.message);
-    }
-}
-
-// ============================================================
-// KEYBOARD SHORTCUTS
-// ============================================================
-
-/**
- * Handle global keyboard shortcuts
- * @param {KeyboardEvent} e - Keyboard event
- */
-function handleKeyboardShortcuts(e) {
-    // Escape to close modals
-    if (e.key === 'Escape') {
-        closeMainModal();
-        closeConfirm();
-        closeScanner();
-    }
+// Expose functions to window.App for HTML onclick handlers
+window.App = {
+    // Merchant operations
+    openMerchantModal,
+    saveMerchant,
+    editMerchant,
+    deleteMerchant,
     
-    // Prevent Ctrl+S default behavior
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        showWarning('💡 استخدم أزرار النظام للحفظ');
-    }
-}
-
-// ============================================================
-// LOADING & CONNECTION STATUS HELPERS
-// ============================================================
-
-/**
- * Show/hide loading overlay
- * @param {boolean} show - Show loading state
- */
-export function showLoading(show) {
-    const overlay = document.getElementById('loadingOverlay');
-    overlay?.classList.toggle('hidden', !show);
-}
-
-/**
- * Set connection status indicator
- * @param {string} status - Status ('live', 'offline', 'connecting')
- */
-export function setConnectionStatusUI(status) {
-    const el = document.getElementById('connectionStatus');
-    if (!el) return;
+    // Machine operations
+    openMachineModal,
+    saveMachine,
+    editMachine,
+    deleteMachine,
+    autoFillMerchantData,
     
-    el.className = 'conn-status ' + status;
+    // Transfer operations
+    openTransferModal,
+    saveTransfer,
+    editTransfer,
+    deleteTransfer,
     
-    const statusTexts = {
-        live: 'متصل',
-        offline: 'غير متصل',
-        connecting: 'جاري الاتصال...'
-    };
+    // Collection operations
+    openCollectionModal,
+    saveCollection,
+    editCollection,
+    deleteCollection,
     
-    el.querySelector('span').textContent = statusTexts[status] || status;
+    // Archive operations
+    confirmCloseMonth,
+    deleteArchive,
     
-    // Update database page status
-    const dbStatusEl = document.getElementById('dbStatusText');
-    if (dbStatusEl) {
-        const badgeClasses = {
-            live: 'success',
-            offline: 'danger',
-            connecting: 'warning'
-        };
-        
-        dbStatusEl.textContent = statusTexts[status];
-        dbStatusEl.className = `badge badge-${badgeClasses[status] || 'warning'}`;
-    }
-}
-
-// Override setConnectionStatus from state manager to also update UI
-const originalSetConnectionStatus = setConnectionStatus;
-setConnectionStatus = (status) => {
-    originalSetConnectionStatus(status);
-    setConnectionStatusUI(status);
+    // Request operations
+    convertRequest,
+    deleteRequest,
+    
+    // Database explorer
+    discoverDatabase,
+    selectTable,
+    refreshSelectedTable,
+    
+    // AI Assistant
+    sendAiMessage,
+    toggleAiPanel,
+    
+    // Utility
+    refreshAllData: () => refreshAllData(true),
+    showLoading
 };
 
 // ============================================================
-// APPLICATION BOOTSTRAP 🚀
+// START APPLICATION
 // ============================================================
 
-// Start application when DOM is ready
-document.addEventListener('DOMContentLoaded', initializeApp);
-
-// Console branding with sound system indicator
-console.log('%c🎉 Axentro System v3.0 Professional Edition', 'color:#2563eb;font-size:18px;font-weight:bold;');
-console.log('%c⚡ Developed by Axentro Team | © 2024', 'color:#64748b;font-size:12px;');
-console.log('%c🔊 Sound System: ENABLED ✅', 'color:#10b981;font-size:14px;font-weight:bold;');
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
