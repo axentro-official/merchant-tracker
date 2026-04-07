@@ -1,13 +1,14 @@
 /**
  * Merchant Service
  * Business logic for merchant operations
+ * @version 4.5.0
  */
 
 import { fetchAll, insertRecord, updateRecord, deleteRecord } from './dbService.js';
 
 /**
  * Get all merchants
- * @returns {Promise<Array>}
+ * @returns {Promise<Array>} Array of merchants
  */
 export async function getAllMerchants() {
     return fetchAll('merchants', { orderBy: 'created_at.asc' });
@@ -20,13 +21,11 @@ export async function getAllMerchants() {
  */
 export async function createMerchant(merchantData) {
     const now = new Date().toISOString();
-    
     const newMerchant = {
         ...merchantData,
         created_at: now,
         updated_at: now
     };
-    
     return insertRecord('merchants', newMerchant);
 }
 
@@ -41,14 +40,13 @@ export async function updateMerchant(merchantId, merchantData) {
         ...merchantData,
         updated_at: new Date().toISOString()
     };
-    
     return updateRecord('merchants', updatedData, 'رقم التاجر', merchantId);
 }
 
 /**
  * Delete a merchant
  * @param {string} merchantId - Merchant ID
- * @returns {Promise<boolean>}
+ * @returns {Promise<boolean>} Success status
  */
 export async function removeMerchant(merchantId) {
     return deleteRecord('merchants', 'رقم التاجر', merchantId);
@@ -58,7 +56,7 @@ export async function removeMerchant(merchantId) {
  * Find merchant by ID
  * @param {string} merchantId - Merchant ID
  * @param {Array} merchants - Local merchants array (optional optimization)
- * @returns {Object|null}
+ * @returns {Object|null} Merchant object or null
  */
 export function findMerchantById(merchantId, merchants = null) {
     const list = merchants || [];
@@ -75,7 +73,6 @@ export function generateMerchantId(merchants) {
         const id = parseInt(m['رقم التاجر']) || 0;
         return Math.max(max, id);
     }, 0);
-    
     return String(maxId + 1).padStart(4, '0');
 }
 
@@ -90,9 +87,19 @@ export function searchMerchants(searchTerm, merchants, normalizeFn) {
     if (!searchTerm) return merchants;
     
     const normalizedTerm = normalizeFn(searchTerm).toLowerCase();
-    
-    return merchants.filter(m =>
-        normalizeFn(m['اسم التاجر']).toLowerCase().includes(normalizedTerm) ||
+    return merchants.filter(m => 
+        normalizeText(m['اسم التاجر']).toLowerCase().includes(normalizedTerm) ||
         m['رقم التاجر']?.toString().includes(searchTerm)
     );
+}
+
+/** Internal normalize helper */
+function normalizeText(str) {
+    return (str || '').toString()
+        .trim()
+        .replace(/[إأآا]/g, 'ا')
+        .replace(/[ة]/g, 'ه')
+        .replace(/[يى]/g, 'ي')
+        .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '')
+        .toLowerCase();
 }
