@@ -32,8 +32,7 @@ import {
 // UI Components
 import { showToast, showSuccess, showError, showWarning } from '../ui/toast.js';
 import { initModals, showModal, closeMainModal, showConfirm, closeConfirm, handleConfirmClick } from '../ui/modals.js';
-import { playSound } from './soundManager.js';
-
+import { playSound } from '../ui/soundManager.js';
 // Utilities
 import { 
     formatDate, formatTime, formatTimeForDB, formatMoney, 
