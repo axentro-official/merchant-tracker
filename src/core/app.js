@@ -402,8 +402,6 @@ function exposeGlobalMethods() {
 /**
  * Perform user login with sound effects
  */
-// داخل src/core/app.js - استبدل دالة performLogin بهذا الكود
-
 async function performLogin() {
     const passwordInput = document.getElementById('passwordInput');
     const loginBtn = document.getElementById('loginBtn');
@@ -412,6 +410,8 @@ async function performLogin() {
     if (!password) {
         showWarning('⚠️ يرجى إدخال كلمة المرور');
         shakeElement(passwordInput);
+        
+        // Play warning sound
         playSound('scan');
         return;
     }
@@ -421,42 +421,43 @@ async function performLogin() {
     setLoading(true);
 
     try {
-        const supabase = getSupabase();
-        const { data, error } = await supabase
-            .from('settings')
-            .select('value')
-            .eq('key', 'admin_password')
-            .single();
+        const data = await rpcCall('check_admin_login', { p_password: password });
 
-        if (error) throw new Error('فشل جلب الإعدادات من قاعدة البيانات');
-
-        const correctPassword = data?.value;
-
-        if (password === correctPassword) {
+        if (data && data.success) {
             localStorage.setItem('axentro_auth', JSON.stringify({
                 loggedIn: true,
                 timestamp: Date.now(),
                 sessionExpiry: Date.now() + CONFIG.SESSION_DURATION
             }));
 
+            // ✅ Play success sound on successful login
             playSound('loginSuccess');
+            
             showSuccess('🎉 مرحباً بك في النظام!');
+            
             await logLoginAttempt(true, 'تم تسجيل الدخول بنجاح');
 
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('appContainer').style.display = 'flex';
+
             await refreshAllData();
         } else {
+            // ❌ Play error sound on failed login
             playSound('loginError');
-            showError('❌ كلمة المرور غير صحيحة');
+            
+            showError(data?.message || '❌ كلمة المرور غير صحيحة');
             passwordInput.value = '';
             passwordInput.focus();
+            
             await logLoginAttempt(false, 'محاولة فاشلة');
         }
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('❌ Login error:', error);
+        
+        // ❌ Play error sound on exception
         playSound('loginError');
-        showError('❌ فشل الاتصال بقاعدة البيانات: ' + error.message);
+        
+        showError('❌ ' + error.message);
     } finally {
         setLoading(false);
         loginBtn.disabled = false;
