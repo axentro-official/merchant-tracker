@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Axentro System v4.0 - Professional Edition</title>
+<title>Axentro System v4.2 - Professional Edition</title>
 
 <!-- Fonts & Icons -->
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@ body {
 }
 
 /* ============================================
-   PROFESSIONAL LOADING SCREEN v4.0
+   PROFESSIONAL LOADING SCREEN v4.2
    ============================================ */
 .loading-overlay {
     position: fixed;
@@ -59,7 +59,6 @@ body {
     padding: 20px;
 }
 
-/* Animated Logo Container */
 .logo-wrapper {
     position: relative;
     width: 130px;
@@ -96,7 +95,6 @@ body {
     animation: ringExpand 2s ease-out infinite;
 }
 
-/* Loading Text */
 .loading-title {
     font-size: 2.8rem;
     font-weight: 900;
@@ -113,7 +111,6 @@ body {
     letter-spacing: 1px;
 }
 
-/* Progress Bar */
 .progress-wrap {
     width: 320px;
     margin: 0 auto 22px;
@@ -158,7 +155,7 @@ body {
     font-weight: 500;
 }
 
-/* Animations */
+/* Optimized Animations */
 @keyframes logoBounce {
     0%, 100% { transform: translateY(0) scale(1); }
     50% { transform: translateY(-18px) scale(1.04); }
@@ -185,7 +182,7 @@ body {
 }
 
 /* ============================================
-   LOGIN SECTION - PROFESSIONAL DESIGN v4.0
+   LOGIN SECTION - PROFESSIONAL v4.2
    ============================================ */
 .login-section {
     display: none;
@@ -198,7 +195,6 @@ body {
     overflow: hidden;
 }
 
-/* Animated Background Particles */
 .login-section::before {
     content: '';
     position: absolute;
@@ -231,14 +227,8 @@ body {
 }
 
 @keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(40px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .login-logo-wrapper {
@@ -296,10 +286,15 @@ body {
     margin-bottom: 8px;
 }
 
+/* Password Input with Toggle Button */
+.password-input-container {
+    position: relative;
+    width: 100%;
+}
+
 .form-input {
     width: 100%;
-    padding: 14px 18px;
-    padding-right: 48px;
+    padding: 14px 52px 14px 18px;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     font-size: 1rem;
@@ -326,7 +321,38 @@ body {
     transform: translateY(-50%);
     color: #94a3b8;
     font-size: 1.1rem;
-    margin-top: 10px;
+    pointer-events: none;
+}
+
+/* Password Toggle Button - Professional */
+.password-toggle-btn {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    z-index: 5;
+}
+
+.password-toggle-btn:hover {
+    transform: translateY(-50%) scale(1.08);
+    box-shadow: 0 6px 18px rgba(102, 126, 234, 0.45);
+}
+
+.password-toggle-btn:active {
+    transform: translateY(-50%) scale(0.95);
 }
 
 /* Login Button */
@@ -360,6 +386,30 @@ body {
     margin-left: 8px;
 }
 
+.login-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Loading State for Button */
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: calc(50% - 10px);
+    right: calc(50% - 30px);
+    border: 2px solid transparent;
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 /* QR Code Section */
 .qr-section {
     text-align: center;
@@ -381,12 +431,8 @@ body {
 }
 
 @keyframes qrPulse {
-    0%, 100% { 
-        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
-    }
-    50% { 
-        box-shadow: 0 0 0 12px rgba(102, 126, 234, 0);
-    }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); }
+    50% { box-shadow: 0 0 0 12px rgba(102, 126, 234, 0); }
 }
 
 .qr-image {
@@ -431,8 +477,38 @@ body {
     75% { transform: translateX(8px); }
 }
 
+/* Database Status */
+.db-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    padding: 10px 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.db-status.loading {
+    background: #fefce8;
+    border-color: #fde68a;
+    color: #854d0e;
+}
+
+.db-status.error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.db-status i {
+    font-size: 1rem;
+}
+
 /* ============================================
-   APP CONTAINER - MAIN DASHBOARD
+   APP CONTAINER
    ============================================ */
 .app-container {
     display: none;
@@ -440,7 +516,6 @@ body {
     flex-direction: column;
 }
 
-/* Header */
 .app-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
@@ -487,7 +562,6 @@ body {
     font-size: 0.88rem;
     font-weight: 600;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
 }
 
 .header-btn:hover {
@@ -516,7 +590,6 @@ body {
     50% { opacity: 0.5; }
 }
 
-/* Sidebar Navigation */
 .main-content {
     display: flex;
     flex: 1;
@@ -562,7 +635,6 @@ body {
     text-align: center;
 }
 
-/* Content Area */
 .content-area {
     flex: 1;
     padding: 28px;
@@ -588,7 +660,6 @@ body {
     margin-bottom: 20px;
 }
 
-/* Stats Grid */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -639,7 +710,6 @@ body {
     font-weight: 500;
 }
 
-/* Table Styles */
 .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -676,23 +746,11 @@ body {
     transition: all 0.3s ease;
 }
 
-.action-btn.edit {
-    background: #dbeafe;
-    color: #2563eb;
-}
+.action-btn.edit { background: #dbeafe; color: #2563eb; }
+.action-btn.delete { background: #fee2e2; color: #dc2626; }
+.action-btn:hover { transform: scale(1.05); }
 
-.action-btn.delete {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-.action-btn:hover {
-    transform: scale(1.05);
-}
-
-/* ============================================
-   FOOTER - GLOBAL COMPONENT
-   ============================================ */
+/* Footer */
 .app-footer {
     background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
     color: #fff;
@@ -736,12 +794,8 @@ body {
 }
 
 @keyframes footerQrGlow {
-    0%, 100% { 
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }
-    50% { 
-        box-shadow: 0 4px 25px rgba(102, 126, 234, 0.6);
-    }
+    0%, 100% { box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
+    50% { box-shadow: 0 4px 25px rgba(102, 126, 234, 0.6); }
 }
 
 .footer-qr-label {
@@ -786,9 +840,7 @@ body {
     color: #8b9cf7;
 }
 
-/* ============================================
-   TOAST NOTIFICATIONS
-   ============================================ */
+/* Toast Notifications */
 .toast-container {
     position: fixed;
     top: 20px;
@@ -817,20 +869,11 @@ body {
 .toast.warning { border-right-color: #f59e0b; }
 
 @keyframes toastSlideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-100px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(-100px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
-.toast-icon {
-    font-size: 1.4rem;
-}
-
+.toast-icon { font-size: 1.4rem; }
 .toast.success .toast-icon { color: #10b981; }
 .toast.error .toast-icon { color: #ef4444; }
 .toast.warning .toast-icon { color: #f59e0b; }
@@ -841,9 +884,7 @@ body {
     font-size: 0.92rem;
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+/* Responsive */
 @media (max-width: 768px) {
     .sidebar {
         position: fixed;
@@ -855,32 +896,16 @@ body {
         transition: right 0.3s ease;
     }
     
-    .sidebar.open {
-        right: 0;
-    }
-    
-    .login-container {
-        padding: 32px 24px;
-        margin: 10px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .app-header {
-        padding: 12px 16px;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
+    .sidebar.open { right: 0; }
+    .login-container { padding: 32px 24px; margin: 10px; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .app-header { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
 }
 </style>
 </head>
 <body>
 
-<!-- ============================================
-     AUDIO ELEMENTS - Sound System
-     ============================================ -->
+<!-- Audio Elements -->
 <audio id="soundLoginSuccess" preload="auto" src="src/assets/login-success.mp3"></audio>
 <audio id="soundLoginError" preload="auto" src="src/assets/login-error.mp3"></audio>
 <audio id="soundLogoutSuccess" preload="auto" src="src/assets/logout-success.mp3"></audio>
@@ -890,9 +915,7 @@ body {
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- ============================================
-     LOADING SCREEN
-     ============================================ -->
+<!-- Loading Screen -->
 <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-content">
         <div class="logo-wrapper">
@@ -903,7 +926,7 @@ body {
         </div>
         
         <h1 class="loading-title">Axentro System</h1>
-        <p class="loading-subtitle">نظام إدارة التجار والمكن v4.0</p>
+        <p class="loading-subtitle">نظام إدارة التجار والمكن v4.2</p>
         
         <div class="progress-wrap">
             <div class="progress-track">
@@ -916,9 +939,7 @@ body {
     </div>
 </div>
 
-<!-- ============================================
-     LOGIN SECTION
-     ============================================ -->
+<!-- Login Section -->
 <section class="login-section" id="loginSection">
     <div class="login-container">
         <div class="login-logo-wrapper">
@@ -926,9 +947,16 @@ body {
                 <i class="fas fa-store login-logo-icon"></i>
             </div>
             <h1 class="login-title">Axentro System</h1>
-            <p class="login-subtitle">نظام إدارة التجار والمكن v4.0</p>
+            <p class="login-subtitle">نظام إدارة التجار والمكن v4.2</p>
         </div>
         
+        <!-- DB Status -->
+        <div class="db-status loading" id="dbStatus">
+            <i class="fas fa-database fa-spin"></i>
+            <span>جاري الاتصال بقاعدة البيانات...</span>
+        </div>
+        
+        <!-- Error Message -->
         <div class="error-message" id="loginError">
             <i class="fas fa-exclamation-circle"></i>
             <span id="loginErrorMsg">كلمة المرور غير صحيحة!</span>
@@ -937,14 +965,24 @@ body {
         <form id="loginForm" onsubmit="return false;">
             <div class="form-group">
                 <label class="form-label">🔑 كلمة المرور</label>
-                <input 
-                    type="password" 
-                    id="passwordInput" 
-                    class="form-input" 
-                    placeholder="أدخل كلمة المرور..."
-                    autocomplete="off"
-                >
-                <i class="fas fa-lock input-icon"></i>
+                
+                <div class="password-input-container">
+                    <input 
+                        type="password" 
+                        id="passwordInput" 
+                        class="form-input" 
+                        placeholder="أدخل كلمة المرور..."
+                        autocomplete="off"
+                    >
+                    <i class="fas fa-lock input-icon"></i>
+                    
+                    <!-- Eye Toggle Button -->
+                    <button type="button" class="password-toggle-btn" 
+                            onclick="togglePasswordVisibility()" 
+                            title="إظهار/إخفاء كلمة المرور">
+                        <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                    </button>
+                </div>
             </div>
             
             <button type="button" class="login-btn" id="loginBtn" onclick="performLogin()">
@@ -955,23 +993,16 @@ body {
         
         <div class="qr-section">
             <div class="qr-code-container" onclick="window.open('https://axentro-official.github.io/axentro-website/links.html', '_blank')">
-                <img 
-                    src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://axentro-official.github.io/axentro-website/links.html" 
-                    alt="QR Code" 
-                    class="qr-image"
-                >
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://axentro-official.github.io/axentro-website/links.html" 
+                     alt="QR Code" class="qr-image">
             </div>
             <p class="qr-text"><span>Scan Me</span> > Click On Me</p>
         </div>
     </div>
 </section>
 
-<!-- ============================================
-     MAIN APPLICATION CONTAINER
-     ============================================ -->
+<!-- App Container -->
 <div class="app-container" id="appContainer">
-    
-    <!-- Header -->
     <header class="app-header">
         <div class="header-brand">
             <i class="fas fa-store header-logo"></i>
@@ -994,130 +1025,94 @@ body {
         </div>
     </header>
     
-    <!-- Main Content -->
     <div class="main-content">
-        <!-- Sidebar -->
         <nav class="sidebar" id="sidebar">
             <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
-                <i class="fas fa-home"></i>
-                <span>الرئيسية</span>
+                <i class="fas fa-home"></i><span>الرئيسية</span>
             </div>
             <div class="nav-item" data-page="merchants" onclick="showPage('merchants')">
-                <i class="fas fa-users"></i>
-                <span>التجار</span>
+                <i class="fas fa-users"></i><span>التجار</span>
             </div>
             <div class="nav-item" data-page="machines" onclick="showPage('machines')">
-                <i class="fas fa-print"></i>
-                <span>المكن</span>
+                <i class="fas fa-print"></i><span>المكن</span>
             </div>
             <div class="nav-item" data-page="transfers" onclick="showPage('transfers')">
-                <i class="fas fa-exchange-alt"></i>
-                <span>التحويلات</span>
+                <i class="fas fa-exchange-alt"></i><span>التحويلات</span>
             </div>
             <div class="nav-item" data-page="collections" onclick="showPage('collections')">
-                <i class="fas fa-hand-holding-usd"></i>
-                <span>التحصيلات</span>
+                <i class="fas fa-hand-holding-usd"></i><span>التحصيلات</span>
             </div>
             <div class="nav-item" data-page="archive" onclick="showPage('archive')">
-                <i class="fas fa-archive"></i>
-                <span>الأرشيف</span>
+                <i class="fas fa-archive"></i><span>الأرشيف</span>
             </div>
         </nav>
         
-        <!-- Content Area -->
         <main class="content-area" id="contentArea">
-            <!-- Dashboard Page -->
             <div class="page" id="page-dashboard">
-                <h2 class="page-title">
-                    <i class="fas fa-chart-line"></i>
-                    الإحصائيات
-                </h2>
+                <h2 class="page-title"><i class="fas fa-chart-line"></i> الإحصائيات</h2>
                 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon purple">
-                            <i class="fas fa-users"></i>
-                        </div>
+                        <div class="stat-icon purple"><i class="fas fa-users"></i></div>
                         <div class="stat-value" id="statMerchants">0</div>
                         <div class="stat-label">عدد التجار</div>
                     </div>
                     
                     <div class="stat-card">
-                        <div class="stat-icon blue">
-                            <i class="fas fa-print"></i>
-                        </div>
+                        <div class="stat-icon blue"><i class="fas fa-print"></i></div>
                         <div class="stat-value" id="statMachines">0</div>
                         <div class="stat-label">عدد المكن</div>
                     </div>
                     
                     <div class="stat-card">
-                        <div class="stat-icon green">
-                            <i class="fas fa-exchange-alt"></i>
-                        </div>
+                        <div class="stat-icon green"><i class="fas fa-exchange-alt"></i></div>
                         <div class="stat-value" id="statTransfers">0</div>
                         <div class="stat-label">تحويلات الشهر</div>
                     </div>
                     
                     <div class="stat-card">
-                        <div class="stat-icon orange">
-                            <i class="fas fa-hand-holding-usd"></i>
-                        </div>
+                        <div class="stat-icon orange"><i class="fas fa-hand-holding-usd"></i></div>
                         <div class="stat-value" id="statCollections">0</div>
                         <div class="stat-label">تحصيلات الشهر</div>
                     </div>
                 </div>
             </div>
             
-            <!-- Other Pages Placeholder -->
             <div class="page" id="page-merchants" style="display:none;">
                 <h2 class="page-title"><i class="fas fa-users"></i> التجار</h2>
-                <div class="page-card">
-                    <p>محتوى صفحة التجار...</p>
-                </div>
+                <div class="page-card"><p>محتوى صفحة التجار...</p></div>
             </div>
             
             <div class="page" id="page-machines" style="display:none;">
                 <h2 class="page-title"><i class="fas fa-print"></i> المكن</h2>
-                <div class="page-card">
-                    <p>محتوى صفحة المكن...</p>
-                </div>
+                <div class="page-card"><p>محتوى صفحة المكن...</p></div>
             </div>
             
             <div class="page" id="page-transfers" style="display:none;">
                 <h2 class="page-title"><i class="fas fa-exchange-alt"></i> التحويلات</h2>
-                <div class="page-card">
-                    <p>محتوى صفحة التحويلات...</p>
-                </div>
+                <div class="page-card"><p>محتوى صفحة التحويلات...</p></div>
             </div>
             
             <div class="page" id="page-collections" style="display:none;">
                 <h2 class="page-title"><i class="fas fa-hand-holding-usd"></i> التحصيلات</h2>
-                <div class="page-card">
-                    <p>محتوى صفحة التحصيلات...</p>
-                </div>
+                <div class="page-card"><p>محتوى صفحة التحصيلات...</p></div>
             </div>
             
             <div class="page" id="page-archive" style="display:none;">
                 <h2 class="page-title"><i class="fas fa-archive"></i> الأرشيف</h2>
-                <div class="page-card">
-                    <p>محتوى صفحة الأرشيف...</p>
-                </div>
+                <div class="page-card"><p>محتوى صفحة الأرشيف...</p></div>
             </div>
         </main>
     </div>
     
-    <!-- Footer with QR Code -->
     <footer class="app-footer">
         <div class="footer-content">
             <div class="footer-qr-section">
                 <div class="footer-qr-wrapper">
-                    <img 
-                        src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://axentro-official.github.io/axentro-website/links.html" 
-                        alt="QR Code" 
-                        class="footer-qr-code"
-                        onclick="window.open('https://axentro-official.github.io/axentro-website/links.html', '_blank')"
-                        title="اضغط للانتقال"
-                    >
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://axentro-official.github.io/axentro-website/links.html" 
+                         alt="QR Code" class="footer-qr-code"
+                         onclick="window.open('https://axentro-official.github.io/axentro-website/links.html', '_blank')"
+                         title="اضغط للانتقال">
                     <p class="footer-qr-label"><span>Scan Me</span> > Click On Me</p>
                 </div>
             </div>
@@ -1130,30 +1125,28 @@ body {
     </footer>
 </div>
 
-<!-- ============================================
-     JAVASCRIPT - Main Application Logic
-     ============================================ -->
 <script>
 // ============================================================
-// CONFIGURATION & CONSTANTS
+// CONFIGURATION - متوافق مع جدول settings الحالي
 // ============================================================
-
-/**
- * ⚠️ IMPORTANT: This is your database password
- * Change this to your desired password
- */
-const ADMIN_PASSWORD = 'Axentro2024!@#$'; // <-- CHANGE THIS PASSWORD
 
 const CONFIG = {
     SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
-    SESSION_DURATION: 24 * 60 * 60 * 1000, // 24 hours
+    SESSION_DURATION: 24 * 60 * 60 * 1000,
+    // ⭐ إعدادات الجدول الحالي
+    SETTINGS_TABLE: 'settings',          // اسم الجدول
+    KEY_COLUMN: 'المفتاح',              // عمود المفتاح
+    VALUE_COLUMN: 'القيمة',             // عمود القيمة
+    PASSWORD_KEY: 'كلمة مرور الدخول'    // مفتاح كلمة المرور
 };
 
 let supabaseClient = null;
+let ADMIN_PASSWORD = '';
+let isPasswordLoaded = false;
 
 // ============================================================
-// SOUND MANAGEMENT SYSTEM 🎵
+// SOUND SYSTEM 🎵
 // ============================================================
 
 function playSound(soundName) {
@@ -1166,26 +1159,18 @@ function playSound(soundName) {
             'scan': 'soundScan'
         };
         
-        const audioId = soundMap[soundName];
-        if (!audioId) {
-            console.warn(`⚠️ Sound not found: ${soundName}`);
-            return;
-        }
-        
-        const audio = document.getElementById(audioId);
+        const audio = document.getElementById(soundMap[soundName]);
         if (audio) {
             audio.currentTime = 0;
-            audio.play().catch(e => console.log('🔊 Audio play blocked:', e.message));
-        } else {
-            console.warn(`⚠️ Audio element not found: ${audioId}`);
+            audio.play().catch(e => console.log('🔊 Audio blocked:', e.message));
         }
     } catch (error) {
-        console.error('❌ Error playing sound:', error);
+        console.error('❌ Sound error:', error);
     }
 }
 
 // ============================================================
-// TOAST NOTIFICATION SYSTEM
+// TOAST SYSTEM
 // ============================================================
 
 function showToast(message, type = 'success') {
@@ -1206,7 +1191,6 @@ function showToast(message, type = 'success') {
     
     container.appendChild(toast);
     
-    // Auto remove after 4 seconds
     setTimeout(() => {
         toast.style.animation = 'toastSlideIn 0.4s ease-out reverse';
         setTimeout(() => toast.remove(), 400);
@@ -1214,52 +1198,132 @@ function showToast(message, type = 'success') {
 }
 
 // ============================================================
-// INITIALIZATION WITH LOADING SCREEN
+// DATABASE PASSWORD LOADER 💾
+// ============================================================
+
+/**
+ * جلب كلمة المرور من جدول settings الحالي
+ * المتوافق مع: public.settings
+ */
+async function loadPasswordFromDatabase() {
+    const dbStatus = document.getElementById('dbStatus');
+    
+    try {
+        dbStatus.className = 'db-status loading';
+        dbStatus.innerHTML = '<i class="fas fa-database fa-spin"></i><span>جاري جلب كلمة المرور من قاعدة البيانات...</span>';
+        
+        console.log('🔐 Loading password from settings table...');
+        
+        // ⭐ الاستعلام من جدول settings الحالي
+        const { data, error } = await supabaseClient
+            .from(CONFIG.SETTINGS_TABLE)
+            .select(`${CONFIG.VALUE_COLUMN}`)
+            .eq(CONFIG.KEY_COLUMN, CONFIG.PASSWORD_KEY)
+            .single();
+        
+        if (error) {
+            console.error('❌ Database query error:', error);
+            throw error;
+        }
+        
+        // ⭐ استخراج القيمة من العمود "القيمة"
+        if (data && data[CONFIG.VALUE_COLUMN]) {
+            ADMIN_PASSWORD = data[CONFIG.VALUE_COLUMN];
+            isPasswordLoaded = true;
+            
+            // ✅ نجاح الاتصال
+            dbStatus.className = 'db-status';
+            dbStatus.innerHTML = '<i class="fas fa-check-circle"></i><span>تم الاتصال بقاعدة البيانات بنجاح ✓</span>';
+            
+            console.log(`✅ Password loaded successfully: ${ADMIN_PASSWORD.substring(0, 3)}***`);
+            return true;
+        } else {
+            throw new Error('Password key not found in settings table');
+        }
+        
+    } catch (error) {
+        console.error('❌ Failed to load password:', error.message);
+        
+        dbStatus.className = 'db-status error';
+        dbStatus.innerHTML = `<i class="fas fa-times-circle"></i><span>خطأ: ${error.message}</span>`;
+        
+        isPasswordLoaded = false;
+        return false;
+    }
+}
+
+// ============================================================
+// INITIALIZATION
 // ============================================================
 
 async function initializeApp() {
-    console.log('🚀 Axentro System v4.0 Professional Initializing...');
+    console.log('🚀 Axentro System v4.2 Initializing...');
     
     const progressFill = document.getElementById('progressFill');
     const progressText = document.getElementById('progressText');
     const loadingStatus = document.getElementById('loadingStatus');
     const loadingOverlay = document.getElementById('loadingOverlay');
     
-    // Animate progress bar
     let progress = 0;
     const progressInterval = setInterval(() => {
-        if (progress < 90) {
-            progress += Math.random() * 15;
-            if (progress > 90) progress = 90;
+        if (progress < 85) {
+            progress += Math.random() * 12;
+            if (progress > 85) progress = 85;
             
             if (progressFill) progressFill.style.width = `${progress}%`;
             if (progressText) progressText.textContent = `${Math.round(progress)}%`;
             
             if (loadingStatus) {
-                if (progress >= 30 && progress < 60) {
+                if (progress >= 25 && progress < 50) {
                     loadingStatus.textContent = 'جاري تحميل الوحدات...';
-                } else if (progress >= 60 && progress < 85) {
-                    loadingStatus.textContent = 'جاري الاتصال بقاعدة البيانات...';
+                } else if (progress >= 50 && progress < 70) {
+                    loadingStatus.textContent = 'جاري تهيئة الاتصال...';
+                } else if (progress >= 70) {
+                    loadingStatus.textContent = 'جاري جلب بيانات المصادقة...';
                 }
             }
         }
     }, 200);
 
     try {
-        // Step 1: Initialize Supabase connection
-        if (loadingStatus) loadingStatus.textContent = 'جاري تهيئة الاتصال...';
+        // Step 1: Initialize Supabase
+        if (loadingStatus) loadingStatus.textContent = 'جاري تهيئة الاتصال بقاعدة البيانات...';
         
         supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-        console.log('✅ Supabase client initialized successfully');
+        console.log('✅ Supabase client initialized');
         
-        // Update progress
-        if (progressFill) progressFill.style.width = '95%';
-        if (progressText) progressText.textContent = '95%';
-        if (loadingStatus) loadingStatus.textContent = 'جاري تهيئة واجهة المستخدم...';
+        if (progressFill) progressFill.style.width = '65%';
+        if (progressText) progressText.textContent = '65%';
         
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        // Complete the progress bar
+        // Step 2: Load password from settings table ⭐⭐⭐
+        if (loadingStatus) loadingStatus.textContent = 'جاري قراءة كلمة المرور من جدول الإعدادات...';
+        
+        const passwordLoaded = await loadPasswordFromDatabase();
+        
+        if (!passwordLoaded) {
+            clearInterval(progressInterval);
+            
+            if (progressFill) progressFill.style.width = '100%';
+            if (progressText) progressText.textContent = '100%';
+            if (loadingStatus) loadingStatus.textContent = '⚠️ لم يتم تحميل كلمة المرور';
+            
+            playSound('loginError');
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            if (loadingOverlay) loadingOverlay.classList.add('fade-out');
+            setTimeout(() => {
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+                showLogin();
+                showToast('تحذير: مشكلة في تحميل كلمة المرور', 'warning');
+            }, 500);
+            
+            return;
+        }
+        
+        // Complete progress
         clearInterval(progressInterval);
         
         if (progressFill) progressFill.style.width = '100%';
@@ -1268,13 +1332,11 @@ async function initializeApp() {
         
         await new Promise(resolve => setTimeout(resolve, 800));
         
-        // Hide loading screen
         if (loadingOverlay) loadingOverlay.classList.add('fade-out');
         
         setTimeout(() => {
             if (loadingOverlay) loadingOverlay.style.display = 'none';
             
-            // Check authentication session
             if (checkSession()) {
                 showApp();
                 playSound('scan');
@@ -1285,15 +1347,15 @@ async function initializeApp() {
             }
         }, 500);
         
-        console.log('✅ Axentro System v4.0 Ready!');
+        console.log('✅ Axentro System v4.2 Ready!');
         
     } catch (error) {
-        console.error('❌ Initialization error:', error);
+        console.error('❌ Init error:', error);
         clearInterval(progressInterval);
         
         if (progressFill) progressFill.style.width = '100%';
         if (progressText) progressText.textContent = '100%';
-        if (loadingStatus) loadingStatus.textContent = 'حدث خطأ أثناء التحميل';
+        if (loadingStatus) loadingStatus.textContent = 'حدث خطأ!';
         
         playSound('loginError');
         
@@ -1302,14 +1364,44 @@ async function initializeApp() {
             setTimeout(() => {
                 if (loadingOverlay) loadingOverlay.style.display = 'none';
                 showLogin();
-                showErrorToast('حدث خطأ أثناء تحميل النظام');
+                showToast('حدث خطأ أثناء التحميل', 'error');
             }, 500);
         }, 1000);
     }
 }
 
 // ============================================================
-// AUTHENTICATION SYSTEM
+// PASSWORD TOGGLE 👁️
+// ============================================================
+
+function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('passwordInput');
+    const toggleIcon = document.getElementById('togglePasswordIcon');
+    const toggleBtn = document.getElementById('togglePasswordBtn');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.className = 'fas fa-eye-slash';
+        toggleBtn.title = 'إخفاء كلمة المرور';
+        console.log('👁️ Password visible');
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.className = 'fas fa-eye';
+        toggleBtn.title = 'إظهار كلمة المرور';
+        console.log('🔒 Password hidden');
+    }
+    
+    // Animation effect
+    toggleBtn.style.transform = 'translateY(-50%) scale(1.1)';
+    setTimeout(() => {
+        toggleBtn.style.transform = 'translateY(-50%) scale(1)';
+    }, 150);
+    
+    playSound('scan');
+}
+
+// ============================================================
+// AUTHENTICATION
 // ============================================================
 
 function checkSession() {
@@ -1318,61 +1410,75 @@ function checkSession() {
     
     if (!session || !sessionTime) return false;
     
-    // Check if session is expired
-    const elapsed = Date.now() - parseInt(sessionTime);
-    return elapsed < CONFIG.SESSION_DURATION;
+    return (Date.now() - parseInt(sessionTime)) < CONFIG.SESSION_DURATION;
 }
 
-function performLogin() {
+async function performLogin() {
     const passwordInput = document.getElementById('passwordInput');
     const loginError = document.getElementById('loginError');
+    const loginBtn = document.getElementById('loginBtn');
     const password = passwordInput.value.trim();
     
-    // Validate password
+    // Validation
     if (!password) {
         showErrorToast('الرجاء إدخال كلمة المرور!');
         shakeElement(passwordInput);
+        playSound('loginError');
         return;
     }
     
-    // Check password against configured password
+    if (!isPasswordLoaded || !ADMIN_PASSWORD) {
+        showErrorToast('كلمة المرور غير محملة!');
+        playSound('loginError');
+        return;
+    }
+    
+    // Show loading state
+    loginBtn.classList.add('btn-loading');
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+    
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Check password against database value
     if (password === ADMIN_PASSWORD) {
         // Success!
         console.log('✅ Login successful!');
         
-        // Set session
         sessionStorage.setItem('axentro_session', 'authenticated');
         sessionStorage.setItem('axentro_session_time', Date.now().toString());
         
-        // Play success sound
-        playSound('loginSuccess');
+        loginBtn.classList.remove('btn-loading');
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fas fa-check"></i> تم الدخول!';
         
-        // Show success message
+        playSound('loginSuccess');
         showToast('تم تسجيل الدخول بنجاح! 🎉', 'success');
         
-        // Hide login and show app
         setTimeout(() => {
             hideLogin();
             showApp();
             refreshAllData();
-        }, 500);
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+        }, 600);
         
     } else {
         // Failed!
         console.log('❌ Login failed!');
         
-        // Show error
+        loginBtn.classList.remove('btn-loading');
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+        
         loginError.classList.add('show');
         shakeElement(document.querySelector('.login-container'));
         
-        // Play error sound
         playSound('loginError');
         
-        // Clear password
         passwordInput.value = '';
         passwordInput.focus();
         
-        // Hide error after 3 seconds
         setTimeout(() => {
             loginError.classList.remove('show');
         }, 3000);
@@ -1380,28 +1486,30 @@ function performLogin() {
 }
 
 function performLogout() {
-    // Clear session
     sessionStorage.removeItem('axentro_session');
     sessionStorage.removeItem('axentro_session_time');
     
-    // Play logout sound
     playSound('logoutSuccess');
-    
-    // Show toast
     showToast('تم تسجيل الخروج بنجاح 👋', 'success');
     
-    // Hide app and show login
     setTimeout(() => {
         hideApp();
         showLogin();
         
-        // Clear password field
         document.getElementById('passwordInput').value = '';
+        
+        // Reset password visibility
+        const passwordInput = document.getElementById('passwordInput');
+        const toggleIcon = document.getElementById('togglePasswordIcon');
+        if (passwordInput.type === 'text') {
+            passwordInput.type = 'password';
+            toggleIcon.className = 'fas fa-eye';
+        }
     }, 500);
 }
 
 // ============================================================
-// UI NAVIGATION FUNCTIONS
+// NAVIGATION
 // ============================================================
 
 function showLogin() {
@@ -1419,26 +1527,16 @@ function showApp() {
 }
 
 function showPage(pageName) {
-    // Hide all pages
-    document.querySelectorAll('.page').forEach(page => {
-        page.style.display = 'none';
-    });
+    document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
     
-    // Show selected page
     const targetPage = document.getElementById(`page-${pageName}`);
-    if (targetPage) {
-        targetPage.style.display = 'block';
-    }
+    if (targetPage) targetPage.style.display = 'block';
     
-    // Update nav items
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
-        if (item.dataset.page === pageName) {
-            item.classList.add('active');
-        }
+        if (item.dataset.page === pageName) item.classList.add('active');
     });
     
-    // Play subtle sound
     playSound('scan');
 }
 
@@ -1446,28 +1544,24 @@ function refreshAllData() {
     console.log('🔄 Refreshing data...');
     showToast('جاري تحديث البيانات...', 'warning');
     
-    // Simulate data refresh (replace with actual API calls)
     setTimeout(() => {
-        // Update stats with random data for demo
         document.getElementById('statMerchants').textContent = Math.floor(Math.random() * 100);
         document.getElementById('statMachines').textContent = Math.floor(Math.random() * 200);
         document.getElementById('statTransfers').textContent = Math.floor(Math.random() * 500);
         document.getElementById('statCollections').textContent = Math.floor(Math.random() * 1000);
         
         playSound('done');
-        showToast('تم تحديث البيانات بنجاح ✓', 'success');
+        showToast('تم تحديث البيانات ✓', 'success');
     }, 1500);
 }
 
 // ============================================================
-// UTILITY FUNCTIONS
+// UTILITIES
 // ============================================================
 
 function shakeElement(element) {
     element.style.animation = 'shakeError 0.5s ease';
-    setTimeout(() => {
-        element.style.animation = '';
-    }, 500);
+    setTimeout(() => element.style.animation = '', 500);
 }
 
 function showErrorToast(message) {
@@ -1478,32 +1572,25 @@ function showErrorToast(message) {
 // EVENT LISTENERS
 // ============================================================
 
-// Enter key on password input
 document.addEventListener('DOMContentLoaded', function() {
     const passwordInput = document.getElementById('passwordInput');
+    
     if (passwordInput) {
         passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                performLogin();
-            }
+            if (e.key === 'Enter') performLogin();
         });
     }
     
-    // Initialize the application
     initializeApp();
 });
 
-// ============================================================
-// KEYBOARD SHORTCUTS
-// ============================================================
-
+// Keyboard shortcut: Ctrl+Shift+P for password toggle
 document.addEventListener('keydown', function(e) {
-    // Ctrl+L to focus on password when on login page
-    if (e.ctrlKey && e.key === 'l') {
+    if (e.ctrlKey && e.shiftKey && e.key === 'P') {
         e.preventDefault();
-        const passwordInput = document.getElementById('passwordInput');
-        if (passwordInput && document.getElementById('loginSection').style.display !== 'none') {
-            passwordInput.focus();
+        const loginSection = document.getElementById('loginSection');
+        if (loginSection && loginSection.style.display !== 'none') {
+            togglePasswordVisibility();
         }
     }
 });
