@@ -481,15 +481,15 @@ async function initializeApp() {
         // Step 1: Initialize Supabase connection
         if (loadingStatus) loadingStatus.textContent = 'جاري تهيئة الاتصال...';
         
-        if (!initSupabase()) {
-            clearInterval(progressInterval);
-            showError('❌ فشل تهيئة الاتصال بقاعدة البيانات');
-            playSound('loginError');
-            
-            finishLoadingWithError(loadingOverlay, progressFill, progressText, loadingStatus);
-            setLoading(false);
-            return;
-        }
+        try {
+    const supabaseOk = initSupabase();
+    
+    if (!supabaseOk) {
+        console.warn("⚠️ Supabase failed, continuing anyway...");
+    }
+} catch (e) {
+    console.error("Supabase init error:", e);
+}
         
         // Update progress for Supabase connection
         updateProgress(progressFill, progressText, loadingStatus, 95, 'جاري تهيئة واجهة المستخدم...');
