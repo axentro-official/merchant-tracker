@@ -56,7 +56,7 @@ export function initSoundManager() {
  * Preload all sound files into cache
  */
 function preloadSounds() {
-    Object.entries(SOUND_MAP).forEach(([name, elementId]) => {
+    Object.entries(soundMap).forEach(([name, elementId]) => {
         const audio = document.getElementById(elementId);
         if (audio) {
             soundCache.set(name, audio);
@@ -84,7 +84,7 @@ export async function playSound(soundName, options = {}) {
     
     try {
         // Validate sound name
-        const audioId = SOUND_MAP[soundName];
+        const audioId = sound_map[soundName];
         if (!audioId) {
             console.warn(`⚠️ Sound not found: ${soundName}`);
             return false;
@@ -156,7 +156,7 @@ export function isAudioEnabled() {
  * @returns {string[]}
  */
 export function getAvailableSounds() {
-    return Object.keys(SOUND_MAP);
+    return Object.keys(sound_map);
 }
 
 // Initialize on import
