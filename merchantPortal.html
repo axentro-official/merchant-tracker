@@ -1967,6 +1967,7 @@
         async submitRequest() {
             if (!_currentMerchant) {
                 Toast.show('خطأ: لا يوجد تاجر محدد', 'error');
+                Sound.playError();
                 return;
             }
             
@@ -1974,15 +1975,32 @@
             const amount = parseFloat(document.getElementById('reqAmount').value);
             const notes = document.getElementById('reqNotes').value.trim();
             
-            if (!type) { Toast.show('يرجى اختيار نوع الطلب', 'error'); Sound.playError(); return; }
-            if (!amount || amount <= 0) { Toast.show('يرجى إدخال مبلغ صحيح', 'error'); Sound.playError(); return; }
+            if (!type) { 
+                Toast.show('يرجى اختيار نوع الطلب', 'error'); 
+                Sound.playError(); 
+                return; 
+            }
             
-            // ✅ FIXED: Removed 'الشهر' - Trigger will handle everything!
+            if (!amount || amount <= 0) { 
+                Toast.show('يرجى إدخال مبلغ صحيح', 'error'); 
+                Sound.playError(); 
+                return; 
+            }
+            
+            // ✅ FIXED: Time format compatible with PostgreSQL TIME type
+            const currentTimeFormatted = new Date().toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false // 24-hour format: "18:04:30"
+            });
+            
+            // ✅ FIXED: Removed 'الشهر' - Trigger handles it!
             const requestData = {
                 'رقم الطلب': this._generateRefNumber('REQ'),
                 'التاريخ': new Date().toISOString().split('T')[0],
-                'الوقت': this._getCurrentTime12H(),
-                // ⚠️ لا نرسل 'الشهر' - Trigger هيولّفه تلقائياً
+                'الوقت': currentTimeFormatted,  // ✅ NOW COMPATIBLE!
+                // ⚠️ Don't send 'الشهر' - DB Trigger handles it
                 'رقم التاجر': _currentMerchant.id,
                 'اسم التاجر': _currentMerchant['اسم التاجر'],
                 'اسم النشاط': _currentMerchant['اسم النشاط'],
@@ -1992,8 +2010,10 @@
                 'المبلغ': amount,
                 'ملاحظات': notes || null,
                 'الحالة': 'معلق',
-                'وقت الإنشاء': this._getCurrentTime12H()
+                'وقت الإنشاء': currentTimeFormatted  // ✅ Same fixed format
             };
+            
+            // ... باقي الكود كما هو بدون تغيير ...
             
             this._showLoading(true);
             Toast.show('جاري إرسال الطلب...', 'info');
