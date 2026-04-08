@@ -1596,11 +1596,9 @@
      * ============================================
      * AXENTRO MERCHANT PORTAL v5.1 PROFESSIONAL
      * ============================================
-     * ✅ Fixed: Removed 'الشهر' field (Trigger handles it)
-     * ✅ Added: Sound Manager with Web Audio API
-     * ✅ Enhanced: Performance & UX improvements
-     * ✅ Connected: To your Supabase database
-     * ✅ NEW: TimeFormatter for proper DB time formatting
+     * ✅ FIXED: Time formatting for timestamptz columns
+     * ✅ Added: TimeFormatter utility for proper DB formats
+     * ✅ Enhanced: Error handling and validation
      */
 
     // ===== CONFIGURATION =====
@@ -1638,25 +1636,22 @@
             if (!this.enabled || !this.audioContext) return;
             
             try {
-                // Resume context on user interaction
                 if (this.audioContext.state === 'suspended') {
                     await this.audioContext.resume();
                 }
                 
-                // Create oscillator for simple sounds (beep-style)
                 const oscillator = this.audioContext.createOscillator();
                 const gainNode = this.audioContext.createGain();
                 
                 oscillator.connect(gainNode);
                 gainNode.connect(this.audioContext.destination);
                 
-                // Different frequencies for different sound types
                 const freqMap = {
-                    'success': 523.25,      // C5
-                    'error': 293.66,       // D4
-                    'scan': 783.99,         // G5
-                    'notification': 659.25, // E5
-                    'click': 440           // A4
+                    'success': 523.25,
+                    'error': 293.66,
+                    'scan': 783.99,
+                    'notification': 659.25,
+                    'click': 440
                 };
                 
                 oscillator.type = 'sine';
@@ -1684,9 +1679,12 @@
         toggle() { this.enabled = !this.enabled; }
     };
 
-    // ===== TIME FORMATTER FOR DATABASE (NEW!) =====
+    // ===== TIME FORMATTER FOR DATABASE (FIXED!) =====
     const TimeFormatter = {
-        // Returns time in format: "18:22:07" (24-hour, no timezone)
+        /**
+         * Returns time in format: "19:00:06" (24-hour, no timezone)
+         * ✅ FOR: varchar columns like 'الوقت' (character varying)
+         */
         getCurrentTimeShort() {
             const now = new Date();
             return now.toLocaleTimeString('en-GB', { 
@@ -1697,7 +1695,10 @@
             });
         },
         
-        // Returns time in format: "06:22:07 PM" (12-hour with AM/PM) - FOR DISPLAY ONLY
+        /**
+         * Returns time in format: "07:00:06 PM" (12-hour with AM/PM)
+         * ✅ FOR: Display purposes only
+         */
         getCurrentTime12H() {
             return new Date().toLocaleTimeString('en-US', {
                 hour: '2-digit',
@@ -1706,19 +1707,36 @@
             });
         },
         
-        // Returns FULL timestamp for DB columns of type "timestamp with time zone"
-        // Format: "2026-01-15 18:22:07+02"
+        /**
+         * Returns FULL timestamp for timestamptz columns
+         * Format: "2026-01-15T19:00:06.000Z" (ISO 8601)
+         * ✅ FOR: 'وقت الإنشاء' (timestamp with time zone)
+         * ⚠️ THIS IS THE FIX!
+         */
         getCurrentTimestampWithTZ() {
+            // Return ISO string which PostgreSQL accepts for timestamptz
+            return new Date().toISOString();
+        },
+
+        /**
+         * Alternative: Returns format "2026-01-15 19:00:06+02:00"
+         * Use if the above doesn't work
+         */
+        getCurrentTimestampWithTZAlt() {
             const now = new Date();
+            const offset = now.getTimezoneOffset();
+            const offsetHours = Math.floor(Math.abs(offset) / 60);
+            const offsetMinutes = Math.abs(offset) % 60;
+            const offsetSign = offset <= 0 ? '+' : '-';
+            
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
             
-            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}${tz}`;
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}${offsetSign}${String(offsetHours).padStart(2,'0')}:${String(offsetMinutes).padStart(2,'0')}`;
         }
     };
 
@@ -2003,6 +2021,11 @@
             document.getElementById('reqNotes').value = '';
         },
 
+        /**
+         * ✅ FIXED VERSION - Properly handles both column types:
+         * - 'الوقت' (varchar) → uses getCurrentTimeShort()
+         * - 'وقت الإنشاء' (timestamptz) → uses getCurrentTimestampWithTZ()
+         */
         async submitRequest() {
             if (!_currentMerchant) {
                 Toast.show('خطأ: لا يوجد تاجر محدد', 'error');
@@ -2026,20 +2049,21 @@
                 return; 
             }
             
-            // ✅ FIXED: Use proper timestamp format for DB!
+            // ✅ FIXED: Use proper timestamp format for each column type!
             const requestData = {
                 'رقم الطلب': this._generateRefNumber('REQ'),
                 
-                // ✅ Date: YYYY-MM-DD
+                // Date: YYYY-MM-DD (standard SQL date)
                 'التاريخ': new Date().toISOString().split('T')[0],
                 
-                // ✅ Time: HH:MM:SS (compatible with timestamp with time zone)
+                // ✅ 'الوقت' is VARCHAR(20) → use short time format
                 'الوقت': TimeFormatter.getCurrentTimeShort(),
                 
-                // ✅ OR use full timestamp if needed:
-                // 'وقت الإنشاء': TimeFormatter.getCurrentTimestampWithTZ(),
+                // ✅ 'وقت الإنشاء' is TIMESTAMPTZ → use full ISO timestamp!
+                // This was the bug: was sending "19:00:06" but needs full timestamp
+                'وقت الإنشاء': TimeFormatter.getCurrentTimestampWithTZ(),
                 
-                // ⚠️ Don't send 'الشهر' - Trigger handles it automatically!
+                // Don't send 'الشهر' - Trigger handles it automatically!
                 'رقم التاجر': _currentMerchant.id,
                 'اسم التاجر': _currentMerchant['اسم التاجر'],
                 'اسم النشاط': _currentMerchant['اسم النشاط'],
@@ -2048,11 +2072,13 @@
                 'نوع الطلب': type,
                 'المبلغ': amount,
                 'ملاحظات': notes || null,
-                'الحالة': 'معلق',
-                'وقت الإنشاء': TimeFormatter.getCurrentTimeShort()
+                'الحالة': 'معلق'
             };
             
-            console.log('📤 Request Data:', requestData); // For debugging
+            console.log('📤 Request Data:', requestData);
+            console.log('⏰ Time values:');
+            console.log('   - الوقت (varchar):', requestData['الوقت']);
+            console.log('   - وقت الإنشاء (timestamptz):', requestData['وقت الإنشاء']);
             
             this._showLoading(true);
             Toast.show('جاري إرسال الطلب...', 'info');
@@ -2070,16 +2096,17 @@
                 
                 console.log('✅ Request Saved:', insertedReq);
                 
-                // Send email
+                // Send email notification
                 await this._sendEmailNotification(requestData);
                 
-                // Show success
+                // Show success modal
                 this.closeRequestModal();
                 document.getElementById('successRefId').textContent = insertedReq['رقم الطلب'] || this._generateRefNumber('REQ');
                 document.getElementById('successModal').classList.add('show');
                 
                 Sound.playSuccess();
                 
+                // Refresh requests list
                 if (_currentMerchant) await this._loadRequests(_currentMerchant.id);
                 
             } catch (error) {
@@ -2107,7 +2134,7 @@
                     notes: data['ملاحظات'] || 'لا توجد',
                     date: data['التاريخ'],
                     time: data['الوقت'],
-                    timestamp: new Date().toISOString()
+                    timestamp: data['وقت الإنشاء']
                 };
                 
                 await fetch(CONFIG.googleScriptUrl, {
@@ -2117,7 +2144,7 @@
                     body: JSON.stringify(payload)
                 });
                 
-                console.log('📧 Email triggered');
+                console.log('📧 Email triggered successfully');
                 
             } catch (emailErr) {
                 console.warn('⚠️ Email failed (non-critical):', emailErr);
@@ -2163,7 +2190,11 @@
    • Calculated Fields
    • Email Notifications
    • Sound Effects
-   • TimeFormatter (NEW!)
+   • TimeFormatter (FIXED!)
+
+🕐 Time Formats:
+   • getCurrentTimeShort(): "${TimeFormatter.getCurrentTimeShort()}"
+   • getCurrentTimestampWithTZ(): "${TimeFormatter.getCurrentTimestampWithTZ()}"
 
 🎯 Last Action: User viewing debug info
                 `;
@@ -2199,7 +2230,7 @@
             if (!timeValue) return '—';
             
             try {
-                // Try to parse as ISO string first
+                // Try to parse as ISO string first (for timestamptz columns)
                 const date = new Date(timeValue);
                 if (!isNaN(date.getTime())) {
                     return date.toLocaleTimeString('ar-EG', {
@@ -2208,8 +2239,19 @@
                         hour12: true
                     });
                 }
+                
+                // If it's already a simple time string like "19:00:06", format it
+                if (typeof timeValue === 'string' && timeValue.includes(':')) {
+                    const [hours, minutes] = timeValue.split(':');
+                    const h = parseInt(hours);
+                    const ampm = h >= 12 ? 'م' : 'ص';
+                    const displayHour = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+                    return `${displayHour}:${minutes} ${ampm}`;
+                }
+                
+                return timeValue;
             } catch (e) {
-                // If not a date, return as-is or format differently
+                console.warn('Time formatting error:', e);
                 return timeValue;
             }
         },
