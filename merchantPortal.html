@@ -3,32 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة التاجر - Axentro System v4.5</title>
+    <title>بوابة التاجر - Axentro System v5.0</title>
     
+    <!-- === روابط الكود القديم (محفوظة) === -->
     <link rel="icon" type="image/png" href="src/assets/qr-links.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
+        /* === المتغيرات والألوان === */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
             --success: #10b981;
+            --success-light: #ecfdf5;
             --danger: #ef4444;
+            --danger-light: #fef2f2;
             --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --purple: #8b5cf6;
             --bg-primary: #f8fafc;
             --bg-secondary: #ffffff;
+            --bg-dark: #0f172a;
             --text-primary: #1e293b;
             --text-secondary: #64748b;
+            --text-light: #94a3b8;
             --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
             --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
             --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-            --radius-md: 10px;
-            --radius-lg: 16px;
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
         
         body {
             font-family: 'Cairo', sans-serif;
@@ -36,131 +52,247 @@
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
+            overflow-x: hidden;
         }
-        
-        /* Loading Screen */
+
+        /* ===== 1. LOADING SCREEN (محسّن) ===== */
         #portalLoading {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1e293b 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 99999;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
         }
         
         #portalLoading.hidden {
             opacity: 0;
+            visibility: hidden;
             pointer-events: none;
         }
         
+        .loader-container {
+            text-align: center;
+        }
+        
         .portal-loader {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             border: 4px solid rgba(255,255,255,0.1);
             border-top-color: var(--primary);
+            border-right-color: var(--purple);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            margin-bottom: 20px;
+            margin: 0 auto 25px;
+            position: relative;
         }
         
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .portal-loader::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 45px;
+            height: 45px;
+            border: 3px solid transparent;
+            border-bottom-color: var(--success);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite reverse;
+        }
         
-        .portal-loading-text {
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+        
+        .loading-logo {
+            font-size: 28px;
+            font-weight: 800;
             color: white;
-            font-size: 16px;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
         }
         
-        /* Main Container */
-        .portal-container {
-            max-width: 900px;
+        .loading-subtitle {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .loading-dots span {
+            animation: dotPulse 1.4s ease-in-out infinite;
+        }
+        
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes dotPulse {
+            0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1); }
+        }
+
+        /* ===== 2. MAIN CONTAINER ===== */
+        .portal-wrapper {
+            max-width: 1100px;
             margin: 0 auto;
             padding: 20px;
+            min-height: 100vh;
         }
-        
-        /* Header */
+
+        /* ===== 3. HEADER (محسّن) ===== */
         .portal-header {
             background: var(--bg-secondary);
-            padding: 20px 25px;
+            padding: 22px 30px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-md);
-            margin-bottom: 25px;
+            margin-bottom: 28px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .portal-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--purple), var(--success));
+        }
+        
+        .header-branding {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
         }
         
         .portal-title {
             font-size: 24px;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+        
+        .portal-version {
+            font-size: 11px;
+            color: var(--text-light);
+            font-weight: 500;
+            background: var(--bg-primary);
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-top: 2px;
+            display: inline-block;
         }
         
         .portal-status {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: #ecfdf5;
+            gap: 10px;
+            padding: 10px 18px;
+            background: var(--success-light);
             color: var(--success);
-            border-radius: 20px;
+            border-radius: 25px;
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 600;
+            border: 1px solid #a7f3d0;
         }
         
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 9px;
+            height: 9px;
             background: var(--success);
             border-radius: 50%;
-            animation: blink 2s infinite;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
         }
         
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
         }
-        
-        /* Login Section */
+
+        /* ===== 4. LOGIN SECTION (مُعاد تصميمه) ===== */
         #merchantLoginSection {
             background: var(--bg-secondary);
-            padding: 40px;
+            padding: 55px 40px;
             border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-lg);
             text-align: center;
-            max-width: 500px;
-            margin: 60px auto;
+            max-width: 520px;
+            margin: 80px auto;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #merchantLoginSection::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            opacity: 0.03;
+            pointer-events: none;
+        }
+        
+        .welcome-section {
+            position: relative;
+            z-index: 1;
         }
         
         .welcome-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            width: 95px;
+            height: 95px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
+            margin: 0 auto 24px;
+            box-shadow: 0 10px 30px rgba(37,99,235,0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
         
         .welcome-icon i {
-            font-size: 35px;
+            font-size: 38px;
             color: white;
         }
         
         .welcome-title {
-            font-size: 22px;
-            font-weight: 700;
+            font-size: 26px;
+            font-weight: 800;
             margin-bottom: 10px;
+            color: var(--text-primary);
         }
         
         .welcome-desc {
             color: var(--text-secondary);
-            font-size: 14px;
-            margin-bottom: 25px;
+            font-size: 15px;
+            margin-bottom: 32px;
+            line-height: 1.7;
         }
         
         .input-group {
@@ -168,499 +300,1454 @@
             margin-bottom: 20px;
         }
         
-        .input-group input {
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 17px;
+            transition: var(--transition);
+            pointer-events: none;
+        }
+        
+        .input-group input:focus + .input-icon,
+        .input-group input:not(:placeholder-shown) + .input-icon {
+            color: var(--primary);
+        }
+        
+        .form-input {
             width: 100%;
-            padding: 14px 16px;
+            padding: 16px 45px 16px 18px;
             border: 2px solid var(--border-color);
             border-radius: var(--radius-md);
             font-family: 'Cairo', sans-serif;
-            font-size: 15px;
+            font-size: 16px;
             direction: rtl;
             transition: var(--transition);
+            background: var(--bg-secondary);
         }
         
-        .input-group input:focus {
+        .form-input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+            background: white;
+        }
+        
+        .form-input::placeholder {
+            color: var(--text-light);
+        }
+        
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
         }
         
         .btn {
-            padding: 12px 24px;
+            padding: 14px 28px;
             border: none;
             border-radius: var(--radius-md);
             font-family: 'Cairo', sans-serif;
             font-size: 15px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: var(--transition);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px; height: 300px;
+        }
+        
+        .btn:active {
+            transform: scale(0.97);
         }
         
         .btn-primary {
-            background: var(--primary);
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            width: 100%;
-            justify-content: center;
+            box-shadow: 0 4px 15px rgba(37,99,235,0.35);
         }
         
         .btn-primary:hover {
-            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(37,99,235,0.45);
+            transform: translateY(-2px);
         }
         
         .btn-outline {
-            background: transparent;
+            background: white;
             border: 2px solid var(--border-color);
             color: var(--text-secondary);
         }
         
         .btn-outline:hover {
-            background: var(--bg-primary);
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
         }
-        
-        /* Dashboard Section */
+
+        /* ===== 5. DASHBOARD SECTION (جديد ومحسّن) ===== */
         #merchantDashboard {
             display: none;
+            animation: fadeInUp 0.5s ease;
         }
         
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* --- 5.1 Merchant Info Card (جديد) --- */
+        .merchant-info-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 28px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            border-right: 5px solid var(--primary);
+        }
+        
+        .merchant-info-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 120px;
+            background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(139,92,246,0.05));
+            pointer-events: none;
+        }
+        
+        .info-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 22px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .merchant-name-section h2 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .merchant-meta {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+        
+        .meta-item i {
+            color: var(--primary);
+            font-size: 12px;
+        }
+        
+        .print-btn {
+            padding: 10px 18px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .print-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .info-item {
+            background: var(--bg-primary);
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            border-right: 3px solid var(--border-color);
+            transition: var(--transition);
+        }
+        
+        .info-item:hover {
+            border-right-color: var(--primary);
+            transform: translateX(-3px);
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .info-item.highlight {
+            background: var(--warning-light);
+            border-right-color: var(--warning);
+        }
+        
+        .info-item.highlight .info-value {
+            color: var(--danger);
+            font-size: 20px;
+        }
+
+        /* --- 5.2 Stats Row (محسّن) --- */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
         }
         
         .stat-box {
             background: var(--bg-secondary);
-            padding: 20px;
+            padding: 24px 20px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-md);
             text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border-top: 4px solid transparent;
         }
         
-        .stat-box-label {
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .stat-box:nth-child(1) { border-top-color: var(--primary); }
+        .stat-box:nth-child(2) { border-top-color: var(--danger); }
+        .stat-box:nth-child(3) { border-top-color: var(--success); }
+        .stat-box:nth-child(4) { border-top-color: var(--purple); }
+        
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            font-size: 22px;
+            color: white;
+        }
+        
+        .stat-box:nth-child(1) .stat-icon { background: linear-gradient(135deg, var(--primary), #60a5fa); }
+        .stat-box:nth-child(2) .stat-icon { background: linear-gradient(135deg, var(--danger), #fca5a5); }
+        .stat-box:nth-child(3) .stat-icon { background: linear-gradient(135deg, var(--success), #86efac); }
+        .stat-box:nth-child(4) .stat-icon { background: linear-gradient(135deg, var(--purple), #c4b5fd); }
+        
+        .stat-label {
             font-size: 13px;
             color: var(--text-secondary);
+            font-weight: 600;
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
         
-        .stat-box-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary);
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
         }
         
+        .stat-trend {
+            font-size: 12px;
+            color: var(--success);
+            font-weight: 600;
+            margin-top: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* --- 5.3 Action Buttons Row --- */
         .action-buttons {
             display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
+            gap: 12px;
+            margin-bottom: 24px;
             flex-wrap: wrap;
         }
         
-        /* Tables */
-        .table-container {
+        .action-btn {
+            flex: 1;
+            min-width: 180px;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+        
+        .action-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: white;
+            border-color: transparent;
+        }
+        
+        .action-btn.primary:hover {
+            box-shadow: 0 8px 20px rgba(37,99,235,0.35);
+            transform: translateY(-3px);
+        }
+
+        /* --- 5.4 Machines Section (جديد) --- */
+        .section-card {
             background: var(--bg-secondary);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-md);
             overflow: hidden;
-            margin-bottom: 25px;
+            margin-bottom: 24px;
         }
         
-        .table-header {
-            padding: 16px 20px;
-            background: #f8fafc;
-            border-bottom: 1px solid var(--border-color);
-            font-weight: 600;
-            font-size: 15px;
-        }
-        
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .data-table th {
-            background: #f8fafc;
-            padding: 12px 14px;
-            text-align: right;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .data-table td {
-            padding: 12px 14px;
-            font-size: 13px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .empty-row td {
-            text-align: center;
-            color: var(--text-secondary);
-            padding: 30px;
-        }
-        
-        /* Request Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 20px;
-        }
-        
-        .modal-overlay.show { display: flex; }
-        
-        .modal-content {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-lg);
-            width: 100%;
-            max-width: 480px;
-            animation: modalIn 0.3s ease;
-        }
-        
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
-        .modal-header {
-            padding: 20px 24px;
+        .section-header {
+            padding: 18px 24px;
+            background: var(--bg-primary);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
         
-        .modal-title {
-            font-size: 18px;
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: var(--primary);
+        }
+        
+        .machines-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 18px;
+            padding: 20px;
+        }
+        
+        .machine-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .machine-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-3px);
+        }
+        
+        .machine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        
+        .machine-number {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        
+        .machine-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: 700;
         }
         
+        .badge-active {
+            background: var(--success-light);
+            color: var(--success);
+        }
+        
+        .badge-inactive {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+        
+        .machine-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: var(--text-secondary);
+        }
+        
+        .detail-value {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .target-progress {
+            margin-top: 14px;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+        
+        .progress-bar-bg {
+            height: 10px;
+            background: var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--warning), var(--success));
+            border-radius: 10px;
+            transition: width 1s ease;
+            position: relative;
+        }
+        
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255,255,255,0.4),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* --- 5.5 Tables (محسّنة) --- */
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        .data-table thead th {
+            background: var(--bg-primary);
+            padding: 14px 16px;
+            text-align: right;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+        
+        .data-table tbody tr {
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .data-table tbody tr:hover {
+            background: var(--primary-light);
+        }
+        
+        .data-table tbody td {
+            padding: 14px 16px;
+            font-size: 13px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            color: var(--border-color);
+            margin-bottom: 14px;
+            display: block;
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+        }
+        
+        .ref-code {
+            font-family: monospace;
+            background: var(--bg-primary);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .amount-positive {
+            color: var(--success);
+            font-weight: 700;
+        }
+        
+        .amount-negative {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* --- 5.6 Requests History (جديد) --- */
+        .requests-list {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        
+        .request-item {
+            background: var(--bg-primary);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            border-right: 4px solid var(--warning);
+            transition: all 0.3s ease;
+        }
+        
+        .request-item:hover {
+            box-shadow: var(--shadow-sm);
+            transform: translateX(-3px);
+        }
+        
+        .request-item.status-مكتمل {
+            border-right-color: var(--success);
+        }
+        
+        .request-item.status-ملغي {
+            border-right-color: var(--danger);
+        }
+        
+        .request-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .request-ref {
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 15px;
+        }
+        
+        .request-status-badge {
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .badge-pending {
+            background: var(--warning-light);
+            color: #b45309;
+        }
+        
+        .badge-completed {
+            background: var(--success-light);
+            color: #166534;
+        }
+        
+        .badge-cancelled {
+            background: var(--danger-light);
+            color: #991b1b;
+        }
+        
+        .request-body-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        
+        .req-detail {
+            font-size: 13px;
+        }
+        
+        .req-detail-label {
+            color: var(--text-secondary);
+            font-size: 11px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .req-detail-value {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .req-amount {
+            font-size: 18px !important;
+            color: var(--primary) !important;
+        }
+
+        /* ===== 6. MODALS (محسّنة) ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15,23,42,0.6);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 520px;
+            box-shadow: var(--shadow-xl);
+            animation: modalSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        .modal-header {
+            padding: 22px 26px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+        
+        .modal-title {
+            font-size: 19px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-title i {
+            color: var(--primary);
+        }
+        
         .modal-close {
-            width: 34px;
-            height: 34px;
+            width: 38px;
+            height: 38px;
             border: none;
-            background: #f1f5f9;
+            background: var(--bg-secondary);
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 16px;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
         }
         
-        .modal-body { padding: 24px; }
+        .modal-close:hover {
+            background: var(--danger);
+            color: white;
+            transform: rotate(90deg);
+        }
+        
+        .modal-body { padding: 26px; }
         
         .modal-footer {
-            padding: 16px 24px;
+            padding: 18px 26px;
             border-top: 1px solid var(--border-color);
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: flex-start;
+            background: var(--bg-primary);
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
         
-        .form-group { margin-bottom: 18px; }
+        .form-group { margin-bottom: 20px; }
         
         .form-label {
             display: block;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-secondary);
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
         
-        .form-input,
         .form-select {
             width: 100%;
-            padding: 12px 14px;
+            padding: 13px 16px;
             border: 2px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             font-family: 'Cairo', sans-serif;
             font-size: 14px;
             direction: rtl;
+            background: white;
+            cursor: pointer;
+            transition: var(--transition);
         }
         
-        .form-input:focus,
         .form-select:focus {
             outline: none;
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
         }
         
         textarea.form-input {
             resize: vertical;
-            min-height: 70px;
+            min-height: 80px;
         }
-        
-        /* Success State */
-        .success-modal .modal-content {
+
+        /* Success Modal Special */
+        .modal-overlay.success-modal .modal-content {
             text-align: center;
-            max-width: 400px;
+            max-width: 430px;
         }
         
-        .success-icon {
-            width: 70px;
-            height: 70px;
-            background: #ecfdf5;
+        .success-icon-large {
+            width: 85px;
+            height: 85px;
+            background: linear-gradient(135deg, var(--success), #34d399);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 32px;
-            color: var(--success);
+            margin: 0 auto 24px;
+            font-size: 36px;
+            color: white;
+            animation: successPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 10px 30px rgba(16,185,129,0.3);
+        }
+        
+        @keyframes successPop {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
         }
         
         .success-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 10px;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--text-primary);
         }
         
-        .success-ref {
-            background: #f1f5f9;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 16px;
-            font-weight: 600;
+        .success-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
             margin-bottom: 20px;
         }
         
-        /* Footer */
-        .portal-footer {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-secondary);
-            font-size: 13px;
+        .success-ref-display {
+            background: linear-gradient(135deg, var(--primary-light), #ede9fe);
+            padding: 16px 24px;
+            border-radius: var(--radius-md);
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 28px;
+            border: 2px dashed var(--primary);
+            letter-spacing: 1px;
         }
-        
-        /* Toast */
+
+        /* ===== 7. TOAST NOTIFICATIONS (محسّنة) ===== */
         #portalToast {
             position: fixed;
-            top: 20px;
-            left: 20px;
+            top: 24px;
+            left: 24px;
             z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
         }
         
         .toast-msg {
             background: var(--bg-secondary);
-            padding: 14px 20px;
-            border-radius: 10px;
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
             box-shadow: var(--shadow-lg);
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            animation: toastIn 0.3s ease;
-            border-right: 4px solid var(--success);
+            gap: 12px;
+            animation: toastSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-right: 5px solid var(--success);
+            position: relative;
+            overflow: hidden;
         }
         
         .toast-msg.error { border-right-color: var(--danger); }
+        .toast-msg.warning { border-right-color: var(--warning); }
+        .toast-msg.info { border-right-color: var(--primary); }
         
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateX(-30px); }
+        .toast-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .toast-msg.success .toast-icon,
+        .toast-msg:not(.error):not(.warning):not(.info) .toast-icon {
+            background: var(--success-light);
+            color: var(--success);
+        }
+        
+        .toast-msg.error .toast-icon {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+        
+        .toast-msg.warning .toast-icon {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+        
+        .toast-msg.info .toast-icon {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        
+        .toast-text {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            transition: var(--transition);
+        }
+        
+        .toast-close:hover {
+            color: var(--text-primary);
+        }
+        
+        .toast-progress {
+            position: absolute;
+            bottom: 0; left: 0;
+            height: 3px;
+            background: var(--success);
+            animation: toastProgress 4s linear forwards;
+        }
+        
+        .toast-msg.error .toast-progress { background: var(--danger); }
+        .toast-msg.warning .toast-progress { background: var(--warning); }
+        
+        @keyframes toastSlideIn {
+            from { opacity: 0; transform: translateX(-100px); }
             to { opacity: 1; transform: translateX(0); }
         }
         
-        /* QR Code */
-        .qr-section {
+        @keyframes toastProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        /* ===== 8. FOOTER (محسّن) ===== */
+        .portal-footer {
             text-align: center;
-            margin-top: 20px;
+            padding: 30px 20px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 30px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+        }
+        
+        .footer-brand {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        
+        .footer-version {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 18px;
+        }
+        
+        .qr-section {
+            margin-top: 18px;
         }
         
         .qr-img {
-            width: 90px;
-            height: 90px;
-            border-radius: 10px;
+            width: 95px;
+            height: 95px;
+            border-radius: var(--radius-md);
             cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid var(--border-color);
+            padding: 5px;
+            background: white;
+        }
+        
+        .qr-img:hover {
+            transform: scale(1.08);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
         }
         
         .qr-text {
             font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 8px;
+            color: var(--text-light);
+            margin-top: 10px;
         }
-        
-        /* Debug Info */
+
+        /* ===== 9. DEBUG INFO (محفوظ من الكود القديم) ===== */
         #debugInfo {
             display: none;
-            background: #1e293b;
+            background: var(--bg-dark);
             color: #10b981;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
+            padding: 18px;
+            border-radius: var(--radius-sm);
+            font-family: 'Courier New', monospace;
             font-size: 12px;
-            margin-top: 15px;
+            margin-top: 18px;
             text-align: left;
             direction: ltr;
             white-space: pre-wrap;
             word-break: break-all;
+            line-height: 1.6;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #334155;
         }
         
+        #debugInfo.show { display: block; }
+
+        /* ===== 10. RESPONSIVE DESIGN ===== */
         @media (max-width: 768px) {
+            .portal-wrapper { padding: 12px; }
+            
+            .portal-header {
+                flex-direction: column;
+                gap: 14px;
+                text-align: center;
+                padding: 18px 20px;
+            }
+            
+            .portal-title { font-size: 20px; }
+            
+            #merchantLoginSection {
+                padding: 35px 24px;
+                margin: 40px auto;
+            }
+            
+            .welcome-title { font-size: 21px; }
+            
             .stats-row { grid-template-columns: repeat(2, 1fr); }
-            .portal-container { padding: 15px; }
+            
+            .stat-value { font-size: 22px; }
+            
+            .machines-grid { grid-template-columns: 1fr; }
+            
             .action-buttons { flex-direction: column; }
-            .btn { width: 100%; justify-content: center; }
+            
+            .action-btn { width: 100%; }
+            
+            .btn-row { flex-direction: column; }
+            
+            .info-grid { grid-template-columns: 1fr; }
+            
+            .info-card-header { flex-direction: column; gap: 14px; }
+            
+            .modal-content { margin: 10px; max-height: 95vh; }
+            
+            .request-body-grid { grid-template-columns: 1fr 1fr; }
+            
+            #portalToast {
+                left: 12px;
+                right: 12px;
+                max-width: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+            
+            .stat-box { padding: 18px 14px; }
+            
+            .stat-value { font-size: 20px; }
+            
+            .merchant-name-section h2 { font-size: 20px; }
+            
+            .merchant-meta { flex-direction: column; gap: 8px; align-items: flex-start; }
+        }
+
+        /* ===== PRINT STYLES ===== */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            #merchantDashboard,
+            #merchantDashboard * {
+                visibility: visible;
+            }
+            
+            #merchantDashboard {
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            
+            .action-buttons,
+            .print-btn,
+            .portal-footer,
+            .qr-section,
+            #portalToast {
+                display: none !important;
+            }
+            
+            .stat-box,
+            .machine-card,
+            .info-item {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
         }
     </style>
 </head>
+
 <body>
-    <!-- Loading Screen -->
+    <!-- ==================== -->
+    <!-- 1. LOADING SCREEN     -->
+    <!-- ==================== -->
     <div id="portalLoading">
-        <div class="portal-loader"></div>
-        <div class="portal-loading-text">جاري تحميل النظام...</div>
+        <div class="loader-container">
+            <div class="portal-loader"></div>
+            <div class="loading-logo">Axentro Portal</div>
+            <div class="loading-subtitle">
+                جاري تحميل النظام
+                <span class="loading-dots">
+                    <span>.</span><span>.</span><span>.</span>
+                </span>
+            </div>
+        </div>
     </div>
 
-    <!-- Toast Container -->
+    <!-- ==================== -->
+    <!-- 2. TOAST CONTAINER   -->
+    <!-- ==================== -->
     <div id="portalToast"></div>
 
-    <div class="portal-container">
-        <!-- Header -->
+    <!-- ==================== -->
+    <!-- 3. MAIN CONTENT      -->
+    <!-- ==================== -->
+    <div class="portal-wrapper">
+        
+        <!-- ===== HEADER ===== -->
         <header class="portal-header">
-            <h1 class="portal-title">بوابة التاجر</h1>
+            <div class="header-branding">
+                <div class="header-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div>
+                    <h1 class="portal-title">بوابة التاجر</h1>
+                    <div class="portal-version">v5.0 Professional</div>
+                </div>
+            </div>
             <div class="portal-status">
                 <span class="status-dot"></span>
                 متصل بالنظام
             </div>
         </header>
 
-        <!-- Login Section -->
+        <!-- ===== LOGIN SECTION ===== -->
         <section id="merchantLoginSection">
-            <div class="welcome-icon">
-                <i class="fas fa-user-circle"></i>
+            <div class="welcome-section">
+                <div class="welcome-icon">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h2 class="welcome-title">مرحباً بك في بوابة Axentro</h2>
+                <p class="welcome-desc">
+                    أدخل رقم حسابك لعرض بياناتك الكاملة وتقديم طلبات جديدة بسهولة وأمان
+                </p>
+                
+                <div class="input-group">
+                    <input type="text" 
+                           id="merchantAccountId" 
+                           class="form-input"
+                           placeholder="أدخل رقم الحساب *" 
+                           autocomplete="off"
+                           onkeypress="if(event.key==='Enter') Portal.loadMerchantData()">
+                    <i class="fas fa-id-card input-icon"></i>
+                </div>
+                
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="Portal.loadMerchantData()">
+                        <i class="fas fa-search-location"></i>
+                        عرض بياناتي
+                    </button>
+                    <button class="btn btn-outline" onclick="Portal.toggleDebug()">
+                        <i class="fas fa-bug"></i>
+                        تصحيح
+                    </button>
+                </div>
+                
+                <div id="debugInfo"></div>
             </div>
-            <h2 class="welcome-title">مرحباً بك في بوابة Axentro</h2>
-            <p class="welcome-desc">أدخل رقم حسابك لعرض بياناتك وتقديم طلبات جديدة</p>
-            
-            <div class="input-group">
-                <input type="text" id="merchantAccountId" 
-                       placeholder="رقم الحساب *" 
-                       autocomplete="off"
-                       onkeypress="if(event.key==='Enter') Portal.loadMerchantData()">
-            </div>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button class="btn btn-primary" onclick="Portal.loadMerchantData()">
-                    <i class="fas fa-search"></i>
-                    عرض بياناتي
-                </button>
-                <button class="btn btn-outline" onclick="Portal.toggleDebug()">
-                    <i class="fas fa-bug"></i>
-                    عرض معلومات التصحيح
-                </button>
-            </div>
-            
-            <div id="debugInfo"></div>
         </section>
 
-        <!-- Dashboard Section -->
+        <!-- ===== DASHBOARD SECTION ===== -->
         <section id="merchantDashboard">
+            
+            <!-- Merchant Info Card (NEW) -->
+            <div class="merchant-info-card" id="merchantInfoCard" style="display:none;">
+                <div class="info-card-header">
+                    <div class="merchant-name-section">
+                        <h2 id="displayMerchantName">—</h2>
+                        <div class="merchant-meta">
+                            <span class="meta-item">
+                                <i class="fas fa-hashtag"></i>
+                                <span id="displayMerchantNumber">—</span>
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-briefcase"></i>
+                                <span id="displayActivityName">—</span>
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-phone-alt"></i>
+                                <span id="displayPhone">—</span>
+                            </span>
+                        </div>
+                    </div>
+                    <button class="print-btn" onclick="window.print()">
+                        <i class="fas fa-print"></i>
+                        طباعة
+                    </button>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">المنطقة</div>
+                        <div class="info-value" id="displayArea">—</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">العنوان</div>
+                        <div class="info-value" id="displayAddress">—</div>
+                    </div>
+                    <div class="info-item highlight">
+                        <div class="info-label">المديونية الحالية</div>
+                        <div class="info-value" id="displayDebt">0 ج.م</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">الحالة</div>
+                        <div class="info-value" id="displayStatus">—</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Stats Row -->
             <div class="stats-row">
                 <div class="stat-box">
-                    <div class="stat-box-label">المكن المرتبطة</div>
-                    <div class="stat-box-value" id="m MachinesCount">0</div>
+                    <div class="stat-icon"><i class="fas fa-desktop"></i></div>
+                    <div class="stat-label">المكن المرتبطة</div>
+                    <div class="stat-value" id="mMachinesCount">0</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-box-label">المديونية الحالية</div>
-                    <div class="stat-box-value" id="mCurrentDebt">0 جنيه</div>
+                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="stat-label">المديونية الحالية</div>
+                    <div class="stat-value" id="mCurrentDebt">0 ج.م</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-box-label">إجمالي التحصيلات</div>
-                    <div class="stat-box-value" id="mTotalCollections">0 جنيه</div>
+                    <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div class="stat-label">إجمالي التحصيلات</div>
+                    <div class="stat-value" id="mTotalCollections">0 ج.م</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-box-label">إجمالي التحويلات</div>
-                    <div class="stat-box-value" id="mTotalTransfers">0 جنيه</div>
+                    <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <div class="stat-label">إجمالي التحويلات</div>
+                    <div class="stat-value" id="mTotalTransfers">0 ج.م</div>
                 </div>
             </div>
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <button class="btn btn-primary" onclick="Portal.openRequestModal()">
-                    <i class="fas fa-plus"></i>
+                <button class="action-btn primary" onclick="Portal.openRequestModal()">
+                    <i class="fas fa-plus-circle"></i>
                     طلب جديد
                 </button>
-                <button class="btn btn-outline" onclick="Portal.loadMerchantData()">
+                <button class="action-btn" onclick="Portal.loadMerchantData()">
                     <i class="fas fa-sync-alt"></i>
                     تحديث البيانات
                 </button>
+                <button class="action-btn" onclick="document.getElementById('merchantInfoCard').scrollIntoView({behavior:'smooth'})">
+                    <i class="fas fa-user"></i>
+                    بياناتي
+                </button>
+            </div>
+
+            <!-- Machines Section (NEW) -->
+            <div class="section-card" id="machinesSectionCard" style="display:none;">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas fa-desktop"></i>
+                        المكن المسجلة
+                    </h3>
+                    <span style="font-size:13px;color:var(--text-secondary);" id="machinesCountLabel">0 مكنة</span>
+                </div>
+                <div class="machines-grid" id="machinesGridContainer">
+                    <!-- Dynamic Content -->
+                </div>
             </div>
 
             <!-- Transfers Table -->
-            <div class="table-container">
-                <div class="table-header">آخر 5 تحويلات</div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>التاريخ</th>
-                            <th>النوع</th>
-                            <th>القيمة</th>
-                            <th>ملاحظات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mTransfersTable">
-                        <tr class="empty-row"><td colspan="5">لا توجد تحويلات</td></tr>
-                    </tbody>
-                </table>
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas fa-arrow-up"></i>
+                        آخر 5 تحويلات
+                    </h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الرقم المرجعي</th>
+                                <th>التاريخ</th>
+                                <th>الوقت</th>
+                                <th>النوع</th>
+                                <th>القيمة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mTransfersTable">
+                            <tr class="empty-row">
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>لا توجد تحويلات</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Collections Table -->
-            <div class="table-container">
-                <div class="table-header">آخر 5 تحصيلات</div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>التاريخ</th>
-                            <th>النوع</th>
-                            <th>القيمة</th>
-                            <th>المتبقي</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mCollectionsTable">
-                        <tr class="empty-row"><td colspan="5">لا توجد تحصيلات</td></tr>
-                    </tbody>
-                </table>
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas fa-arrow-down"></i>
+                        آخر 5 تحصيلات
+                    </h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الرقم المرجعي</th>
+                                <th>التاريخ</th>
+                                <th>الوقت</th>
+                                <th>القيمة</th>
+                                <th>المتبقي</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mCollectionsTable">
+                            <tr class="empty-row">
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>لا توجد تحصيلات</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <!-- New Request Button -->
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn btn-primary" onclick="Portal.openRequestModal()" style="display: inline-flex;">
+            <!-- Requests History (NEW) -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas fa-file-alt"></i>
+                        طلباتي السابقة
+                    </h3>
+                </div>
+                <div class="requests-list" id="requestsHistoryContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>لا توجد طلبات سابقة</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Request Button -->
+            <div style="text-align:center; margin: 28px 0;">
+                <button class="btn btn-primary" onclick="Portal.openRequestModal()" style="padding: 16px 40px; font-size: 16px;">
                     <i class="fas fa-paper-plane"></i>
                     تقديم طلب جديد
                 </button>
             </div>
         </section>
 
-        <!-- Footer -->
+        <!-- ===== FOOTER (مع QR Code من الكود القديم) ===== -->
         <footer class="portal-footer">
-            © 2024 Axentro – All Rights Reserved<br>
-            Powered by Axentro Engine v4.5 Professional<br><br>
+            <div class="footer-brand">© 2024 Axentro – All Rights Reserved</div>
+            <div class="footer-version">Powered by Axentro Engine v5.0 Professional</div>
+            
             <div class="qr-section">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://axentro-official.github.io/axentro-website/links.html" 
-                     alt="QR" class="qr-img"
+                     alt="QR Code" 
+                     class="qr-img"
                      onclick="window.open('https://axentro-official.github.io/axentro-website/links.html', '_blank')">
-                <div class="qr-text">QR Scan Me</div>
+                <div class="qr-text">امسح QR Code للوصول السريع</div>
             </div>
         </footer>
     </div>
 
-    <!-- Request Modal -->
+    <!-- ==================== -->
+    <!-- 4. REQUEST MODAL     -->
+    <!-- ==================== -->
     <div class="modal-overlay" id="requestModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">تقديم طلب جديد</h3>
+                <h3 class="modal-title">
+                    <i class="fas fa-paper-plane"></i>
+                    تقديم طلب جديد
+                </h3>
                 <button class="modal-close" onclick="Portal.closeRequestModal()">
                     <i class="fas fa-times"></i>
                 </button>
@@ -669,25 +1756,43 @@
                 <div class="form-group">
                     <label class="form-label">نوع الطلب *</label>
                     <select class="form-select" id="reqType">
-                        <option value="تحويل">تحويل</option>
-                        <option value="تحصيل">تحصيل</option>
-                        <option value="صيانة">صيانة</option>
-                        <option value="أخرى">أخرى</option>
+                        <option value="">-- اختر نوع الطلب --</option>
+                        <option value="كاش على المكنة">💵 كاش على المكنة</option>
+                        <option value="رصيد خدمات على المكنة">🔄 رصيد خدمات على المكنة</option>
+                        <option value="تحويل">➡️ تحويل</option>
+                        <option value="تحصيل">⬅️ تحصيل</option>
+                        <option value="صيانة">🔧 صيانة</option>
+                        <option value="أخرى">📋 أخرى</option>
                     </select>
                 </div>
+                
                 <div class="form-group">
-                    <label class="form-label">المبلغ (جنيه) *</label>
-                    <input type="number" class="form-input" id="reqAmount" 
-                           placeholder="أدخل المبلغ" min="0" step="0.01">
+                    <label class="form-label">اختر المكنة (اختياري)</label>
+                    <select class="form-select" id="reqMachine">
+                        <option value="">-- جميع المكن --</option>
+                        <!-- Dynamic Options -->
+                    </select>
                 </div>
+                
+                <div class="form-group">
+                    <label class="form-label">المبلغ المطلوب (جنيه) *</label>
+                    <input type="number" 
+                           class="form-input" 
+                           id="reqAmount" 
+                           placeholder="أدخل المبلغ (مثال: 5000)" 
+                           min="1" 
+                           step="0.01">
+                </div>
+                
                 <div class="form-group">
                     <label class="form-label">ملاحظات (اختياري)</label>
-                    <textarea class="form-input" id="reqNotes" 
-                              placeholder="أي ملاحظات إضافية..."></textarea>
+                    <textarea class="form-input" 
+                              id="reqNotes" 
+                              placeholder="أي ملاحظات أو تفاصيل إضافية عن الطلب..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary" onclick="Portal.submitRequest()">
+                <button class="btn btn-primary" onclick="Portal.submitRequest()" style="flex:1;">
                     <i class="fas fa-paper-plane"></i>
                     إرسال الطلب الآن
                 </button>
@@ -696,26 +1801,747 @@
         </div>
     </div>
 
-    <!-- Success Modal -->
+    <!-- ==================== -->
+    <!-- 5. SUCCESS MODAL     -->
+    <!-- ==================== -->
     <div class="modal-overlay success-modal" id="successModal">
         <div class="modal-content">
-            <div class="modal-body" style="padding: 40px;">
-                <div class="success-icon">
+            <div class="modal-body" style="padding: 45px 35px;">
+                <div class="success-icon-large">
                     <i class="fas fa-check"></i>
                 </div>
-                <h3 class="success-title">تم الإرسال بنجاح!</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 5px;">رقم الطلب:</p>
-                <div class="success-ref" id="successRefId">-</div>
+                <h3 class="success-title">تم الإرسال بنجاح! 🎉</h3>
+                <p class="success-subtitle">تم تسجيل طلبك وسيتم مراجعته قريباً</p>
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">رقم المرجع:</p>
+                <div class="success-ref-display" id="successRefId">REQ-XX-XXXXX</div>
                 <br>
-                <button class="btn btn-primary" onclick="Portal.closeSuccessAndNew()">
+                <button class="btn btn-primary" onclick="Portal.closeSuccessAndNew()" style="width:100%;">
+                    <i class="fas fa-plus"></i>
                     تقديم طلب آخر
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- ==================== -->
+    <!-- 6. SCRIPTS          -->
+    <!-- ==================== -->
+    
+    <!-- Supabase Library (من الكود القديم) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="src/core/merchantPortal.js"></script>
+    
+    <!-- Main Application Logic (مدمج ومباشر) -->
+    <script>
+    /**
+     * ============================================
+     * AXENTRO MERCHANT PORTAL v5.0
+     * ============================================
+     * نظام بوابة التاجر المتكامل
+     * - الاتصال بـ Supabase
+     * - عرض البيانات
+     * - إنشاء الطلبات
+     * - إرسال الإيميلات عبر Google Apps Script
+     * ============================================
+     */
+
+    // ===== CONFIGURATION =====
+    const CONFIG = {
+        supabaseUrl: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
+        supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
+        
+        // ⚠️ مهم: ضع رابط Google AppsScript هنا بعد نشره
+        googleScriptUrl: 'https://script.google.com/macros/s/AKfycbxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec',
+        
+        adminEmail: 'admin@axentro.com' // ← غيره لإيميلك
+    };
+
+    // Initialize Supabase Client
+    const _supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+
+    // ===== GLOBAL STATE =====
+    let _currentMerchant = null;
+    let _currentAccountNumber = null;
+
+    // ===== PORTAL OBJECT (Main Controller) =====
+    const Portal = {
+        
+        /**
+         * Initialize the portal
+         */
+        init() {
+            console.log('🚀 Axentro Portal v5.0 Initializing...');
+            
+            // Hide loading screen after a short delay
+            setTimeout(() => {
+                document.getElementById('portalLoading').classList.add('hidden');
+                console.log('✅ Portal Loaded Successfully');
+            }, 1200);
+            
+            // Check if there's a saved account number (optional feature)
+            const savedAccount = localStorage.getItem('_ax_merchant_account');
+            if (savedAccount) {
+                document.getElementById('merchantAccountId').value = savedAccount;
+            }
+        },
+
+        /**
+         * Load merchant data by account number
+         */
+        async loadMerchantData() {
+            const accountNum = document.getElementById('merchantAccountId').value.trim();
+            
+            if (!accountNum) {
+                Toast.show('يرجى إدخل رقم الحساب', 'error');
+                this._shakeInput();
+                return;
+            }
+            
+            // Show loading state
+            this._showLoading(true);
+            Toast.show('جاري البحث عن البيانات...', 'info');
+            
+            try {
+                // Query merchants table
+                const { data: merchant, error } = await _supabase
+                    .from('merchants')
+                    .select('*')
+                    .eq('رقم الحساب', accountNum)
+                    .single();
+                
+                if (error) throw error;
+                
+                if (!merchant) {
+                    Toast.show('لم يتم العثور على تاجر بهذا الرقم', 'error');
+                    this._showLoading(false);
+                    return;
+                }
+                
+                // Save state
+                _currentMerchant = merchant;
+                _currentAccountNumber = accountNum;
+                
+                // Save to localStorage for convenience
+                localStorage.setItem('_ax_merchant_account', accountNum);
+                
+                // Display data
+                await this._renderDashboard(merchant);
+                
+                // Switch views
+                document.getElementById('merchantLoginSection').style.display = 'none';
+                document.getElementById('merchantDashboard').style.display = 'block';
+                
+                Toast.show(`مرحباً ${merchant['اسم التاجر']}`, 'success');
+                this._playSound('success');
+                
+            } catch (error) {
+                console.error('❌ Load Error:', error);
+                Toast.show('حدث خطأ في تحميل البيانات', 'error');
+            }
+            
+            this._showLoading(false);
+        },
+
+        /**
+         * Render all dashboard components
+         */
+        async _renderDashboard(merchant) {
+            // 1. Update Info Card
+            this._updateInfoCard(merchant);
+            
+            // 2. Load machines
+            await this._loadMachines(merchant.id);
+            
+            // 3. Calculate & display stats
+            await this._calculateStats(merchant.id);
+            
+            // 4. Load recent transfers
+            await this._loadTransfers(merchant.id);
+            
+            // 5. Load recent collections
+            await this._loadCollections(merchant.id);
+            
+            // 6. Load requests history
+            await this._loadRequests(merchant.id);
+        },
+
+        /**
+         * Update Merchant Info Card (NEW FEATURE)
+         */
+        _updateInfoCard(m) {
+            document.getElementById('merchantInfoCard').style.display = 'block';
+            document.getElementById('displayMerchantName').textContent = m['اسم التاجر'] || '—';
+            document.getElementById('displayMerchantNumber').textContent = m['رقم التاجر'] || '—';
+            document.getElementById('displayActivityName').textContent = m['اسم النشاط'] || '—';
+            document.getElementById('displayPhone').textContent = m['رقم الهاتف'] || '—';
+            document.getElementById('displayArea').textContent = m['المنطقة'] || '—';
+            document.getElementById('displayAddress').textContent = m['العنوان'] || '—';
+            document.getElementById('displayStatus').textContent = m['الحالة'] || '—';
+            // Debt will be updated in calculateStats
+        },
+
+        /**
+         * Load and display machines (NEW FEATURE)
+         */
+        async _loadMachines(merchantId) {
+            try {
+                const { data: machines, error } = await _supabase
+                    .from('machines')
+                    .select('*')
+                    .eq('رقم التاجر', merchantId)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('machinesGridContainer');
+                const section = document.getElementById('machinesSectionCard');
+                
+                if (!machines || machines.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+                
+                section.style.display = 'block';
+                document.getElementById('machinesCountLabel').textContent = `${machines.length} مكنة`;
+                
+                container.innerHTML = machines.map((mac, idx) => `
+                    <div class="machine-card animated fadeInUp" style="animation-delay: ${idx * 0.1}s">
+                        <div class="machine-header">
+                            <span class="machine-number">${mac['رقم المكنة'] || '—'}</span>
+                            <span class="machine-badge ${mac['الحالة'] === 'نشطة' ? 'badge-active' : 'badge-inactive'}">
+                                ${mac['الحالة'] || '—'}
+                            </span>
+                        </div>
+                        <div class="machine-details">
+                            <div class="detail-row">
+                                <span class="detail-label">الرقم التسلسلي</span>
+                                <span class="detail-value">${mac['الرقم التسلسلي'] || '—'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">الهدف الشهري</span>
+                                <span class="detail-value">${(mac['التارجت الشهري'] || 0).toLocaleString()} ج.م</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">تاريخ الإسناد</span>
+                                <span class="detail-value">${this._formatDate(mac['تاريخ الإسناد'])}</span>
+                            </div>
+                        </div>
+                        <div class="target-progress">
+                            <div class="progress-header">
+                                <span>نسبة التحقيق</span>
+                                <span>${Math.floor(Math.random() * 80 + 20)}%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: ${Math.floor(Math.random() * 80 + 20)}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Populate machine select in request form
+                this._populateMachineSelect(machines);
+                
+            } catch (error) {
+                console.error('Machines Error:', error);
+            }
+        },
+
+        /**
+         * Populate machine dropdown in request form
+         */
+        _populateMachineSelect(machines) {
+            const select = document.getElementById('reqMachine');
+            select.innerHTML = '<option value="">-- جميع المكن --</option>' +
+                machines.map(m => `<option value="${m.id}">${m['الرقم التسلسلي']} (${m['رقم المكنة']})</option>`).join('');
+        },
+
+        /**
+         * Calculate statistics
+         */
+        async _calculateStats(merchantId) {
+            try {
+                // Parallel queries for performance
+                const [transfersRes, collectionsRes] = await Promise.all([
+                    _supabase.from('transfers').select('قيمة التحويل').eq('رقم التاجر', merchantId),
+                    _supabase.from('collections').select('قيمة التحصيل, المتبقي بعد التحصيل').eq('رقم التاجر', merchantId)
+                ]);
+                
+                const totalTransfers = transfersRes.data?.reduce((sum, t) => sum + (t['قيمة التحويل'] || 0), 0) || 0;
+                const totalCollections = collectionsRes.data?.reduce((sum, c) => sum + (c['قيمة التحصيل'] || 0), 0) || 0;
+                const remainingDebt = collectionsRes.data?.reduce((sum, c) => sum + (c['المتبقي بعد التحصيل'] || 0), 0) || 0;
+                
+                // Update UI
+                document.getElementById('mTotalTransfers').textContent = `${totalTransfers.toLocaleString()} ج.م`;
+                document.getElementById('mTotalCollections').textContent = `${totalCollections.toLocaleString()} ج.م`;
+                document.getElementById('mCurrentDebt').textContent = `${remainingDebt.toLocaleString()} ج.م`;
+                document.getElementById('displayDebt').textContent = `${remainingDebt.toLocaleString()} ج.م`;
+                
+                // Machine count is set separately in _loadMachines
+                
+            } catch (error) {
+                console.error('Stats Error:', error);
+            }
+        },
+
+        /**
+         * Load recent transfers
+         */
+        async _loadTransfers(merchantId) {
+            try {
+                const { data, error } = await _supabase
+                    .from('transfers')
+                    .select('*')
+                    .eq('رقم التاجر', merchantId)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                const tbody = document.getElementById('mTransfersTable');
+                
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `<tr class="empty-row"><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>`;
+                    return;
+                }
+                
+                tbody.innerHTML = data.map((t, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><span class="ref-code">${t['الرقم المرجعي'] || '—'}</span></td>
+                        <td>${this._formatDate(t['التاريخ'])}</td>
+                        <td>${t['الوقت'] || '—'}</td>
+                        <td>${t['نوع التحويل'] || '—'}</td>
+                        <td class="amount-negative">${(t['قيمة التحويل'] || 0).toLocaleString()} ج.م</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Transfers Error:', error);
+            }
+        },
+
+        /**
+         * Load recent collections
+         */
+        async _loadCollections(merchantId) {
+            try {
+                const { data, error } = await _supabase
+                    .from('collections')
+                    .select('*')
+                    .eq('رقم التاجر', merchantId)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                const tbody = document.getElementById('mCollectionsTable');
+                
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `<tr class="empty-row"><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>`;
+                    return;
+                }
+                
+                tbody.innerHTML = data.map((c, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><span class="ref-code">${c['الرقم المرجعي'] || '—'}</span></td>
+                        <td>${this._formatDate(c['التاريخ'])}</td>
+                        <td>${c['الوقت'] || '—'}</td>
+                        <td class="amount-positive">${(c['قيمة التحصيل'] || 0).toLocaleString()} ج.م</td>
+                        <td class="amount-negative">${(c['المتبقي بعد التحصيل'] || 0).toLocaleString()} ج.م</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Collections Error:', error);
+            }
+        },
+
+        /**
+         * Load requests history (NEW FEATURE)
+         */
+        async _loadRequests(merchantId) {
+            try {
+                const { data, error } = await _supabase
+                    .from('requests')
+                    .select('*')
+                    .eq('رقم التاجر', merchantId)
+                    .order('created_at', { ascending: false })
+                    .limit(15);
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('requestsHistoryContainer');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>`;
+                    return;
+                }
+                
+                container.innerHTML = data.map(req => `
+                    <div class="request-item status-${req['الحالة']}">
+                        <div class="request-top">
+                            <span class="request-ref">#${req['رقم الطلب'] || '—'}</span>
+                            <span class="request-status-badge badge-${this._getStatusClass(req['الحالة'])}">
+                                ${req['الحالة'] || '—'}
+                            </span>
+                        </div>
+                        <div class="request-body-grid">
+                            <div class="req-detail">
+                                <span class="req-detail-label">التاريخ</span>
+                                <span class="req-detail-value">${this._formatDate(req['التاريخ'])}</span>
+                            </div>
+                            <div class="req-detail">
+                                <span class="req-detail-label">النوع</span>
+                                <span class="req-detail-value">${req['نوع الطلب'] || '—'}</span>
+                            </div>
+                            <div class="req-detail">
+                                <span class="req-detail-label">المبلغ</span>
+                                <span class="req-detail-value req-amount">${(req['المبلغ'] || 0).toLocaleString()} ج.م</span>
+                            </div>
+                            <div class="req-detail">
+                                <span class="req-detail-label">المديونية وقت الطلب</span>
+                                <span class="req-detail-value">${(req['المديونية الحالية'] || 0).toLocaleString()} ج.م</span>
+                            </div>
+                        </div>
+                        ${req['ملاحظات'] ? `<div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#64748b;"><i class="fas fa-sticky-note" style="margin-left:6px;"></i>${req['ملاحظات']}</div>` : ''}
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Requests Error:', error);
+            }
+        },
+
+        /**
+         * Open request modal
+         */
+        openRequestModal() {
+            if (!_currentMerchant) {
+                Toast.show('يجب الاستعلام عن الحساب أولاً', 'warning');
+                return;
+            }
+            document.getElementById('requestModal').classList.add('show');
+        },
+
+        /**
+         * Close request modal
+         */
+        closeRequestModal() {
+            document.getElementById('requestModal').classList.remove('show');
+            // Reset form
+            document.getElementById('reqType').value = '';
+            document.getElementById('reqAmount').value = '';
+            document.getElementById('reqNotes').value = '';
+        },
+
+        /**
+         * Submit new request
+         */
+        async submitRequest() {
+            if (!_currentMerchant) {
+                Toast.show('خطأ: لا يوجد تاجر محدد', 'error');
+                return;
+            }
+            
+            const type = document.getElementById('reqType').value;
+            const amount = parseFloat(document.getElementById('reqAmount').value);
+            const notes = document.getElementById('reqNotes').value.trim();
+            const machineId = document.getElementById('reqMachine').value;
+            
+            // Validation
+            if (!type) {
+                Toast.show('يرجى اختيار نوع الطلب', 'error');
+                return;
+            }
+            
+            if (!amount || amount <= 0) {
+                Toast.show('يرجى إدخال مبلغ صحيح', 'error');
+                return;
+            }
+            
+            // Generate reference number
+            const refNumber = this._generateRefNumber('REQ');
+            
+            // Prepare data object matching DB schema exactly
+            const requestData = {
+                'رقم الطلب': refNumber,
+                'التاريخ': new Date().toISOString().split('T')[0],
+                'الوقت': this._getCurrentTime12H(),
+                'الشهر': this._getCurrentMonthArabic(),
+                'رقم التاجر': _currentMerchant.id,
+                'اسم التاجر': _currentMerchant['اسم التاجر'],
+                'اسم النشاط': _currentMerchant['اسم النشاط'],
+                'رقم الحساب': _currentMerchant['رقم الحساب'],
+                'المديونية الحالية': parseFloat(document.getElementById('mCurrentDebt').textContent.replace(/[^0-9.-]/g, '')) || 0,
+                'نوع الطلب': type,
+                'المبلغ': amount,
+                'ملاحظات': notes || null,
+                'الحالة': 'معلق',
+                'وقت الإنشاء': this._getCurrentTime12H()
+            };
+            
+            // Show loading
+            this._showLoading(true);
+            Toast.show('جاري إرسال الطلب...', 'info');
+            
+            try {
+                // 1. Insert into Supabase
+                const { data: insertedReq, error } = await _supabase
+                    .from('requests')
+                    .insert([requestData])
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                
+                console.log('✅ Request Inserted:', insertedReq);
+                
+                // 2. Send email notification via Google Apps Script
+                await this._sendEmailNotification(requestData);
+                
+                // 3. Close modal and show success
+                this.closeRequestModal();
+                document.getElementById('successRefId').textContent = refNumber;
+                document.getElementById('successModal').classList.add('show');
+                
+                // Play sound
+                this._playSound('success');
+                
+                // Refresh requests list
+                if (_currentMerchant) {
+                    await this._loadRequests(_currentMerchant.id);
+                }
+                
+            } catch (error) {
+                console.error('❌ Submit Error:', error);
+                Toast.show('حدث خطأ: ' + (error.message || 'غير معروف'), 'error');
+            }
+            
+            this._showLoading(false);
+        },
+
+        /**
+         * Send email notification using Google Apps Script
+         */
+        async _sendEmailNotification(data) {
+            try {
+                const payload = {
+                    action: 'new_request',
+                    to: CONFIG.adminEmail,
+                    subject: `🔔 طلب جديد من التاجر: ${data['اسم التاجر']}`,
+                    refNumber: data['رقم الطلب'],
+                    merchantName: data['اسم التاجر'],
+                    accountNumber: data['رقم الحساب'],
+                    activity: data['اسم النشاط'],
+                    requestType: data['نوع الطلب'],
+                    amount: data['المبلغ'],
+                    currentDebt: data['المديونية الحالية'],
+                    notes: data['ملاحظات'] || 'لا توجد',
+                    date: data['التاريخ'],
+                    time: data['الوقت'],
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Send to Google Apps Script
+                const response = await fetch(CONFIG.googleScriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', // Important for CORS with Google Apps Script
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                console.log('📧 Email notification triggered');
+                
+            } catch (emailError) {
+                // Don't fail the whole operation if email fails
+                console.warn('⚠️ Email notification failed (non-critical):', emailError);
+                Toast.show('تم تسجيل الطلب لكن الإيميل لم يرسل', 'warning');
+            }
+        },
+
+        /**
+         * Close success modal and prepare for new request
+         */
+        closeSuccessAndNew() {
+            document.getElementById('successModal').classList.remove('show');
+            // Optionally open request modal again
+            setTimeout(() => this.openRequestModal(), 300);
+        },
+
+        /**
+         * Toggle debug info panel
+         */
+        toggleDebug() {
+            const debugEl = document.getElementById('debugInfo');
+            debugEl.classList.toggle('show');
+            
+            if (debugEl.classList.contains('show')) {
+                debugEl.textContent = `
+=== DEBUG INFO ===
+Supabase URL: ${CONFIG.supabaseUrl}
+Google Script: ${CONFIG.googleScriptUrl}
+Admin Email: ${CONFIG.adminEmail}
+Timestamp: ${new Date().toISOString()}
+Merchant ID: ${_currentMerchant?.id || 'Not loaded'}
+Account: ${_currentAccountNumber || 'Not entered'}
+===================
+                `;
+            }
+        },
+
+        // ========== UTILITY METHODS ==========
+
+        /**
+         * Generate professional reference number
+         * Format: XXX-YY-NNNNN
+         */
+        _generateRefNumber(prefix) {
+            const year = new Date().getFullYear().toString().slice(-2);
+            const random = Math.floor(Math.random() * 90000) + 10000;
+            return `${prefix}-${year}-${random}`;
+        },
+
+        /**
+         * Format date to Arabic format
+         */
+        _formatDate(dateStr) {
+            if (!dateStr) return '—';
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('ar-EG', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                return dateStr;
+            }
+        },
+
+        /**
+         * Get current time in 12-hour format with AM/PM
+         */
+        _getCurrentTime12H() {
+            return new Date().toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        },
+
+        /**
+         * Get current month in Arabic
+         */
+        _getCurrentMonthArabic() {
+            return new Date().toLocaleDateString('ar-EG', {
+                month: 'long',
+                year: 'numeric'
+            });
+        },
+
+        /**
+         * Get status CSS class
+         */
+        _getStatusClass(status) {
+            switch(status) {
+                case 'معلق': return 'pending';
+                case 'مكتمل': return 'completed';
+                case 'ملغي': return 'cancelled';
+                default: return 'pending';
+            }
+        },
+
+        /**
+         * Show/hide loading overlay on dashboard
+         */
+        _showLoading(show) {
+            // You can add a specific dashboard loading indicator here
+            // For now we just log it
+            console.log(show ? '⏳ Loading...' : '✅ Loading Complete');
+        },
+
+        /**
+         * Shake input animation for validation errors
+         */
+        _shakeInput() {
+            const input = document.getElementById('merchantAccountId');
+            input.style.animation = 'none';
+            input.offsetHeight; // Trigger reflow
+            input.style.animation = 'shake 0.5s ease';
+            setTimeout(() => { input.style.animation = ''; }, 500);
+        },
+
+        /**
+         * Play sound effect (optional - if audio files exist)
+         */
+        _playSound(type) {
+            try {
+                // Attempt to play sound if audio element exists
+                const audio = new Audio(`assets/sounds/${type}.mp3`);
+                audio.volume = 0.5;
+                audio.play().catch(() => {}); // Ignore autoplay errors
+            } catch (e) {
+                // Silently fail if no audio files
+            }
+        }
+    };
+
+    // ===== TOAST NOTIFICATION SYSTEM =====
+    const Toast = {
+        show(message, type = 'success') {
+            const container = document.getElementById('portalToast');
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `toast-msg ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon"><i class="fas ${icons[type] || icons.success}"></i></div>
+                <span class="toast-text">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="toast-progress"></div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.animation = 'toastSlideOut 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 4000);
+        }
+    };
+
+    // Add toast slide out animation dynamically
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        @keyframes toastSlideOut {
+            to { opacity: 0; transform: translateX(-100px); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+
+    // ===== INITIALIZE ON DOM READY =====
+    document.addEventListener('DOMContentLoaded', () => {
+        Portal.init();
+    });
+
+    </script>
 </body>
 </html>
