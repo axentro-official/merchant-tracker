@@ -1600,6 +1600,7 @@
      * ✅ Added: Sound Manager with Web Audio API
      * ✅ Enhanced: Performance & UX improvements
      * ✅ Connected: To your Supabase database
+     * ✅ NEW: TimeFormatter for proper DB time formatting
      */
 
     // ===== CONFIGURATION =====
@@ -1617,7 +1618,7 @@
     let _currentMerchant = null;
     let _currentAccountNumber = null;
 
-    // ===== SOUND MANAGER (NEW!) =====
+    // ===== SOUND MANAGER =====
     const Sound = {
         audioContext: null,
         enabled: true,
@@ -1683,6 +1684,44 @@
         toggle() { this.enabled = !this.enabled; }
     };
 
+    // ===== TIME FORMATTER FOR DATABASE (NEW!) =====
+    const TimeFormatter = {
+        // Returns time in format: "18:22:07" (24-hour, no timezone)
+        getCurrentTimeShort() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-GB', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false 
+            });
+        },
+        
+        // Returns time in format: "06:22:07 PM" (12-hour with AM/PM) - FOR DISPLAY ONLY
+        getCurrentTime12H() {
+            return new Date().toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        },
+        
+        // Returns FULL timestamp for DB columns of type "timestamp with time zone"
+        // Format: "2026-01-15 18:22:07+02"
+        getCurrentTimestampWithTZ() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}${tz}`;
+        }
+    };
+
     // ===== PORTAL OBJECT =====
     const Portal = {
         
@@ -1706,7 +1745,7 @@
             const accountNum = document.getElementById('merchantAccountId').value.trim();
             
             if (!accountNum) {
-                Toast.show('يرجى إدخل رقم الحساب', 'error');
+                Toast.show('يرجى إدخال رقم الحساب', 'error');
                 Sound.playError();
                 this._shakeInput();
                 return;
@@ -1869,7 +1908,7 @@
                         <td>${i+1}</td>
                         <td><span class="ref-code">${t['الرقم المرجعي'] || '—'}</span></td>
                         <td>${this._formatDate(t['التاريخ'])}</td>
-                        <td>${t['الوقت'] || '—'}</td>
+                        <td>${this._formatTimeForDisplay(t['الوقت'])}</td>
                         <td>${t['نوع التحويل'] || '—'}</td>
                         <td class="amount-negative">${(t['قيمة التحويل'] || 0).toLocaleString()} ج.م</td>
                     </tr>
@@ -1900,7 +1939,7 @@
                         <td>${i+1}</td>
                         <td><span class="ref-code">${c['الرقم المرجعي'] || '—'}</span></td>
                         <td>${this._formatDate(c['التاريخ'])}</td>
-                        <td>${c['الوقت'] || '—'}</td>
+                        <td>${this._formatTimeForDisplay(c['الوقت'])}</td>
                         <td class="amount-positive">${(c['قيمة التحصيل'] || 0).toLocaleString()} ج.م</td>
                         <td class="amount-negative">${(c['المتبقي بعد التحصيل'] || 0).toLocaleString()} ج.م</td>
                     </tr>
@@ -1987,20 +2026,20 @@
                 return; 
             }
             
-            // ✅ FIXED: Time format compatible with PostgreSQL TIME type
-            const currentTimeFormatted = new Date().toLocaleTimeString('en-GB', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false // 24-hour format: "18:04:30"
-            });
-            
-            // ✅ FIXED: Removed 'الشهر' - Trigger handles it!
+            // ✅ FIXED: Use proper timestamp format for DB!
             const requestData = {
                 'رقم الطلب': this._generateRefNumber('REQ'),
+                
+                // ✅ Date: YYYY-MM-DD
                 'التاريخ': new Date().toISOString().split('T')[0],
-                'الوقت': currentTimeFormatted,  // ✅ NOW COMPATIBLE!
-                // ⚠️ Don't send 'الشهر' - DB Trigger handles it
+                
+                // ✅ Time: HH:MM:SS (compatible with timestamp with time zone)
+                'الوقت': TimeFormatter.getCurrentTimeShort(),
+                
+                // ✅ OR use full timestamp if needed:
+                // 'وقت الإنشاء': TimeFormatter.getCurrentTimestampWithTZ(),
+                
+                // ⚠️ Don't send 'الشهر' - Trigger handles it automatically!
                 'رقم التاجر': _currentMerchant.id,
                 'اسم التاجر': _currentMerchant['اسم التاجر'],
                 'اسم النشاط': _currentMerchant['اسم النشاط'],
@@ -2010,17 +2049,17 @@
                 'المبلغ': amount,
                 'ملاحظات': notes || null,
                 'الحالة': 'معلق',
-                'وقت الإنشاء': currentTimeFormatted  // ✅ Same fixed format
+                'وقت الإنشاء': TimeFormatter.getCurrentTimeShort()
             };
             
-            // ... باقي الكود كما هو بدون تغيير ...
+            console.log('📤 Request Data:', requestData); // For debugging
             
             this._showLoading(true);
             Toast.show('جاري إرسال الطلب...', 'info');
             Sound.playClick();
             
             try {
-                // Insert into DB - Trigger generates رقم الطلب automatically!
+                // Insert into DB
                 const { data: insertedReq, error } = await _supabase
                     .from('requests')
                     .insert([requestData])
@@ -2031,7 +2070,7 @@
                 
                 console.log('✅ Request Saved:', insertedReq);
                 
-                // Send email notification
+                // Send email
                 await this._sendEmailNotification(requestData);
                 
                 // Show success
@@ -2041,7 +2080,6 @@
                 
                 Sound.playSuccess();
                 
-                // Refresh requests
                 if (_currentMerchant) await this._loadRequests(_currentMerchant.id);
                 
             } catch (error) {
@@ -2125,6 +2163,7 @@
    • Calculated Fields
    • Email Notifications
    • Sound Effects
+   • TimeFormatter (NEW!)
 
 🎯 Last Action: User viewing debug info
                 `;
@@ -2148,6 +2187,31 @@
 
         _getCurrentTime12H() {
             return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        },
+
+        /**
+         * Format time value for display in tables
+         * Handles both ISO strings and simple time formats
+         * @param {string|Date} timeValue - The time value from database
+         * @returns {string} Formatted Arabic time string
+         */
+        _formatTimeForDisplay(timeValue) {
+            if (!timeValue) return '—';
+            
+            try {
+                // Try to parse as ISO string first
+                const date = new Date(timeValue);
+                if (!isNaN(date.getTime())) {
+                    return date.toLocaleTimeString('ar-EG', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                }
+            } catch (e) {
+                // If not a date, return as-is or format differently
+                return timeValue;
+            }
         },
 
         _getStatusClass(status) {
