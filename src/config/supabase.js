@@ -1,7 +1,7 @@
 /**
  * Supabase Configuration & Client Initialization
- * Handles database connection setup and configuration
- * @version 4.5.0
+ * Enhanced version with better error handling and security
+ * @version 5.0.0
  */
 
 // ============================================================
@@ -21,35 +21,44 @@ export const CONFIG = {
     // Auto-refresh interval (5 minutes)
     AUTO_REFRESH_INTERVAL: 300000,
     
-    // AI Configuration (prepared for future integration)
+    // Request check interval (5 minutes)
+    REQUEST_CHECK_INTERVAL: 300000,
+    
+    // AI Configuration (Hybrid System)
     AI_CONFIG: {
-        // Set to true to enable AI features
         ENABLED: true,
-        // AI endpoint URL (leave empty to use rules engine)
-        ENDPOINT_URL: '',
-        // API Key (leave empty for rules-only mode)
-        API_KEY: '',
-        // Model name (for OpenAI/Ollama)
+        ENDPOINT_URL: '', // Leave empty for rules-only mode
+        API_KEY: '',      // Leave empty for rules-only mode
         MODEL: '',
-        // Maximum tokens for response
         MAX_TOKENS: 500
     },
     
     // Application Settings
     APP_NAME: 'Axentro System',
-    APP_VERSION: '4.5.0',
-    PASSWORD: 'admin123' // Default password (should be environment variable in production)
+    APP_VERSION: '5.0.0',
+    
+    // Reference Number Generation
+    REFERENCE_PREFIX: {
+        MERCHANT: 'MR',
+        MACHINE: 'MC',
+        TRANSFER: 'TR',
+        COLLECTION: 'CL',
+        REQUEST: 'RQ'
+    },
+    
+    // Date/Time Format
+    DATE_FORMAT: 'DD/MM/YYYY',
+    TIME_FORMAT: 'hh:mm A' // 12-hour format with AM/PM
 };
 
 // ============================================================
-// SUPABASE CLIENT INSTANCE
+// SUPABASE CLIENT INSTANCE (Singleton Pattern)
 // ============================================================
 let supabaseClient = null;
 
 /**
  * Initialize Supabase client connection
  * @returns {boolean} Success status
- * @throws {Error} If initialization fails critically
  */
 export function initSupabase() {
     try {
@@ -100,10 +109,119 @@ export function isSupabaseReady() {
 export async function testConnection() {
     try {
         const supabase = getSupabase();
-        const { data, error } = await supabase.from('merchants').select('count', { count: 'exact', head: true }).limit(1);
+        const { data, error } = await supabase
+            .from('settings')
+            .select('id')
+            .limit(1);
+        
         return !error;
     } catch (error) {
         console.error('Connection test failed:', error.message);
         return false;
     }
+}
+
+/**
+ * Generate professional reference number
+ * @param {string} prefix - Prefix for the reference (MR, MC, TR, CL, RQ)
+ * @returns {string} Generated reference number
+ */
+export function generateReferenceNumber(prefix) {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${prefix}-${timestamp}-${random}`;
+}
+
+/**
+ * Format date to Arabic format (DD/MM/YYYY)
+ * @param {Date|string} date - Date to format
+ * @returns {string} Formatted date string
+ */
+export function formatDate(date) {
+    if (!date) return '-';
+    
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+}
+
+/**
+ * Format time to 12-hour format with AM/PM
+ * @param {Date|string} time - Time to format
+ * @returns {string} Formatted time string (HH:MM AM/PM)
+ */
+export function formatTime(time) {
+    if (!time) return '-';
+    
+    let d;
+    if (typeof time === 'string') {
+        // Handle both date strings and time strings
+        if (time.includes('T') || time.includes('-')) {
+            d = new Date(time);
+        } else {
+            // Assume it's a time string like "14:30"
+            const [hours, minutes] = time.split(':');
+            d = new Date();
+            d.setHours(parseInt(hours), parseInt(minutes || 0));
+        }
+    } else {
+        d = new Date(time);
+    }
+    
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    
+    hours = hours % 12;
+    hours = hours ? hours : 12; // Convert 0 to 12
+    hours = String(hours).padStart(2, '0');
+    
+    return `${hours}:${minutes} ${ampm}`;
+}
+
+/**
+ * Format money/currency
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted currency string
+ */
+export function formatMoney(amount) {
+    if (amount === null || amount === undefined) return '0.00';
+    return parseFloat(amount).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+/**
+ * Normalize Arabic text for search/comparison
+ * @param {string} text - Text to normalize
+ * @returns {string} Normalized text
+ */
+export function normalizeText(text) {
+    if (!text) return '';
+    return text
+        .toString()
+        .trim()
+        .replace(/[إأآا]/g, 'ا')
+        .replace(/ى/g, 'ي')
+        .replace(/ؤ/g, 'و')
+        .replace(/ئ/g, 'ي')
+        .replace(/ة/g, 'ه')
+        .replace(//g/g, 'غ')
+        .toLowerCase();
+}
+
+/**
+ * Escape HTML to prevent XSS
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text
+ */
+export function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
