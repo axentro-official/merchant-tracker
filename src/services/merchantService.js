@@ -1,105 +1,161 @@
 /**
- * Merchant Service
- * Business logic for merchant operations
- * @version 4.5.0
+ * Merchant Service - Enhanced Version
+ * Handles all merchant-related database operations
+ * Schema matches: merchants table with Arabic columns
+ * @version 5.0.0
  */
 
-import { fetchAll, insertRecord, updateRecord, deleteRecord } from './dbService.js';
+import { fetchAll, insertRecord, updateRecord, deleteRecord, fetchByColumn } from './dbService.js';
+import { CONFIG, generateReferenceNumber } from '../config/supabase.js';
 
 /**
  * Get all merchants
  * @returns {Promise<Array>} Array of merchants
  */
 export async function getAllMerchants() {
-    return fetchAll('merchants', { orderBy: 'created_at.asc' });
+    return await fetchAll('merchants', {
+        orderBy: 'created_at.desc'
+    });
 }
 
 /**
- * Create a new merchant
- * @param {Object} merchantData - Merchant information
+ * Get merchant by ID
+ * @param {string} id - Merchant UUID
+ * @returns {Promise<Object|null>} Merchant object or null
+ */
+export async function getMerchantById(id) {
+    const merchants = await fetchByColumn('merchants', 'id', id);
+    return merchants.length > 0 ? merchants[0] : null;
+}
+
+/**
+ * Find merchant by merchant number (رقم التاجر)
+ * @param {string} merchantNumber - Merchant number
+ * @returns {Promise<Object|null>} Merchant object or null
+ */
+export async function findByMerchantNumber(merchantNumber) {
+    const merchants = await fetchByColumn('merchants', 'رقم التاجر', merchantNumber);
+    return merchants.length > 0 ? merchants[0] : null;
+}
+
+/**
+ * Create new merchant with auto-generated number
+ * @param {Object} merchantData - Merchant data (without رقم التاجر)
  * @returns {Promise<Object>} Created merchant
  */
 export async function createMerchant(merchantData) {
-    const now = new Date().toISOString();
+    // Generate professional merchant number
+    const merchantNumber = generateReferenceNumber(CONFIG.REFERENCE_PREFIX.MERCHANT);
+    
     const newMerchant = {
-        ...merchantData,
-        created_at: now,
-        updated_at: now
+        'رقم التاجر': merchantNumber,
+        'اسم التاجر': merchantData['اسم التاجر'] || '',
+        'اسم النشاط': merchantData['اسم النشاط'] || '',
+        'رقم الهاتف': merchantData['رقم الهاتف'] || '',
+        'المنطقة': merchantData['المنطقة'] || '',
+        'العنوان': merchantData['العنوان'] || '',
+        'الحالة': merchantData['الحالة'] || 'نشط',
+        'ملاحظات': merchantData['ملاحظات'] || '',
+        'تاريخ الإنشاء': new Date().toISOString().split('T')[0],
+        'وقت الإنشاء': new Date().toTimeString().slice(0, 8),
+        'created_at': new Date().toISOString(),
+        'updated_at': new Date().toISOString()
     };
-    return insertRecord('merchants', newMerchant);
+    
+    return await insertRecord('merchants', newMerchant);
 }
 
 /**
- * Update an existing merchant
- * @param {string} merchantId - Merchant ID
+ * Update existing merchant
+ * @param {string} id - Merchant UUID
  * @param {Object} merchantData - Updated data
  * @returns {Promise<Object>} Updated merchant
  */
-export async function updateMerchant(merchantId, merchantData) {
-    const updatedData = {
+export async function updateMerchant(id, merchantData) {
+    const updateData = {
         ...merchantData,
-        updated_at: new Date().toISOString()
+        'updated_at': new Date().toISOString()
     };
-    return updateRecord('merchants', updatedData, 'رقم التاجر', merchantId);
+    
+    return await updateRecord('merchants', updateData, 'id', id);
 }
 
 /**
- * Delete a merchant
- * @param {string} merchantId - Merchant ID
+ * Delete merchant
+ * @param {string} id - Merchant UUID
  * @returns {Promise<boolean>} Success status
  */
-export async function removeMerchant(merchantId) {
-    return deleteRecord('merchants', 'رقم التاجر', merchantId);
+export async function deleteMerchant(id) {
+    return await deleteRecord('merchants', 'id', id);
 }
 
 /**
- * Find merchant by ID
- * @param {string} merchantId - Merchant ID
- * @param {Array} merchants - Local merchants array (optional optimization)
- * @returns {Object|null} Merchant object or null
- */
-export function findMerchantById(merchantId, merchants = null) {
-    const list = merchants || [];
-    return list.find(m => m['رقم التاجر'] == merchantId) || null;
-}
-
-/**
- * Generate next merchant ID
- * @param {Array} merchants - Current merchants array
- * @returns {string} New ID
- */
-export function generateMerchantId(merchants) {
-    const maxId = merchants.reduce((max, m) => {
-        const id = parseInt(m['رقم التاجر']) || 0;
-        return Math.max(max, id);
-    }, 0);
-    return String(maxId + 1).padStart(4, '0');
-}
-
-/**
- * Search merchants by term
+ * Search merchants by name or phone
  * @param {string} searchTerm - Search term
- * @param {Array} merchants - Merchants array
- * @param {Function} normalizeFn - Normalization function
- * @returns {Array} Filtered merchants
+ * @returns {Promise<Array>} Matching merchants
  */
-export function searchMerchants(searchTerm, merchants, normalizeFn) {
-    if (!searchTerm) return merchants;
+export async function searchMerchants(searchTerm) {
+    if (!searchTerm || searchTerm.trim() === '') {
+        return await getAllMerchants();
+    }
     
-    const normalizedTerm = normalizeFn(searchTerm).toLowerCase();
-    return merchants.filter(m => 
-        normalizeText(m['اسم التاجر']).toLowerCase().includes(normalizedTerm) ||
-        m['رقم التاجر']?.toString().includes(searchTerm)
-    );
+    // This is a simple implementation - for production, consider using PostgreSQL full-text search
+    const allMerchants = await getAllMerchants();
+    const term = searchTerm.toLowerCase().trim();
+    
+    return allMerchants.filter(merchant => {
+        const name = (merchant['اسم التاجر'] || '').toLowerCase();
+        const phone = (merchant['رقم الهاتف'] || '').toLowerCase();
+        const activity = (merchant['اسم النشاط'] || '').toLowerCase();
+        const region = (merchant['المنطقة'] || '').toLowerCase();
+        const number = (merchant['رقم التاجر'] || '').toLowerCase();
+        
+        return name.includes(term) || 
+               phone.includes(term) || 
+               activity.includes(term) ||
+               region.includes(term) ||
+               number.includes(term);
+    });
 }
 
-/** Internal normalize helper */
-function normalizeText(str) {
-    return (str || '').toString()
-        .trim()
-        .replace(/[إأآا]/g, 'ا')
-        .replace(/[ة]/g, 'ه')
-        .replace(/[يى]/g, 'ي')
-        .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '')
-        .toLowerCase();
+/**
+ * Get merchant select options (for dropdowns)
+ * @returns {Promise<Array>} Array of {value, label} objects
+ */
+export async function getMerchantSelectOptions() {
+    const merchants = await getAllMerchants();
+    
+    return merchants.map(m => ({
+        value: m['رقم التاجر'],
+        label: `${m['رقم التاجر']} - ${m['اسم التاجر']}`,
+        name: m['اسم التاجر'],
+        activity: m['اسم النشاط'],
+        phone: m['رقم الهاتف'],
+        region: m['المنطقة'],
+        address: m['العنوان'],
+        id: m['id']
+    }));
+}
+
+/**
+ * Calculate merchant balance (transfers - collections)
+ * @param {string} merchantNumber - Merchant number
+ * @param {Array} transfers - All transfers
+ * @param {Array} collections - All collections
+ * @returns {Object} Balance info {totalTransfers, totalCollections, balance}
+ */
+export function calculateMerchantBalance(merchantNumber, transfers, collections) {
+    const merchantTransfers = transfers.filter(t => t['رقم التاجر'] === merchantNumber);
+    const merchantCollections = collections.filter(c => c['رقم التاجر'] === merchantNumber);
+    
+    const totalTransfers = merchantTransfers.reduce((sum, t) => sum + (parseFloat(t['قيمة التحويل']) || 0), 0);
+    const totalCollections = merchantCollections.reduce((sum, c) => sum + (parseFloat(c['قيمة التحصيل']) || 0), 0);
+    
+    return {
+        totalTransfers,
+        totalCollections,
+        balance: totalTransfers - totalCollections,
+        transferCount: merchantTransfers.length,
+        collectionCount: merchantCollections.length
+    };
 }
