@@ -18,7 +18,7 @@
     <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233b82f6'/%3E%3Ctext x='50' y='68' font-family='Arial' font-size='50' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
 
-    <!-- ✅ Supabase SDK - مهم جداً تحميله قبل أي كود -->
+    <!-- ✅ Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -61,7 +61,7 @@
             --danger-light: rgba(239, 68, 68, 0.15);
             --warning: #f59e0b;
             --warning-light: rgba(245, 158, 11, 0.15);
-            --purple: #8b5cf6;  /* ✅ اللون الصحيح */
+            --purple: #8b5cf6;
             --purple-light: rgba(139, 92, 246, 0.15);
             --text-primary: #f9fafb;
             --text-secondary: #9ca3af;
@@ -94,7 +94,11 @@
             min-height: 100vh;
             min-height: -webkit-fill-available;
         }
-        #bootScreen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        #bootScreen.hidden { 
+            opacity: 0; 
+            visibility: hidden; 
+            pointer-events: none; 
+        }
 
         .boot-container {
             width: 100%;
@@ -183,7 +187,10 @@
             opacity: 0;
             transition: opacity 0.5s ease;
         }
-        #mainApp.visible { display: block; opacity: 1; }
+        #mainApp.visible { 
+            display: block; 
+            opacity: 1; 
+        }
 
         /* ===== SIDEBAR NAVIGATION ===== */
         .app-layout {
@@ -300,6 +307,8 @@
             padding: 24px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
         }
 
         /* ===== TOP HEADER ===== */
@@ -348,10 +357,10 @@
         }
         .icon-btn:hover { background: var(--bg-secondary); color: var(--primary-light); border-color: var(--primary); }
 
-        /* ===== LOGIN SECTION ===== */
+        /* ===== LOGIN SECTION - محسّن ===== */
         .login-container {
             max-width: 480px;
-            margin: 80px auto;
+            margin: 40px auto;
             padding: 40px 32px;
             background: var(--bg-card);
             backdrop-filter: blur(20px);
@@ -361,6 +370,7 @@
             box-shadow: var(--shadow-lg);
             position: relative;
             overflow: hidden;
+            width: 100%;
         }
         .login-container::before {
             content: '';
@@ -394,7 +404,7 @@
         .login-title { font-size: 26px; font-weight: 900; margin-bottom: 8px; color: var(--text-primary); }
         .login-desc { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; line-height: 1.7; }
 
-        /* QR Scanner Section */
+        /* ✅ QR Scanner Section - قابل للضغط */
         .qr-scanner-area {
             background: var(--bg-primary);
             border: 2px dashed var(--border-color);
@@ -404,20 +414,37 @@
             margin-bottom: 32px;
             cursor: pointer;
             transition: all 0.3s ease;
+            text-decoration: none !important;
+            display: block;
         }
         .qr-scanner-area:hover {
             border-color: var(--primary);
             background: rgba(59, 130, 246, 0.05);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
         }
         .qr-code-img {
-            width: 120px;
-            height: 120px;
+            width: 150px;
+            height: 150px;
             border-radius: var(--radius-md);
-            padding: 8px;
+            padding: 12px;
             background: white;
             margin: 0 auto 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
         }
-        .qr-hint { font-size: 13px; color: var(--text-muted); margin-top: 12px; }
+        .qr-hint { 
+            font-size: 15px; 
+            font-weight: 700; 
+            color: var(--primary-light); 
+            margin-top: 16px; 
+            animation: pulse-text 2s infinite;
+        }
+        
+        /* ✅ Pulse Animation for "Scan me" text */
+        @keyframes pulse-text {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.02); }
+        }
 
         /* Form Elements */
         .form-group { margin-bottom: 20px; position: relative; }
@@ -618,6 +645,30 @@
             box-shadow: var(--shadow-md);
         }
 
+        /* ===== ✅ FOOTER ===== */
+        .app-footer {
+            margin-top: auto;
+            padding: 24px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .footer-copyright {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .footer-team {
+            font-size: 12px;
+            color: var(--primary-light);
+            font-weight: 700;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .app-layout { grid-template-columns: 1fr; }
@@ -642,11 +693,11 @@
             .header-left { flex-wrap: wrap; }
             .dashboard-grid { grid-template-columns: 1fr; }
             .btn-group { flex-direction: column; }
-            .login-container { padding: 24px 20px; margin: 40px 12px; }
+            .login-container { padding: 24px 20px; margin: 20px 12px; }
             .login-avatar { width: 70px; height: 70px; font-size: 28px; }
             .login-title { font-size: 22px; }
             .qr-scanner-area { padding: 28px 20px; }
-            .qr-code-img { width: 90px; height: 90px; }
+            .qr-code-img { width: 120px; height: 120px; }
         }
 
         /* Safe Area for notch phones */
@@ -755,8 +806,8 @@
                 </div>
             </header>
 
-            <!-- LOGIN SECTION -->
-            <section id="section-login">
+            <!-- ✅ LOGIN SECTION - مصحح بالكامل -->
+            <section id="section-login" style="display:flex;min-height:calc(100vh - 120px);align-items:center;justify-content:center;">
                 <div class="login-container">
                     <div class="login-header">
                         <div class="login-avatar"><i class="fas fa-user-shield"></i></div>
@@ -764,13 +815,15 @@
                         <p class="login-desc">سجلب مسح الضوئي أو أدخل بياناتك للدخول</p>
                     </div>
 
-                    <!-- QR Scanner -->
-                    <div class="qr-scanner-area" onclick="startScanner()">
+                    <!-- ✅ QR Scanner - قابل للضغط ويفتح اللينك المطلوب -->
+                    <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" class="qr-scanner-area">
                         <div class="qr-code-img">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://axentro-official.github.io/merchant-tracker/" alt="QR Code" style="width:100%;height:100%;object-fit:contain;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://axentro-official.github.io/axentro-website/links.html&color=0a0f1e&bgcolor=ffffff" alt="QR Code" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
                         </div>
-                        <div class="qr-hint">امسح للدخول السريع</div>
-                    </div>
+                        <div class="qr-hint">
+                            📱 Scan me &lt; Click On Me
+                        </div>
+                    </a>
 
                     <!-- Login Form -->
                     <div class="form-group">
@@ -783,7 +836,7 @@
                             <i class="fas fa-sign-in-alt"></i>
                             تسجيل الدخول
                         </button>
-                        <button class="btn btn-outline" onclick="playClick()">
+                        <button class="btn btn-outline" onclick="window.open('https://axentro-official.github.io/axentro-website/links.html','_blank')">
                             <i class="fas fa-qrcode"></i>
                             مسح ضوئي
                         </button>
@@ -873,216 +926,83 @@
                 </div>
             </section>
 
-            <!-- MERCHANTS SECTION -->
+            <!-- Other Sections (hidden by default) -->
             <section id="section-merchants" style="display:none;">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <div class="dash-card-title">
-                            <i class="fas fa-users" style="color:var(--primary)"></i>
-                            <span>قائمة التجار</span>
-                        </div>
-                        <button class="btn btn-primary" onclick="showAddMerchantModal()" style="padding:8px 16px;font-size:13px;">
-                            <i class="fas fa-plus"></i>
-                            إضافة تاجر
-                        </button>
+                        <div class="dash-card-title"><i class="fas fa-users" style="color:var(--primary)"></i><span>قائمة التجار</span></div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>اسم التاجر</th>
-                                    <th>رقم الهاتف</th>
-                                    <th>المنطقة</th>
-                                    <th>عدد المكن</th>
-                                    <th>الرصيد</th>
-                                    <th>إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="merchantsTableBody">
-                                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px;">جاري التحميل...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <p style="text-align:center;color:var(--text-muted);padding:40px;">قيد التطوير...</p>
                 </div>
             </section>
 
-            <!-- MACHINES SECTION -->
             <section id="section-machines" style="display:none;">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <div class="dash-card-title">
-                            <i class="fas fa-desktop" style="color:var(--success)"></i>
-                            <span>قائمة المكن</span>
-                        </div>
-                        <button class="btn btn-primary" onclick="showAddMachineModal()" style="padding:8px 16px;font-size:13px;">
-                            <i class="fas fa-plus"></i>
-                            إضافة مكنة
-                        </button>
+                        <div class="dash-card-title"><i class="fas fa-desktop" style="color:var(--success)"></i><span>قائمة المكن</span></div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>رقم المكنة</th>
-                                    <th>التاجر</th>
-                                    <th>الموقع</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
-                                    <th>إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="machinesTableBody">
-                                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px;">جاري التحميل...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <p style="text-align:center;color:var(--text-muted);padding:40px;">قيد التطوير...</p>
                 </div>
             </section>
 
-            <!-- TRANSFERS SECTION -->
             <section id="section-transfers" style="display:none;">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <div class="dash-card-title">
-                            <i class="fas fa-arrow-up" style="color:var(--purple)"></i>
-                            <span>سجل التحويلات</span>
-                        </div>
-                        <button class="btn btn-primary" onclick="showAddTransferModal()" style="padding:8px 16px;font-size:13px;">
-                            <i class="fas fa-plus"></i>
-                            تحويل جديد
-                        </button>
+                        <div class="dash-card-title"><i class="fas fa-arrow-up" style="color:var(--purple)"></i><span>سجل التحويلات</span></div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>رقم مرجعي</th>
-                                    <th>من</th>
-                                    <th>إلى</th>
-                                    <th>المبلغ</th>
-                                    <th>التاريخ</th>
-                                    <th>الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transfersTableBody">
-                                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px;">جاري التحميل...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <p style="text-align:center;color:var(--text-muted);padding:40px;">قيد التطوير...</p>
                 </div>
             </section>
 
-            <!-- COLLECTIONS SECTION -->
             <section id="section-collections" style="display:none;">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <div class="dash-card-title">
-                            <i class="fas fa-arrow-down" style="color:var(--success)"></i>
-                            <span>سجل التحصيلات</span>
-                        </div>
-                        <button class="btn btn-primary" onclick="showAddCollectionModal()" style="padding:8px 16px;font-size:13px;">
-                            <i class="fas fa-plus"></i>
-                            تحصيل جديد
-                        </button>
+                        <div class="dash-card-title"><i class="fas fa-arrow-down" style="color:var(--success)"></i><span>سجل التحصيلات</span></div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>رقم مرجعي</th>
-                                    <th>التاجر</th>
-                                    <th>المبلغ</th>
-                                    <th>المتبقي</th>
-                                    <th>التاريخ</th>
-                                    <th>الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody id="collectionsTableBody">
-                                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px;">جاري التحميل...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <p style="text-align:center;color:var(--text-muted);padding:40px;">قيد التطوير...</p>
                 </div>
             </section>
 
-            <!-- REQUESTS SECTION -->
             <section id="section-requests" style="display:none;">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <div class="dash-card-title">
-                            <i class="fas fa-file-alt" style="color:var(--warning)"></i>
-                            <span>طلبات التجار</span>
-                        </div>
+                        <div class="dash-card-title"><i class="fas fa-file-alt" style="color:var(--warning)"></i><span>طلبات التجار</span></div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>رقم مرجعي</th>
-                                    <th>التاجر</th>
-                                    <th>نوع الطلب</th>
-                                    <th>المبلغ</th>
-                                    <th>التاريخ</th>
-                                    <th>الحالة</th>
-                                    <th>إجراء</th>
-                                </tr>
-                            </thead>
-                            <tbody id="requestsTableBody">
-                                <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:40px;">جاري التحميل...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <p style="text-align:center;color:var(--text-muted);padding:40px;">قيد التطوير...</p>
                 </div>
             </section>
 
-            <!-- ARCHIVE SECTION -->
             <section id="section-archive" style="display:none;">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <div class="dash-card-title">
-                            <i class="fas fa-archive" style="color:var(--text-muted)"></i>
-                            <span>الأرشيف</span>
-                        </div>
+                        <div class="dash-card-title"><i class="fas fa-archive" style="color:var(--text-muted)"></i><span>الأرشيف</span></div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>النوع</th>
-                                    <th>الوصف</th>
-                                    <th>القيمة</th>
-                                    <th>تاريخ الأرشفة</th>
-                                    <th>بواسطة</th>
-                                </tr>
-                            </thead>
-                            <tbody id="archiveTableBody">
-                                <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:40px;">جاري التحميل...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <p style="text-align:center;color:var(--text-muted);padding:40px;">قيد التطوير...</p>
                 </div>
             </section>
+
+            <!-- ✅ FOOTER -->
+            <footer class="app-footer">
+                <div class="footer-content">
+                    <p class="footer-copyright">© 2024 Axentro – All Rights Reserved</p>
+                    <p class="footer-team">By Axentro Team ❤️</p>
+                </div>
+            </footer>
 
         </main>
     </div>
 </div>
 
-<!-- ✅ JavaScript مع معالجة الأخطاء -->
+<!-- JavaScript -->
 <script>
 // ============================================================
 // GLOBAL CONFIGURATION
 // ============================================================
 const CONFIG = {
-    PASSWORD: 'Axentro2024@Admin',  // كلمة المرور الافتراضية
+    PASSWORD: 'Axentro2024@Admin',
     SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
-    SESSION_DURATION: 24 * 60 * 60 * 1000 // 24 ساعة
+    SESSION_DURATION: 24 * 60 * 60 * 1000
 };
 
 // ============================================================
@@ -1148,7 +1068,7 @@ const UI = {
 };
 
 // ============================================================
-// BOOT SEQUENCE
+// ✅ BOOT SEQUENCE - مصحح
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Starting Axentro System...');
@@ -1188,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('bootScreen').classList.add('hidden');
                 Sound.play('boot');
                 
-                // التحقق من الجلسة
+                // ✅ التحقق من الجلسة وعرض الصفحة المناسبة
                 checkSessionAndShow();
             }, 500);
         }
@@ -1214,6 +1134,7 @@ function checkSessionAndShow() {
         }
     }
     
+    // ✅ عرض صفحة تسجيل الدخول
     showLogin();
 }
 
@@ -1231,17 +1152,38 @@ function clearSession() {
 }
 
 // ============================================================
-// NAVIGATION & DISPLAY
+// ✅ NAVIGATION & DISPLAY - مصحح
 // ============================================================
 function showLogin() {
-    document.getElementById('mainApp').classList.remove('visible');
-    document.getElementById('section-login').style.display = 'block';
-    document.getElementById('section-dashboard').style.display = 'none';
+    const mainApp = document.getElementById('mainApp');
+    const loginSection = document.getElementById('section-login');
+    
+    // إظهار التطبيق الرئيسي
+    mainApp.classList.add('visible');
+    mainApp.style.display = 'block';
+    
+    // ✅ إظهار قسم تسجيل الدخول فقط
+    loginSection.style.display = 'flex';
+    
+    // إخفاء باقي الأقسام
+    const sections = ['dashboard', 'merchants', 'machines', 'transfers', 'collections', 'requests', 'archive'];
+    sections.forEach(s => {
+        const el = document.getElementById(`section-${s}`);
+        if (el) el.style.display = 'none';
+    });
 }
 
 function showMainApp() {
-    document.getElementById('mainApp').classList.add('visible');
+    const mainApp = document.getElementById('mainApp');
+    
+    // إظهار التطبيق الرئيسي
+    mainApp.classList.add('visible');
+    mainApp.style.display = 'block';
+    
+    // إخفاء تسجيل الدخول
     document.getElementById('section-login').style.display = 'none';
+    
+    // إظهار لوحة التحكم
     document.getElementById('section-dashboard').style.display = 'block';
 }
 
@@ -1255,7 +1197,7 @@ function showSection(sectionName) {
     
     // إظهار القسم المطلوب
     const target = document.getElementById(`section-${sectionName}`);
-    if (target) target.style.display = 'block';
+    if (target) target.style.display = sectionName === 'login' ? 'flex' : 'block';
     
     // تحديث القائمة النشطة
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -1296,7 +1238,6 @@ async function adminLogin() {
         return;
     }
     
-    // نجاح تسجيل الدخول
     Sound.play('success');
     createSession();
     showMainApp();
@@ -1325,7 +1266,6 @@ function shakeElement(el) {
 async function refreshAll() {
     console.log('🔄 Refreshing all data...');
     try {
-        // محاكاة تحميل البيانات (يمكن استبداله بـ API calls حقيقية)
         await loadDashboardStats();
         UI.showToast('✅ تم تحديث البيانات', 'success');
     } catch (error) {
@@ -1335,7 +1275,6 @@ async function refreshAll() {
 }
 
 async function loadDashboardStats() {
-    // محاكاة - استبدل هذا بـ calls حقيقية لـ Supabase
     animateValue('totalMerchants', 0, 156, 1500);
     animateValue('totalMachines', 0, 342, 1500);
     animateValue('totalTransfers', 0, 45800, 2000);
@@ -1366,30 +1305,6 @@ function animateValue(elementId, start, end, duration) {
 
 function easeOutQuart(x) {
     return 1 - Math.pow(1 - x, 4);
-}
-
-// ============================================================
-// SCANNER (Placeholder)
-// ============================================================
-function startScanner() {
-    UI.showToast('🔍 سيتم فتح الماسح الضوئي...', 'info');
-    playClick();
-}
-
-// ============================================================
-// MODAL PLACEHOLDERS
-// ============================================================
-function showAddMerchantModal() {
-    UI.showToast('سيتم فتح نافذة إضافة تاجر', 'info');
-}
-function showAddMachineModal() {
-    UI.showToast('سيتم فتح نافذة إضافة مكنة', 'info');
-}
-function showAddTransferModal() {
-    UI.showToast('سيتم فتح نافذة تحويل جديد', 'info');
-}
-function showAddCollectionModal() {
-    UI.showToast('سيتم فتح نافذة تحصيل جديد', 'info');
 }
 
 // ============================================================
