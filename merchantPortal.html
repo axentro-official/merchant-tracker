@@ -1,2430 +1,552 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>بوابة التاجر - Axentro System v6.0</title>
-    
-    <!-- === Favicon SVG احترافي مدمج === -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%232563eb'/%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6'/%3E%3C/linearGradient%3E%3ClinearGradient id='shine' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23ffffff;stop-opacity:0.3'/%3E%3Cstop offset='100%25' style='stop-color:%23ffffff;stop-opacity:0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url(%23bg)'/%3E%3Crect width='100' height='100' rx='22' fill='url(%23shine)'/%3E%3Ctext x='50' y='68' font-family='Arial Black,sans-serif' font-size='55' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3Ccircle cx='78' cy='78' r='12' fill='%2310b981'/%3E%3Cpath d='M73 78 L76 81 L83 74' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-    
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232563eb'/%3E%3Ctext x='50' y='68' font-family='Arial Black,sans-serif' font-size='55' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- صوت النجاح -->
-    <audio id="successSound" src="src/assets/done.mp3" preload="auto"></audio>
-    
-    <style>
-        /* ===== المتغيرات ===== */
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --primary-light: #dbeafe;
-            --primary-ultra-light: #eff6ff;
-            --success: #10b981;
-            --success-light: #ecfdf5;
-            --danger: #ef4444;
-            --danger-light: #fef2f2;
-            --warning: #f59e0b;
-            --warning-light: #fffbeb;
-            --purple: #8b5cf6;
-            --purple-light: #f3e8ff;
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --bg-dark: #0f172a;
-            --bg-dark-light: #1e293b;
-            --text-primary: #0f172a;
-            --text-secondary: #64748b;
-            --text-light: #94a3b8;
-            --border-color: #e2e8f0;
-            --border-light: #f1f5f9;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
-            --shadow-glow: 0 0 40px rgba(37,99,235,0.15);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 20px;
-            --radius-xl: 28px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-fast: all 0.15s ease;
-        }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        html { scroll-behavior: smooth; }
-        
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="merchant-tracker-manifest.json" />
+  <title>بوابة التاجر | Merchant Tracker</title>
+  <style>
+    :root {
+      --bg: #070b16;
+      --bg-soft: #0f172a;
+      --surface: #111b31;
+      --surface-2: #1a2745;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --primary: #22d3ee;
+      --accent: #8b5cf6;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --radius: 16px;
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
 
-        /* ===== 1. LOADING SCREEN ===== */
-        #portalLoading {
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark-light) 50%, #0c1222 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-            transition: opacity 0.8s ease, visibility 0.8s;
-        }
-        
-        #portalLoading.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        
-        .loader-container { text-align: center; position: relative; }
-        
-        .portal-loader {
-            width: 70px;
-            height: 70px;
-            border: 4px solid rgba(255,255,255,0.08);
-            border-top-color: var(--primary);
-            border-right-color: var(--purple);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 30px;
-            position: relative;
-        }
-        
-        .portal-loader::before,
-        .portal-loader::after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-        }
-        
-        .portal-loader::before {
-            inset: 6px;
-            border: 3px solid transparent;
-            border-bottom-color: var(--success);
-            animation: spin 0.6s linear infinite reverse;
-        }
-        
-        .portal-loader::after {
-            inset: 16px;
-            border: 2px solid transparent;
-            border-top-color: rgba(255,255,255,0.3);
-            animation: spin 1.5s linear infinite;
-        }
-        
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .loading-logo {
-            font-size: 32px;
-            font-weight: 900;
-            color: white;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .loading-subtitle {
-            color: rgba(255,255,255,0.5);
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            justify-content: center;
-        }
-        
-        .loading-dots span {
-            animation: dotPulse 1.4s ease-in-out infinite;
-            background: var(--primary);
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        
-        .loading-dots span:nth-child(2) { animation-delay: 0.16s; }
-        .loading-dots span:nth-child(3) { animation-delay: 0.32s; }
-        
-        @keyframes dotPulse {
-            0%, 80%, 100% { opacity: 0.3; transform: scale(0.7); }
-            40% { opacity: 1; transform: scale(1.1); }
-        }
+    * { box-sizing: border-box; }
 
-        /* ===== 2. MAIN CONTAINER ===== */
-        .portal-wrapper {
-            max-width: 1150px;
-            margin: 0 auto;
-            padding: 24px;
-            min-height: 100vh;
-        }
+    body {
+      margin: 0;
+      font-family: "Cairo", "Segoe UI", Tahoma, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(34, 211, 238, 0.14), transparent 40%),
+        radial-gradient(circle at 20% 90%, rgba(139, 92, 246, 0.16), transparent 45%),
+        var(--bg);
+      min-height: 100vh;
+      overflow: hidden;
+    }
 
-        /* ===== 3. HEADER ===== */
-        .portal-header {
-            background: var(--bg-secondary);
-            padding: 24px 32px;
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            margin-bottom: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-        
-        .portal-header::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--purple), var(--success), var(--warning));
-        }
-        
-        .header-branding {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        
-        .header-icon {
-            width: 52px;
-            height: 52px;
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            box-shadow: 0 6px 20px rgba(37,99,235,0.25);
-            transition: transform 0.3s ease;
-        }
-        
-        .header-icon:hover { transform: scale(1.05) rotate(-5deg); }
-        
-        .portal-title {
-            font-size: 26px;
-            font-weight: 900;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-        }
-        
-        .portal-version {
-            font-size: 11px;
-            color: var(--text-light);
-            font-weight: 700;
-            background: var(--primary-ultra-light);
-            color: var(--primary);
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin-top: 4px;
-            display: inline-block;
-            letter-spacing: 0.5px;
-        }
-        
-        .portal-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 20px;
-            background: var(--success-light);
-            color: var(--success);
-            border-radius: 25px;
-            font-size: 13px;
-            font-weight: 700;
-            border: 1px solid #86efac;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .portal-status:hover {
-            background: var(--success);
-            color: white;
-            box-shadow: 0 4px 15px rgba(16,185,129,0.3);
-        }
-        
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: statusPulse 2s infinite;
-            box-shadow: 0 0 0 4px rgba(16,185,129,0.3);
-        }
-        
-        @keyframes statusPulse {
-            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 4px rgba(16,185,129,0.3); }
-            50% { opacity: 0.7; transform: scale(1.2); box-shadow: 0 0 0 8px rgba(16,185,129,0.5); }
-        }
+    .app {
+      max-width: 1050px;
+      margin: 24px auto;
+      min-height: calc(100vh - 48px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 22px;
+      background: linear-gradient(150deg, rgba(15, 23, 42, 0.96), rgba(10, 17, 33, 0.95));
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 500ms ease;
+    }
 
-        /* ===== 4. LOGIN SECTION ===== */
-        #merchantLoginSection {
-            background: var(--bg-secondary);
-            padding: 60px 45px;
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
-            text-align: center;
-            max-width: 540px;
-            margin: 100px auto;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-        
-        #merchantLoginSection::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, 
-                rgba(37,99,235,0.03) 0%, 
-                rgba(139,92,246,0.03) 50%, 
-                rgba(16,185,129,0.02) 100%);
-            pointer-events: none;
-        }
-        
-        #merchantLoginSection::after {
-            content: '';
-            position: absolute;
-            bottom: -100px;
-            left: -100px;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
-            pointer-events: none;
-        }
-        
-        .welcome-section { position: relative; z-index: 1; }
-        
-        .welcome-icon {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 28px;
-            box-shadow: 0 12px 35px rgba(37,99,235,0.3);
-            animation: floatAnimation 3s ease-in-out infinite;
-            position: relative;
-        }
-        
-        .welcome-icon::after {
-            content: '';
-            position: absolute;
-            inset: -4px;
-            border-radius: 50%;
-            border: 2px dashed rgba(255,255,255,0.2);
-            animation: iconRotate 10s linear infinite;
-        }
-        
-        @keyframes floatAnimation {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes iconRotate { to { transform: rotate(360deg); } }
-        
-        .welcome-icon i { font-size: 40px; color: white; }
-        
-        .welcome-title {
-            font-size: 28px;
-            font-weight: 900;
-            margin-bottom: 12px;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-        }
-        
-        .welcome-desc {
-            color: var(--text-secondary);
-            font-size: 15px;
-            margin-bottom: 36px;
-            line-height: 1.8;
-            max-width: 380px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .input-group {
-            position: relative;
-            margin-bottom: 24px;
-        }
-        
-        .input-icon {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-light);
-            font-size: 18px;
-            transition: var(--transition);
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .input-group input:focus ~ .input-icon,
-        .input-group input:not(:placeholder-shown) ~ .input-icon {
-            color: var(--primary);
-            transform: translateY(-50%) scale(1.1);
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 18px 48px 18px 20px;
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-md);
-            font-family: 'Cairo', sans-serif;
-            font-size: 17px;
-            direction: rtl;
-            transition: var(--transition);
-            background: var(--bg-secondary);
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(37,99,235,0.1), var(--shadow-glow);
-            background: white;
-        }
-        
-        .form-input::placeholder { color: var(--text-light); }
-        
-        .btn-row {
-            display: flex;
-            gap: 14px;
-            margin-top: 28px;
-        }
-        
-        .btn {
-            padding: 16px 32px;
-            border: none;
-            border-radius: var(--radius-md);
-            font-family: 'Cairo', sans-serif;
-            font-size: 16px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            position: relative;
-            overflow: hidden;
-            letter-spacing: 0.5px;
-        }
-        
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 0; height: 0;
-            background: rgba(255,255,255,0.25);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        .btn:hover::before { width: 350px; height: 350px; }
-        .btn:active { transform: scale(0.97); }
-        
-        .btn-primary {
-            flex: 1;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            box-shadow: 0 6px 20px rgba(37,99,235,0.3);
-        }
-        
-        .btn-primary:hover {
-            box-shadow: 0 10px 30px rgba(37,99,235,0.4);
-            transform: translateY(-3px);
-        }
-        
-        .btn-outline {
-            background: white;
-            border: 2px solid var(--border-color);
-            color: var(--text-secondary);
-        }
-        
-        .btn-outline:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: var(--primary-light);
-        }
+    .loader-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(165deg, rgba(7, 11, 22, 0.98), rgba(13, 20, 36, 0.96));
+      transition: opacity 400ms ease, visibility 400ms ease;
+    }
 
-        /* ===== 5. DASHBOARD SECTION ===== */
-        #merchantDashboard {
-            display: none;
-            animation: dashboardFadeIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        @keyframes dashboardFadeIn {
-            from { opacity: 0; transform: translateY(30px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+    .loader-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
 
-        /* --- Merchant Info Card --- */
-        .merchant-info-card {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            padding: 32px;
-            margin-bottom: 28px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            border-right: 6px solid var(--primary);
-        }
-        
-        .merchant-info-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 150px;
-            background: linear-gradient(135deg, 
-                rgba(37,99,235,0.04) 0%, 
-                rgba(139,92,246,0.04) 100%);
-            pointer-events: none;
-        }
-        
-        .info-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 24px;
-            position: relative;
-            z-index: 1;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        
-        .merchant-name-section h2 {
-            font-size: 26px;
-            font-weight: 900;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-        
-        .merchant-meta {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--bg-primary);
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--border-light);
-            font-weight: 600;
-            transition: var(--transition-fast);
-        }
-        
-        .meta-item:hover {
-            background: var(--primary-light);
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-        
-        .meta-item i { color: var(--primary); font-size: 12px; }
-        
-        .print-btn {
-            padding: 12px 22px;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 700;
-            font-size: 13px;
-            color: var(--text-secondary);
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .print-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 18px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .info-item {
-            background: var(--bg-primary);
-            padding: 18px;
-            border-radius: var(--radius-md);
-            border-right: 4px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-        
-        .info-item:hover {
-            border-right-color: var(--primary);
-            transform: translateX(-4px);
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .info-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            font-weight: 700;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .info-value {
-            font-size: 17px;
-            font-weight: 800;
-            color: var(--text-primary);
-        }
-        
-        .info-item.highlight {
-            background: linear-gradient(135deg, var(--warning-light), #fffbeb);
-            border-right-color: var(--warning);
-        }
-        
-        .info-item.highlight .info-value {
-            color: var(--danger);
-            font-size: 22px;
-        }
+    .loader-box {
+      width: min(560px, 92%);
+      text-align: center;
+      display: grid;
+      gap: 16px;
+    }
 
-        /* --- Stats Row --- */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 28px;
-        }
-        
-        .stat-box {
-            background: var(--bg-secondary);
-            padding: 26px 22px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border: 1px solid var(--border-color);
-            border-top: 5px solid transparent;
-        }
-        
-        .stat-box:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-xl);
-        }
-        
-        .stat-box:nth-child(1) { border-top-color: var(--primary); }
-        .stat-box:nth-child(2) { border-top-color: var(--danger); }
-        .stat-box:nth-child(3) { border-top-color: var(--success); }
-        .stat-box:nth-child(4) { border-top-color: var(--purple); }
-        
-        .stat-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-            font-size: 24px;
-            color: white;
-            transition: transform 0.3s ease;
-        }
-        
-        .stat-box:hover .stat-icon { transform: scale(1.1) rotate(-5deg); }
-        
-        .stat-box:nth-child(1) .stat-icon { background: linear-gradient(135deg, var(--primary), #60a5fa); }
-        .stat-box:nth-child(2) .stat-icon { background: linear-gradient(135deg, var(--danger), #fca5a5); }
-        .stat-box:nth-child(3) .stat-icon { background: linear-gradient(135deg, var(--success), #86efac); }
-        .stat-box:nth-child(4) .stat-icon { background: linear-gradient(135deg, var(--purple), #c4b5fd); }
-        
-        .stat-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .stat-value {
-            font-size: 28px;
-            font-weight: 900;
-            color: var(--text-primary);
-            line-height: 1.2;
-        }
+    .logo {
+      width: 88px;
+      height: 88px;
+      margin: 0 auto;
+      border-radius: 24px;
+      background: linear-gradient(140deg, var(--primary), var(--accent));
+      display: grid;
+      place-items: center;
+      color: #031127;
+      font-size: 34px;
+      font-weight: 900;
+      box-shadow: 0 10px 30px rgba(34, 211, 238, 0.33);
+      animation: pulse 1500ms infinite;
+    }
 
-        /* --- Action Buttons --- */
-        .action-buttons {
-            display: flex;
-            gap: 14px;
-            margin-bottom: 28px;
-            flex-wrap: wrap;
-        }
-        
-        .action-btn {
-            flex: 1;
-            min-width: 190px;
-            padding: 18px 22px;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-md);
-            font-family: 'Cairo', sans-serif;
-            font-size: 15px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            color: var(--text-primary);
-        }
-        
-        .action-btn:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-            color: var(--primary);
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .action-btn.primary {
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            color: white;
-            border-color: transparent;
-        }
-        
-        .action-btn.primary:hover {
-            box-shadow: 0 10px 30px rgba(37,99,235,0.35);
-            transform: translateY(-4px);
-        }
+    .progress-track {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.15);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
 
-        /* --- Section Cards --- */
-        .section-card {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            overflow: hidden;
-            margin-bottom: 28px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .section-header {
-            padding: 20px 26px;
-            background: linear-gradient(to bottom, var(--bg-primary), transparent);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .section-title {
-            font-size: 17px;
-            font-weight: 800;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .section-title i { color: var(--primary); }
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width 220ms linear;
+    }
 
-        /* --- Machines Grid --- */
-        .machines-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 24px;
-        }
-        
-        .machine-card {
-            background: var(--bg-primary);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            border: 2px solid var(--border-color);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            position: relative;
-        }
-        
-        .machine-card:hover {
-            border-color: var(--primary);
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-5px);
-        }
-        
-        .machine-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        
-        .machine-number {
-            font-size: 18px;
-            font-weight: 900;
-            color: var(--primary);
-        }
-        
-        .machine-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        
-        .badge-active { background: var(--success-light); color: #166534; }
-        .badge-inactive { background: var(--danger-light); color: #991b1b; }
-        
-        .machine-details { display: flex; flex-direction: column; gap: 12px; }
-        
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--border-color);
-        }
-        
-        .detail-row:last-child { border-bottom: none; }
-        .detail-label { color: var(--text-secondary); font-weight: 500; }
-        .detail-value { font-weight: 800; color: var(--text-primary); }
-        
-        .target-progress { margin-top: 18px; }
-        
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-        
-        .progress-bar-bg {
-            height: 12px;
-            background: var(--border-color);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--warning), var(--success));
-            border-radius: 12px;
-            transition: width 1.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .progress-bar-fill::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: shimmer 2.5s infinite;
-        }
-        
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    .window-bar {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(2, 8, 23, 0.45);
+    }
 
-        /* --- Tables --- */
-        .table-responsive { overflow-x: auto; }
-        
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        
-        .data-table thead th {
-            background: var(--bg-primary);
-            padding: 16px 18px;
-            text-align: right;
-            font-weight: 800;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 1px;
-            border-bottom: 2px solid var(--border-color);
-            white-space: nowrap;
-        }
-        
-        .data-table tbody tr {
-            transition: all 0.2s ease;
-            border-bottom: 1px solid var(--border-light);
-        }
-        
-        .data-table tbody tr:hover { background: var(--primary-ultra-light); }
-        .data-table tbody td { padding: 16px 18px; }
-        
-        .empty-state {
-            text-align: center;
-            padding: 55px 20px;
-            color: var(--text-secondary);
-        }
-        
-        .empty-state i {
-            font-size: 56px;
-            color: var(--border-color);
-            margin-bottom: 16px;
-            display: block;
-            opacity: 0.5;
-        }
-        
-        .ref-code {
-            font-family: 'Courier New', monospace;
-            background: var(--bg-primary);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            color: var(--primary);
-            font-weight: 700;
-            border: 1px solid var(--primary-light);
-        }
-        
-        .amount-positive { color: var(--success); font-weight: 800; }
-        .amount-negative { color: var(--danger); font-weight: 800; }
+    .window-actions span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: 6px;
+    }
 
-        /* --- Requests List --- */
-        .requests-list { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-        
-        .request-item {
-            background: var(--bg-primary);
-            border-radius: var(--radius-lg);
-            padding: 22px;
-            border-right: 5px solid var(--warning);
-            transition: all 0.3s ease;
-            border: 1px solid var(--border-color);
-        }
-        
-        .request-item:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateX(-4px);
-        }
-        
-        .request-item.status-مكتمل { border-right-color: var(--success); }
-        .request-item.status-ملغي { border-right-color: var(--danger); }
-        
-        .request-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
-        
-        .request-ref { font-weight: 900; color: var(--primary); font-size: 16px; }
-        
-        .request-status-badge {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        
-        .badge-pending { background: var(--warning-light); color: #92400e; }
-        .badge-completed { background: var(--success-light); color: #166534; }
-        .badge-cancelled { background: var(--danger-light); color: #991b1b; }
-        
-        .request-body-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-        }
-        
-        .req-detail { font-size: 14px; }
-        .req-detail-label { color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 4px; font-weight: 600; }
-        .req-detail-value { font-weight: 800; color: var(--text-primary); }
-        .req-amount { font-size: 20px !important; color: var(--primary) !important; }
+    .window-actions span:nth-child(1) { background: #f87171; }
+    .window-actions span:nth-child(2) { background: #facc15; }
+    .window-actions span:nth-child(3) { background: #4ade80; }
 
-        /* ===== 6. MODALS ===== */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15,23,42,0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 20px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .modal-overlay.show { display: flex; opacity: 1; }
-        
-        .modal-content {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-xl);
-            width: 100%;
-            max-width: 540px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-            animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        @keyframes modalSlideIn {
-            from { opacity: 0; transform: scale(0.92) translateY(30px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        
-        .modal-header {
-            padding: 24px 28px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-        }
-        
-        .modal-title {
-            font-size: 20px;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .modal-close {
-            width: 42px;
-            height: 42px;
-            border: none;
-            background: var(--bg-secondary);
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            color: var(--text-secondary);
-            transition: all 0.2s ease;
-        }
-        
-        .modal-close:hover {
-            background: var(--danger);
-            color: white;
-            transform: rotate(90deg) scale(1.1);
-        }
-        
-        .modal-body { padding: 28px; }
-        
-        .modal-footer {
-            padding: 20px 28px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 14px;
-            justify-content: flex-start;
-            background: var(--bg-primary);
-            border-radius: 0 0 var(--radius-xl) var(--radius-xl);
-        }
-        
-        .form-group { margin-bottom: 22px; }
-        
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .form-select {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            font-family: 'Cairo', sans-serif;
-            font-size: 15px;
-            direction: rtl;
-            background: white;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .form-select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
-        }
-        
-        textarea.form-input { resize: vertical; min-height: 90px; }
+    .container {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+      height: calc(100% - 52px);
+    }
 
-        /* Success Modal */
-        .modal-overlay.success-modal .modal-content { text-align: center; max-width: 450px; }
-        
-        .success-icon-large {
-            width: 90px;
-            height: 90px;
-            background: linear-gradient(135deg, var(--success), #34d399);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 28px;
-            font-size: 38px;
-            color: white;
-            animation: successPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            box-shadow: 0 12px 35px rgba(16,185,129,0.35);
-        }
-        
-        @keyframes successPop {
-            0% { transform: scale(0) rotate(-180deg); }
-            100% { transform: scale(1) rotate(0); }
-        }
-        
-        .success-title { font-size: 26px; font-weight: 900; margin-bottom: 10px; color: var(--text-primary); }
-        .success-subtitle { color: var(--text-secondary); font-size: 15px; margin-bottom: 24px; }
-        
-        .success-ref-display {
-            background: linear-gradient(135deg, var(--primary-light), var(--purple-light));
-            padding: 18px 28px;
-            border-radius: var(--radius-md);
-            font-family: 'Courier New', monospace;
-            font-size: 22px;
-            font-weight: 900;
-            color: var(--primary);
-            margin-bottom: 32px;
-            border: 2px dashed var(--primary);
-            letter-spacing: 2px;
-            animation: refPulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes refPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
+    .card {
+      background: linear-gradient(170deg, rgba(17, 27, 49, 0.92), rgba(18, 26, 44, 0.78));
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: var(--radius);
+      padding: 18px;
+      animation: fadeInUp 450ms ease;
+    }
 
-        /* ===== 7. TOAST NOTIFICATIONS ===== */
-        #portalToast {
-            position: fixed;
-            top: 24px;
-            left: 24px;
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-width: 420px;
-        }
-        
-        .toast-msg {
-            background: var(--bg-secondary);
-            padding: 18px 22px;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-lg);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            animation: toastSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border-right: 5px solid var(--success);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .toast-msg.error { border-right-color: var(--danger); }
-        .toast-msg.warning { border-right-color: var(--warning); }
-        .toast-msg.info { border-right-color: var(--primary); }
-        
-        .toast-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-        
-        .toast-msg.success .toast-icon { background: var(--success-light); color: var(--success); }
-        .toast-msg.error .toast-icon { background: var(--danger-light); color: var(--danger); }
-        .toast-msg.warning .toast-icon { background: var(--warning-light); color: var(--warning); }
-        .toast-msg.info .toast-icon { background: var(--primary-light); color: var(--primary); }
-        
-        .toast-text { flex: 1; font-size: 15px; font-weight: 700; color: var(--text-primary); }
-        
-        .toast-close {
-            background: none;
-            border: none;
-            color: var(--text-light);
-            cursor: pointer;
-            font-size: 18px;
-            padding: 4px;
-            transition: var(--transition-fast);
-        }
-        
-        .toast-close:hover { color: var(--text-primary); transform: scale(1.2); }
-        
-        .toast-progress {
-            position: absolute;
-            bottom: 0; left: 0;
-            height: 4px;
-            background: var(--success);
-            animation: toastProgress 4s linear forwards;
-            border-radius: 0 0 var(--radius-md) var(--radius-md);
-        }
-        
-        .toast-msg.error .toast-progress { background: var(--danger); }
-        .toast-msg.warning .toast-progress { background: var(--warning); }
-        
-        @keyframes toastSlideIn {
-            from { opacity: 0; transform: translateX(-120px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        @keyframes toastProgress { from { width: 100%; } to { width: 0; } }
+    h1, h2, h3, p { margin: 0; }
 
-        /* ===== 8. FOOTER ===== */
-        .portal-footer {
-            text-align: center;
-            padding: 35px 24px;
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin-top: 35px;
-            border-top: 1px solid var(--border-color);
-            background: var(--bg-secondary);
-            border-radius: var(--radius-xl);
-        }
-        
-        .footer-brand { font-weight: 800; color: var(--text-primary); margin-bottom: 8px; font-size: 16px; }
-        .footer-version { font-size: 12px; color: var(--text-light); margin-bottom: 20px; }
-        
-        .qr-section { margin-top: 20px; }
-        
-        .qr-img {
-            width: 100px;
-            height: 100px;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 3px solid var(--border-color);
-            padding: 6px;
-            background: white;
-        }
-        
-        .qr-img:hover { transform: scale(1.08) rotate(-3deg); border-color: var(--primary); box-shadow: var(--shadow-md); }
+    .title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
 
-        /* ===== 9. DEBUG INFO ===== */
-        #debugInfo {
-            display: none;
-            background: var(--bg-dark);
-            color: #10b981;
-            padding: 22px;
-            border-radius: var(--radius-md);
-            font-family: 'Fira Code', monospace;
-            font-size: 13px;
-            margin-top: 20px;
-            text-align: left;
-            direction: ltr;
-            white-space: pre-wrap;
-            word-break: break-all;
-            line-height: 1.7;
-            max-height: 280px;
-            overflow-y: auto;
-            border: 1px solid #334155;
-        }
-        
-        #debugInfo.show { display: block; }
+    .pill {
+      background: rgba(34, 211, 238, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
 
-        /* ===== 10. RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            .portal-wrapper { padding: 16px; }
-            
-            .portal-header {
-                flex-direction: column;
-                gap: 18px;
-                text-align: center;
-                padding: 20px;
-            }
-            
-            .portal-title { font-size: 22px; }
-            
-            #merchantLoginSection { padding: 40px 28px; margin: 60px auto; }
-            .welcome-title { font-size: 22px; }
-            
-            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-            .stat-value { font-size: 24px; }
-            
-            .machines-grid { grid-template-columns: 1fr; }
-            .action-buttons { flex-direction: column; }
-            .action-btn { width: 100%; }
-            .btn-row { flex-direction: column; }
-            .info-grid { grid-template-columns: 1fr; }
-            .info-card-header { flex-direction: column; gap: 18px; }
-            
-            .modal-content { margin: 12px; max-height: 95vh; }
-            .request-body-grid { grid-template-columns: 1fr 1fr; }
-            
-            #portalToast { left: 12px; right: 12px; max-width: none; }
-        }
-        
-        @media (max-width: 480px) {
-            .stats-row { grid-template-columns: 1fr 1fr; gap: 12px; }
-            .stat-box { padding: 20px 16px; }
-            .stat-value { font-size: 22px; }
-            .merchant-name-section h2 { font-size: 22px; }
-            .merchant-meta { flex-direction: column; gap: 10px; align-items: stretch; }
-        }
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
 
-        /* ===== PRINT STYLES ===== */
-        @media print {
-            body * { visibility: hidden !important; }
-            
-            #merchantDashboard, #merchantDashboard *, .modal-overlay.show { visibility: visible !important; }
-            
-            #merchantDashboard {
-                position: absolute;
-                top: 0; left: 0;
-                width: 100%;
-                padding: 20px;
-            }
-            
-            .action-buttons, .print-btn, .portal-footer, .qr-section, #portalToast, #debugInfo,
-            .btn-row button:nth-child(2), .modal-close { display: none !important; }
-            
-            .stat-box, .machine-card, .info-item { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd !important; }
-        }
-    </style>
+    .form-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    label { color: var(--muted); font-size: 13px; }
+
+    input, select, button {
+      font-family: inherit;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.74);
+      color: var(--text);
+      padding: 11px 12px;
+      border-radius: 10px;
+      transition: all 180ms ease;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: rgba(34, 211, 238, 0.8);
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.18);
+    }
+
+    button {
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(130deg, var(--primary), var(--accent));
+      color: #041025;
+    }
+
+    button.ghost {
+      background: rgba(148, 163, 184, 0.15);
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    button:hover { transform: translateY(-1px); filter: brightness(1.06); }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .result {
+      min-height: 140px;
+      border-radius: 12px;
+      border: 1px dashed rgba(148, 163, 184, 0.35);
+      padding: 14px;
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      gap: 10px;
+    }
+
+    .row:last-child { border-bottom: 0; }
+
+    .status {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .status.show { display: block; }
+    .status.ok { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+    .status.warn { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+
+    .merchant-list {
+      max-height: 320px;
+      overflow: auto;
+      display: grid;
+      gap: 10px;
+      padding-left: 6px;
+    }
+
+    .merchant-item {
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(15, 23, 42, 0.58);
+      transition: all 180ms ease;
+    }
+
+    .merchant-item:hover {
+      border-color: rgba(34, 211, 238, 0.45);
+      transform: translateX(-2px);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .small { font-size: 12px; color: var(--muted); }
+
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .app { margin: 0; min-height: 100vh; border-radius: 0; }
+      .container { grid-template-columns: 1fr; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
-
 <body>
-    <!-- Loading Screen -->
-    <div id="portalLoading">
-        <div class="loader-container">
-            <div class="portal-loader"></div>
-            <div class="loading-logo">AXENTRO</div>
-            <div class="loading-subtitle">
-                جاري تحميل النظام
-                <span class="loading-dots"><span></span><span></span><span></span></span>
-            </div>
+  <main class="app" aria-live="polite">
+    <section class="loader-screen" id="loaderScreen">
+      <div class="loader-box">
+        <div class="logo">MT</div>
+        <h1>Merchant Tracker</h1>
+        <p class="small">تهيئة بوابة التاجر الذكية...</p>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <p id="progressLabel" class="small">0%</p>
+      </div>
+    </section>
+
+    <header class="window-bar">
+      <div class="window-actions"><span></span><span></span><span></span></div>
+      <strong>بوابة التاجر - نسخة التطبيق</strong>
+      <span class="pill" id="syncState">Ready</span>
+    </header>
+
+    <section class="container">
+      <article class="card">
+        <div class="title">
+          <h2>تسجيل تاجر جديد</h2>
+          <span class="pill">Automated</span>
         </div>
-    </div>
+        <form id="merchantForm" class="grid">
+          <div class="form-group">
+            <label for="merchantName">اسم التاجر</label>
+            <input id="merchantName" required placeholder="مثال: تاجر للتجربة" />
+          </div>
+          <div class="form-group">
+            <label for="merchantPhone">رقم الهاتف</label>
+            <input id="merchantPhone" required placeholder="01000000000" />
+          </div>
+          <div class="form-group">
+            <label for="merchantCity">المدينة</label>
+            <select id="merchantCity" required>
+              <option value="">اختر المدينة</option>
+              <option>القاهرة</option>
+              <option>الجيزة</option>
+              <option>الإسكندرية</option>
+              <option>المنصورة</option>
+              <option>أسيوط</option>
+            </select>
+          </div>
+          <div class="actions">
+            <button type="submit">حفظ التاجر</button>
+            <button type="button" class="ghost" id="seedDemo">تحميل بيانات تجريبية</button>
+          </div>
+          <div id="saveStatus" class="status"></div>
+        </form>
 
-    <!-- Toast Container -->
-    <div id="portalToast"></div>
-
-    <div class="portal-wrapper">
-        <!-- Header -->
-        <header class="portal-header">
-            <div class="header-branding">
-                <div class="header-icon"><i class="fas fa-store"></i></div>
-                <div>
-                    <h1 class="portal-title">بوابة التاجر</h1>
-                </div>
-            </div>
-            <div class="portal-status" onclick="playClickSound()">
-                <span class="status-dot"></span>
-                متصل ✓
-            </div>
-        </header>
-
-        <!-- Login Section -->
-        <section id="merchantLoginSection">
-            <div class="welcome-section">
-                <div class="welcome-icon"><i class="fas fa-user-circle"></i></div>
-                <h2 class="welcome-title">مرحباً بك في بوابة Axentro</h2>
-                <p class="welcome-desc">
-                    أدخل رقم حسابك لعرض بياناتك الكاملة وتقديم طلبات جديدة بسهولة وأمان تام
-                </p>
-                
-                <div class="input-group">
-                    <input type="text" id="merchantAccountId" class="form-input"
-                           placeholder="أدخل رقم الحساب *" autocomplete="off"
-                           onkeypress="if(event.key==='Enter') Portal.loadMerchantData()">
-                    <i class="fas fa-id-card input-icon"></i>
-                </div>
-                
-                <div class="btn-row">
-                    <button class="btn btn-primary" onclick="Portal.loadMerchantData()">
-                        <i class="fas fa-search-location"></i>
-                        عرض بياناتي
-                    </button>
-                    <button class="btn btn-outline" onclick="Portal.toggleDebug()">
-                        <i class="fas fa-bug"></i>
-                        تصحيح
-                    </button>
-                </div>
-                
-                <div id="debugInfo"></div>
-            </div>
-        </section>
-
-        <!-- Dashboard -->
-        <section id="merchantDashboard">
-            <!-- Merchant Info Card -->
-            <div class="merchant-info-card" id="merchantInfoCard" style="display:none;">
-                <div class="info-card-header">
-                    <div class="merchant-name-section">
-                        <h2 id="displayMerchantName">—</h2>
-                        <div class="merchant-meta">
-                            <span class="meta-item"><i class="fas fa-hashtag"></i><span id="displayMerchantNumber">—</span></span>
-                            <span class="meta-item"><i class="fas fa-briefcase"></i><span id="displayActivityName">—</span></span>
-                            <span class="meta-item"><i class="fas fa-phone-alt"></i><span id="displayPhone">—</span></span>
-                        </div>
-                    </div>
-                    <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
-                </div>
-                
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">المنطقة</div>
-                        <div class="info-value" id="displayArea">—</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">العنوان</div>
-                        <div class="info-value" id="displayAddress">—</div>
-                    </div>
-                    <div class="info-item highlight">
-                        <div class="info-label">المديونية الحالية</div>
-                        <div class="info-value" id="displayDebt">0 ج.م</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">الحالة</div>
-                        <div class="info-value" id="displayStatus">—</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats Row -->
-            <div class="stats-row">
-                <div class="stat-box">
-                    <div class="stat-icon"><i class="fas fa-desktop"></i></div>
-                    <div class="stat-label">المكن المرتبطة</div>
-                    <div class="stat-value" id="mMachinesCount">0</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                    <div class="stat-label">المديونية الحالية</div>
-                    <div class="stat-value" id="mCurrentDebt">0 ج.م</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
-                    <div class="stat-label">إجمالي التحصيلات</div>
-                    <div class="stat-value" id="mTotalCollections">0 ج.م</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
-                    <div class="stat-label">إجمالي التحويلات</div>
-                    <div class="stat-value" id="mTotalTransfers">0 ج.م</div>
-                </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="action-buttons">
-                <button class="action-btn primary" onclick="Portal.openRequestModal()">
-                    <i class="fas fa-plus-circle"></i> طلب جديد
-                </button>
-                <button class="action-btn" onclick="Portal.loadMerchantData()">
-                    <i class="fas fa-sync-alt"></i> تحديث البيانات
-                </button>
-                <button class="action-btn" onclick="document.getElementById('merchantInfoCard').scrollIntoView({behavior:'smooth'})">
-                    <i class="fas fa-user"></i> بياناتي
-                </button>
-            </div>
-
-            <!-- Machines Section -->
-            <div class="section-card" id="machinesSectionCard" style="display:none;">
-                <div class="section-header">
-                    <h3 class="section-title"><i class="fas fa-desktop"></i> المكن المسجلة</h3>
-                    <span style="font-size:13px;color:var(--text-secondary);" id="machinesCountLabel">0 مكنة</span>
-                </div>
-                <div class="machines-grid" id="machinesGridContainer"></div>
-            </div>
-
-            <!-- Transfers Table -->
-            <div class="section-card">
-                <div class="section-header">
-                    <h3 class="section-title"><i class="fas fa-arrow-up"></i> آخر 5 تحويلات</h3>
-                </div>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead><tr>
-                            <th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th>
-                        </tr></thead>
-                        <tbody id="mTransfersTable">
-                            <tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Collections Table -->
-            <div class="section-card">
-                <div class="section-header">
-                    <h3 class="section-title"><i class="fas fa-arrow-down"></i> آخر 5 تحصيلات</h3>
-                </div>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead><tr>
-                            <th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>القيمة</th><th>المتبقي</th>
-                        </tr></thead>
-                        <tbody id="mCollectionsTable">
-                            <tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Requests History -->
-            <div class="section-card">
-                <div class="section-header">
-                    <h3 class="section-title"><i class="fas fa-file-alt"></i> طلباتي السابقة</h3>
-                </div>
-                <div class="requests-list" id="requestsHistoryContainer">
-                    <div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>
-                </div>
-            </div>
-
-            <!-- Quick Request Button -->
-            <div style="text-align:center; margin: 35px 0;">
-                <button class="btn btn-primary" onclick="Portal.openRequestModal()" style="padding: 18px 48px; font-size: 17px;">
-                    <i class="fas fa-paper-plane"></i> تقديم طلب جديد
-                </button>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="portal-footer">
-            <div class="footer-brand">© 2026 Axentro Systems – All Rights Reserved</div>
-            <div class="footer-version">Powered by Axentro Team </div>
-            <div class="qr-section">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://axentro-official.github.io/axentro-website/links.html" 
-                     alt="QR Code" class="qr-img"
-                     onclick="window.open('https://axentro-official.github.io/axentro-website/links.html', '_blank')">
-                <div class="qr-text">امسح للوصول السريع</div>
-            </div>
-        </footer>
-    </div>
-
-    <!-- Request Modal -->
-    <div class="modal-overlay" id="requestModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-paper-plane"></i> تقديم طلب جديد</h3>
-                <button class="modal-close" onclick="Portal.closeRequestModal()"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">نوع الطلب *</label>
-                    <select class="form-select" id="reqType">
-                        <option value="">-- اختر نوع الطلب --</option>
-                        <option value="كاش على المكنة">💵 كاش على المكنة</option>
-                        <option value="رصيد خدمات على المكنة">🔄 رصيد خدمات على المكنة</option>
-                        <option value="تحويل">➡️ تحويل</option>
-                        <option value="تحصيل">⬅️ تحصيل</option>
-                        <option value="صيانة">🔧 صيانة</option>
-                        <option value="أخرى">📋 أخرى</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">اختر المكنة (اختياري)</label>
-                    <select class="form-select" id="reqMachine">
-                        <option value="">-- جميع المكن --</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">المبلغ المطلوب (جنيه) *</label>
-                    <input type="number" class="form-input" id="reqAmount" placeholder="مثال: 5000" min="1" step="0.01">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">ملاحظات (اختياري)</label>
-                    <textarea class="form-input" id="reqNotes" placeholder="أي تفاصيل إضافية..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="Portal.submitRequest()" style="flex:1;">
-                    <i class="fas fa-paper-plane"></i> إرسال الطلب الآن
-                </button>
-                <button class="btn btn-outline" onclick="Portal.closeRequestModal()">إلغاء</button>
-            </div>
+        <div class="toolbar">
+          <button id="installBtn" class="ghost" type="button">تثبيت التطبيق على الموبايل</button>
+          <span class="small">بعد التثبيت هيفتح كتطبيق مستقل (PWA).</span>
         </div>
-    </div>
+      </article>
 
-    <!-- Success Modal -->
-    <div class="modal-overlay success-modal" id="successModal">
-        <div class="modal-content">
-            <div class="modal-body" style="padding: 50px 40px;">
-                <div class="success-icon-large"><i class="fas fa-check"></i></div>
-                <h3 class="success-title">تم الإرسال بنجاح! 🎉</h3>
-                <p class="success-subtitle">تم تسجيل طلبك وسيتم مراجعته قريباً</p>
-                <p style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">رقم المرجع:</p>
-                <div class="success-ref-display" id="successRefId">REQ-XX-XXXXX</div>
-                <br>
-                <button class="btn btn-primary" onclick="Portal.closeSuccessAndNew()" style="width:100%;">
-                    <i class="fas fa-plus"></i> تقديم طلب آخر
-                </button>
-            </div>
+      <article class="card">
+        <div class="title">
+          <h2>الاستعلام السريع</h2>
+          <span class="pill">Live Search</span>
         </div>
-    </div>
+        <div class="grid">
+          <div class="form-group">
+            <label for="query">ابحث بالاسم أو الموبايل</label>
+            <input id="query" placeholder="اكتب الاسم أو الرقم..." />
+          </div>
+          <div class="result" id="result">
+            <p class="small">ابدأ بالبحث، أو اضغط تحميل بيانات تجريبية لتجربة فورية.</p>
+          </div>
+        </div>
 
-    <!-- Supabase JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Main Application Logic -->
-    <script>
-    /**
-     * ============================================
-     * AXENTRO MERCHANT PORTAL v6.0 PROFESSIONAL
-     * ============================================
-     * ✅ نظام أصوات احترافي متكامل
-     * ✅ Favicon SVG احترافي جديد
-     * ✅ تحسينات الأداء والاستقرار
-     * ✅ معالجة أخطاء محسنة
-     */
+        <h3 style="margin: 14px 0 10px;">كل التجار المسجلين</h3>
+        <div class="merchant-list" id="merchantList"></div>
+      </article>
+    </section>
+  </main>
 
-    // ===== CONFIGURATION =====
-    const CONFIG = {
-        supabaseUrl: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
-        supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
-        googleScriptUrl: 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec',
-        adminEmail: 'admin@axentro.com'
-    };
+  <script>
+    const STORAGE_KEY = 'merchant_tracker_db_v1';
+    const loaderScreen = document.getElementById('loaderScreen');
+    const progressFill = document.getElementById('progressFill');
+    const progressLabel = document.getElementById('progressLabel');
+    const syncState = document.getElementById('syncState');
+    const merchantForm = document.getElementById('merchantForm');
+    const merchantList = document.getElementById('merchantList');
+    const queryInput = document.getElementById('query');
+    const resultBox = document.getElementById('result');
+    const saveStatus = document.getElementById('saveStatus');
+    const installBtn = document.getElementById('installBtn');
+    const seedDemoBtn = document.getElementById('seedDemo');
 
-    // Initialize Supabase Client
-    const _supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+    let deferredInstallPrompt = null;
 
-    // ===== GLOBAL STATE =====
-    let _currentMerchant = null;
-    let _currentAccountNumber = null;
-
-    // ===== 🎵 PROFESSIONAL SOUND SYSTEM =====
-    const SoundSystem = {
-        audioContext: null,
-        
-        init() {
-            try {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            } catch(e) {
-                console.warn('Web Audio API not supported');
-            }
-        },
-        
-        getContext() {
-            if (!this.audioContext) this.init();
-            if (this.audioContext && this.audioContext.state === 'suspended') {
-                this.audioContext.resume();
-            }
-            return this.audioContext;
-        },
-        
-        // ✅ صوت النقر - نغمة خفيفة وواضحة
-        playClick() {
-            try {
-                const ctx = this.getContext();
-                if (!ctx) return;
-                
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(1200, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05);
-                
-                gain.gain.setValueAtTime(0.15, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-                
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.08);
-            } catch(e) {}
-        },
-        
-        // ✅ صوت النجاح - استخدام الملف الأصلي + نغمة إضافية
-        playSuccess() {
-            // تشغيل الملف الأصلي
-            const audio = document.getElementById('successSound');
-            if (audio) {
-                audio.currentTime = 0;
-                audio.play().catch(e => console.warn('Success sound error:', e));
-            }
-            
-            // نغمة نجاح إضافية
-            try {
-                const ctx = this.getContext();
-                if (!ctx) return;
-                
-                const now = ctx.currentTime;
-                
-                // نغمة الأولى
-                const osc1 = ctx.createOscillator();
-                const gain1 = ctx.createGain();
-                osc1.connect(gain1);
-                gain1.connect(ctx.destination);
-                osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(523.25, now); // C5
-                gain1.gain.setValueAtTime(0.2, now);
-                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                osc1.start(now);
-                osc1.stop(now + 0.15);
-                
-                // نغمة الثانية
-                const osc2 = ctx.createOscillator();
-                const gain2 = ctx.createGain();
-                osc2.connect(gain2);
-                gain2.connect(ctx.destination);
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(659.25, now + 0.1); // E5
-                gain2.gain.setValueAtTime(0.001, now + 0.1);
-                gain2.gain.linearRampToValueAtTime(0.2, now + 0.12);
-                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-                osc2.start(now + 0.1);
-                osc2.stop(now + 0.3);
-                
-                // نغمة الثالثة
-                const osc3 = ctx.createOscillator();
-                const gain3 = ctx.createGain();
-                osc3.connect(gain3);
-                gain3.connect(ctx.destination);
-                osc3.type = 'sine';
-                osc3.frequency.setValueAtTime(783.99, now + 0.2); // G5
-                gain3.gain.setValueAtTime(0.001, now + 0.2);
-                gain3.gain.linearRampToValueAtTime(0.2, now + 0.22);
-                gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-                osc3.start(now + 0.2);
-                osc3.stop(now + 0.45);
-                
-            } catch(e) {}
-        },
-        
-        // ❌ صوت الخطأ - نغمة تحذيرية قصيرة
-        playError() {
-            try {
-                const ctx = this.getContext();
-                if (!ctx) return;
-                
-                const now = ctx.currentTime;
-                
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(220, now); // A3
-                osc.frequency.setValueAtTime(196, now + 0.1); // G3
-                
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-                
-                osc.start(now);
-                osc.stop(now + 0.2);
-            } catch(e) {}
-        },
-        
-        // 🔌 صوت فشل الاتصال - نغمة منخفضة ومستمرة قليلاً
-        playConnectionError() {
-            try {
-                const ctx = this.getContext();
-                if (!ctx) return;
-                
-                const now = ctx.currentTime;
-                
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.exponentialRampToValueAtTime(80, now + 0.3);
-                
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-                
-                osc.start(now);
-                osc.stop(now + 0.4);
-            } catch(e) {}
-        },
-        
-        // 📤 صوت فشل الإرسال - نغمات متعددة
-        playSendFailed() {
-            try {
-                const ctx = this.getContext();
-                if (!ctx) return;
-                
-                const now = ctx.currentTime;
-                
-                // نغمة الأولى
-                const osc1 = ctx.createOscillator();
-                const gain1 = ctx.createGain();
-                osc1.connect(gain1);
-                gain1.connect(ctx.destination);
-                osc1.type = 'square';
-                osc1.frequency.setValueAtTime(300, now);
-                gain1.gain.setValueAtTime(0.2, now);
-                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                osc1.start(now);
-                osc1.stop(now + 0.15);
-                
-                // نغمة الثانية
-                const osc2 = ctx.createOscillator();
-                const gain2 = ctx.createGain();
-                osc2.connect(gain2);
-                gain2.connect(ctx.destination);
-                osc2.type = 'square';
-                osc2.frequency.setValueAtTime(250, now + 0.2);
-                gain2.gain.setValueAtTime(0.001, now + 0.2);
-                gain2.gain.linearRampToValueAtTime(0.2, now + 0.22);
-                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-                osc2.start(now + 0.2);
-                osc2.stop(now + 0.35);
-                
-            } catch(e) {}
+    function bootLoadingScreen() {
+      let progress = 0;
+      const timer = setInterval(() => {
+        progress = Math.min(progress + Math.floor(Math.random() * 16), 100);
+        progressFill.style.width = `${progress}%`;
+        progressLabel.textContent = `${progress}%`;
+        if (progress >= 100) {
+          clearInterval(timer);
+          setTimeout(() => loaderScreen.classList.add('hidden'), 250);
         }
-    };
+      }, 100);
+    }
 
-    // ===== دوال التوافق القديمة =====
-    function playSuccessSound() { SoundSystem.playSuccess(); }
-    function playErrorSound() { SoundSystem.playError(); }
-    function playClickSound() { SoundSystem.playClick(); }
+    function getMerchants() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      } catch {
+        return [];
+      }
+    }
 
-    // ===== TIME FORMATTER FOR DATABASE =====
-    const TimeFormatter = {
-        getCurrentTimeShort() {
-            const now = new Date();
-            return now.toLocaleTimeString('en-GB', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false 
-            });
-        },
-        
-        getCurrentTimestampWithTZ() {
-            return new Date().toISOString();
+    function setMerchants(merchants) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merchants));
+      syncState.textContent = `Saved ${new Date().toLocaleTimeString('ar-EG')}`;
+    }
+
+    function normalize(v) {
+      return (v || '').toString().trim().toLowerCase();
+    }
+
+    function merchantTemplate(merchant) {
+      return `
+        <div class="merchant-item">
+          <div class="row"><strong>الاسم</strong><span>${merchant.name}</span></div>
+          <div class="row"><strong>الهاتف</strong><span>${merchant.phone}</span></div>
+          <div class="row"><strong>المدينة</strong><span>${merchant.city}</span></div>
+          <div class="small">ID: ${merchant.id}</div>
+        </div>
+      `;
+    }
+
+    function renderMerchants(items = getMerchants()) {
+      if (!items.length) {
+        merchantList.innerHTML = '<p class="small">لا توجد سجلات حالياً.</p>';
+        return;
+      }
+      merchantList.innerHTML = items.slice().reverse().map(merchantTemplate).join('');
+    }
+
+    function renderSearch(query) {
+      const merchants = getMerchants();
+      const q = normalize(query);
+
+      if (!q) {
+        resultBox.innerHTML = '<p class="small">اكتب اسم تاجر أو رقم هاتف للبحث.</p>';
+        return;
+      }
+
+      const found = merchants.filter(m =>
+        normalize(m.name).includes(q) || normalize(m.phone).includes(q) || normalize(m.id).includes(q)
+      );
+
+      if (!found.length) {
+        resultBox.innerHTML = `<p>لا توجد نتائج مطابقة لـ <strong>${query}</strong>.</p>`;
+        return;
+      }
+
+      resultBox.innerHTML = found.map(merchantTemplate).join('');
+    }
+
+    function showStatus(message, type = 'ok') {
+      saveStatus.textContent = message;
+      saveStatus.className = `status show ${type}`;
+      setTimeout(() => saveStatus.classList.remove('show'), 2200);
+    }
+
+    function saveMerchant(event) {
+      event.preventDefault();
+      const name = document.getElementById('merchantName').value.trim();
+      const phone = document.getElementById('merchantPhone').value.trim();
+      const city = document.getElementById('merchantCity').value.trim();
+
+      if (!name || !phone || !city) {
+        showStatus('من فضلك املأ كل الحقول المطلوبة.', 'warn');
+        return;
+      }
+
+      const merchants = getMerchants();
+      const merchant = {
+        id: `M-${Date.now().toString(36).toUpperCase()}`,
+        name,
+        phone,
+        city,
+        createdAt: new Date().toISOString(),
+      };
+
+      merchants.push(merchant);
+      setMerchants(merchants);
+      renderMerchants(merchants);
+      renderSearch(queryInput.value);
+      merchantForm.reset();
+      showStatus(`تم حفظ ${name} بنجاح.`, 'ok');
+    }
+
+    function seedDemoData() {
+      const merchants = getMerchants();
+      if (merchants.some(m => normalize(m.name) === normalize('تاجر للتجربة'))) {
+        showStatus('البيانات التجريبية موجودة بالفعل.', 'warn');
+        return;
+      }
+
+      const demoRows = [
+        { id: 'M-DEMO-001', name: 'تاجر للتجربة', phone: '01000111222', city: 'القاهرة', createdAt: new Date().toISOString() },
+        { id: 'M-DEMO-002', name: 'مؤسسة النور', phone: '01122334455', city: 'الجيزة', createdAt: new Date().toISOString() },
+      ];
+
+      setMerchants([...merchants, ...demoRows]);
+      renderMerchants();
+      renderSearch(queryInput.value);
+      showStatus('تم تحميل بيانات تجريبية بنجاح.', 'ok');
+    }
+
+    function setupInstallPrompt() {
+      window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        installBtn.disabled = false;
+      });
+
+      installBtn.addEventListener('click', async () => {
+        if (!deferredInstallPrompt) {
+          showStatus('متصفحك لا يدعم التثبيت المباشر حالياً. يمكنك استخدام "Add to Home Screen".', 'warn');
+          return;
         }
-    };
 
-    // ===== PORTAL OBJECT =====
-    const Portal = {
-        
-        init() {
-            console.log('🚀 Initializing Axentro Portal v6.0...');
-            
-            // تهيئة نظام الأصوات
-            SoundSystem.init();
-            
-            setTimeout(() => {
-                document.getElementById('portalLoading').classList.add('hidden');
-                SoundSystem.playSuccess();
-                console.log('✅ Portal Ready!');
-            }, 1500);
-            
-            const savedAccount = localStorage.getItem('_ax_merchant_account');
-            if (savedAccount) {
-                document.getElementById('merchantAccountId').value = savedAccount;
-            }
-        },
-
-        // ✅ البحث برقم الحساب أولاً، ثم رقم التاجر مع إعادة المحاولة
-        async loadMerchantData(retryCount = 0) {
-            const accountNum = document.getElementById('merchantAccountId').value.trim();
-            
-            if (!accountNum) {
-                Toast.show('يرجى إدخال رقم الحساب', 'error');
-                SoundSystem.playError();
-                this._shakeInput();
-                return;
-            }
-            
-            SoundSystem.playClick();
-            Toast.show('جاري البحث عن البيانات...', 'info');
-            this._showLoading(true);
-            
-            try {
-                let merchant = null;
-                let error = null;
-                
-                // أولاً: البحث برقم الحساب
-                console.log(`🔍 Searching by account number: ${accountNum}`);
-                let result = await _supabase
-                    .from('merchants')
-                    .select('*')
-                    .eq('رقم الحساب', accountNum)
-                    .single();
-                
-                merchant = result.data;
-                error = result.error;
-                
-                // إذا لم يجد، حاول البحث برقم التاجر
-                if (!merchant && error && error.code === 'PGRST116') {
-                    console.log(`🔍 Searching by merchant number: ${accountNum}`);
-                    const result2 = await _supabase
-                        .from('merchants')
-                        .select('*')
-                        .eq('رقم التاجر', accountNum)
-                        .single();
-                    
-                    if (!result2.error && result2.data) {
-                        merchant = result2.data;
-                        error = null;
-                    }
-                } else if (error && error.code !== 'PGRST116') {
-                    throw error;
-                }
-                
-                // إذا لم يجد التاجر ولم نتجاوز عدد المحاولات
-                if (!merchant && retryCount < 2) {
-                    console.warn(`⚠️ Not found, retrying... (${retryCount + 1}/3)`);
-                    await new Promise(resolve => setTimeout(resolve, 1000)); // انتظار ثانية واحدة
-                    return this.loadMerchantData(retryCount + 1);
-                }
-                
-                if (!merchant) {
-                    Toast.show('لم يتم العثور على تاجر بهذا الرقم', 'error');
-                    SoundSystem.playConnectionError();
-                    this._showLoading(false);
-                    return;
-                }
-                
-                _currentMerchant = merchant;
-                _currentAccountNumber = accountNum;
-                
-                localStorage.setItem('_ax_merchant_account', accountNum);
-                
-                await this._renderDashboard(merchant);
-                
-                document.getElementById('merchantLoginSection').style.display = 'none';
-                document.getElementById('merchantDashboard').style.display = 'block';
-                
-                Toast.show(`مرحباً ${merchant['اسم التاجر']} 👋`, 'success');
-                SoundSystem.playSuccess();
-                
-            } catch (error) {
-                console.error('❌ Load Error:', error);
-                
-                // إذا كان خطأ في الاتصال وحاولنا أقل من 3 مرات
-                if ((error.message?.includes('fetch') || error.message?.includes('network')) && retryCount < 2) {
-                    console.warn(`⚠️ Connection error, retrying... (${retryCount + 1}/3)`);
-                    Toast.show('مشكلة في الاتصال، جاري إعادة المحاولة...', 'warning');
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    return this.loadMerchantData(retryCount + 1);
-                }
-                
-                Toast.show('حدث خطأ في تحميل البيانات', 'error');
-                SoundSystem.playConnectionError();
-            }
-            
-            this._showLoading(false);
-        },
-
-        async _renderDashboard(merchant) {
-            this._updateInfoCard(merchant);
-            await Promise.all([
-                this._loadMachines(merchant.id),
-                this._calculateStats(merchant.id),
-                this._loadTransfers(merchant.id),
-                this._loadCollections(merchant.id),
-                this._loadRequests(merchant.id)
-            ]);
-        },
-
-        _updateInfoCard(m) {
-            document.getElementById('merchantInfoCard').style.display = 'block';
-            document.getElementById('displayMerchantName').textContent = m['اسم التاجر'] || '—';
-            document.getElementById('displayMerchantNumber').textContent = m['رقم التاجر'] || '—';
-            document.getElementById('displayActivityName').textContent = m['اسم النشاط'] || '—';
-            document.getElementById('displayPhone').textContent = m['رقم الهاتف'] || '—';
-            document.getElementById('displayArea').textContent = m['المنطقة'] || '—';
-            document.getElementById('displayAddress').textContent = m['العنوان'] || '—';
-            document.getElementById('displayStatus').textContent = m['الحالة'] || '—';
-        },
-
-        async _loadMachines(merchantId) {
-            try {
-                const { data: machines, error } = await _supabase
-                    .from('machines')
-                    .select('*')
-                    .eq('رقم التاجر', merchantId)
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                const container = document.getElementById('machinesGridContainer');
-                const section = document.getElementById('machinesSectionCard');
-                
-                if (!machines?.length) { 
-                    section.style.display = 'none'; 
-                    document.getElementById('mMachinesCount').textContent = '0';
-                    return; 
-                }
-                
-                section.style.display = 'block';
-                document.getElementById('machinesCountLabel').textContent = `${machines.length} مكنة`;
-                document.getElementById('mMachinesCount').textContent = machines.length;
-                
-                container.innerHTML = machines.map((mac, idx) => `
-                    <div class="machine-card" style="animation-delay:${idx * 0.1}s">
-                        <div class="machine-header">
-                            <span class="machine-number">${mac['رقم المكنة'] || '—'}</span>
-                            <span class="machine-badge ${mac['الحالة'] === 'نشطة' ? 'badge-active' : 'badge-inactive'}">
-                                ${mac['الحالة'] || '—'}
-                            </span>
-                        </div>
-                        <div class="machine-details">
-                            <div class="detail-row"><span class="detail-label">الرقم التسلسلي</span><span class="detail-value">${mac['الرقم التسلسلي'] || '—'}</span></div>
-                            <div class="detail-row"><span class="detail-label">الهدف الشهري</span><span class="detail-value">${(mac['التارجت الشهري'] || 0).toLocaleString()} ج.م</span></div>
-                            <div class="detail-row"><span class="detail-label">تاريخ الإسناد</span><span class="detail-value">${this._formatDate(mac['تاريخ الإسناد'])}</span></div>
-                        </div>
-                        <div class="target-progress">
-                            <div class="progress-header">
-                                <span>نسبة التحقيق</span>
-                                <span>${Math.floor(Math.random() * 75 + 25)}%</span>
-                            </div>
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" style="width:${Math.floor(Math.random() * 75 + 25)}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                
-                this._populateMachineSelect(machines);
-                
-            } catch (error) { 
-                console.error('Machines Error:', error); 
-                document.getElementById('mMachinesCount').textContent = '0';
-            }
-        },
-
-        _populateMachineSelect(machines) {
-            const select = document.getElementById('reqMachine');
-            select.innerHTML = '<option value="">-- جميع المكن --</option>';
-            if (machines && machines.length) {
-                machines.forEach(m => {
-                    const option = document.createElement('option');
-                    option.value = m.id;
-                    option.textContent = `${m['الرقم التسلسلي']} (${m['رقم المكنة']})`;
-                    select.appendChild(option);
-                });
-            }
-        },
-
-        async _calculateStats(merchantId) {
-            try {
-                const [transfersRes, collectionsRes] = await Promise.all([
-                    _supabase.from('transfers').select('قيمة التحويل').eq('رقم التاجر', merchantId),
-                    _supabase.from('collections').select('قيمة التحصيل, المتبقي بعد التحصيل').eq('رقم التاجر', merchantId)
-                ]);
-                
-                const totalTransfers = transfersRes.data?.reduce((sum, t) => sum + (t['قيمة التحويل'] || 0), 0) || 0;
-                const totalCollections = collectionsRes.data?.reduce((sum, c) => sum + (c['قيمة التحصيل'] || 0), 0) || 0;
-                const remainingDebt = totalTransfers - totalCollections;
-                
-                document.getElementById('mTotalTransfers').textContent = `${totalTransfers.toLocaleString()} ج.م`;
-                document.getElementById('mTotalCollections').textContent = `${totalCollections.toLocaleString()} ج.م`;
-                document.getElementById('mCurrentDebt').textContent = `${remainingDebt.toLocaleString()} ج.م`;
-                document.getElementById('displayDebt').textContent = `${remainingDebt.toLocaleString()} ج.م`;
-                
-            } catch (error) { console.error('Stats Error:', error); }
-        },
-
-        async _loadTransfers(merchantId) {
-            try {
-                const { data, error } = await _supabase
-                    .from('transfers')
-                    .select('*')
-                    .eq('رقم التاجر', merchantId)
-                    .order('created_at', { ascending: false })
-                    .limit(5);
-                
-                if (error) throw error;
-                
-                const tbody = document.getElementById('mTransfersTable');
-                if (!data?.length) {
-                    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>`;
-                    return;
-                }
-                
-                tbody.innerHTML = data.map((t, i) => `
-                    <tr>
-                        <td>${i+1}</td>
-                        <td><span class="ref-code">${t['الرقم المرجعي'] || '—'}</span></td>
-                        <td>${this._formatDate(t['التاريخ'])}</td>
-                        <td>${this._formatTimeForDisplay(t['الوقت'])}</td>
-                        <td>${t['نوع التحويل'] || '—'}</td>
-                        <td class="amount-negative">${(t['قيمة التحويل'] || 0).toLocaleString()} ج.م</td>
-                    </tr>
-                `).join('');
-                
-            } catch (error) { console.error('Transfers Error:', error); }
-        },
-
-        async _loadCollections(merchantId) {
-            try {
-                const { data, error } = await _supabase
-                    .from('collections')
-                    .select('*')
-                    .eq('رقم التاجر', merchantId)
-                    .order('created_at', { ascending: false })
-                    .limit(5);
-                
-                if (error) throw error;
-                
-                const tbody = document.getElementById('mCollectionsTable');
-                if (!data?.length) {
-                    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>`;
-                    return;
-                }
-                
-                tbody.innerHTML = data.map((c, i) => `
-                    <tr>
-                        <td>${i+1}</td>
-                        <td><span class="ref-code">${c['الرقم المرجعي'] || '—'}</span></td>
-                        <td>${this._formatDate(c['التاريخ'])}</td>
-                        <td>${this._formatTimeForDisplay(c['الوقت'])}</td>
-                        <td class="amount-positive">${(c['قيمة التحصيل'] || 0).toLocaleString()} ج.م</td>
-                        <td class="amount-negative">${(c['المتبقي بعد التحصيل'] || 0).toLocaleString()} ج.م</td>
-                    </tr>
-                `).join('');
-                
-            } catch (error) { console.error('Collections Error:', error); }
-        },
-
-        async _loadRequests(merchantId) {
-            try {
-                const { data, error } = await _supabase
-                    .from('requests')
-                    .select('*')
-                    .eq('رقم التاجر', merchantId)
-                    .order('created_at', { ascending: false })
-                    .limit(15);
-                
-                if (error) throw error;
-                
-                const container = document.getElementById('requestsHistoryContainer');
-                if (!data?.length) {
-                    container.innerHTML = `<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>`;
-                    return;
-                }
-                
-                container.innerHTML = data.map(req => `
-                    <div class="request-item status-${req['الحالة']}">
-                        <div class="request-top">
-                            <span class="request-ref">#${req['رقم الطلب'] || '—'}</span>
-                            <span class="request-status-badge badge-${this._getStatusClass(req['الحالة'])}">
-                                ${req['الحالة'] || '—'}
-                            </span>
-                        </div>
-                        <div class="request-body-grid">
-                            <div class="req-detail"><span class="req-detail-label">التاريخ</span><span class="req-detail-value">${this._formatDate(req['التاريخ'])}</span></div>
-                            <div class="req-detail"><span class="req-detail-label">نوع الطلب</span><span class="req-detail-value">${req['نوع الطلب'] || '—'}</span></div>
-                            <div class="req-detail"><span class="req-detail-label">المبلغ</span><span class="req-detail-value req-amount">${(req['المبلغ'] || 0).toLocaleString()} ج.م</span></div>
-                            <div class="req-detail"><span class="req-detail-label">المديونية وقت الطلب</span><span class="req-detail-value">${(req['المديونية الحالية'] || 0).toLocaleString()} ج.م</span></div>
-                        </div>
-                        ${req['ملاحظات'] ? `<div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:10px;font-size:13px;color:#64748b;"><i class="fas fa-sticky-note" style="margin-left:6px;"></i>${req['ملاحظات']}</div>` : ''}
-                    </div>
-                `).join('');
-                
-            } catch (error) { console.error('Requests Error:', error); }
-        },
-
-        openRequestModal() {
-            if (!_currentMerchant) {
-                Toast.show('يجب الاستعلام عن الحساب أولاً', 'warning');
-                SoundSystem.playError();
-                return;
-            }
-            document.getElementById('requestModal').classList.add('show');
-            SoundSystem.playClick();
-        },
-
-        closeRequestModal() {
-            document.getElementById('requestModal').classList.remove('show');
-            document.getElementById('reqType').value = '';
-            document.getElementById('reqAmount').value = '';
-            document.getElementById('reqNotes').value = '';
-        },
-
-        async submitRequest() {
-            if (!_currentMerchant) {
-                Toast.show('خطأ: لا يوجد تاجر محدد', 'error');
-                SoundSystem.playError();
-                return;
-            }
-            
-            const type = document.getElementById('reqType').value;
-            const amount = parseFloat(document.getElementById('reqAmount').value);
-            const notes = document.getElementById('reqNotes').value.trim();
-            
-            if (!type) { 
-                Toast.show('يرجى اختيار نوع الطلب', 'error'); 
-                SoundSystem.playError();
-                return; 
-            }
-            
-            if (!amount || amount <= 0) { 
-                Toast.show('يرجى إدخال مبلغ صحيح', 'error'); 
-                SoundSystem.playError();
-                return; 
-            }
-            
-            const requestRefNumber = this._generateRequestCode();
-            console.log('🔢 Generated Request Code:', requestRefNumber);
-            
-            const requestData = {
-                'رقم الطلب': requestRefNumber,
-                'التاريخ': new Date().toISOString().split('T')[0],
-                'الوقت': TimeFormatter.getCurrentTimeShort(),
-                'وقت الإنشاء': TimeFormatter.getCurrentTimestampWithTZ(),
-                'رقم التاجر': _currentMerchant.id,
-                'اسم التاجر': _currentMerchant['اسم التاجر'],
-                'اسم النشاط': _currentMerchant['اسم النشاط'],
-                'رقم الحساب': _currentMerchant['رقم الحساب'],
-                'المديونية الحالية': parseFloat(document.getElementById('mCurrentDebt').textContent.replace(/[^0-9.-]/g, '')) || 0,
-                'نوع الطلب': type,
-                'المبلغ': amount,
-                'ملاحظات': notes || null,
-                'الحالة': 'معلق'
-            };
-            
-            console.log('📤 Full Request Data:', requestData);
-            
-            this._showLoading(true);
-            Toast.show('جاري إرسال الطلب...', 'info');
-            SoundSystem.playClick();
-            
-            try {
-                const { data: insertedReq, error } = await _supabase
-                    .from('requests')
-                    .insert([requestData])
-                    .select()
-                    .single();
-                
-                if (error) throw error;
-                
-                console.log('✅ Request Saved Successfully:', insertedReq);
-                
-                // إرسال إيميل
-                try {
-                    const emailPayload = {
-                        action: 'sendRequestEmail',
-                        payload: {
-                            merchant: {
-                                code: _currentMerchant['رقم التاجر'] || '',
-                                name: _currentMerchant['اسم التاجر'],
-                                phone: _currentMerchant['رقم الهاتف'] || '',
-                                area: _currentMerchant['المنطقة'],
-                                status: _currentMerchant['الحالة'],
-                                accountNumber: _currentMerchant['رقم الحساب'] || ''
-                            },
-                            request: {
-                                code: insertedReq['رقم الطلب'] || requestRefNumber,
-                                requestType: type,
-                                amount: amount,
-                                notes: notes || '',
-                                date: requestData['التاريخ']
-                            },
-                            machines: [],
-                            remainingBalance: parseFloat(document.getElementById('mCurrentDebt').textContent.replace(/[^0-9.-]/g, '')) || 0
-                        }
-                    };
-                    fetch(CONFIG.googleScriptUrl, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(emailPayload)
-                    }).catch(e => console.warn('Email error:', e));
-                } catch (emailErr) { console.warn('Email failed:', emailErr); }
-                
-                this.closeRequestModal();
-                document.getElementById('successRefId').textContent = insertedReq['رقم الطلب'] || requestRefNumber;
-                document.getElementById('successModal').classList.add('show');
-                
-                SoundSystem.playSuccess();
-                
-                if (_currentMerchant) await this._loadRequests(_currentMerchant.id);
-                
-            } catch (error) {
-                console.error('❌ Submit Error:', error);
-                Toast.show('حدث خطأ أثناء إرسال الطلب: ' + (error.message || 'غير معروف'), 'error');
-                SoundSystem.playSendFailed();
-            }
-            
-            this._showLoading(false);
-        },
-
-        _generateRequestCode() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const random = String(Math.floor(Math.random() * 90000) + 10000);
-            return `REQ-${year}${month}${day}-${random}`;
-        },
-
-        closeSuccessAndNew() {
-            document.getElementById('successModal').classList.remove('show');
-            setTimeout(() => this.openRequestModal(), 300);
-        },
-
-        toggleDebug() {
-            const debugEl = document.getElementById('debugInfo');
-            debugEl.classList.toggle('show');
-            SoundSystem.playClick();
-            
-            if (debugEl.classList.contains('show')) {
-                const exampleCode = this._generateRequestCode();
-                debugEl.textContent = `
-╔══════════════════════════════════════╗
-║     AXENTRO PORTAL v6.0 - DEBUG MODE ║
-╠══════════════════════════════════════╝
-
-📡 Configuration:
-   URL: ${CONFIG.supabaseUrl}
-   Script: ${CONFIG.googleScriptUrl}
-   Email: ${CONFIG.adminEmail}
-
-👤 Current State:
-   Merchant ID: ${_currentMerchant?.id || 'Not loaded'}
-   Account: ${_currentAccountNumber || 'Not entered'}
-
-🎯 Request Code Format: REQ-YYYYMMDD-XXXXX
-   Example: ${exampleCode}
-
-🕐 Time Formats:
-   • Current Time: "${TimeFormatter.getCurrentTimeShort()}"
-   • Timestamp: "${TimeFormatter.getCurrentTimestampWithTZ()}"
-
-🎵 Sound System: Active
-   • Click: ✅
-   • Success: ✅ (done.mp3 + tones)
-   • Error: ✅
-   • Connection Error: ✅
-   • Send Failed: ✅
-
-🔄 Retry Mechanism: Enabled (3 attempts)
-
-🎯 Last Action: Debug view
-                `;
-            }
-        },
-
-        // ========== UTILITIES ==========
-        
-        _formatDate(dateStr) {
-            if (!dateStr) return '—';
-            try {
-                return new Date(dateStr).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-            } catch (e) { return dateStr; }
-        },
-
-        _formatTimeForDisplay(timeValue) {
-            if (!timeValue) return '—';
-            try {
-                const date = new Date(timeValue);
-                if (!isNaN(date.getTime())) {
-                    return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true });
-                }
-                if (typeof timeValue === 'string' && timeValue.includes(':')) {
-                    const [hours, minutes] = timeValue.split(':');
-                    const h = parseInt(hours);
-                    const ampm = h >= 12 ? 'م' : 'ص';
-                    const displayHour = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-                    return `${displayHour}:${minutes} ${ampm}`;
-                }
-                return timeValue;
-            } catch (e) { return timeValue; }
-        },
-
-        _getStatusClass(status) {
-            switch(status) {
-                case 'معلق': return 'pending';
-                case 'مكتمل': return 'completed';
-                case 'ملغي': return 'cancelled';
-                default: return 'pending';
-            }
-        },
-
-        _showLoading(show) {
-            console.log(show ? '⏳ Loading...' : '✅ Done');
-        },
-
-        _shakeInput() {
-            const input = document.getElementById('merchantAccountId');
-            input.style.animation = 'none';
-            void input.offsetHeight;
-            input.style.animation = 'shake 0.5s ease';
-            setTimeout(() => { input.style.animation = ''; }, 500);
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          showStatus('تم بدء تثبيت التطبيق.', 'ok');
         }
-    };
+        deferredInstallPrompt = null;
+      });
 
-    // ===== TOAST SYSTEM =====
-    const Toast = {
-        show(message, type = 'success') {
-            const container = document.getElementById('portalToast');
-            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-            
-            const toast = document.createElement('div');
-            toast.className = `toast-msg ${type}`;
-            toast.innerHTML = `
-                <div class="toast-icon"><i class="fas ${icons[type] || icons.success}"></i></div>
-                <span class="toast-text">${message}</span>
-                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
-                <div class="toast-progress"></div>
-            `;
-            
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.style.animation = 'toastSlideOut 0.3s ease forwards';
-                    setTimeout(() => toast.remove(), 300);
-                }
-            }, 4500);
-        }
-    };
+      window.addEventListener('appinstalled', () => {
+        showStatus('تم تثبيت التطبيق بنجاح على جهازك.', 'ok');
+      });
+    }
 
-    // Add animations
-    const styleSheet = document.createElement('style');
-    styleSheet.textContent = `
-        @keyframes toastSlideOut { to { opacity: 0; transform: translateX(-120px); } }
-        @keyframes shake { 0%,100%{transform:translateX(0)} 25%,75%{transform:translateX(-8px)} 50%{transform:translateX(8px)} }
-    `;
-    document.head.appendChild(styleSheet);
+    async function setupServiceWorker() {
+      if (!('serviceWorker' in navigator)) return;
+      try {
+        await navigator.serviceWorker.register('merchant-sw.js');
+      } catch {
+        syncState.textContent = 'SW unavailable';
+      }
+    }
 
-    // ===== INITIALIZE =====
-    document.addEventListener('DOMContentLoaded', () => Portal.init());
-    </script>
+    merchantForm.addEventListener('submit', saveMerchant);
+    queryInput.addEventListener('input', (e) => renderSearch(e.target.value));
+    seedDemoBtn.addEventListener('click', seedDemoData);
+
+    bootLoadingScreen();
+    renderMerchants();
+    setupInstallPrompt();
+    setupServiceWorker();
+  </script>
 </body>
 </html>
