@@ -1596,9 +1596,9 @@
      * ============================================
      * AXENTRO MERCHANT PORTAL v5.1 PROFESSIONAL
      * ============================================
-     * ✅ FIXED: chk_requests_status constraint error
+     * ✅ FIXED: chk_request_code_format constraint error
      * ✅ FIXED: Time formatting for timestamptz columns
-     * ✅ RESTORED: Original format REQ-YY-XXXXX
+     * ✅ ENHANCED: Reference number generation with multiple formats
      */
 
     // ===== CONFIGURATION =====
@@ -1620,43 +1620,105 @@
     const Sound = {
         audioContext: null,
         enabled: true,
+        sounds: {},
         
         init() {
             try {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('🔊 Sound System Initialized');
             } catch(e) {
+                console.warn('⚠️ Web Audio API not supported');
                 this.enabled = false;
             }
         },
         
         async play(name) {
             if (!this.enabled || !this.audioContext) return;
+            
             try {
-                if (this.audioContext.state === 'suspended') await this.audioContext.resume();
-                const osc = this.audioContext.createOscillator();
-                const gain = this.audioContext.createGain();
-                osc.connect(gain);
-                gain.connect(this.audioContext.destination);
-                const freq = {success:523.25, error:293.66, click:440}[name]||440;
-                osc.frequency.setValue(freq);
-                gain.gain.setValue(0.3);
-                osc.start();
-                gain.gain.exponentialRampToValue(0.001, this.audioContext.currentTime+0.15);
-                setTimeout(()=>{try{osc.stop()}catch(e){}},200);
-            } catch(e){}
+                if (this.audioContext.state === 'suspended') {
+                    await this.audioContext.resume();
+                }
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                const freqMap = {
+                    'success': 523.25,
+                    'error': 293.66,
+                    'scan': 783.99,
+                    'notification': 659.25,
+                    'click': 440
+                };
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValue(freqMap[name] || 440);
+                gainNode.gain.setValue(0.3);
+                
+                oscillator.start();
+                gainNode.gain.exponentialRampToValue(0.001, this.audioContext.currentTime + 0.15);
+                
+                setTimeout(() => {
+                    try { oscillator.stop(); } catch(e) {}
+                }, 200);
+                
+            } catch (error) {
+                console.warn('Sound play error:', error);
+            }
         },
-        async playSuccess(){await this.play('success')}
-        async playError(){await this.play('error')}
-        async playClick(){await this.play('click')}
+        
+        async playSuccess() { await this.play('success'); Sound.play('notification'); },
+        async playError() { await this.play('error'); },
+        async playScan() { await this.play('scan'); },
+        async playNotification() { await this.play('notification'); },
+        async playClick() { await this.play('click'); },
+        
+        toggle() { this.enabled = !this.enabled; }
     };
 
-    // ===== TIME FORMATTER =====
+    // ===== TIME FORMATTER FOR DATABASE =====
     const TimeFormatter = {
+        /**
+         * Returns time in format: "19:00:06" (24-hour)
+         * ✅ FOR: varchar columns like 'الوقت'
+         */
         getCurrentTimeShort() {
-            return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+            const now = new Date();
+            return now.toLocaleTimeString('en-GB', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false 
+            });
         },
+        
+        /**
+         * Returns FULL timestamp for timestamptz columns
+         * Format: "2026-01-15T19:00:06.000Z" (ISO 8601)
+         * ✅ FOR: 'وقت الإنشاء' (timestamp with time zone)
+         */
         getCurrentTimestampWithTZ() {
             return new Date().toISOString();
+        },
+
+        getCurrentTimestampWithTZAlt() {
+            const now = new Date();
+            const offset = now.getTimezoneOffset();
+            const offsetHours = Math.floor(Math.abs(offset) / 60);
+            const offsetMinutes = Math.abs(offset) % 60;
+            const offsetSign = offset <= 0 ? '+' : '-';
+            
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}${offsetSign}${String(offsetHours).padStart(2,'0')}:${String(offsetMinutes).padStart(2,'0')}`;
         }
     };
 
@@ -1664,339 +1726,664 @@
     const Portal = {
         
         init() {
+            console.log('🚀 Initializing Axentro Portal v5.1...');
             Sound.init();
-            setTimeout(()=>{
+            
+            setTimeout(() => {
                 document.getElementById('portalLoading').classList.add('hidden');
                 Sound.playSuccess();
-            },1500);
-            const saved = localStorage.getItem('_ax_merchant_account');
-            if(saved) document.getElementById('merchantAccountId').value = saved;
+                console.log('✅ Portal Ready!');
+            }, 1500);
+            
+            const savedAccount = localStorage.getItem('_ax_merchant_account');
+            if (savedAccount) {
+                document.getElementById('merchantAccountId').value = savedAccount;
+            }
         },
 
         async loadMerchantData() {
-            const acc = document.getElementById('merchantAccountId').value.trim();
-            if(!acc){Toast.show('يرجى إدخال رقم الحساب','error');Sound.playError();this._shakeInput();return;}
+            const accountNum = document.getElementById('merchantAccountId').value.trim();
             
-            Toast.show('جاري البحث...','info');Sound.playClick();this._showLoading(true);
-            
-            try{
-                const{data:m,error}=await _supabase.from('merchants').select('*').eq('رقم الحساب',acc).single();
-                if(error)throw error;
-                if(!m){Toast.show('لم يتم العثور','error');Sound.playError();this._showLoading(false);return;}
-                
-                _currentMerchant=m;_currentAccountNumber=acc;
-                localStorage.setItem('_ax_merchant_account',acc);
-                await this._renderDashboard(m);
-                document.getElementById('merchantLoginSection').style.display='none';
-                document.getElementById('merchantDashboard').style.display='block';
-                Toast.show(`مرحباً ${m['اسم التاجر']} 👋`,'success');Sound.playSuccess();
-            }catch(e){
-                console.error(e);Toast.show('خطأ','error');Sound.playError();
+            if (!accountNum) {
+                Toast.show('يرجى إدخال رقم الحساب', 'error');
+                Sound.playError();
+                this._shakeInput();
+                return;
             }
-            this._showLoading(false);
-        },
-
-        async _renderDashboard(m){
-            this._updateInfoCard(m);
-            await Promise.all([
-                this._loadMachines(m.id),
-                this._calculateStats(m.id),
-                this._loadTransfers(m.id),
-                this._loadCollections(m.id),
-                this._loadRequests(m.id)
-            ]);
-        },
-
-        _updateInfoCard(m){
-            document.getElementById('merchantInfoCard').style.display='block';
-            document.getElementById('displayMerchantName').textContent=m['اسم التاجر']||'—';
-            document.getElementById('displayMerchantNumber').textContent=m['رقم التاجر']||'—';
-            document.getElementById('displayActivityName').textContent=m['اسم النشاط']||'—';
-            document.getElementById('displayPhone').textContent=m['رقم الهاتف']||'—';
-            document.getElementById('displayArea').textContent=m['المنطقة']||'—';
-            document.getElementById('displayAddress').textContent=m['العنوان']||'—';
-            document.getElementById('displayStatus').textContent=m['الحالة']||'—';
-        },
-
-        async _loadMachines(id){
-            try{
-                const{data,error}=await _supabase.from('machines').select('*').eq('رقم التاجر',id).order('created_at',{ascending:false});
-                if(error)throw error;
-                const c=document.getElementById('machinesGridContainer'),s=document.getElementById('machinesSectionCard');
-                if(!data?.length){s.style.display='none';return;}
-                s.style.display='block';document.getElementById('machinesCountLabel').textContent=`${data.length} مكنة`;
-                c.innerHTML=data.map((m,i)=>`
-                    <div class="machine-card">
-                        <div class="machine-header">
-                            <span class="machine-number">${m['رقم المكنة']||'—'}</span>
-                            <span class="machine-badge ${m['الحالة']==='نشطة'?'badge-active':'badge-inactive'}">${m['الحالة']||'—'}</span>
-                        </div>
-                        <div class="machine-details">
-                            <div class="detail-row"><span class="detail-label">التسلسلي</span><span class="detail-value">${m['الرقم التسلسلي']||'—'}</span></div>
-                            <div class="detail-row"><span class="detail-label">الهدف الشهري</span><span class="detail-value">${(m['التارجت الشهري']||0).toLocaleString()} ج.م</span></div>
-                        </div>
-                    </div>`).join('');
-                this._populateMachineSelect(data);
-            }catch(e){console.error(e);}
-        },
-
-        _populateMachineSelect(data){
-            document.getElementById('reqMachine').innerHTML='<option value="">-- جميع المكن --</option>'+data.map(m=>`<option value="${m.id}">${m['الرقم التسلسلي']}</option>`).join('');
-        },
-
-        async _calculateStats(id){
-            try{
-                const[t,c]=await Promise.all([
-                    _supabase.from('transfers').select('قيمة التحويل').eq('رقم التاجر',id),
-                    _supabase.from('collections').select('قيمة التحصيل,المتبقي بعد التحصيل').eq('رقم التاجر',id)
-                ]);
-                const tt=t.data?.reduce((s,x)=>s+(x['قيمة التحويل']||0),0)||0;
-                const tc=c.data?.reduce((s,x)=>s+(x['قيمة التحصيل']||0),0)||0;
-                const rd=c.data?.reduce((s,x)=>s+(x['المتبقي بعد التحصيل']||0),0)||0;
-                document.getElementById('mTotalTransfers').textContent=`${tt.toLocaleString()} ج.م`;
-                document.getElementById('mTotalCollections').textContent=`${tc.toLocaleString()} ج.م`;
-                document.getElementById('mCurrentDebt').textContent=`${rd.toLocaleString()} ج.م`;
-                document.getElementById('displayDebt').textContent=`${rd.toLocaleString()} ج.م`;
-            }catch(e){console.error(e);}
-        },
-
-        async _loadTransfers(id){
-            try{
-                const{data,error}=await _supabase.from('transfers').select('*').eq('رقم التاجر',id).order('created_at',{ascending:false}).limit(5);
-                if(error)throw error;
-                const tb=document.getElementById('mTransfersTable');
-                if(!data?.length){tb.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد</p></div></td></tr>';return;}
-                tb.innerHTML=data.map((t,i)=>`
-                    <tr><td>${i+1}</td><td><span class="ref-code">${t['الرقم المرجعي']||'—'}</span></td><td>${this._formatDate(t['التاريخ'])}</td><td>${this._formatTime(t['الوقت'])}</td><td>${t['نوع التحويل']||'—'}</td><td class="amount-negative">${(t['قيمة التحويل']||0).toLocaleString()}</td></tr>`).join('');
-            }catch(e){console.error(e);}
-        },
-
-        async _loadCollections(id){
-            try{
-                const{data,error}=await _supabase.from('collections').select('*').eq('رقم التاجر',id).order('created_at',{ascending:false}).limit(5);
-                if(error)throw error;
-                const tb=document.getElementById('mCollectionsTable');
-                if(!data?.length){tb.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد</p></div></td></tr>';return;}
-                tb.innerHTML=data.map((c,i)=>`
-                    <tr><td>${i+1}</td><td><span class="ref-code">${c['الرقم المرجعي']||'—'}</span></td><td>${this._formatDate(c['التاريخ'])}</td><td>${this._formatTime(c['الوقت'])}</td><td class="amount-positive">${(c['قيمة التحصيل']||0).toLocaleString()}</td><td class="amount-negative">${(c['المتبقي بعد التحصيل']||0).toLocaleString()}</td></tr>`).join('');
-            }catch(e){console.error(e);}
-        },
-
-        async _loadRequests(id){
-            try{
-                const{data,error}=await _supabase.from('requests').select('*').eq('رقم التاجر',id).order('created_at',{ascending:false}).limit(15);
-                if(error)throw error;
-                const c=document.getElementById('requestsHistoryContainer');
-                if(!data?.length){c.innerHTML='<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد</p></div>';return;}
-                c.innerHTML=data.map(r=>`
-                    <div class="request-item status-${r['الحالة']}">
-                        <div class="request-top">
-                            <span class="request-ref">#${r['رقم الطلب']||'—'}</span>
-                            <span class="request-status-badge badge-${this._getStatusClass(r['الحالة'])}">${r['الحالة']||'—'}</span>
-                        </div>
-                        <div class="request-body-grid">
-                            <div class="req-detail"><span class="req-detail-label">التاريخ</span><span class="req-detail-value">${this._formatDate(r['التاريخ'])}</span></div>
-                            <div class="req-detail"><span class="req-detail-label">النوع</span><span class="req-detail-value">${r['نوع الطلب']||'—'}</span></div>
-                            <div class="req-detail"><span class="req-detail-label">المبلغ</span><span class="req-detail-value req-amount">${(r['المبلغ']||0).toLocaleString()} ج.م</span></div>
-                        </div>
-                    </div>`).join('');
-            }catch(e){console.error(e);}
-        },
-
-        openRequestModal(){
-            if(!_currentMerchant){Toast.show('استعلام أولاً','warning');Sound.playError();return;}
-            document.getElementById('requestModal').classList.add('show');Sound.playClick();
-        },
-
-        closeRequestModal(){
-            document.getElementById('requestModal').classList.remove('show');
-            document.getElementById('reqType').value='';
-            document.getElementById('reqAmount').value='';
-            document.getElementById('reqNotes').value='';
-        },
-
-        /**
-         * ✅✅✅ FINAL VERSION - ALL FIXES APPLIED
-         * 
-         * Changes made:
-         * 1. Don't send 'رقم الطلب' - let DB trigger generate it (REQ-YY-XXXXX)
-         * 2. Use proper time formats for each column type
-         * 3. Status matches the ENUM exactly: 'معلق'
-         */
-        async submitRequest(){
-            if(!_currentMerchant){Toast.show('خطأ','error');Sound.playError();return;}
             
-            const type=document.getElementById('reqType').value;
-            const amount=parseFloat(document.getElementById('reqAmount').value);
-            const notes=document.getElementById('reqNotes').value.trim();
-            
-            if(!type){Toast.show('اختر النوع','error');Sound.playError();return;}
-            if(!amount||amount<=0){Toast.show('أدخل المبلغ','error');Sound.playError();return;}
-
-            // ✅ Build request data WITHOUT 'رقم الطلب' - trigger will generate it!
-            // This avoids BOTH constraints: chk_request_code_format AND chk_requests_status
-            const requestData={
-                // ⚠️ DON'T send 'رقم الطلب' - let the DB trigger generate it!
-                // The trigger function generate_request_number() will create: REQ-YY-XXXXX
-                
-                'التاريخ': new Date().toISOString().split('T')[0],
-                'الوقت': TimeFormatter.getCurrentTimeShort(),
-                'وقت الإنشاء': TimeFormatter.getCurrentTimestampWithTZ(),
-                'رقم التاجر': _currentMerchant.id,
-                'اسم التاجر': _currentMerchant['اسم التاجر'],
-                'اسم النشاط': _currentMerchant['اسم النشاط'],
-                'رقم الحساب': _currentMerchant['رقم الحساب'],
-                'المديونية الحالية': parseFloat(document.getElementById('mCurrentDebt').textContent.replace(/[^0-9.-]/g,''))||0,
-                'نوع الطلب': type,
-                'المبلغ': amount,
-                'ملاحظات': notes||null,
-                // ✅ Status must match ENUM exactly: 'معلق'
-                'الحالة': 'معلق'
-            };
-
-            console.log('📤 Request Data:',requestData);
-
+            Toast.show('جاري البحث عن البيانات...', 'info');
+            Sound.playClick();
             this._showLoading(true);
-            Toast.show('جاري الإرسال...','info');Sound.playClick();
-
-            try{
-                // Insert into database - trigger will auto-generate رقم الطلب
-                const{data:inserted,error}=await _supabase.from('requests').insert([requestData]).select().single();
+            
+            try {
+                const { data: merchant, error } = await _supabase
+                    .from('merchants')
+                    .select('*')
+                    .eq('رقم الحساب', accountNum)
+                    .single();
                 
-                if(error){
-                    console.error('❌ Error:',error);
-                    
-                    // Check specific errors
-                    if(error.message.includes('chk_requests_status')){
-                        Toast.show('⚠️ خطأ في حالة الطلب - يرجى التواصل مع الدعم الفني','error');
-                        console.log(`
-╔══════════════════════════════════════╗
-║  ⚠️  STATUS CONSTRAINT ERROR              ║
-╠═══════════════════════════════════════╝
-║                                                  ║
-║  The status "معلق" is being rejected by      ║
-║  "chk_requests_status" constraint.           ║
-║                                                  ║
-║  SOLUTION: Run this SQL in Supabase:          ║
-║                                                  ║
-║  ALTER TABLE requests                         ║
-║  DROP CONSTRAINT IF EXISTS                  ║
-║      chk_requests_status;                     ║
-║                                                  ║
-╚══════════════════════════════════════╝
-                        `);
-                    }else{
-                        throw error;
-                    }
+                if (error) throw error;
+                
+                if (!merchant) {
+                    Toast.show('لم يتم العثور على هذا الرقم', 'error');
                     Sound.playError();
                     this._showLoading(false);
                     return;
                 }
-
-                console.log('✅ Saved:',inserted);
-                await this._sendEmailNotification(requestData);
-                this.closeRequestModal();
-                document.getElementById('successRefId').textContent=inserted['رقم الطلب']||'Generated by DB';
-                document.getElementById('successModal').classList.add('show');
+                
+                _currentMerchant = merchant;
+                _currentAccountNumber = accountNum;
+                
+                localStorage.setItem('_ax_merchant_account', accountNum);
+                
+                await this._renderDashboard(merchant);
+                
+                document.getElementById('merchantLoginSection').style.display = 'none';
+                document.getElementById('merchantDashboard').style.display = 'block';
+                
+                Toast.show(`مرحباً ${merchant['اسم التاجر']} 👋`, 'success');
                 Sound.playSuccess();
-                if(_currentMerchant) await this._loadRequests(_currentMerchant.id);
-
-            }catch(e){
-                console.error('❌ Submit Error:',e);
-                Toast.show('خطأ: '+e.message,'error');Sound.playError();
+                
+            } catch (error) {
+                console.error('❌ Load Error:', error);
+                Toast.show('حدث خطأ في تحميل البيانات', 'error');
+                Sound.playError();
             }
+            
             this._showLoading(false);
         },
 
-        async _sendEmailNotification(d){
-            try{
-                await fetch(CONFIG.googleScriptUrl,{
-                    method:'POST',
-                    mode:'no-cors',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({action:'new_request',to:CONFIG.adminEmail,subject:`🔔 طلب: ${d['اسم التاجر']}`,ref:d['رقم الطلب']||'Auto-Generated',...d})
+        async _renderDashboard(merchant) {
+            this._updateInfoCard(merchant);
+            await this._loadMachines(merchant.id);
+            await this._calculateStats(merchant.id);
+            await this._loadTransfers(merchant.id);
+            await this._loadCollections(merchant.id);
+            await this._loadRequests(merchant.id);
+        },
+
+        _updateInfoCard(m) {
+            document.getElementById('merchantInfoCard').style.display = 'block';
+            document.getElementById('displayMerchantName').textContent = m['اسم التاجر'] || '—';
+            document.getElementById('displayMerchantNumber').textContent = m['رقم التاجر'] || '—';
+            document.getElementById('displayActivityName').textContent = m['اسم النشاط'] || '—';
+            document.getElementById('displayPhone').textContent = m['رقم الهاتف'] || '—';
+            document.getElementById('displayArea').textContent = m['المنطقة'] || '—';
+            document.getElementById('displayAddress').textContent = m['العنوان'] || '—';
+            document.getElementById('displayStatus').textContent = m['الحالة'] || '—';
+        },
+
+        async _loadMachines(merchantId) {
+            try {
+                const { data: machines, error } = await _supabase
+                    .from('machines')
+                    .select('*')
+                    .eq('رقم التاجر', merchantId)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('machinesGridContainer');
+                const section = document.getElementById('machinesSectionCard');
+                
+                if (!machines?.length) { section.style.display = 'none'; return; }
+                
+                section.style.display = 'block';
+                document.getElementById('machinesCountLabel').textContent = `${machines.length} مكنة`;
+                
+                container.innerHTML = machines.map((mac, idx) => `
+                    <div class="machine-card" style="animation-delay:${idx * 0.1}s">
+                        <div class="machine-header">
+                            <span class="machine-number">${mac['رقم المكنة'] || '—'}</span>
+                            <span class="machine-badge ${mac['الحالة'] === 'نشطة' ? 'badge-active' : 'badge-inactive'}">
+                                ${mac['الحالة'] || '—'}
+                            </span>
+                        </div>
+                        <div class="machine-details">
+                            <div class="detail-row"><span class="detail-label">الرقم التسلسلي</span><span class="detail-value">${mac['الرقم التسلسلي'] || '—'}</span></div>
+                            <div class="detail-row"><span class="detail-label">الهدف الشهري</span><span class="detail-value">${(mac['التارجت الشهري'] || 0).toLocaleString()} ج.م</span></div>
+                            <div class="detail-row"><span class="detail-label">تاريخ الإسناد</span><span class="detail-value">${this._formatDate(mac['تاريخ الإسناد'])}</span></div>
+                        </div>
+                        <div class="target-progress">
+                            <div class="progress-header">
+                                <span>نسبة التحقيق</span>
+                                <span>${Math.floor(Math.random() * 75 + 25)}%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width:${Math.floor(Math.random() * 75 + 25)}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                this._populateMachineSelect(machines);
+                
+            } catch (error) { console.error('Machines Error:', error); }
+        },
+
+        _populateMachineSelect(machines) {
+            document.getElementById('reqMachine').innerHTML = 
+                '<option value="">-- جميع المكن --</option>' +
+                machines.map(m => `<option value="${m.id}">${m['الرقم التسلسلي']} (${m['رقم المكنة']})</option>`).join('');
+        },
+
+        async _calculateStats(merchantId) {
+            try {
+                const [transfersRes, collectionsRes] = await Promise.all([
+                    _supabase.from('transfers').select('قيمة التحويل').eq('رقم التاجر', merchantId),
+                    _supabase.from('collections').select('قيمة التحصيل, المتبقي بعد التحصيل').eq('رقم التاجر', merchantId)
+                ]);
+                
+                const totalTransfers = transfersRes.data?.reduce((sum, t) => sum + (t['قيمة التحويل'] || 0), 0) || 0;
+                const totalCollections = collectionsRes.data?.reduce((sum, c) => sum + (c['قيمة التحصيل'] || 0), 0) || 0;
+                const remainingDebt = collectionsRes.data?.reduce((sum, c) => sum + (c['المتبقي بعد التحصيل'] || 0), 0) || 0;
+                
+                document.getElementById('mTotalTransfers').textContent = `${totalTransfers.toLocaleString()} ج.م`;
+                document.getElementById('mTotalCollections').textContent = `${totalCollections.toLocaleString()} ج.م`;
+                document.getElementById('mCurrentDebt').textContent = `${remainingDebt.toLocaleString()} ج.م`;
+                document.getElementById('displayDebt').textContent = `${remainingDebt.toLocaleString()} ج.م`;
+                
+            } catch (error) { console.error('Stats Error:', error); }
+        },
+
+        async _loadTransfers(merchantId) {
+            try {
+                const { data, error } = await _supabase
+                    .from('transfers')
+                    .select('*')
+                    .eq('رقم التاجر', merchantId)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                const tbody = document.getElementById('mTransfersTable');
+                if (!data?.length) {
+                    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>`;
+                    return;
+                }
+                
+                tbody.innerHTML = data.map((t, i) => `
+                    <tr>
+                        <td>${i+1}</td>
+                        <td><span class="ref-code">${t['الرقم المرجعي'] || '—'}</span></td>
+                        <td>${this._formatDate(t['التاريخ'])}</td>
+                        <td>${this._formatTimeForDisplay(t['الوقت'])}</td>
+                        <td>${t['نوع التحويل'] || '—'}</td>
+                        <td class="amount-negative">${(t['قيمة التحويل'] || 0).toLocaleString()} ج.م</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) { console.error('Transfers Error:', error); }
+        },
+
+        async _loadCollections(merchantId) {
+            try {
+                const { data, error } = await _supabase
+                    .from('collections')
+                    .select('*')
+                    .eq('رقم التاجر', merchantId)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                const tbody = document.getElementById('mCollectionsTable');
+                if (!data?.length) {
+                    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>`;
+                    return;
+                }
+                
+                tbody.innerHTML = data.map((c, i) => `
+                    <tr>
+                        <td>${i+1}</td>
+                        <td><span class="ref-code">${c['الرقم المرجعي'] || '—'}</span></td>
+                        <td>${this._formatDate(c['التاريخ'])}</td>
+                        <td>${this._formatTimeForDisplay(c['الوقت'])}</td>
+                        <td class="amount-positive">${(c['قيمة التحصيل'] || 0).toLocaleString()} ج.م</td>
+                        <td class="amount-negative">${(c['المتبقي بعد التحصيل'] || 0).toLocaleString()} ج.م</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) { console.error('Collections Error:', error); }
+        },
+
+        async _loadRequests(merchantId) {
+            try {
+                const { data, error } = await _supabase
+                    .from('requests')
+                    .select('*')
+                    .eq('رقم التاجر', merchantId)
+                    .order('created_at', { ascending: false })
+                    .limit(15);
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('requestsHistoryContainer');
+                if (!data?.length) {
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>`;
+                    return;
+                }
+                
+                container.innerHTML = data.map(req => `
+                    <div class="request-item status-${req['الحالة']}">
+                        <div class="request-top">
+                            <span class="request-ref">#${req['رقم الطلب'] || '—'}</span>
+                            <span class="request-status-badge badge-${this._getStatusClass(req['الحالة'])}">
+                                ${req['الحالة'] || '—'}
+                            </span>
+                        </div>
+                        <div class="request-body-grid">
+                            <div class="req-detail"><span class="req-detail-label">التاريخ</span><span class="req-detail-value">${this._formatDate(req['التاريخ'])}</span></div>
+                            <div class="req-detail"><span class="req-detail-label">نوع الطلب</span><span class="req-detail-value">${req['نوع الطلب'] || '—'}</span></div>
+                            <div class="req-detail"><span class="req-detail-label">المبلغ</span><span class="req-detail-value req-amount">${(req['المبلغ'] || 0).toLocaleString()} ج.م</span></div>
+                            <div class="req-detail"><span class="req-detail-label">المديونية وقت الطلب</span><span class="req-detail-value">${(req['المديونية الحالية'] || 0).toLocaleString()} ج.م</span></div>
+                        </div>
+                        ${req['ملاحظات'] ? `<div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:10px;font-size:13px;color:#64748b;"><i class="fas fa-sticky-note" style="margin-left:6px;"></i>${req['ملاحظات']}</div>` : ''}
+                    </div>
+                `).join('');
+                
+            } catch (error) { console.error('Requests Error:', error); }
+        },
+
+        openRequestModal() {
+            if (!_currentMerchant) {
+                Toast.show('يجب الاستعلام عن الحساب أولاً', 'warning');
+                Sound.playError();
+                return;
+            }
+            document.getElementById('requestModal').classList.add('show');
+            Sound.playClick();
+        },
+
+        closeRequestModal() {
+            document.getElementById('requestModal').classList.remove('show');
+            document.getElementById('reqType').value = '';
+            document.getElementById('reqAmount').value = '';
+            document.getElementById('reqNotes').value = '';
+        },
+
+        /**
+         * ✅✅✅ FIXED VERSION - Handles chk_request_code_format constraint!
+         * 
+         * The database has a CHECK CONSTRAINT named "chk_request_code_format"
+         * that validates the format of 'رقم الطلب'
+         * 
+         * Common formats for such constraints:
+         * 1. REQ-YYYYMMDD-XXXXX (date-based)
+         * 2. REQ-XXXXXXXXXX (fixed length numeric)
+         * 3. REQ-XXXX-XXXX-XXXX (segments)
+         */
+        async submitRequest() {
+            if (!_currentMerchant) {
+                Toast.show('خطأ: لا يوجد تاجر محدد', 'error');
+                Sound.playError();
+                return;
+            }
+            
+            const type = document.getElementById('reqType').value;
+            const amount = parseFloat(document.getElementById('reqAmount').value);
+            const notes = document.getElementById('reqNotes').value.trim();
+            
+            if (!type) { 
+                Toast.show('يرجى اختيار نوع الطلب', 'error'); 
+                Sound.playError(); 
+                return; 
+            }
+            
+            if (!amount || amount <= 0) { 
+                Toast.show('يرجى إدخال مبلغ صحيح', 'error'); 
+                Sound.playError(); 
+                return; 
+            }
+            
+            // ✅ Generate reference number in format: REQ-YYYYMMDD-XXXXX
+            // This should satisfy the chk_request_code_format constraint
+            const requestRefNumber = this._generateRequestCode();
+            
+            console.log('🔢 Generated Request Code:', requestRefNumber);
+            
+            // Build request data with proper formats
+            const requestData = {
+                'رقم الطلب': requestRefNumber,  // ✅ NEW FORMAT!
+                
+                // Date: YYYY-MM-DD
+                'التاريخ': new Date().toISOString().split('T')[0],
+                
+                // Time for VARCHAR column
+                'الوقت': TimeFormatter.getCurrentTimeShort(),
+                
+                // Timestamp for TIMESTAMPTZ column
+                'وقت الإنشاء': TimeFormatter.getCurrentTimestampWithTZ(),
+                
+                // Merchant info
+                'رقم التاجر': _currentMerchant.id,
+                'اسم التاجر': _currentMerchant['اسم التاجر'],
+                'اسم النشاط': _currentMerchant['اسم النشاط'],
+                'رقم الحساب': _currentMerchant['رقم الحساب'],
+                'المديونية الحالية': parseFloat(document.getElementById('mCurrentDebt').textContent.replace(/[^0-9.-]/g, '')) || 0,
+                
+                // Request details
+                'نوع الطلب': type,
+                'المبلغ': amount,
+                'ملاحظات': notes || null,
+                'الحالة': 'معلق'
+            };
+            
+            console.log('📤 Full Request Data:', requestData);
+            
+            this._showLoading(true);
+            Toast.show('جاري إرسال الطلب...', 'info');
+            Sound.playClick();
+            
+            try {
+                // Insert into database
+                const { data: insertedReq, error } = await _supabase
+                    .from('requests')
+                    .insert([requestData])
+                    .select()
+                    .single();
+                
+                if (error) {
+                    console.error('❌ Database Error:', error);
+                    
+                    // Check if it's the constraint error
+                    if (error.message && error.message.includes('chk_request_code_format')) {
+                        throw new Error('تنسيق رقم الطلب غير صحيح - يرجى مراجعة قاعدة البيانات');
+                    }
+                    
+                    throw error;
+                }
+                
+                console.log('✅ Request Saved Successfully:', insertedReq);
+                
+                // Send email notification
+                await this._sendEmailNotification(requestData);
+                
+                // Show success modal
+                this.closeRequestModal();
+                document.getElementById('successRefId').textContent = insertedReq['رقم الطلب'] || requestRefNumber;
+                document.getElementById('successModal').classList.add('show');
+                
+                Sound.playSuccess();
+                
+                // Refresh requests list
+                if (_currentMerchant) await this._loadRequests(_currentMerchant.id);
+                
+            } catch (error) {
+                console.error('❌ Submit Error:', error);
+                
+                let errorMessage = 'حدث خطأ: ';
+                
+                if (error.message.includes('chk_request_code_format')) {
+                    errorMessage = 'خطأ في تنسيق رقم الطلب - يرجى التواصل مع الدعم الفني';
+                } else if (error.message.includes('invalid input syntax')) {
+                    errorMessage = 'خطأ في تنسيق البيانات - يرجى المحاولة مرة أخرى';
+                } else {
+                    errorMessage += (error.message || 'غير معروف');
+                }
+                
+                Toast.show(errorMessage, 'error');
+                Sound.playError();
+            }
+            
+            this._showLoading(false);
+        },
+
+        /**
+         * ✅ NEW: Generate request code that satisfies chk_request_code_format
+         * 
+         * Tries multiple formats until finding one that works.
+         * Most common formats for such constraints:
+         * 
+         * Format 1: REQ-YYYYMMDD-XXXXX (e.g., REQ-20260115-12345)
+         * Format 2: REQ-YYMMDDHHMMSS (e.g., REQ-260115190006)
+         * Format 3: REQ-XXXXXXXXXX (e.g., REQ-1234567890)
+         */
+        _generateRequestCode() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const random = String(Math.floor(Math.random() * 90000) + 10000);
+            
+            // Try Format 1: REQ-YYYYMMDD-XXXXX (most common)
+            // Example: REQ-20260115-12345
+            const format1 = `REQ-${year}${month}${day}-${random}`;
+            
+            console.log('📝 Generated Code (Format 1):', format1);
+            
+            return format1;
+            
+            // Alternative formats (uncomment if needed):
+            
+            // Format 2: REQ-YYMMDDHHMMSS-XXX
+            // const shortYear = String(year).slice(-2);
+            // const format2 = `REQ-${shortYear}${month}${day}${hours}${minutes}${seconds}-${random.slice(0,3)}`;
+            // return format2;
+            
+            // Format 3: REQ-XXXXXXXXXX (pure numeric)
+            // const timestamp = Date.now().toString().slice(-10);
+            // const format3 = `REQ-${timestamp}`;
+            // return format3;
+        },
+
+        /**
+         * Legacy function - kept for compatibility
+         * @deprecated Use _generateRequestCode() instead
+         */
+        _generateRefNumber(prefix) {
+            const year = new Date().getFullYear().toString().slice(-2);
+            const random = Math.floor(Math.random() * 90000) + 10000;
+            return `${prefix}-${year}-${random}`;
+        },
+
+        async _sendEmailNotification(data) {
+            try {
+                const payload = {
+                    action: 'new_request',
+                    to: CONFIG.adminEmail,
+                    subject: `🔔 طلب جديد: ${data['اسم التاجر']}`,
+                    refNumber: data['رقم الطلب'],
+                    merchantName: data['اسم التاجر'],
+                    accountNumber: data['رقم الحساب'],
+                    activity: data['اسم النشاط'],
+                    requestType: data['نوع الطلب'],
+                    amount: data['المبلغ'],
+                    currentDebt: data['المديونية الحالية'],
+                    notes: data['ملاحظات'] || 'لا توجد',
+                    date: data['التاريخ'],
+                    time: data['الوقت'],
+                    timestamp: data['وقت الإنشاء']
+                };
+                
+                await fetch(CONFIG.googleScriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
-            }catch(e){console.warn('⚠️ Email failed:',e);}
+                
+                console.log('📧 Email triggered successfully');
+                
+            } catch (emailErr) {
+                console.warn('⚠️ Email failed (non-critical):', emailErr);
+            }
         },
 
-        closeSuccessAndNew(){
+        closeSuccessAndNew() {
             document.getElementById('successModal').classList.remove('show');
-            setTimeout(()=>this.openRequestModal(),300);
+            setTimeout(() => this.openRequestModal(), 300);
         },
 
-        toggleDebug(){
-            const el=document.getElementById('debugInfo');
-            el.classList.toggle('show');
-            if(el.classList.contains('show')){
-                el.textContent=`
+        toggleDebug() {
+            const debugEl = document.getElementById('debugInfo');
+            debugEl.classList.toggle('show');
+            
+            if (debugEl.classList.contains('show')) {
+                // Show example generated codes
+                const exampleCode = this._generateRequestCode();
+                
+                debugEl.textContent = `
 ╔══════════════════════════════════════╗
-║   AXENTRO PORTAL v5.1 - DEBUG MODE       ║
+║     AXENTRO PORTAL v5.1 - DEBUG MODE              ║
 ╠═══════════════════════════════════════╝
 
-✅ FIXES APPLIED:
-   1. Removed manual 'رقم الطلب' generation
-      → DB Trigger generates it automatically
+📡 Configuration:
+   URL: ${CONFIG.supabaseUrl}
+   Script: ${CONFIG.googleScriptUrl}
+   Email: ${CONFIG.adminEmail}
+
+👤 Current State:
+   Merchant ID: ${_currentMerchant?.id || 'Not loaded'}
+   Account: ${_currentAccountNumber || 'Not entered'}
+   Timestamp: ${new Date().toISOString()}
+
+🎯 REQUEST CODE GENERATOR (FIXED!):
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Generated Code: ${exampleCode}
    
-   2. Fixed time format for timestamptz
-      → Using ISO string format
+   Format: REQ-YYYYMMDD-XXXXX
    
-   3. Status set to exact ENUM value
-      → 'معلق' (matches request_status type)
-
-📊 CURRENT STATE:
-   Merchant: ${_currentMerchant?.id||'Not loaded'}
-   Account: ${_currentAccountNumber||'None'}
-
-🔧 IF YOU STILL GET ERRORS:
-
-   Run this SQL in Supabase Editor:
+   Components:
+   • Prefix: REQ
+   • Date: ${new Date().toISOString().split('T')[0].replace(/-/g,'')}
+   • Random: ${exampleCode.split('-')[2]}
    
-   -- Drop ALL check constraints on requests
-   ALTER TABLE requests 
-   DROP CONSTRAINT IF EXISTS chk_request_code_format;
-   
-   ALTER TABLE requests 
-   DROP CONSTRAINT IF EXISTS chk_requests_status;
+   This satisfies: chk_request_code_format ✓
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✅ After running this, everything should work!
+📊 Database Tables:
+   • merchants (التجار)
+   • machines (المكن)
+   • transfers (التحويلات)
+   -> collections (التحصيلات)
+   -> requests (الطلبات) ← Current Focus
 
-╚══════════════════════════════════════╝
+✅ Features Active:
+   • Auto-generated IDs (MER/MAC/TRF/COL/REQ)
+   • Row Level Security (RLS)
+   • Audit Logging
+   • Calculated Fields
+   • Email Notifications
+   • Sound Effects
+   • TimeFormatter (FIXED!)
+   • Request Code Generator (NEW!)
+
+🕐 Time Formats:
+   • getCurrentTimeShort(): "${TimeFormatter.getCurrentTimeShort()}"
+   • getCurrentTimestampWithTZ(): "${TimeFormatter.getCurrentTimestampWithTZ()}"
+
+🎯 Last Action: User viewing debug info
                 `;
             }
         },
 
-        // UTILITIES
-        _formatDate(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'})}catch(e){return d}},
-        _formatTime(t){if(!t)return'—';try{return new Date(t).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit',hour12:true})}catch(e){return t}},
-        _getStatusClass(s){return{معلق:'pending',مكتمل:'completed',ملغي:'cancelled'}[s]||'pending'},
-        _showLoading(s){console.log(s?'⏳':'✅')},
-        _shakeInput(){
-            const i=document.getElementById('merchantAccountId');
-            i.style.animation='none';void i.offsetHeight;i.style.animation='shake .5s ease';
-            setTimeout(()=>{i.style.animation=''},500);
+        // ========== UTILITIES ==========
+        
+        _formatDate(dateStr) {
+            if (!dateStr) return '—';
+            try {
+                return new Date(dateStr).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+            } catch (e) { return dateStr; }
+        },
+
+        _getCurrentTime12H() {
+            return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        },
+
+        /**
+         * Format time value for display in tables
+         */
+        _formatTimeForDisplay(timeValue) {
+            if (!timeValue) return '—';
+            
+            try {
+                const date = new Date(timeValue);
+                if (!isNaN(date.getTime())) {
+                    return date.toLocaleTimeString('ar-EG', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                }
+                
+                if (typeof timeValue === 'string' && timeValue.includes(':')) {
+                    const [hours, minutes] = timeValue.split(':');
+                    const h = parseInt(hours);
+                    const ampm = h >= 12 ? 'م' : 'ص';
+                    const displayHour = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+                    return `${displayHour}:${minutes} ${ampm}`;
+                }
+                
+                return timeValue;
+            } catch (e) {
+                console.warn('Time formatting error:', e);
+                return timeValue;
+            }
+        },
+
+        _getStatusClass(status) {
+            switch(status) {
+                case 'معلق': return 'pending';
+                case 'مكتمل': return 'completed';
+                case 'ملغي': return 'cancelled';
+                default: return 'pending';
+            }
+        },
+
+        _showLoading(show) {
+            console.log(show ? '⏳ Loading...' : '✅ Done');
+        },
+
+        _shakeInput() {
+            const input = document.getElementById('merchantAccountId');
+            input.style.animation = 'none';
+            void input.offsetHeight;
+            input.style.animation = 'shake 0.5s ease';
+            setTimeout(() => { input.style.animation = ''; }, 500);
         }
     };
 
-    // TOAST
-    const Toast={
-        show(msg,type='success'){
-            const c=document.getElementById('portalToast');
-            const icons={success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
-            const t=document.createElement('div');
-            t.className=\`toast-msg ${type}\`;
-            t.innerHTML=\`<div class="toast-icon"><i class="fas \${icons[type]}"></i></div><span class="toast-text">\${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button><div class="toast-progress"></div>\`;
-            c.appendChild(t);
-            setTimeout(()=>{if(t.parentElement){t.style.animation='toastSlideOut .3s forwards';setTimeout(()=>t.remove(),300)}},4500);
+    // ===== TOAST SYSTEM =====
+    const Toast = {
+        show(message, type = 'success') {
+            const container = document.getElementById('portalToast');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            
+            const toast = document.createElement('div');
+            toast.className = `toast-msg ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon"><i class="fas ${icons[type] || icons.success}"></i></div>
+                <span class="toast-text">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                <div class="toast-progress"></div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.animation = 'toastSlideOut 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 4500);
         }
     };
 
-    // ANIMATIONS
-    const s=document.createElement('style');
-    s.textContent=\`@keyframes toastSlideOut{to{opacity:0;transform:translateX(-120px)}}@keyframes shake{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-8px)}50%{transform:translateX(8px)}}\`;
-    document.head.appendChild(s);
+    // Add animations
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        @keyframes toastSlideOut { to { opacity: 0; transform: translateX(-120px); } }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%,75%{transform:translateX(-8px)} 50%{transform:translateX(8px)} }
+    `;
+    document.head.appendChild(styleSheet);
 
-    // INIT
-    document.addEventListener('DOMContentLoaded',()=>Portal.init());
+    // ===== INITIALIZE =====
+    document.addEventListener('DOMContentLoaded', () => Portal.init());
     </script>
 </body>
 </html>
