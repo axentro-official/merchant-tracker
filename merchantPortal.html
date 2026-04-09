@@ -2,11 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة التاجر - Axentro System v5.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>بوابة التاجر - Axentro System v6.0</title>
     
-    <!-- === Favicon SVG مدمج (بدون ملف خارجي) === -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'/%3E%3Cpath fill='white' d='M30 35h40v8H30zM30 48h40v8H30zM30 61h40v8H30z'/%3E%3Ccircle cx='50' cy='77' r='8' fill='%23ffffff'/%3E%3C/svg%3E">
+    <!-- === Favicon SVG احترافي مدمج === -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%232563eb'/%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6'/%3E%3C/linearGradient%3E%3ClinearGradient id='shine' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23ffffff;stop-opacity:0.3'/%3E%3Cstop offset='100%25' style='stop-color:%23ffffff;stop-opacity:0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url(%23bg)'/%3E%3Crect width='100' height='100' rx='22' fill='url(%23shine)'/%3E%3Ctext x='50' y='68' font-family='Arial Black,sans-serif' font-size='55' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3Ccircle cx='78' cy='78' r='12' fill='%2310b981'/%3E%3Cpath d='M73 78 L76 81 L83 74' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232563eb'/%3E%3Ctext x='50' y='68' font-family='Arial Black,sans-serif' font-size='55' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -63,6 +66,7 @@
             min-height: 100vh;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* ===== 1. LOADING SCREEN ===== */
@@ -1489,7 +1493,7 @@
                             <th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>القيمة</th><th>المتبقي</th>
                         </tr></thead>
                         <tbody id="mCollectionsTable">
-                            <tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div>NonNull</td>
+                            <tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1597,13 +1601,12 @@
     <script>
     /**
      * ============================================
-     * AXENTRO MERCHANT PORTAL v5.1 PROFESSIONAL
+     * AXENTRO MERCHANT PORTAL v6.0 PROFESSIONAL
      * ============================================
-     * ✅ الحفاظ على الشكل والمنطق الأصلي
-     * ✅ إضافة عرض المكن المرتبطة (موجود بالفعل)
-     * ✅ إضافة أصوات النجاح (done.mp3) والخطأ (قصير ونظيف)
-     * ✅ البحث برقم الحساب ثم رقم التاجر
-     * ✅ Favicon مدمج SVG
+     * ✅ نظام أصوات احترافي متكامل
+     * ✅ Favicon SVG احترافي جديد
+     * ✅ تحسينات الأداء والاستقرار
+     * ✅ معالجة أخطاء محسنة
      */
 
     // ===== CONFIGURATION =====
@@ -1621,54 +1624,200 @@
     let _currentMerchant = null;
     let _currentAccountNumber = null;
 
-    // ===== SOUND FUNCTIONS (محسنة - قصيرة ونظيفة) =====
-    function playSuccessSound() {
-        const audio = document.getElementById('successSound');
-        if (audio) {
-            audio.currentTime = 0;
-            audio.play().catch(e => console.warn('Sound play error:', e));
-        }
-    }
-    
-    // ✅ صوت خطأ قصير جداً (150ms فقط) لا يتكرر
-    function playErrorSound() {
-        try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+    // ===== 🎵 PROFESSIONAL SOUND SYSTEM =====
+    const SoundSystem = {
+        audioContext: null,
+        
+        init() {
+            try {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch(e) {
+                console.warn('Web Audio API not supported');
             }
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'sine';
-            osc.frequency.value = 440; // نغمة واضحة
-            gain.gain.setValueAtTime(0.25, now);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
-            osc.start();
-            osc.stop(now + 0.15);
-        } catch(e) {
-            console.warn('Error sound failed');
+        },
+        
+        getContext() {
+            if (!this.audioContext) this.init();
+            if (this.audioContext && this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
+            return this.audioContext;
+        },
+        
+        // ✅ صوت النقر - نغمة خفيفة وواضحة
+        playClick() {
+            try {
+                const ctx = this.getContext();
+                if (!ctx) return;
+                
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05);
+                
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+                
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.08);
+            } catch(e) {}
+        },
+        
+        // ✅ صوت النجاح - استخدام الملف الأصلي + نغمة إضافية
+        playSuccess() {
+            // تشغيل الملف الأصلي
+            const audio = document.getElementById('successSound');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.warn('Success sound error:', e));
+            }
+            
+            // نغمة نجاح إضافية
+            try {
+                const ctx = this.getContext();
+                if (!ctx) return;
+                
+                const now = ctx.currentTime;
+                
+                // نغمة الأولى
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, now); // C5
+                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc1.start(now);
+                osc1.stop(now + 0.15);
+                
+                // نغمة الثانية
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                gain2.gain.setValueAtTime(0.001, now + 0.1);
+                gain2.gain.linearRampToValueAtTime(0.2, now + 0.12);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc2.start(now + 0.1);
+                osc2.stop(now + 0.3);
+                
+                // نغمة الثالثة
+                const osc3 = ctx.createOscillator();
+                const gain3 = ctx.createGain();
+                osc3.connect(gain3);
+                gain3.connect(ctx.destination);
+                osc3.type = 'sine';
+                osc3.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gain3.gain.setValueAtTime(0.001, now + 0.2);
+                gain3.gain.linearRampToValueAtTime(0.2, now + 0.22);
+                gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                osc3.start(now + 0.2);
+                osc3.stop(now + 0.45);
+                
+            } catch(e) {}
+        },
+        
+        // ❌ صوت الخطأ - نغمة تحذيرية قصيرة
+        playError() {
+            try {
+                const ctx = this.getContext();
+                if (!ctx) return;
+                
+                const now = ctx.currentTime;
+                
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.setValueAtTime(196, now + 0.1); // G3
+                
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } catch(e) {}
+        },
+        
+        // 🔌 صوت فشل الاتصال - نغمة منخفضة ومستمرة قليلاً
+        playConnectionError() {
+            try {
+                const ctx = this.getContext();
+                if (!ctx) return;
+                
+                const now = ctx.currentTime;
+                
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.3);
+                
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } catch(e) {}
+        },
+        
+        // 📤 صوت فشل الإرسال - نغمات متعددة
+        playSendFailed() {
+            try {
+                const ctx = this.getContext();
+                if (!ctx) return;
+                
+                const now = ctx.currentTime;
+                
+                // نغمة الأولى
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.type = 'square';
+                osc1.frequency.setValueAtTime(300, now);
+                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc1.start(now);
+                osc1.stop(now + 0.15);
+                
+                // نغمة الثانية
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.type = 'square';
+                osc2.frequency.setValueAtTime(250, now + 0.2);
+                gain2.gain.setValueAtTime(0.001, now + 0.2);
+                gain2.gain.linearRampToValueAtTime(0.2, now + 0.22);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc2.start(now + 0.2);
+                osc2.stop(now + 0.35);
+                
+            } catch(e) {}
         }
-    }
-    
-    function playClickSound() {
-        try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'sine';
-            osc.frequency.value = 880;
-            gain.gain.value = 0.1;
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
-            osc.stop(audioCtx.currentTime + 0.08);
-        } catch(e) {}
-    }
+    };
+
+    // ===== دوال التوافق القديمة =====
+    function playSuccessSound() { SoundSystem.playSuccess(); }
+    function playErrorSound() { SoundSystem.playError(); }
+    function playClickSound() { SoundSystem.playClick(); }
 
     // ===== TIME FORMATTER FOR DATABASE =====
     const TimeFormatter = {
@@ -1691,11 +1840,14 @@
     const Portal = {
         
         init() {
-            console.log('🚀 Initializing Axentro Portal v5.1...');
+            console.log('🚀 Initializing Axentro Portal v6.0...');
+            
+            // تهيئة نظام الأصوات
+            SoundSystem.init();
             
             setTimeout(() => {
                 document.getElementById('portalLoading').classList.add('hidden');
-                playSuccessSound();
+                SoundSystem.playSuccess();
                 console.log('✅ Portal Ready!');
             }, 1500);
             
@@ -1705,44 +1857,63 @@
             }
         },
 
-        // ✅ البحث برقم الحساب أولاً، ثم رقم التاجر
-        async loadMerchantData() {
+        // ✅ البحث برقم الحساب أولاً، ثم رقم التاجر مع إعادة المحاولة
+        async loadMerchantData(retryCount = 0) {
             const accountNum = document.getElementById('merchantAccountId').value.trim();
             
             if (!accountNum) {
                 Toast.show('يرجى إدخال رقم الحساب', 'error');
-                playErrorSound();
+                SoundSystem.playError();
                 this._shakeInput();
                 return;
             }
             
+            SoundSystem.playClick();
             Toast.show('جاري البحث عن البيانات...', 'info');
-            playClickSound();
             this._showLoading(true);
             
             try {
+                let merchant = null;
+                let error = null;
+                
                 // أولاً: البحث برقم الحساب
-                let { data: merchant, error } = await _supabase
+                console.log(`🔍 Searching by account number: ${accountNum}`);
+                let result = await _supabase
                     .from('merchants')
                     .select('*')
                     .eq('رقم الحساب', accountNum)
                     .single();
                 
+                merchant = result.data;
+                error = result.error;
+                
                 // إذا لم يجد، حاول البحث برقم التاجر
                 if (!merchant && error && error.code === 'PGRST116') {
-                    const { data: m2, error: e2 } = await _supabase
+                    console.log(`🔍 Searching by merchant number: ${accountNum}`);
+                    const result2 = await _supabase
                         .from('merchants')
                         .select('*')
                         .eq('رقم التاجر', accountNum)
                         .single();
-                    if (!e2 && m2) merchant = m2;
+                    
+                    if (!result2.error && result2.data) {
+                        merchant = result2.data;
+                        error = null;
+                    }
                 } else if (error && error.code !== 'PGRST116') {
                     throw error;
                 }
                 
+                // إذا لم يجد التاجر ولم نتجاوز عدد المحاولات
+                if (!merchant && retryCount < 2) {
+                    console.warn(`⚠️ Not found, retrying... (${retryCount + 1}/3)`);
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // انتظار ثانية واحدة
+                    return this.loadMerchantData(retryCount + 1);
+                }
+                
                 if (!merchant) {
                     Toast.show('لم يتم العثور على تاجر بهذا الرقم', 'error');
-                    playErrorSound();
+                    SoundSystem.playConnectionError();
                     this._showLoading(false);
                     return;
                 }
@@ -1758,12 +1929,21 @@
                 document.getElementById('merchantDashboard').style.display = 'block';
                 
                 Toast.show(`مرحباً ${merchant['اسم التاجر']} 👋`, 'success');
-                playSuccessSound();
+                SoundSystem.playSuccess();
                 
             } catch (error) {
                 console.error('❌ Load Error:', error);
+                
+                // إذا كان خطأ في الاتصال وحاولنا أقل من 3 مرات
+                if ((error.message?.includes('fetch') || error.message?.includes('network')) && retryCount < 2) {
+                    console.warn(`⚠️ Connection error, retrying... (${retryCount + 1}/3)`);
+                    Toast.show('مشكلة في الاتصال، جاري إعادة المحاولة...', 'warning');
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    return this.loadMerchantData(retryCount + 1);
+                }
+                
                 Toast.show('حدث خطأ في تحميل البيانات', 'error');
-                playErrorSound();
+                SoundSystem.playConnectionError();
             }
             
             this._showLoading(false);
@@ -1771,11 +1951,13 @@
 
         async _renderDashboard(merchant) {
             this._updateInfoCard(merchant);
-            await this._loadMachines(merchant.id);
-            await this._calculateStats(merchant.id);
-            await this._loadTransfers(merchant.id);
-            await this._loadCollections(merchant.id);
-            await this._loadRequests(merchant.id);
+            await Promise.all([
+                this._loadMachines(merchant.id),
+                this._calculateStats(merchant.id),
+                this._loadTransfers(merchant.id),
+                this._loadCollections(merchant.id),
+                this._loadRequests(merchant.id)
+            ]);
         },
 
         _updateInfoCard(m) {
@@ -1980,11 +2162,11 @@
         openRequestModal() {
             if (!_currentMerchant) {
                 Toast.show('يجب الاستعلام عن الحساب أولاً', 'warning');
-                playErrorSound();
+                SoundSystem.playError();
                 return;
             }
             document.getElementById('requestModal').classList.add('show');
-            playClickSound();
+            SoundSystem.playClick();
         },
 
         closeRequestModal() {
@@ -1997,7 +2179,7 @@
         async submitRequest() {
             if (!_currentMerchant) {
                 Toast.show('خطأ: لا يوجد تاجر محدد', 'error');
-                playErrorSound();
+                SoundSystem.playError();
                 return;
             }
             
@@ -2007,13 +2189,13 @@
             
             if (!type) { 
                 Toast.show('يرجى اختيار نوع الطلب', 'error'); 
-                playErrorSound();
+                SoundSystem.playError();
                 return; 
             }
             
             if (!amount || amount <= 0) { 
                 Toast.show('يرجى إدخال مبلغ صحيح', 'error'); 
-                playErrorSound();
+                SoundSystem.playError();
                 return; 
             }
             
@@ -2040,7 +2222,7 @@
             
             this._showLoading(true);
             Toast.show('جاري إرسال الطلب...', 'info');
-            playClickSound();
+            SoundSystem.playClick();
             
             try {
                 const { data: insertedReq, error } = await _supabase
@@ -2089,14 +2271,14 @@
                 document.getElementById('successRefId').textContent = insertedReq['رقم الطلب'] || requestRefNumber;
                 document.getElementById('successModal').classList.add('show');
                 
-                playSuccessSound();
+                SoundSystem.playSuccess();
                 
                 if (_currentMerchant) await this._loadRequests(_currentMerchant.id);
                 
             } catch (error) {
                 console.error('❌ Submit Error:', error);
                 Toast.show('حدث خطأ أثناء إرسال الطلب: ' + (error.message || 'غير معروف'), 'error');
-                playErrorSound();
+                SoundSystem.playSendFailed();
             }
             
             this._showLoading(false);
@@ -2119,12 +2301,13 @@
         toggleDebug() {
             const debugEl = document.getElementById('debugInfo');
             debugEl.classList.toggle('show');
+            SoundSystem.playClick();
             
             if (debugEl.classList.contains('show')) {
                 const exampleCode = this._generateRequestCode();
                 debugEl.textContent = `
 ╔══════════════════════════════════════╗
-║     AXENTRO PORTAL v5.1 - DEBUG MODE ║
+║     AXENTRO PORTAL v6.0 - DEBUG MODE ║
 ╠══════════════════════════════════════╝
 
 📡 Configuration:
@@ -2142,6 +2325,15 @@
 🕐 Time Formats:
    • Current Time: "${TimeFormatter.getCurrentTimeShort()}"
    • Timestamp: "${TimeFormatter.getCurrentTimestampWithTZ()}"
+
+🎵 Sound System: Active
+   • Click: ✅
+   • Success: ✅ (done.mp3 + tones)
+   • Error: ✅
+   • Connection Error: ✅
+   • Send Failed: ✅
+
+🔄 Retry Mechanism: Enabled (3 attempts)
 
 🎯 Last Action: Debug view
                 `;
