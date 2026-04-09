@@ -572,7 +572,7 @@
                 </div>
             </div>
 
-@@ -319,460 +432,499 @@
+@@ -319,460 +432,519 @@
                 <button class="action-btn primary" onclick="Portal.openRequestModal()"><i class="fas fa-plus-circle"></i> طلب جديد</button>
                 <button class="action-btn" onclick="Portal.loadMerchantData()"><i class="fas fa-sync-alt"></i> تحديث البيانات</button>
                 <button class="action-btn" onclick="document.getElementById('merchantInfoCard').scrollIntoView({behavior:'smooth'})"><i class="fas fa-user"></i> بياناتي</button>
@@ -662,6 +662,8 @@
     const CONFIG = {
         supabaseUrl: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
         supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY'
+        supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
+        googleScriptUrl: 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec'
     };
 
     // Initialize Supabase
@@ -1175,12 +1177,31 @@
                 const{data,error}=await _supabase.from('requests').insert([reqData]).select().single();
                 if(error)throw error;
             try {
-                const { data, error } = await _supabase.from('requests').insert([reqData]).select().single();
-                if (error) throw error;
+                const response = await fetch(CONFIG.googleScriptUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reqData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Google Script HTTP ${response.status}`);
+                }
+
+                let result = null;
+                try {
+                    result = await response.json();
+                } catch (parseError) {
+                    result = { success: true };
+                }
+
+                if (result && result.success === false) {
+                    throw new Error(result.message || 'Google Script rejected request');
+                }
+
                 this.closeRequestModal();
                 document.getElementById('successRefId').textContent=data?.request_number||refNum;
                 document.getElementById('successModal').classList.add('show');
-                DOM.id('successRefId').textContent = data?.request_number || refNum;
+                DOM.id('successRefId').textContent = result?.request_number || result?.data?.request_number || refNum;
                 DOM.id('successModal').classList.add('show');
                 SoundSystem.success();
                 if(_currentMerchant)await this._loadRequests(_currentMerchant.id);
@@ -1190,7 +1211,7 @@
                 if (_currentMerchant) await this._loadRequests(_currentMerchant.id);
             } catch (e) {
                 console.error('Submit Error:', e);
-                Toast.show('حدث خطأ أثناء إرسال الطلب', 'error');
+                Toast.show('تعذر إرسال الطلب حالياً، حاول مرة أخرى', 'error');
                 SoundSystem.error();
             }
         },
