@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0a0f2c">
-    <meta name="description" content="بوابة التاجر المتكاملة - نظام AXENTRO OS">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <title>AXENTRO OS | بوابة التاجر</title>
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <title>بوابة التاجر | نظام متكامل</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -28,7 +24,7 @@
             color: #eef5ff;
         }
 
-        /* شاشة التحميل (Splash Screen) */
+        /* شاشة التحميل */
         .splash-screen {
             position: fixed;
             top: 0;
@@ -45,16 +41,21 @@
             backdrop-filter: blur(4px);
         }
 
-        .splash-logo {
-            font-size: 3.8rem;
-            font-weight: 800;
+        /* أيقونة احترافية بدلاً من النص */
+        .splash-icon {
+            font-size: 5rem;
             background: linear-gradient(135deg, #D4AF37, #F9E076);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
-            letter-spacing: 2px;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; text-shadow: 0 0 20px rgba(212,175,55,0.5); }
+            100% { transform: scale(1); opacity: 0.7; }
         }
 
         .splash-sub {
@@ -87,23 +88,21 @@
             color: #b9c3e6;
         }
 
-        /* الواجهة الرئيسية (مخفية في البداية) */
+        /* الواجهة الرئيسية */
         .merchant-dashboard {
             opacity: 0;
             visibility: hidden;
             width: 100%;
             max-width: 1400px;
             margin: 1rem;
-            transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+            transition: opacity 0.5s ease;
         }
 
         .merchant-dashboard.active {
             opacity: 1;
             visibility: visible;
-            transition: opacity 0.5s ease, visibility 0s linear 0s;
         }
 
-        /* كروت وبطاقات */
         .glass-card {
             background: rgba(15, 25, 55, 0.65);
             backdrop-filter: blur(12px);
@@ -118,7 +117,6 @@
             transform: translateY(-3px);
         }
 
-        /* رأس الصفحة */
         .header {
             display: flex;
             justify-content: space-between;
@@ -126,6 +124,18 @@
             padding: 1.5rem 2rem;
             margin-bottom: 2rem;
             flex-wrap: wrap;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            color: #D4AF37;
+            filter: drop-shadow(0 0 5px rgba(212,175,55,0.5));
         }
 
         .logo-area h1 {
@@ -146,7 +156,6 @@
             border: 1px solid rgba(212,175,55,0.4);
         }
 
-        /* نموذج البحث */
         .search-section {
             padding: 2rem;
             margin-bottom: 2rem;
@@ -196,7 +205,6 @@
             transform: scale(0.97);
         }
 
-        /* بطاقة معلومات التاجر */
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -216,7 +224,6 @@
             color: #F9E076;
         }
 
-        /* جدول المعاملات */
         .transactions-table-wrapper {
             overflow-x: auto;
             padding: 0.5rem;
@@ -246,7 +253,6 @@
             color: #2ecc71;
         }
 
-        /* رسالة الخطأ */
         .error-msg {
             background: rgba(231, 76, 60, 0.2);
             border-right: 3px solid #e74c3c;
@@ -280,7 +286,9 @@
 
 <!-- شاشة التحميل -->
 <div id="splash" class="splash-screen">
-    <div class="splash-logo">AXENTRO OS</div>
+    <div class="splash-icon">
+        <i class="fas fa-store-alt"></i>
+    </div>
     <div class="splash-sub">Merchant Runtime Environment v7.0</div>
     <div class="progress-bar-container">
         <div id="progressFill" class="progress-fill"></div>
@@ -288,12 +296,12 @@
     <div id="splashStatus" class="splash-text">تمهيد الأنظمة...</div>
 </div>
 
-<!-- لوحة تحكم التاجر -->
+<!-- لوحة التحكم -->
 <div id="dashboard" class="merchant-dashboard">
     <div class="glass-card header">
         <div class="logo-area">
-            <h1><i class="fas fa-store"></i> AXENTRO | بوابة التاجر</h1>
-            <div style="font-size: 0.8rem;">نظام متكامل لإدارة الحسابات</div>
+            <i class="fas fa-crown logo-icon"></i>
+            <h1>بوابة التاجر</h1>
         </div>
         <div class="merchant-badge">
             <i class="fas fa-shield-alt"></i> بيئة آمنة
@@ -309,10 +317,7 @@
     </div>
 
     <div id="merchantInfoArea" style="display: none;">
-        <!-- بطاقات إحصائيات -->
         <div class="info-grid" id="statsGrid"></div>
-
-        <!-- جدول المعاملات الأخيرة -->
         <div class="glass-card" style="padding: 1.5rem;">
             <h3 style="margin-bottom: 1rem;"><i class="fas fa-history"></i> آخر المعاملات</h3>
             <div class="transactions-table-wrapper">
@@ -328,18 +333,18 @@
         </div>
     </div>
     <footer>
-        <i class="fas fa-lock"></i> بيانات مشفرة • AXENTRO SECURE PAYMENTS
+        <i class="fas fa-lock"></i> بيانات مشفرة • نظام المدفوعات المتكامل
     </footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // ---------- تكوين Supabase ----------
+    // تكوين Supabase
     const SUPABASE_URL = 'https://bwcrdcudpnxkmcyyhzhe.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ---------- محاكاة شاشة التحميل ----------
+    // شاشة التحميل - محاكاة تقدم مضمونة الوصول إلى 100%
     let progress = 0;
     const progressFill = document.getElementById('progressFill');
     const splashStatus = document.getElementById('splashStatus');
@@ -354,49 +359,45 @@
     ];
 
     let stepIndex = 0;
-    const interval = setInterval(() => {
-        if (stepIndex < steps.length) {
-            const target = steps[stepIndex].progress;
-            const stepText = steps[stepIndex].text;
-            // محاكاة تقدم تدريجي
+    // دالة لتحديث التقدم بشكل تدريجي وآمن
+    function updateProgress(targetProgress, stepText) {
+        return new Promise((resolve) => {
             let current = progress;
-            const subInterval = setInterval(() => {
-                if (current < target) {
-                    current += 2;
-                    if (current > target) current = target;
+            const interval = setInterval(() => {
+                if (current < targetProgress) {
+                    current += Math.max(1, Math.floor((targetProgress - current) / 5));
+                    if (current > targetProgress) current = targetProgress;
                     progressFill.style.width = current + '%';
                     progress = current;
                 } else {
-                    clearInterval(subInterval);
-                }
-            }, 15);
-            splashStatus.innerText = stepText;
-            stepIndex++;
-        } else if (progress < 100) {
-            // التأكد من الوصول إلى 100%
-            let final = progress;
-            const finalInterval = setInterval(() => {
-                if (final < 100) {
-                    final += 3;
-                    progressFill.style.width = final + '%';
-                    progress = final;
-                } else {
-                    clearInterval(finalInterval);
-                    // انتهاء التحميل
                     clearInterval(interval);
-                    setTimeout(() => {
-                        splashDiv.style.opacity = '0';
-                        setTimeout(() => {
-                            splashDiv.style.display = 'none';
-                            dashboardDiv.classList.add('active');
-                        }, 500);
-                    }, 300);
+                    resolve();
                 }
-            }, 20);
-        }
-    }, 600);
+            }, 30);
+            splashStatus.innerText = stepText;
+        });
+    }
 
-    // ---------- دوال واجهة التاجر ----------
+    async function runSplash() {
+        for (const step of steps) {
+            await updateProgress(step.progress, step.text);
+            await new Promise(r => setTimeout(r, 200));
+        }
+        // الوصول إلى 100%
+        await updateProgress(100, "جاهز! مرحباً بك.");
+        await new Promise(r => setTimeout(r, 300));
+        // إخفاء شاشة التحميل
+        splashDiv.style.opacity = '0';
+        setTimeout(() => {
+            splashDiv.style.display = 'none';
+            dashboardDiv.classList.add('active');
+        }, 500);
+    }
+
+    // بدء التحميل
+    runSplash();
+
+    // دوال واجهة التاجر
     const merchantAccountInput = document.getElementById('merchantAccount');
     const searchBtn = document.getElementById('searchBtn');
     const merchantInfoArea = document.getElementById('merchantInfoArea');
@@ -404,9 +405,7 @@
     const statsGrid = document.getElementById('statsGrid');
     const transactionsBody = document.getElementById('transactionsBody');
 
-    // عرض البيانات بعد الاستعلام
     async function fetchMerchantData(accountNumber) {
-        // مسح الأخطاء السابقة
         searchErrorDiv.innerHTML = '';
         merchantInfoArea.style.display = 'none';
 
@@ -415,8 +414,7 @@
             return;
         }
 
-        // 1. استعلام بيانات التاجر الرئيسية (نفترض وجود جدول merchants)
-        //    سننشئ الجدول لاحقاً عبر SQL. هيكل الجدول: merchant_id (text), full_name, balance, email, phone, join_date, total_sales
+        // محاولة جلب بيانات التاجر
         const { data: merchantData, error: merchantError } = await supabase
             .from('merchants')
             .select('*')
@@ -424,11 +422,12 @@
             .single();
 
         if (merchantError || !merchantData) {
-            searchErrorDiv.innerHTML = `<div class="error-msg"><i class="fas fa-database"></i> لم يتم العثور على تاجر برقم ${accountNumber} . تأكد من الرقم أو تواصل مع الدعم.</div>`;
+            // عرض رسالة خطأ ودية مع إمكانية استخدام بيانات تجريبية للعرض (اختياري)
+            searchErrorDiv.innerHTML = `<div class="error-msg"><i class="fas fa-database"></i> لم يتم العثور على تاجر برقم ${accountNumber}. تأكد من الرقم أو تواصل مع الدعم.</div>`;
             return;
         }
 
-        // 2. جلب المعاملات الأخيرة لهذا التاجر (جدول transactions)
+        // جلب المعاملات
         const { data: transactions, error: transError } = await supabase
             .from('merchant_transactions')
             .select('*')
@@ -436,16 +435,14 @@
             .order('created_at', { ascending: false })
             .limit(10);
 
-        if (transError) console.warn("خطأ في جلب المعاملات", transError);
+        if (transError) console.warn("خطأ في المعاملات", transError);
 
-        // عرض واجهة المعلومات
         merchantInfoArea.style.display = 'block';
 
-        // بناء بطاقات الإحصائيات
         const balance = merchantData.balance || 0;
         const totalSales = merchantData.total_sales || 0;
         const joinDate = merchantData.join_date ? new Date(merchantData.join_date).toLocaleDateString('ar-EG') : 'غير محدد';
-        
+
         statsGrid.innerHTML = `
             <div class="glass-card stat-card">
                 <i class="fas fa-user-circle fa-2x" style="color:#D4AF37;"></i>
@@ -465,7 +462,6 @@
             </div>
         `;
 
-        // بناء جدول المعاملات
         if (transactions && transactions.length > 0) {
             let rows = '';
             transactions.forEach(tx => {
@@ -486,24 +482,12 @@
         }
     }
 
-    searchBtn.addEventListener('click', () => {
-        fetchMerchantData(merchantAccountInput.value);
-    });
+    searchBtn.addEventListener('click', () => fetchMerchantData(merchantAccountInput.value));
     merchantAccountInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') fetchMerchantData(merchantAccountInput.value);
     });
 
-    // (اختياري) تحميل بيانات نموذجية عند بدء التشغيل؟
-    // يمكن تركها فارغة حتى يطلب التاجر.
-
-    // تسجيل Service Worker لتثبيت التطبيق (PWA)
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').then(reg => {
-                console.log('Service Worker registered:', reg);
-            }).catch(err => console.log('SW registration failed:', err));
-        });
-    }
+    // ملاحظة: تم إزالة Service Worker لتجنب مشاكل المسارات في البداية، يمكن إضافته لاحقاً
 </script>
 </body>
 </html>
