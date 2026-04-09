@@ -2,492 +2,1313 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0a0f2c">
-    <title>بوابة التاجر | نظام متكامل</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="بوابة التاجر">
+    <title>بوابة التاجر - Axentro System v7.0</title>
+    
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%232563eb'/%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url(%23bg)'/%3E%3Ctext x='50' y='68' font-family='Arial Black,sans-serif' font-size='55' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3Ccircle cx='78' cy='78' r='12' fill='%2310b981'/%3E%3Cpath d='M73 78 L76 81 L83 74' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+
+    <audio id="successSound" src="src/assets/done.mp3" preload="auto"></audio>
+    
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #dbeafe;
+            --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #dbeafe; --primary-ultra-light: #eff6ff;
+            --success: #10b981; --success-light: #ecfdf5;
+            --danger: #ef4444; --danger-light: #fef2f2;
+            --warning: #f59e0b; --warning-light: #fffbeb;
+            --purple: #8b5cf6; --purple-light: #f3e8ff;
+            --bg-primary: #f8fafc; --bg-secondary: #ffffff;
+            --bg-dark: #0f172a; --bg-dark-light: #1e293b;
+            --text-primary: #0f172a; --text-secondary: #64748b; --text-light: #94a3b8;
+            --border-color: #e2e8f0; --border-light: #f1f5f9;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 20px; --radius-xl: 28px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        html { scroll-behavior: smooth; height: 100%; }
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0a0f2c 0%, #0b132b 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #eef5ff;
+            min-height: 100%;
+            font-family: 'Cairo', sans-serif;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(37,99,235,.12), transparent 35%),
+                radial-gradient(circle at 100% 100%, rgba(139,92,246,.1), transparent 30%),
+                var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            touch-action: manipulation;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* شاشة التحميل */
-        .splash-screen {
+        .app-shell {
+            position: relative;
+            min-height: 100vh;
+            isolation: isolate;
+        }
+
+        .app-shell::before {
+            content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 20% 30%, #0a0f2c, #030617);
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(180deg, #f8fbff 0%, #f8fafc 100%);
+            pointer-events: none;
+        }
+
+        /* Loading */
+        #portalLoading { position: fixed; inset: 0; background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark-light) 50%, #0c1222 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; transition: opacity 0.8s ease, visibility 0.8s; }
+        #portalLoading {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #090f1d 0%, var(--bg-dark) 45%, var(--bg-dark-light) 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
-            transition: opacity 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            backdrop-filter: blur(4px);
+            z-index: 99999;
+            transition: opacity 0.75s ease, visibility 0.75s ease;
+        }
+        #portalLoading.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .portal-loader { width: 70px; height: 70px; border: 4px solid rgba(255,255,255,0.08); border-top-color: var(--primary); border-right-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 30px; position: relative; }
+        .portal-loader::before { content: ''; position: absolute; inset: 6px; border: 3px solid transparent; border-bottom-color: var(--success); animation: spin 0.6s linear infinite reverse; border-radius: 50%; }
+        .portal-loader::after { content: ''; position: absolute; inset: 16px; border: 2px solid transparent; border-top-color: rgba(255,255,255,0.3); animation: spin 1.5s linear infinite; border-radius: 50%; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-logo { font-size: 32px; font-weight: 900; color: white; letter-spacing: 3px; margin-bottom: 12px; background: linear-gradient(135deg, var(--primary), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .loading-subtitle { color: rgba(255,255,255,0.5); font-size: 14px; display: flex; align-items: center; gap: 8px; justify-content: center; }
+        .loading-dots span { animation: dotPulse 1.4s ease-in-out infinite; background: var(--primary); width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+        .loading-dots span:nth-child(2) { animation-delay: 0.16s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.32s; }
+        @keyframes dotPulse { 0%,80%,100%{opacity:.3;transform:scale(.7)} 40%{opacity:1;transform:scale(1.1)} }
+
+        .portal-wrapper { max-width: 1150px; margin: 0 auto; padding: 24px; min-height: 100vh; }
+
+        /* Header */
+        .portal-header { background: var(--bg-secondary); padding: 24px 32px; border-radius: var(--radius-xl); box-shadow: var(--shadow-md); margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; border: 1px solid var(--border-color); }
+        .portal-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--purple), var(--success), var(--warning)); }
+        .header-branding { display: flex; align-items: center; gap: 16px; }
+        .header-icon { width: 52px; height: 52px; background: linear-gradient(135deg, var(--primary), var(--purple)); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; box-shadow: 0 6px 20px rgba(37,99,235,0.25); transition: transform 0.3s ease; }
+        .header-icon:hover { transform: scale(1.05) rotate(-5deg); }
+        .portal-title { font-size: 26px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.5px; }
+        .portal-status { display: flex; align-items: center; gap: 10px; padding: 10px 20px; background: var(--success-light); color: var(--success); border-radius: 25px; font-size: 13px; font-weight: 700; border: 1px solid #86efac; cursor: pointer; transition: all 0.3s ease; }
+        .portal-status:hover { background: var(--success); color: white; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
+        .status-dot { width: 10px; height: 10px; background: var(--success); border-radius: 50%; animation: statusPulse 2s infinite; box-shadow: 0 0 0 4px rgba(16,185,129,0.3); }
+        @keyframes statusPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.7;transform:scale(1.2)} }
+
+        /* Login */
+        #merchantLoginSection { background: var(--bg-secondary); padding: 60px 45px; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); text-align: center; max-width: 540px; margin: 100px auto; position: relative; overflow: hidden; border: 1px solid var(--border-color); }
+        #merchantLoginSection::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(37,99,235,.03) 0%, rgba(139,92,246,.03) 50%, rgba(16,185,129,.02) 100%); pointer-events: none; }
+
+        .boot-panel {
+            width: min(92vw, 460px);
+            background: rgba(15,23,42,.68);
+            border: 1px solid rgba(148,163,184,.22);
+            box-shadow: 0 25px 50px rgba(0,0,0,.4);
+            backdrop-filter: blur(14px);
+            border-radius: 20px;
+            padding: 24px;
         }
 
-        /* أيقونة احترافية بدلاً من النص */
-        .splash-icon {
-            font-size: 5rem;
-            background: linear-gradient(135deg, #D4AF37, #F9E076);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 1rem;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.7; }
-            50% { transform: scale(1.1); opacity: 1; text-shadow: 0 0 20px rgba(212,175,55,0.5); }
-            100% { transform: scale(1); opacity: 0.7; }
-        }
-
-        .splash-sub {
-            font-size: 0.9rem;
-            color: #a0a8c0;
-            letter-spacing: 1px;
-            margin-bottom: 2rem;
-        }
-
-        .progress-bar-container {
-            width: 240px;
-            height: 4px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 2rem;
-        }
-
-        .progress-fill {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #D4AF37, #F9E076);
-            border-radius: 4px;
-            transition: width 0.2s linear;
-        }
-
-        .splash-text {
-            margin-top: 1rem;
-            font-size: 0.8rem;
-            color: #b9c3e6;
-        }
-
-        /* الواجهة الرئيسية */
-        .merchant-dashboard {
-            opacity: 0;
-            visibility: hidden;
-            width: 100%;
-            max-width: 1400px;
-            margin: 1rem;
-            transition: opacity 0.5s ease;
-        }
-
-        .merchant-dashboard.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .glass-card {
-            background: rgba(15, 25, 55, 0.65);
-            backdrop-filter: blur(12px);
-            border-radius: 32px;
-            border: 1px solid rgba(212, 175, 55, 0.25);
-            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.4);
-            transition: transform 0.2s, border-color 0.2s;
-        }
-
-        .glass-card:hover {
-            border-color: rgba(212, 175, 55, 0.6);
-            transform: translateY(-3px);
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem 2rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-icon {
-            font-size: 2rem;
-            color: #D4AF37;
-            filter: drop-shadow(0 0 5px rgba(212,175,55,0.5));
-        }
-
-        .logo-area h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #FFFFFF, #D4AF37);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .merchant-badge {
-            background: rgba(212,175,55,0.15);
-            padding: 0.5rem 1.2rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            border: 1px solid rgba(212,175,55,0.4);
-        }
-
-        .search-section {
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .input-group input {
-            flex: 2;
-            min-width: 220px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid #2c3a6e;
-            border-radius: 60px;
-            padding: 0.9rem 1.5rem;
-            color: white;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .input-group input:focus {
-            border-color: #D4AF37;
-            box-shadow: 0 0 0 3px rgba(212,175,55,0.2);
-        }
-
-        .btn-gold {
-            background: linear-gradient(95deg, #D4AF37, #F3D572);
-            border: none;
-            padding: 0 2rem;
-            border-radius: 60px;
-            font-weight: 700;
-            color: #0a0f2c;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
-            font-size: 1rem;
+        .loading-logo {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            font-size: 27px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+        .loading-logo i { color: #60a5fa; }
+
+        .boot-subtitle { color: rgba(255,255,255,.7); font-size: 13px; margin-bottom: 18px; }
+        .boot-status { color: #bfdbfe; font-size: 14px; font-weight: 700; min-height: 22px; margin-bottom: 14px; }
+        .boot-progress-wrap { width: 100%; background: rgba(148,163,184,.2); border-radius: 999px; overflow: hidden; height: 9px; }
+        .boot-progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981); transition: width .25s ease-out; }
+        .boot-meta { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 12px; }
+        .boot-percent { color: #e2e8f0; font-weight: 800; }
+
+        .portal-wrapper {
+            max-width: 1150px;
+            margin: 0 auto;
+            padding: 24px;
+            min-height: 100vh;
+            animation: appAppear .55s ease;
+            contain: layout style;
+        }
+        @keyframes appAppear { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .portal-header {
+            position: sticky;
+            top: 10px;
+            z-index: 40;
+            background: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
+            padding: 16px 24px;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(8px);
+        }
+        .header-branding { display: flex; align-items: center; gap: 14px; }
+        .header-icon { width: 46px; height: 46px; background: linear-gradient(135deg, var(--primary), var(--purple)); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; font-size: 21px; box-shadow: 0 8px 24px rgba(37,99,235,0.24); transition: transform .25s ease; }
+        .header-icon:hover { transform: scale(1.06) rotate(-3deg); }
+        .portal-title { font-size: 24px; font-weight: 900; color: var(--text-primary); }
+        .portal-status { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: var(--success-light); color: var(--success); border-radius: 25px; font-size: 13px; font-weight: 700; border: 1px solid #86efac; cursor: pointer; transition: all .25s ease; user-select: none; }
+        .portal-status:hover { background: var(--success); color: #fff; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
+        .status-dot { width: 10px; height: 10px; background: var(--success); border-radius: 50%; animation: statusPulse 2s infinite; box-shadow: 0 0 0 4px rgba(16,185,129,0.26); }
+        @keyframes statusPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.66;transform:scale(1.16)} }
+
+        #merchantLoginSection { background: var(--bg-secondary); padding: 54px 42px; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); text-align: center; max-width: 540px; margin: 80px auto 110px; position: relative; overflow: hidden; border: 1px solid var(--border-color); }
+        #merchantLoginSection::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(37,99,235,.03), rgba(139,92,246,.03)); pointer-events: none; }
+        .welcome-section { position: relative; z-index: 1; }
+        .welcome-icon { width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary), var(--purple)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 28px; box-shadow: 0 12px 35px rgba(37,99,235,0.3); animation: floatAnimation 3s ease-in-out infinite; position: relative; }
+        .welcome-icon::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px dashed rgba(255,255,255,0.2); animation: iconRotate 10s linear infinite; }
+        @keyframes floatAnimation { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        .welcome-icon { width: 96px; height: 96px; background: linear-gradient(135deg, var(--primary), var(--purple)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: 0 12px 35px rgba(37,99,235,0.3); animation: floatAnimation 3s ease-in-out infinite; position: relative; }
+        .welcome-icon::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px dashed rgba(255,255,255,0.22); animation: iconRotate 10s linear infinite; }
+        @keyframes floatAnimation { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        @keyframes iconRotate { to { transform: rotate(360deg); } }
+        .welcome-icon i { font-size: 40px; color: white; }
+        .welcome-title { font-size: 28px; font-weight: 900; margin-bottom: 12px; color: var(--text-primary); }
+        .welcome-desc { color: var(--text-secondary); font-size: 15px; margin-bottom: 36px; line-height: 1.8; max-width: 380px; margin-left: auto; margin-right: auto; }
+        
+        .input-group { position: relative; margin-bottom: 24px; }
+        .welcome-icon i { font-size: 38px; color: white; }
+        .welcome-title { font-size: 27px; font-weight: 900; margin-bottom: 10px; color: var(--text-primary); }
+        .welcome-desc { color: var(--text-secondary); font-size: 15px; margin-bottom: 32px; line-height: 1.8; }
+
+        .input-group { position: relative; margin-bottom: 22px; }
+        .input-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 18px; transition: var(--transition); pointer-events: none; z-index: 1; }
+        .input-group input:focus ~ .input-icon { color: var(--primary); transform: translateY(-50%) scale(1.1); }
+        .input-group input:focus ~ .input-icon { color: var(--primary); transform: translateY(-50%) scale(1.08); }
+        .form-input { width: 100%; padding: 18px 48px 18px 20px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-family: 'Cairo', sans-serif; font-size: 17px; direction: rtl; transition: var(--transition); background: var(--bg-secondary); }
+        .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,0.1); background: white; }
+        .form-input::placeholder { color: var(--text-light); }
+        
+        .btn-row { display: flex; gap: 14px; margin-top: 28px; }
+        .btn { padding: 16px 32px; border: none; border-radius: var(--radius-md); font-family: 'Cairo', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; justify-content: center; gap: 10px; position: relative; overflow: hidden; letter-spacing: 0.5px; }
+        .btn::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(255,255,255,0.25); border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s; }
+        .btn:hover::before { width: 350px; height: 350px; }
+        .btn:active { transform: scale(0.97); }
+
+        .btn-row { display: flex; gap: 12px; margin-top: 24px; }
+        .btn { padding: 16px 28px; border: none; border-radius: var(--radius-md); font-family: 'Cairo', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; transition: all .25s ease; display: inline-flex; align-items: center; justify-content: center; gap: 10px; position: relative; overflow: hidden; letter-spacing: .3px; }
+        .btn::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(255,255,255,0.22); border-radius: 50%; transform: translate(-50%, -50%); transition: width .6s, height .6s; }
+        .btn:hover::before { width: 320px; height: 320px; }
+        .btn:active { transform: scale(.97); }
+        .btn-primary { flex: 1; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 6px 20px rgba(37,99,235,0.3); }
+        .btn-primary:hover { box-shadow: 0 10px 30px rgba(37,99,235,0.4); transform: translateY(-3px); }
+        .btn-primary:hover { box-shadow: 0 10px 26px rgba(37,99,235,0.4); transform: translateY(-2px); }
+        .btn-outline { background: white; border: 2px solid var(--border-color); color: var(--text-secondary); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+        /* Dashboard */
+        #merchantDashboard { display: none; animation: dashboardFadeIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes dashboardFadeIn { from{opacity:0;transform:translateY(30px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
+        #merchantDashboard { display: none; animation: dashboardFadeIn .5s ease-out; }
+        @keyframes dashboardFadeIn { from{opacity:0;transform:translateY(20px) scale(.99)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+        .merchant-info-card { background: var(--bg-secondary); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: 32px; margin-bottom: 28px; position: relative; overflow: hidden; border: 1px solid var(--border-color); border-right: 6px solid var(--primary); }
+        .merchant-info-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 150px; background: linear-gradient(135deg, rgba(37,99,235,.04) 0%, rgba(139,92,246,.04) 100%); pointer-events: none; }
+        .info-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; position: relative; z-index: 1; flex-wrap: wrap; gap: 16px; }
+        .merchant-name-section h2 { font-size: 26px; font-weight: 900; color: var(--text-primary); margin-bottom: 8px; }
+        .merchant-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--text-secondary); }
+        .meta-item { display: flex; align-items: center; gap: 6px; background: var(--bg-primary); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-light); font-weight: 600; transition: var(--transition); }
+        .merchant-info-card { background: var(--bg-secondary); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: 30px; margin-bottom: 24px; position: relative; overflow: hidden; border: 1px solid var(--border-color); border-right: 6px solid var(--primary); }
+        .merchant-info-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 140px; background: linear-gradient(135deg, rgba(37,99,235,.04), rgba(139,92,246,.04)); pointer-events: none; }
+        .info-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; position: relative; z-index: 1; flex-wrap: wrap; gap: 12px; }
+        .merchant-name-section h2 { font-size: 25px; font-weight: 900; color: var(--text-primary); margin-bottom: 8px; }
+        .merchant-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--text-secondary); }
+        .meta-item { display: flex; align-items: center; gap: 6px; background: var(--bg-primary); padding: 6px 12px; border-radius: 18px; border: 1px solid var(--border-light); font-weight: 600; transition: var(--transition); }
+        .meta-item:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+        .meta-item i { color: var(--primary); font-size: 12px; }
+        .print-btn { padding: 12px 22px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 13px; color: var(--text-secondary); transition: var(--transition); display: flex; align-items: center; gap: 8px; }
+        .print-btn:hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; position: relative; z-index: 1; }
+        .info-item { background: var(--bg-primary); padding: 18px; border-radius: var(--radius-md); border-right: 4px solid var(--border-color); transition: all 0.3s ease; }
+        .info-item:hover { border-right-color: var(--primary); transform: translateX(-4px); box-shadow: var(--shadow-sm); }
+        .print-btn { padding: 11px 20px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 13px; color: var(--text-secondary); transition: var(--transition); display: flex; align-items: center; gap: 8px; }
+        .print-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); transform: translateY(-1px); }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; position: relative; z-index: 1; }
+        .info-item { background: var(--bg-primary); padding: 16px; border-radius: var(--radius-md); border-right: 4px solid var(--border-color); transition: all .25s ease; }
+        .info-item:hover { border-right-color: var(--primary); transform: translateX(-3px); box-shadow: var(--shadow-sm); }
+        .info-label { font-size: 12px; color: var(--text-secondary); font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .info-value { font-size: 17px; font-weight: 800; color: var(--text-primary); }
+        .info-value { font-size: 16px; font-weight: 800; color: var(--text-primary); }
+        .info-item.highlight { background: linear-gradient(135deg, var(--warning-light), #fffbeb); border-right-color: var(--warning); }
+        .info-item.highlight .info-value { color: var(--danger); font-size: 22px; }
+        .info-item.highlight .info-value { color: var(--danger); font-size: 21px; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 28px; }
+        .stat-box { background: var(--bg-secondary); padding: 26px 22px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); text-align: center; position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); border: 1px solid var(--border-color); border-top: 5px solid transparent; }
+        .stat-box:hover { transform: translateY(-8px); box-shadow: var(--shadow-xl); }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-box { background: var(--bg-secondary); padding: 22px 18px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); text-align: center; position: relative; overflow: hidden; transition: transform .25s ease, box-shadow .25s ease; border: 1px solid var(--border-color); border-top: 5px solid transparent; will-change: transform; }
+        .stat-box:hover { transform: translateY(-5px); box-shadow: var(--shadow-xl); }
+        .stat-box:nth-child(1) { border-top-color: var(--primary); }
+        .stat-box:nth-child(2) { border-top-color: var(--danger); }
+        .stat-box:nth-child(3) { border-top-color: var(--success); }
+        .stat-box:nth-child(4) { border-top-color: var(--purple); }
+        .stat-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; color: white; transition: transform 0.3s ease; }
+        .stat-box:hover .stat-icon { transform: scale(1.1) rotate(-5deg); }
+        .stat-icon { width: 54px; height: 54px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 23px; color: white; }
+        .stat-box:nth-child(1) .stat-icon { background: linear-gradient(135deg, var(--primary), #60a5fa); }
+        .stat-box:nth-child(2) .stat-icon { background: linear-gradient(135deg, var(--danger), #fca5a5); }
+        .stat-box:nth-child(3) .stat-icon { background: linear-gradient(135deg, var(--success), #86efac); }
+        .stat-box:nth-child(4) .stat-icon { background: linear-gradient(135deg, var(--purple), #c4b5fd); }
+        .stat-label { font-size: 13px; color: var(--text-secondary); font-weight: 700; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 28px; font-weight: 900; color: var(--text-primary); line-height: 1.2; }
+
+        .action-buttons { display: flex; gap: 14px; margin-bottom: 28px; flex-wrap: wrap; }
+        .action-btn { flex: 1; min-width: 190px; padding: 18px 22px; background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: var(--radius-md); font-family: 'Cairo', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text-primary); }
+        .action-btn:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .action-btn.primary { background: linear-gradient(135deg, var(--primary), var(--purple)); color: white; border-color: transparent; }
+        .action-btn.primary:hover { box-shadow: 0 10px 30px rgba(37,99,235,0.35); transform: translateY(-4px); }
+
+        .section-card { background: var(--bg-secondary); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 28px; border: 1px solid var(--border-color); }
+        .section-header { padding: 20px 26px; background: linear-gradient(to bottom, var(--bg-primary), transparent); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .section-title { font-size: 17px; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 12px; }
+        .stat-label { font-size: 12px; color: var(--text-secondary); font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 27px; font-weight: 900; color: var(--text-primary); line-height: 1.2; }
+
+        .action-buttons { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .action-btn { flex: 1; min-width: 190px; padding: 16px 20px; background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: var(--radius-md); font-family: 'Cairo', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; transition: all .25s ease; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text-primary); }
+        .action-btn:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .action-btn.primary { background: linear-gradient(135deg, var(--primary), var(--purple)); color: #fff; border-color: transparent; }
+
+        .section-card { background: var(--bg-secondary); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 24px; border: 1px solid var(--border-color); }
+        .section-header { padding: 18px 22px; background: linear-gradient(to bottom, var(--bg-primary), transparent); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .section-title { font-size: 17px; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
+        .section-title i { color: var(--primary); }
+
+        .table-responsive { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .data-table thead th { background: var(--bg-primary); padding: 16px 18px; text-align: right; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; font-size: 11px; letter-spacing: 1px; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
+        .data-table tbody tr { transition: all 0.2s ease; border-bottom: 1px solid var(--border-light); }
+        .data-table thead th { background: var(--bg-primary); padding: 15px 16px; text-align: right; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; font-size: 11px; letter-spacing: 1px; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
+        .data-table tbody tr { transition: background-color .2s ease; border-bottom: 1px solid var(--border-light); }
+        .data-table tbody tr:hover { background: var(--primary-ultra-light); }
+        .data-table tbody td { padding: 16px 18px; }
+        .empty-state { text-align: center; padding: 55px 20px; color: var(--text-secondary); }
+        .empty-state i { font-size: 56px; color: var(--border-color); margin-bottom: 16px; display: block; opacity: 0.5; }
+        .data-table tbody td { padding: 15px 16px; }
+
+        .empty-state { text-align: center; padding: 48px 20px; color: var(--text-secondary); }
+        .empty-state i { font-size: 54px; color: var(--border-color); margin-bottom: 14px; display: block; opacity: .5; }
+        .ref-code { font-family: 'Courier New', monospace; background: var(--bg-primary); padding: 4px 10px; border-radius: 6px; font-size: 12px; color: var(--primary); font-weight: 700; border: 1px solid var(--primary-light); }
+        .amount-positive { color: var(--success); font-weight: 800; }
+        .amount-negative { color: var(--danger); font-weight: 800; }
+
+        .requests-list { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        .request-item { background: var(--bg-primary); border-radius: var(--radius-lg); padding: 22px; border-right: 5px solid var(--warning); transition: all 0.3s ease; border: 1px solid var(--border-color); }
+        .request-item:hover { box-shadow: var(--shadow-md); transform: translateX(-4px); }
+        .requests-list { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+        .request-item { background: var(--bg-primary); border-radius: var(--radius-lg); padding: 18px; border-right: 5px solid var(--warning); transition: all .25s ease; border: 1px solid var(--border-color); }
+        .request-item:hover { box-shadow: var(--shadow-md); transform: translateX(-3px); }
+        .request-item.status-مكتمل { border-right-color: var(--success); }
+        .request-item.status-ملغي { border-right-color: var(--danger); }
+        .request-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .request-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .request-ref { font-weight: 900; color: var(--primary); font-size: 16px; }
+        .request-status-badge { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; }
+        .request-status-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; }
+        .badge-pending { background: var(--warning-light); color: #92400e; }
+        .badge-completed { background: var(--success-light); color: #166534; }
+        .badge-cancelled { background: var(--danger-light); color: #991b1b; }
+        .request-body-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        .request-body-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .req-detail { font-size: 14px; }
+        .req-detail-label { color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 4px; font-weight: 600; }
+        .req-detail-value { font-weight: 800; color: var(--text-primary); }
+        .req-amount { font-size: 20px !important; color: var(--primary) !important; }
+        .req-amount { font-size: 19px !important; color: var(--primary) !important; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.7); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.72); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; opacity: 0; transition: opacity .25s ease; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-content { background: var(--bg-secondary); border-radius: var(--radius-xl); width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes modalSlideIn { from{opacity:0;transform:scale(.92) translateY(30px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        .modal-header { padding: 24px 28px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: var(--bg-primary); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+        .modal-title { font-size: 20px; font-weight: 900; display: flex; align-items: center; gap: 12px; }
+        .modal-close { width: 42px; height: 42px; border: none; background: var(--bg-secondary); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-secondary); transition: all 0.2s ease; }
+        .modal-close:hover { background: var(--danger); color: white; transform: rotate(90deg) scale(1.1); }
+        .modal-body { padding: 28px; }
+        .modal-footer { padding: 20px 28px; border-top: 1px solid var(--border-color); display: flex; gap: 14px; justify-content: flex-start; background: var(--bg-primary); border-radius: 0 0 var(--radius-xl) var(--radius-xl); }
+        .form-group { margin-bottom: 22px; }
+        .form-label { display: block; font-size: 14px; font-weight: 800; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-select { width: 100%; padding: 14px 18px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); font-family: 'Cairo', sans-serif; font-size: 15px; direction: rtl; background: white; cursor: pointer; transition: var(--transition); }
+        .modal-content { background: var(--bg-secondary); border-radius: var(--radius-xl); width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,.25); animation: modalSlideIn .35s ease; }
+        @keyframes modalSlideIn { from{opacity:0;transform:scale(.94) translateY(18px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        .modal-header { padding: 22px 24px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: var(--bg-primary); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+        .modal-title { font-size: 20px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
+        .modal-close { width: 42px; height: 42px; border: none; background: var(--bg-secondary); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-secondary); transition: all .2s ease; }
+        .modal-close:hover { background: var(--danger); color: #fff; transform: rotate(90deg) scale(1.05); }
+        .modal-body { padding: 24px; }
+        .modal-footer { padding: 18px 24px; border-top: 1px solid var(--border-color); display: flex; gap: 12px; justify-content: flex-start; background: var(--bg-primary); border-radius: 0 0 var(--radius-xl) var(--radius-xl); }
+
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; font-size: 14px; font-weight: 800; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .5px; }
+        .form-select { width: 100%; padding: 14px 18px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); font-family: 'Cairo', sans-serif; font-size: 15px; direction: rtl; background: #fff; cursor: pointer; transition: var(--transition); }
+        .form-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
+        textarea.form-input { resize: vertical; min-height: 90px; }
+
+        .modal-overlay.success-modal .modal-content { text-align: center; max-width: 450px; }
+        .success-icon-large { width: 90px; height: 90px; background: linear-gradient(135deg, var(--success), #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 28px; font-size: 38px; color: white; animation: successPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 12px 35px rgba(16,185,129,0.35); }
+        .success-icon-large { width: 88px; height: 88px; background: linear-gradient(135deg, var(--success), #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 36px; color: #fff; animation: successPop .45s ease; box-shadow: 0 12px 35px rgba(16,185,129,0.35); }
+        @keyframes successPop { 0%{transform:scale(0) rotate(-180deg)} 100%{transform:scale(1) rotate(0)} }
+        .success-title { font-size: 26px; font-weight: 900; margin-bottom: 10px; color: var(--text-primary); }
+        .success-subtitle { color: var(--text-secondary); font-size: 15px; margin-bottom: 24px; }
+        .success-ref-display { background: linear-gradient(135deg, var(--primary-light), var(--purple-light)); padding: 18px 28px; border-radius: var(--radius-md); font-family: 'Courier New', monospace; font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 32px; border: 2px dashed var(--primary); letter-spacing: 2px; animation: refPulse 2s ease-in-out infinite; }
+        @keyframes refPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.02)} }
+        .success-title { font-size: 24px; font-weight: 900; margin-bottom: 8px; color: var(--text-primary); }
+        .success-subtitle { color: var(--text-secondary); font-size: 15px; margin-bottom: 22px; }
+        .success-ref-display { background: linear-gradient(135deg, var(--primary-light), var(--purple-light)); padding: 16px 24px; border-radius: var(--radius-md); font-family: 'Courier New', monospace; font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 28px; border: 2px dashed var(--primary); letter-spacing: 1.5px; }
+
+        #portalToast { position: fixed; top: 24px; left: 24px; z-index: 99999; display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
+        .toast-msg { background: var(--bg-secondary); padding: 18px 22px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 14px; animation: toastSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); border-right: 5px solid var(--success); position: relative; overflow: hidden; }
+        #portalToast { position: fixed; top: 20px; left: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; max-width: 420px; }
+        .toast-msg { background: var(--bg-secondary); padding: 16px 18px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 12px; animation: toastSlideIn .35s ease; border-right: 5px solid var(--success); position: relative; overflow: hidden; }
+        .toast-msg.error { border-right-color: var(--danger); }
+        .toast-msg.warning { border-right-color: var(--warning); }
+        .toast-msg.info { border-right-color: var(--primary); }
+        .toast-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .toast-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .toast-msg.success .toast-icon { background: var(--success-light); color: var(--success); }
+        .toast-msg.error .toast-icon { background: var(--danger-light); color: var(--danger); }
+        .toast-msg.warning .toast-icon { background: var(--warning-light); color: var(--warning); }
+        .toast-msg.info .toast-icon { background: var(--primary-light); color: var(--primary); }
+        .toast-text { flex: 1; font-size: 15px; font-weight: 700; color: var(--text-primary); }
+        .toast-close { background: none; border: none; color: var(--text-light); cursor: pointer; font-size: 18px; padding: 4px; transition: var(--transition); }
+        .toast-close:hover { color: var(--text-primary); transform: scale(1.2); }
+        .toast-progress { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--success); animation: toastProgress 4s linear forwards; border-radius: 0 0 var(--radius-md) var(--radius-md); }
+        .toast-text { flex: 1; font-size: 14px; font-weight: 700; color: var(--text-primary); }
+        .toast-close { background: none; border: none; color: var(--text-light); cursor: pointer; font-size: 18px; padding: 4px; }
+        .toast-progress { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--success); animation: toastProgress 4s linear forwards; }
+        .toast-msg.error .toast-progress { background: var(--danger); }
+        .toast-msg.warning .toast-progress { background: var(--warning); }
+        @keyframes toastSlideIn { from{opacity:0;transform:translateX(-120px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes toastProgress { from{width:100%} to{width:0} }
+
+        .portal-footer { text-align: center; padding: 35px 24px; color: var(--text-secondary); font-size: 14px; margin-top: 35px; border-top: 1px solid var(--border-color); background: var(--bg-secondary); border-radius: var(--radius-xl); }
+        .portal-footer { text-align: center; padding: 30px 24px; color: var(--text-secondary); font-size: 14px; margin-top: 24px; border-top: 1px solid var(--border-color); background: var(--bg-secondary); border-radius: var(--radius-xl); }
+        .footer-brand { font-weight: 800; color: var(--text-primary); margin-bottom: 8px; font-size: 16px; }
+        .footer-version { font-size: 12px; color: var(--text-light); margin-bottom: 20px; }
+        .qr-section { margin-top: 20px; }
+        .qr-img { width: 100px; height: 100px; border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease; border: 3px solid var(--border-color); padding: 6px; background: white; }
+        .qr-img:hover { transform: scale(1.08) rotate(-3deg); border-color: var(--primary); box-shadow: var(--shadow-md); }
+        .footer-version { font-size: 12px; color: var(--text-light); margin-bottom: 16px; }
+        .qr-img { width: 100px; height: 100px; border-radius: var(--radius-md); cursor: pointer; transition: all .25s ease; border: 3px solid var(--border-color); padding: 6px; background: #fff; }
+        .qr-img:hover { transform: scale(1.06) rotate(-2deg); border-color: var(--primary); box-shadow: var(--shadow-md); }
+
+        #debugInfo { display: none; background: var(--bg-dark); color: #10b981; padding: 22px; border-radius: var(--radius-md); font-family: 'Fira Code', monospace; font-size: 13px; margin-top: 20px; text-align: left; direction: ltr; white-space: pre-wrap; word-break: break-all; line-height: 1.7; max-height: 280px; overflow-y: auto; border: 1px solid #334155; }
+        #debugInfo { display: none; background: var(--bg-dark); color: #10b981; padding: 20px; border-radius: var(--radius-md); font-family: 'Fira Code', monospace; font-size: 12px; margin-top: 16px; text-align: left; direction: ltr; white-space: pre-wrap; word-break: break-all; line-height: 1.7; max-height: 260px; overflow-y: auto; border: 1px solid #334155; }
+        #debugInfo.show { display: block; }
+
+        .app-install-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--primary-light), var(--purple-light));
+            border: 1px solid #bfdbfe;
+            border-radius: 14px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+        }
+        .app-install-banner.show { display: flex; }
+        .install-btn { border: none; border-radius: 10px; padding: 8px 12px; font-family: 'Cairo', sans-serif; font-weight: 800; cursor: pointer; }
+        .install-btn.primary { background: var(--primary); color: #fff; }
+        .install-btn.ghost { background: transparent; color: var(--text-secondary); }
+
+        @media (max-width: 768px) {
+            .portal-wrapper { padding: 16px; }
+            .portal-header { flex-direction: column; gap: 18px; text-align: center; padding: 20px; }
+            .portal-title { font-size: 22px; }
+            #merchantLoginSection { padding: 40px 28px; margin: 60px auto; }
+            .portal-wrapper { padding: 14px; }
+            .portal-header { top: 6px; flex-direction: column; gap: 12px; text-align: center; padding: 16px; }
+            .portal-title { font-size: 21px; }
+            #merchantLoginSection { margin: 40px auto 70px; padding: 34px 24px; }
+            .welcome-title { font-size: 22px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+            .stat-value { font-size: 24px; }
+            .action-buttons { flex-direction: column; }
+            .action-btn { width: 100%; }
+            .btn-row { flex-direction: column; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .stat-value { font-size: 22px; }
+            .action-buttons, .btn-row { flex-direction: column; }
+            .action-btn { width: 100%; min-height: 52px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .info-card-header { flex-direction: column; gap: 18px; }
+            .modal-content { margin: 12px; max-height: 95vh; }
+            .info-card-header { flex-direction: column; gap: 14px; }
+            .modal-content { margin: 10px; max-height: 94vh; }
+            .request-body-grid { grid-template-columns: 1fr 1fr; }
+            #portalToast { left: 12px; right: 12px; max-width: none; }
+            #portalToast { left: 10px; right: 10px; max-width: none; }
+            .boot-panel { padding: 20px; }
         }
 
-        .btn-gold:active {
-            transform: scale(0.97);
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
         }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            padding: 1.5rem;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin: 0.5rem 0;
-            color: #F9E076;
-        }
-
-        .transactions-table-wrapper {
-            overflow-x: auto;
-            padding: 0.5rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 1rem 0.8rem;
-            text-align: right;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        th {
-            color: #D4AF37;
-            font-weight: 600;
-        }
-
-        .status-badge {
-            background: rgba(46, 204, 113, 0.2);
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            color: #2ecc71;
-        }
-
-        .error-msg {
-            background: rgba(231, 76, 60, 0.2);
-            border-right: 3px solid #e74c3c;
-            padding: 1rem;
-            border-radius: 16px;
-            margin-top: 1rem;
-            text-align: center;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 3rem;
-            padding: 1.5rem;
-            font-size: 0.75rem;
-            color: #6c7a9e;
-        }
-
-        @media (max-width: 640px) {
-            .header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-            .btn-gold {
-                padding: 0.8rem 1.5rem;
-            }
+        @media print {
+            body * { visibility: hidden !important; }
+            #merchantDashboard, #merchantDashboard *, .modal-overlay.show { visibility: visible !important; }
+            #merchantDashboard { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; }
+            .action-buttons, .print-btn, .portal-footer, .qr-section, #portalToast, #debugInfo, .btn-row button:nth-child(2), .modal-close { display: none !important; }
+            .action-buttons, .print-btn, .portal-footer, .qr-section, #portalToast, #debugInfo, .btn-row button:nth-child(2), .modal-close, .app-install-banner { display: none !important; }
+            .stat-box, .info-item { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd !important; }
         }
     </style>
 </head>
+
 <body>
-
-<!-- شاشة التحميل -->
-<div id="splash" class="splash-screen">
-    <div class="splash-icon">
-        <i class="fas fa-store-alt"></i>
-    </div>
-    <div class="splash-sub">Merchant Runtime Environment v7.0</div>
-    <div class="progress-bar-container">
-        <div id="progressFill" class="progress-fill"></div>
-    </div>
-    <div id="splashStatus" class="splash-text">تمهيد الأنظمة...</div>
-</div>
-
-<!-- لوحة التحكم -->
-<div id="dashboard" class="merchant-dashboard">
-    <div class="glass-card header">
-        <div class="logo-area">
-            <i class="fas fa-crown logo-icon"></i>
-            <h1>بوابة التاجر</h1>
-        </div>
-        <div class="merchant-badge">
-            <i class="fas fa-shield-alt"></i> بيئة آمنة
-        </div>
-    </div>
-
-    <div class="glass-card search-section">
-        <div class="input-group">
-            <input type="text" id="merchantAccount" placeholder="أدخل رقم حساب التاجر (مثال: 1001)" autocomplete="off">
-            <button id="searchBtn" class="btn-gold"><i class="fas fa-search"></i> استعلام</button>
-        </div>
-        <div id="searchError" style="min-height: 50px;"></div>
-    </div>
-
-    <div id="merchantInfoArea" style="display: none;">
-        <div class="info-grid" id="statsGrid"></div>
-        <div class="glass-card" style="padding: 1.5rem;">
-            <h3 style="margin-bottom: 1rem;"><i class="fas fa-history"></i> آخر المعاملات</h3>
-            <div class="transactions-table-wrapper">
-                <table id="transactionsTable">
-                    <thead>
-                        <tr><th>التاريخ</th><th>نوع العملية</th><th>المبلغ</th><th>الحالة</th></tr>
-                    </thead>
-                    <tbody id="transactionsBody">
-                        <tr><td colspan="4" style="text-align:center;">لا توجد معاملات</td></tr>
-                    </tbody>
-                </table>
+    <div id="portalLoading">
+        <div class="loader-container">
+            <div class="portal-loader"></div>
+            <div class="loading-logo">AXENTRO</div>
+            <div class="loading-subtitle">جاري تحميل النظام<span class="loading-dots"><span></span><span></span><span></span></span></div>
+<div class="app-shell">
+    <div id="portalLoading" role="status" aria-live="polite">
+        <div class="boot-panel">
+            <div class="loading-logo"><i class="fas fa-microchip"></i> AXENTRO OS</div>
+            <div class="boot-subtitle">Merchant Runtime Environment v7.0</div>
+            <div class="boot-status" id="bootStatusText">Initializing system</div>
+            <div class="boot-progress-wrap"><div class="boot-progress-bar" id="bootProgressBar"></div></div>
+            <div class="boot-meta">
+                <span id="bootPhaseText">Boot sequence started</span>
+                <span class="boot-percent" id="bootPercentText">0%</span>
             </div>
         </div>
     </div>
-    <footer>
-        <i class="fas fa-lock"></i> بيانات مشفرة • نظام المدفوعات المتكامل
-    </footer>
+
+    <div id="portalToast"></div>
+
+    <div class="portal-wrapper">
+        <div id="appInstallBanner" class="app-install-banner">
+            <div style="font-size:13px;font-weight:700;color:var(--text-primary)"><i class="fas fa-mobile-alt"></i> تثبيت التطبيق للوصول السريع</div>
+            <div style="display:flex;gap:8px">
+                <button id="installAppBtn" class="install-btn primary">تثبيت</button>
+                <button id="dismissInstallBtn" class="install-btn ghost">لاحقاً</button>
+            </div>
+        </div>
+
+        <header class="portal-header">
+            <div class="header-branding">
+                <div class="header-icon"><i class="fas fa-store"></i></div>
+                <div><h1 class="portal-title">بوابة التاجر</h1></div>
+            </div>
+            <div class="portal-status" onclick="SoundSystem.playClick()"><span class="status-dot"></span> متصل ✓</div>
+        </header>
+
+        <section id="merchantLoginSection">
+            <div class="welcome-section">
+                <div class="welcome-icon"><i class="fas fa-user-circle"></i></div>
+                <h2 class="welcome-title">مرحباً بك في بوابة Axentro</h2>
+                <p class="welcome-desc">أدخل رقم الحساب أو رقم التاجر لعرض بياناتك الكاملة</p>
+                
+
+                <div class="input-group">
+                    <input type="text" id="merchantAccountId" class="form-input" placeholder="أدخل رقم الحساب أو رقم التاجر *" autocomplete="off" onkeypress="if(event.key==='Enter') Portal.loadMerchantData()">
+                    <i class="fas fa-id-card input-icon"></i>
+                </div>
+                
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="Portal.loadMerchantData()"><i class="fas fa-search-location"></i> عرض بياناتي</button>
+                    <button class="btn btn-outline" onclick="Portal.toggleDebug()"><i class="fas fa-bug"></i> تصحيح</button>
+                </div>
+                
+
+                <div id="debugInfo"></div>
+            </div>
+        </section>
+
+        <section id="merchantDashboard">
+            <div class="merchant-info-card" id="merchantInfoCard" style="display:none;">
+                <div class="info-card-header">
+                    <div class="merchant-name-section">
+                        <h2 id="displayMerchantName">—</h2>
+                        <div class="merchant-meta">
+                            <span class="meta-item"><i class="fas fa-hashtag"></i><span id="displayMerchantNumber">—</span></span>
+                            <span class="meta-item"><i class="fas fa-briefcase"></i><span id="displayActivityName">—</span></span>
+                            <span class="meta-item"><i class="fas fa-phone-alt"></i><span id="displayPhone">—</span></span>
+                        </div>
+                    </div>
+                    <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item"><div class="info-label">المنطقة</div><div class="info-value" id="displayArea">—</div></div>
+                    <div class="info-item"><div class="info-label">العنوان</div><div class="info-value" id="displayAddress">—</div></div>
+                    <div class="info-item highlight"><div class="info-label">المديونية الحالية</div><div class="info-value" id="displayDebt">0 ج.م</div></div>
+                    <div class="info-item"><div class="info-label">الحالة</div><div class="info-value" id="displayStatus">—</div></div>
+                </div>
+            </div>
+
+@@ -319,460 +432,519 @@
+                <button class="action-btn primary" onclick="Portal.openRequestModal()"><i class="fas fa-plus-circle"></i> طلب جديد</button>
+                <button class="action-btn" onclick="Portal.loadMerchantData()"><i class="fas fa-sync-alt"></i> تحديث البيانات</button>
+                <button class="action-btn" onclick="document.getElementById('merchantInfoCard').scrollIntoView({behavior:'smooth'})"><i class="fas fa-user"></i> بياناتي</button>
+            </div>
+
+            <div class="section-card" id="machinesSectionCard" style="display:none;">
+                <div class="section-header"><h3 class="section-title"><i class="fas fa-desktop"></i> المكن المسجلة</h3><span style="font-size:13px;color:var(--text-secondary);" id="machinesCountLabel">0 مكنة</span></div>
+                <div class="machines-grid" id="machinesGridContainer" style="padding:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;"></div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header"><h3 class="section-title"><i class="fas fa-arrow-up"></i> آخر 5 تحويلات</h3></div>
+                <div class="table-responsive"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th></tr></thead><tbody id="mTransfersTable"><tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr></tbody></table></div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header"><h3 class="section-title"><i class="fas fa-arrow-down"></i> آخر 5 تحصيلات</h3></div>
+                <div class="table-responsive"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>القيمة</th><th>المتبقي</th></tr></thead><tbody id="mCollectionsTable"><tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr></tbody></table></div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header"><h3 class="section-title"><i class="fas fa-file-alt"></i> طلباتي السابقة</h3></div>
+                <div class="requests-list" id="requestsHistoryContainer"><div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div></div>
+            </div>
+
+            <div style="text-align:center; margin: 35px 0;">
+                <button class="btn btn-primary" onclick="Portal.openRequestModal()" style="padding: 18px 48px; font-size: 17px;"><i class="fas fa-paper-plane"></i> تقديم طلب جديد</button>
+            <div style="text-align:center; margin: 30px 0;">
+                <button class="btn btn-primary" onclick="Portal.openRequestModal()" style="padding: 18px 46px; font-size: 17px;"><i class="fas fa-paper-plane"></i> تقديم طلب جديد</button>
+            </div>
+        </section>
+
+        <footer class="portal-footer">
+            <div class="footer-brand">© 2026 Axentro Systems – All Rights Reserved</div>
+            <div class="footer-version">Powered by Axentro Team</div>
+            <div class="qr-section">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://axentro-official.github.io/axentro-website/links.html" alt="QR Code" class="qr-img" onclick="window.open('https://axentro-official.github.io/axentro-website/links.html','_blank')">
+                <div style="margin-top:8px;font-size:12px;color:var(--text-light)">امسح للوصول السريع</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Request Modal -->
+    <div class="modal-overlay" id="requestModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 class="modal-title"><i class="fas fa-paper-plane"></i> تقديم طلب جديد</h3><button class="modal-close" onclick="Portal.closeRequestModal()"><i class="fas fa-times"></i></button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">نوع الطلب *</label><select class="form-select" id="reqType"><option value="">-- اختر نوع الطلب --</option><option value="كاش على المكنة">💵 كاش على المكنة</option><option value="رصيد خدمات على المكنة">🔄 رصيد خدمات على المكنة</option><option value="تحويل">➡️ تحويل</option><option value="تحصيل">⬅️ تحصيل</option><option value="صيانة">🔧 صيانة</option><option value="أخرى">📋 أخرى</option></select></div>
+                <div class="form-group"><label class="form-label">اختر المكنة (اختياري)</label><select class="form-select" id="reqMachine"><option value="">-- جميع المكن --</option></select></div>
+                <div class="form-group"><label class="form-label">المبلغ المطلوب (جنيه) *</label><input type="number" class="form-input" id="reqAmount" placeholder="مثال: 5000" min="1" step="0.01"></div>
+                <div class="form-group"><label class="form-label">ملاحظات (اختياري)</label><textarea class="form-input" id="reqNotes" placeholder="أي تفاصيل إضافية..."></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="Portal.submitRequest()" style="flex:1;"><i class="fas fa-paper-plane"></i> إرسال الطلب الآن</button><button class="btn btn-outline" onclick="Portal.closeRequestModal()">إلغاء</button></div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay success-modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-body" style="padding: 50px 40px;">
+            <div class="modal-body" style="padding: 46px 36px;">
+                <div class="success-icon-large"><i class="fas fa-check"></i></div>
+                <h3 class="success-title">تم الإرسال بنجاح! 🎉</h3>
+                <p class="success-subtitle">تم تسجيل طلبك وسيتم مراجعته قريباً</p>
+                <p style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">رقم المرجع:</p>
+                <div class="success-ref-display" id="successRefId">REQ-XX-XXXXX</div><br>
+                <button class="btn btn-primary" onclick="Portal.closeSuccessAndNew()" style="width:100%;"><i class="fas fa-plus"></i> تقديم طلب آخر</button>
+            </div>
+        </div>
+    </div>
 </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+    /**
+     * ============================================
+     * AXENTRO MERCHANT PORTAL v7.0 - FINAL FIX
+     * ============================================
+     * ✅ حل نهائي لمشكلة 406 / 42703
+     * ✅ استخدام fetch API مباشرة بدلاً من SDK
+     * ✅ بحث مرن يدعم كل أسماء الحقول
+     */
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // تكوين Supabase
-    const SUPABASE_URL = 'https://bwcrdcudpnxkmcyyhzhe.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const CONFIG = {
+        supabaseUrl: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
+        supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY'
+        supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
+        googleScriptUrl: 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec'
+    };
 
-    // شاشة التحميل - محاكاة تقدم مضمونة الوصول إلى 100%
-    let progress = 0;
-    const progressFill = document.getElementById('progressFill');
-    const splashStatus = document.getElementById('splashStatus');
-    const splashDiv = document.getElementById('splash');
-    const dashboardDiv = document.getElementById('dashboard');
+    // Initialize Supabase
+    const _supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
 
-    const steps = [
-        { progress: 20, text: "تحميل البيئة الآمنة..." },
-        { progress: 45, text: "توصيل بقاعدة البيانات..." },
-        { progress: 70, text: "تهيئة واجهة التاجر..." },
-        { progress: 95, text: "إنهاء الاستعداد..." }
-    ];
+    let _currentMerchant = null;
+    let _currentAccountNumber = null;
 
-    let stepIndex = 0;
-    // دالة لتحديث التقدم بشكل تدريجي وآمن
-    function updateProgress(targetProgress, stepText) {
-        return new Promise((resolve) => {
-            let current = progress;
-            const interval = setInterval(() => {
-                if (current < targetProgress) {
-                    current += Math.max(1, Math.floor((targetProgress - current) / 5));
-                    if (current > targetProgress) current = targetProgress;
-                    progressFill.style.width = current + '%';
-                    progress = current;
-                } else {
-                    clearInterval(interval);
-                    resolve();
+    // ===== SOUND SYSTEM =====
+    const DOM = {
+        cache: {},
+        id(name) {
+            if (!this.cache[name]) this.cache[name] = document.getElementById(name);
+            return this.cache[name];
+        }
+    };
+
+    const BootLoader = {
+        messages: [
+            { p: 20, text: 'Initializing system', phase: 'Core services' },
+            { p: 55, text: 'Connecting to database', phase: 'Supabase bridge' },
+            { p: 85, text: 'Loading modules', phase: 'UI & runtime modules' },
+            { p: 100, text: 'Ready', phase: 'Application ready' }
+        ],
+        async run() {
+            const bar = DOM.id('bootProgressBar');
+            const status = DOM.id('bootStatusText');
+            const phase = DOM.id('bootPhaseText');
+            const percent = DOM.id('bootPercentText');
+            let current = 0;
+
+            for (const step of this.messages) {
+                while (current < step.p) {
+                    current += (step.p - current > 12 ? 7 : 2);
+                    if (current > step.p) current = step.p;
+                    bar.style.width = current + '%';
+                    status.textContent = step.text;
+                    phase.textContent = step.phase;
+                    percent.textContent = current + '%';
+                    await new Promise(r => setTimeout(r, 26));
                 }
-            }, 30);
-            splashStatus.innerText = stepText;
-        });
-    }
+            }
 
-    async function runSplash() {
-        for (const step of steps) {
-            await updateProgress(step.progress, step.text);
             await new Promise(r => setTimeout(r, 200));
+            DOM.id('portalLoading').classList.add('hidden');
         }
-        // الوصول إلى 100%
-        await updateProgress(100, "جاهز! مرحباً بك.");
-        await new Promise(r => setTimeout(r, 300));
-        // إخفاء شاشة التحميل
-        splashDiv.style.opacity = '0';
-        setTimeout(() => {
-            splashDiv.style.display = 'none';
-            dashboardDiv.classList.add('active');
-        }, 500);
-    }
+    };
 
-    // بدء التحميل
-    runSplash();
+    const PWA = {
+        deferredPrompt: null,
+        init() {
+            this.registerServiceWorker();
+            this.bindInstallEvents();
+        },
+        registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', async () => {
+                    try {
+                        await navigator.serviceWorker.register('/service-worker.js');
+                    } catch (error) {
+                        console.warn('SW registration failed:', error);
+                    }
+                });
+            }
+        },
+        bindInstallEvents() {
+            const banner = DOM.id('appInstallBanner');
+            const installBtn = DOM.id('installAppBtn');
+            const dismissBtn = DOM.id('dismissInstallBtn');
 
-    // دوال واجهة التاجر
-    const merchantAccountInput = document.getElementById('merchantAccount');
-    const searchBtn = document.getElementById('searchBtn');
-    const merchantInfoArea = document.getElementById('merchantInfoArea');
-    const searchErrorDiv = document.getElementById('searchError');
-    const statsGrid = document.getElementById('statsGrid');
-    const transactionsBody = document.getElementById('transactionsBody');
-
-    async function fetchMerchantData(accountNumber) {
-        searchErrorDiv.innerHTML = '';
-        merchantInfoArea.style.display = 'none';
-
-        if (!accountNumber || accountNumber.trim() === '') {
-            searchErrorDiv.innerHTML = '<div class="error-msg"><i class="fas fa-exclamation-triangle"></i> الرجاء إدخال رقم الحساب</div>';
-            return;
-        }
-
-        // محاولة جلب بيانات التاجر
-        const { data: merchantData, error: merchantError } = await supabase
-            .from('merchants')
-            .select('*')
-            .eq('merchant_id', accountNumber)
-            .single();
-
-        if (merchantError || !merchantData) {
-            // عرض رسالة خطأ ودية مع إمكانية استخدام بيانات تجريبية للعرض (اختياري)
-            searchErrorDiv.innerHTML = `<div class="error-msg"><i class="fas fa-database"></i> لم يتم العثور على تاجر برقم ${accountNumber}. تأكد من الرقم أو تواصل مع الدعم.</div>`;
-            return;
-        }
-
-        // جلب المعاملات
-        const { data: transactions, error: transError } = await supabase
-            .from('merchant_transactions')
-            .select('*')
-            .eq('merchant_id', accountNumber)
-            .order('created_at', { ascending: false })
-            .limit(10);
-
-        if (transError) console.warn("خطأ في المعاملات", transError);
-
-        merchantInfoArea.style.display = 'block';
-
-        const balance = merchantData.balance || 0;
-        const totalSales = merchantData.total_sales || 0;
-        const joinDate = merchantData.join_date ? new Date(merchantData.join_date).toLocaleDateString('ar-EG') : 'غير محدد';
-
-        statsGrid.innerHTML = `
-            <div class="glass-card stat-card">
-                <i class="fas fa-user-circle fa-2x" style="color:#D4AF37;"></i>
-                <div style="font-size:1.2rem; margin-top:0.5rem;">${merchantData.full_name || '---'}</div>
-                <div class="stat-value">${Number(balance).toLocaleString()} ج.م</div>
-                <div>الرصيد الحالي</div>
-            </div>
-            <div class="glass-card stat-card">
-                <i class="fas fa-chart-line fa-2x"></i>
-                <div class="stat-value">${Number(totalSales).toLocaleString()} ج.م</div>
-                <div>إجمالي المبيعات</div>
-            </div>
-            <div class="glass-card stat-card">
-                <i class="fas fa-calendar-alt fa-2x"></i>
-                <div class="stat-value">${joinDate}</div>
-                <div>تاريخ الانضمام</div>
-            </div>
-        `;
-
-        if (transactions && transactions.length > 0) {
-            let rows = '';
-            transactions.forEach(tx => {
-                const date = new Date(tx.created_at).toLocaleString('ar-EG');
-                const type = tx.type === 'sale' ? 'بيع' : (tx.type === 'refund' ? 'استرداد' : 'شحن');
-                const amount = Number(tx.amount).toLocaleString() + ' ج.م';
-                const status = tx.status || 'completed';
-                rows += `<tr>
-                            <td>${date}</td>
-                            <td>${type}</td>
-                            <td>${amount}</td>
-                            <td><span class="status-badge">${status === 'completed' ? 'مكتملة' : 'معلقة'}</span></td>
-                         </tr>`;
+            window.addEventListener('beforeinstallprompt', (event) => {
+                event.preventDefault();
+                this.deferredPrompt = event;
+                banner.classList.add('show');
             });
-            transactionsBody.innerHTML = rows;
-        } else {
-            transactionsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">لا توجد معاملات حديثة</td></tr>';
+
+            installBtn.addEventListener('click', async () => {
+                if (!this.deferredPrompt) return;
+                this.deferredPrompt.prompt();
+                await this.deferredPrompt.userChoice;
+                this.deferredPrompt = null;
+                banner.classList.remove('show');
+            });
+
+            dismissBtn.addEventListener('click', () => banner.classList.remove('show'));
+
+            window.addEventListener('appinstalled', () => {
+                banner.classList.remove('show');
+                Toast.show('تم تثبيت التطبيق بنجاح', 'success');
+            });
         }
-    }
+    };
 
-    searchBtn.addEventListener('click', () => fetchMerchantData(merchantAccountInput.value));
-    merchantAccountInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') fetchMerchantData(merchantAccountInput.value);
-    });
+    const SoundSystem = {
+        ctx: null,
+        init() { try { this.ctx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){} },
+        get() { if(!this.ctx)this.init(); if(this.ctx?.state==='suspended')this.ctx.resume(); return this.ctx; },
+        click() { try{const c=this.get();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='sine';o.frequency.setValueAtTime(1200,c.currentTime);o.frequency.exponentialRampToValueAtTime(800,c.currentTime+0.05);g.gain.setValueAtTime(0.15,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.08);o.start(c.currentTime);o.stop(c.currentTime+0.08);}catch(e){} },
+        success() { const a=document.getElementById('successSound');if(a){a.currentTime=0;a.play().catch(()=>{})} try{const c=this.get();if(!c)return;const n=c.currentTime;[523.25,659.25,783.99].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='sine';o.frequency.setValueAtTime(f,n+i*0.1);g.gain.setValueAtTime(0.001,n+i*0.1);g.gain.linearRampToValueAtTime(0.2,n+i*0.1+0.02);g.gain.exponentialRampToValueAtTime(0.001,n+i*0.1+0.2);o.start(n+i*0.1);o.stop(n+i*0.1+0.2)});}catch(e){} },
+        error() { try{const c=this.get();if(!c)return;const n=c.currentTime,o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='square';o.frequency.setValueAtTime(220,n);o.frequency.setValueAtTime(196,n+0.1);g.gain.setValueAtTime(0.2,n);g.gain.exponentialRampToValueAtTime(0.001,n+0.2);o.start(n);o.stop(n+0.2);}catch(e){} }
+        init() { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} },
+        get() { if (!this.ctx) this.init(); if (this.ctx?.state === 'suspended') this.ctx.resume(); return this.ctx; },
+        click() { try { const c = this.get(); if (!c) return; const o = c.createOscillator(), g = c.createGain(); o.connect(g); g.connect(c.destination); o.type = 'sine'; o.frequency.setValueAtTime(1200, c.currentTime); o.frequency.exponentialRampToValueAtTime(800, c.currentTime + 0.05); g.gain.setValueAtTime(0.15, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08); o.start(c.currentTime); o.stop(c.currentTime + 0.08); } catch (e) {} },
+        playClick() { this.click(); },
+        success() { const a = DOM.id('successSound'); if (a) { a.currentTime = 0; a.play().catch(() => {}); } try { const c = this.get(); if (!c) return; const n = c.currentTime; [523.25, 659.25, 783.99].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.connect(g); g.connect(c.destination); o.type = 'sine'; o.frequency.setValueAtTime(f, n + i * 0.1); g.gain.setValueAtTime(0.001, n + i * 0.1); g.gain.linearRampToValueAtTime(0.2, n + i * 0.1 + 0.02); g.gain.exponentialRampToValueAtTime(0.001, n + i * 0.1 + 0.2); o.start(n + i * 0.1); o.stop(n + i * 0.1 + 0.2); }); } catch (e) {} },
+        error() { try { const c = this.get(); if (!c) return; const n = c.currentTime, o = c.createOscillator(), g = c.createGain(); o.connect(g); g.connect(c.destination); o.type = 'square'; o.frequency.setValueAtTime(220, n); o.frequency.setValueAtTime(196, n + 0.1); g.gain.setValueAtTime(0.2, n); g.gain.exponentialRampToValueAtTime(0.001, n + 0.2); o.start(n); o.stop(n + 0.2); } catch (e) {} }
+    };
 
-    // ملاحظة: تم إزالة Service Worker لتجنب مشاكل المسارات في البداية، يمكن إضافته لاحقاً
+    const TimeFormatter = {
+        short(){return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})},
+        iso(){return new Date().toISOString()}
+        short() { return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); },
+        iso() { return new Date().toISOString(); }
+    };
+
+    // ===== MAIN PORTAL OBJECT =====
+    const Portal = {
+    const Toast = {
+        show(msg, type = 'success') {
+            const c = DOM.id('portalToast');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            const t = document.createElement('div');
+            t.className = `toast-msg ${type}`;
+            t.innerHTML = `<div class="toast-icon"><i class="fas ${icons[type] || icons.success}"></i></div><span class="toast-text">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button><div class="toast-progress"></div>`;
+            c.appendChild(t);
+            setTimeout(() => {
+                if (t.parentElement) {
+                    t.style.animation = 'toastSlideOut 0.3s forwards';
+                    setTimeout(() => t.remove(), 300);
+                }
+            }, 4500);
+        }
+    };
+
+        init() {
+            console.log('🚀 Initializing Portal v7.0...');
+    const Portal = {
+        async init() {
+            SoundSystem.init();
+            setTimeout(()=>{
+                document.getElementById('portalLoading').classList.add('hidden');
+                SoundSystem.success();
+            },1500);
+            PWA.init();
+            await BootLoader.run();
+            SoundSystem.success();
+            const saved = localStorage.getItem('_ax_merchant_account');
+            if(saved) document.getElementById('merchantAccountId').value = saved;
+            if (saved) DOM.id('merchantAccountId').value = saved;
+        },
+
+        /**
+         * ✅✅✅ الدالة المصححة نهائياً
+         * تستخدم select(*) ثم filter client-side
+         * لتجنب مشاكل أسماء الحقول
+         */
+        async loadMerchantData(retryCount = 0) {
+            const accountNum = document.getElementById('merchantAccountId').value.trim();
+            
+            if(!accountNum) {
+                Toast.show('يرجى إدخال رقم الحساب أو رقم التاجر','error');
+            const accountNum = DOM.id('merchantAccountId').value.trim();
+
+            if (!accountNum) {
+                Toast.show('يرجى إدخال رقم الحساب أو رقم التاجر', 'error');
+                SoundSystem.error();
+                this._shakeInput();
+                return;
+            }
+
+            SoundSystem.click();
+            Toast.show('جاري البحث عن البيانات...','info');
+            Toast.show('جاري البحث عن البيانات...', 'info');
+
+            try {
+                console.log(`🔍 Searching for: "${accountNum}" (attempt ${retryCount+1})`);
+
+                // ✅ الاستعلام الأساسي: جلب كل التجار (مع limit للأداء)
+                const { data: allMerchants, error: fetchError } = await _supabase
+                    .from('merchants')
+                    .select('*')
+                    .limit(100); // نحدد بعدد معقول
+                    .limit(100);
+
+                if(fetchError) {
+                    console.error('Fetch error:', fetchError);
+                if (fetchError) {
+                    throw fetchError;
+                }
+
+                console.log(`📦 Fetched ${allMerchants?.length || 0} merchants`);
+
+                // ✅ البحث محلياً في البيانات (client-side filtering)
+                let merchant = null;
+
+                if(allMerchants && allMerchants.length > 0) {
+                if (allMerchants && allMerchants.length > 0) {
+                    merchant = allMerchants.find(m => {
+                        // البحث في كل الحقول المحتملة
+                        const searchStr = accountNum.toLowerCase();
+                        const fieldsToCheck = [
+                            m['رقم التاجر'],
+                            m['رقم_التاجر'],
+                            m['رقم الحساب'],
+                            m['رقم_الحساب'],
+                            m['اسم التاجر'],
+                            m['اسم'],
+                            m['phone'],
+                            m['رقم الهاتف'],
+                            m['id']?.toString(),
+                            String(m['id'])
+                        ].filter(Boolean).map(f => String(f).toLowerCase());
+
+                        return fieldsToCheck.some(field => 
+                            field === searchStr || field.includes(searchStr)
+                        );
+                        return fieldsToCheck.some(field => field === searchStr || field.includes(searchStr));
+                    });
+                }
+
+                if(!merchant && retryCount < 2) {
+                    console.warn(`⚠️ Not found, retrying... (${retryCount+1}/3)`);
+                    await new Promise(r=>setTimeout(r,1000));
+                    return this.loadMerchantData(retryCount+1);
+                if (!merchant && retryCount < 2) {
+                    await new Promise(r => setTimeout(r, 1000));
+                    return this.loadMerchantData(retryCount + 1);
+                }
+
+                if(!merchant) {
+                    Toast.show('لم يتم العثور على تاجر بهذا الرقم','error');
+                if (!merchant) {
+                    Toast.show('لم يتم العثور على تاجر بهذا الرقم', 'error');
+                    SoundSystem.error();
+                    console.error('❌ Merchant not found');
+                    
+                    // عرض معلومات تصحيحية
+                    if(allMerchants && allMerchants.length > 0) {
+                        console.log('📋 Available merchants:', allMerchants.map(m=>({
+                            id: m.id,
+                            'رقم التاجر': m['رقم التاجر'],
+                            'اسم التاجر': m['اسم التاجر']
+                        })));
+                    }
+                    return;
+                }
+
+                // ✅ تم العثور!
+                _currentMerchant = merchant;
+                _currentAccountNumber = accountNum;
+                localStorage.setItem('_ax_merchant_account', accountNum);
+
+                console.log('✅ Found merchant:', merchant);
+
+                await this._renderDashboard(merchant);
+
+                document.getElementById('merchantLoginSection').style.display = 'none';
+                document.getElementById('merchantDashboard').style.display = 'block';
+                DOM.id('merchantLoginSection').style.display = 'none';
+                DOM.id('merchantDashboard').style.display = 'block';
+
+                Toast.show(`مرحباً ${merchant['اسم التاجر'] || 'التاجر'} 👋`,'success');
+                Toast.show(`مرحباً ${merchant['اسم التاجر'] || 'التاجر'} 👋`, 'success');
+                SoundSystem.success();
+
+            } catch(error) {
+                console.error('❌ Error:', error);
+                
+                if(retryCount < 2) {
+                    await new Promise(r=>setTimeout(r,1500));
+                    return this.loadMerchantData(retryCount+1);
+            } catch (error) {
+                if (retryCount < 2) {
+                    await new Promise(r => setTimeout(r, 1500));
+                    return this.loadMerchantData(retryCount + 1);
+                }
+                
+                Toast.show('حدث خطأ في الاتصال بقاعدة البيانات','error');
+
+                Toast.show('حدث خطأ في الاتصال بقاعدة البيانات', 'error');
+                SoundSystem.error();
+            }
+        },
+
+        async _renderDashboard(merchant) {
+            this._updateInfoCard(merchant);
+            await Promise.all([
+                this._loadMachines(merchant.id),
+                this._calculateStats(merchant.id),
+                this._loadTransfers(merchant.id),
+                this._loadCollections(merchant.id),
+                this._loadRequests(merchant.id)
+            ]);
+        },
+
+        _updateInfoCard(m) {
+            document.getElementById('merchantInfoCard').style.display = 'block';
+            document.getElementById('displayMerchantName').textContent = m['اسم التاجر'] || m['اسم'] || '—';
+            document.getElementById('displayMerchantNumber').textContent = m['رقم التاجر'] || '—';
+            document.getElementById('displayActivityName').textContent = m['اسم النشاط'] || '—';
+            document.getElementById('displayPhone').textContent = m['رقم الهاتف'] || m['phone'] || '—';
+            document.getElementById('displayArea').textContent = m['المنطقة'] || '—';
+            document.getElementById('displayAddress').textContent = m['العنوان'] || '—';
+            document.getElementById('displayStatus').textContent = m['merchant_status'] || m['الحالة'] || '—';
+            DOM.id('merchantInfoCard').style.display = 'block';
+            DOM.id('displayMerchantName').textContent = m['اسم التاجر'] || m['اسم'] || '—';
+            DOM.id('displayMerchantNumber').textContent = m['رقم التاجر'] || '—';
+            DOM.id('displayActivityName').textContent = m['اسم النشاط'] || '—';
+            DOM.id('displayPhone').textContent = m['رقم الهاتف'] || m['phone'] || '—';
+            DOM.id('displayArea').textContent = m['المنطقة'] || '—';
+            DOM.id('displayAddress').textContent = m['العنوان'] || '—';
+            DOM.id('displayStatus').textContent = m['merchant_status'] || m['الحالة'] || '—';
+        },
+
+        async _loadMachines(merchantId) {
+            try {
+                const { data, error } = await _supabase.from('machines').select('*').eq('merchant_id', merchantId).limit(50);
+                if(error) throw error;
+                const container = document.getElementById('machinesGridContainer');
+                const section = document.getElementById('machinesSectionCard');
+                if(!data?.length){ section.style.display='none'; document.getElementById('mMachinesCount').textContent='0'; return; }
+                section.style.display='block';
+                document.getElementById('machinesCountLabel').textContent=`${data.length} مكنة`;
+                document.getElementById('mMachinesCount').textContent=data.length;
+                container.innerHTML = data.map((mac,i)=>`
+                if (error) throw error;
+                const container = DOM.id('machinesGridContainer');
+                const section = DOM.id('machinesSectionCard');
+                if (!data?.length) { section.style.display = 'none'; DOM.id('mMachinesCount').textContent = '0'; return; }
+                section.style.display = 'block';
+                DOM.id('machinesCountLabel').textContent = `${data.length} مكنة`;
+                DOM.id('mMachinesCount').textContent = data.length;
+                container.innerHTML = data.map((mac) => `
+                    <div style="background:var(--bg-primary);padding:24px;border-radius:var(--radius-lg);border:2px solid var(--border-color);transition:all 0.3s">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+                            <span style="font-size:18px;font-weight:900;color:var(--primary)">${mac['machine_number']||mac['رقم المكنة']||'—'}</span>
+                            <span style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:800;background:${mac['status']==='active'||mac['الحالة']==='نشطة'?'var(--success-light)':'var(--danger-light)'}">${mac['status']||mac['الحالة']||'—'}</span>
+                            <span style="font-size:18px;font-weight:900;color:var(--primary)">${mac['machine_number'] || mac['رقم المكنة'] || '—'}</span>
+                            <span style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:800;background:${mac['status'] === 'active' || mac['الحالة'] === 'نشطة' ? 'var(--success-light)' : 'var(--danger-light)'}">${mac['status'] || mac['الحالة'] || '—'}</span>
+                        </div>
+                        <div style="font-size:14px;color:var(--text-secondary)">الرقم التسلسلي: <strong>${mac['serial_number']||mac['الرقم التسلسلي']||'—'}</strong></div>
+                        <div style="font-size:14px;color:var(--text-secondary)">الرقم التسلسلي: <strong>${mac['serial_number'] || mac['الرقم التسلسلي'] || '—'}</strong></div>
+                    </div>
+                `).join('');
+            } catch(e){console.error('Machines:',e)}
+            } catch (e) { console.error('Machines:', e); }
+        },
+
+        async _calculateStats(merchantId) {
+            try {
+                const [tRes,cRes] = await Promise.all([
+                    _supabase.from('transfers').select('amount').eq('merchant_id',merchantId),
+                    _supabase.from('collections').select('amount,remaining').eq('merchant_id',merchantId)
+                const [tRes, cRes] = await Promise.all([
+                    _supabase.from('transfers').select('amount').eq('merchant_id', merchantId),
+                    _supabase.from('collections').select('amount,remaining').eq('merchant_id', merchantId)
+                ]);
+                const tTotal = tRes.data?.reduce((s,t)=>s+(t.amount||t['قيمة التحويل']||0),0)||0;
+                const cTotal = cRes.data?.reduce((s,c)=>s+(c.amount||c['قيمة التحصيل']||0),0)||0;
+                const debt = tTotal-cTotal;
+                document.getElementById('mTotalTransfers').textContent=`${tTotal.toLocaleString()} ج.م`;
+                document.getElementById('mTotalCollections').textContent=`${cTotal.toLocaleString()} ج.م`;
+                document.getElementById('mCurrentDebt').textContent=`${debt.toLocaleString()} ج.م`;
+                document.getElementById('displayDebt').textContent=`${debt.toLocaleString()} ج.م`;
+            } catch(e){console.error('Stats:',e)}
+                const tTotal = tRes.data?.reduce((s, t) => s + (t.amount || t['قيمة التحويل'] || 0), 0) || 0;
+                const cTotal = cRes.data?.reduce((s, c) => s + (c.amount || c['قيمة التحصيل'] || 0), 0) || 0;
+                const debt = tTotal - cTotal;
+                DOM.id('mTotalTransfers').textContent = `${tTotal.toLocaleString()} ج.م`;
+                DOM.id('mTotalCollections').textContent = `${cTotal.toLocaleString()} ج.م`;
+                DOM.id('mCurrentDebt').textContent = `${debt.toLocaleString()} ج.م`;
+                DOM.id('displayDebt').textContent = `${debt.toLocaleString()} ج.م`;
+            } catch (e) { console.error('Stats:', e); }
+        },
+
+        async _loadTransfers(merchantId) {
+            try {
+                const { data, error } = await _supabase.from('transfers').select('*').eq('merchant_id',merchantId).order('created_at',{ascending:false}).limit(5);
+                if(error) throw error;
+                const tb=document.getElementById('mTransfersTable');
+                if(!data?.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>`;return}
+                tb.innerHTML=data.map((t,i)=>`<tr><td>${i+1}</td><td><span class="ref-code">${t.ref_number||t['الرقم المرجعي']||'—'}</span></td><td>${this._fmtDate(t.date||t['التاريخ'])}</td><td>${this._fmtTime(t.time||t['الوقت'])}</td><td>${t.type||t['نوع التحويل']||'—'}</td><td class="amount-negative">${(t.amount||t['قيمة التحويل']||0).toLocaleString()} ج.م</td></tr>`).join('');
+            } catch(e){console.error('Transfers:',e)}
+                const { data, error } = await _supabase.from('transfers').select('*').eq('merchant_id', merchantId).order('created_at', { ascending: false }).limit(5);
+                if (error) throw error;
+                const tb = DOM.id('mTransfersTable');
+                if (!data?.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>`; return; }
+                tb.innerHTML = data.map((t, i) => `<tr><td>${i + 1}</td><td><span class="ref-code">${t.ref_number || t['الرقم المرجعي'] || '—'}</span></td><td>${this._fmtDate(t.date || t['التاريخ'])}</td><td>${this._fmtTime(t.time || t['الوقت'])}</td><td>${t.type || t['نوع التحويل'] || '—'}</td><td class="amount-negative">${(t.amount || t['قيمة التحويل'] || 0).toLocaleString()} ج.م</td></tr>`).join('');
+            } catch (e) { console.error('Transfers:', e); }
+        },
+
+        async _loadCollections(merchantId) {
+            try {
+                const { data, error } = await _supabase.from('collections').select('*').eq('merchant_id',merchantId).order('created_at',{ascending:false}).limit(5);
+                if(error) throw error;
+                const tb=document.getElementById('mCollectionsTable');
+                if(!data?.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>`;return}
+                tb.innerHTML=data.map((c,i)=>`<tr><td>${i+1}</td><td><span class="ref-code">${c.ref_number||c['الرقم المرجعي']||'—'}</span></td><td>${this._fmtDate(c.date||c['التاريخ'])}</td><td>${this._fmtTime(c.time||c['الوقت'])}</td><td class="amount-positive">${(c.amount||c['قيمة التحصيل']||0).toLocaleString()} ج.م</td><td class="amount-negative">${(c.remaining||c['المتبقي']||0).toLocaleString()} ج.م</td></tr>`).join('');
+            } catch(e){console.error('Collections:',e)}
+                const { data, error } = await _supabase.from('collections').select('*').eq('merchant_id', merchantId).order('created_at', { ascending: false }).limit(5);
+                if (error) throw error;
+                const tb = DOM.id('mCollectionsTable');
+                if (!data?.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>`; return; }
+                tb.innerHTML = data.map((c, i) => `<tr><td>${i + 1}</td><td><span class="ref-code">${c.ref_number || c['الرقم المرجعي'] || '—'}</span></td><td>${this._fmtDate(c.date || c['التاريخ'])}</td><td>${this._fmtTime(c.time || c['الوقت'])}</td><td class="amount-positive">${(c.amount || c['قيمة التحصيل'] || 0).toLocaleString()} ج.م</td><td class="amount-negative">${(c.remaining || c['المتبقي'] || 0).toLocaleString()} ج.م</td></tr>`).join('');
+            } catch (e) { console.error('Collections:', e); }
+        },
+
+        async _loadRequests(merchantId) {
+            try {
+                const { data, error } = await _supabase.from('requests').select('*').eq('merchant_id',merchantId).order('created_at',{ascending:false}).limit(15);
+                if(error) throw error;
+                const c=document.getElementById('requestsHistoryContainer');
+                if(!data?.length){c.innerHTML=`<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>`;return}
+                c.innerHTML=data.map(r=>`
+                    <div class="request-item status-${r.status||r['الحالة']||''}">
+                const { data, error } = await _supabase.from('requests').select('*').eq('merchant_id', merchantId).order('created_at', { ascending: false }).limit(15);
+                if (error) throw error;
+                const c = DOM.id('requestsHistoryContainer');
+                if (!data?.length) { c.innerHTML = `<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>`; return; }
+                c.innerHTML = data.map(r => `
+                    <div class="request-item status-${r.status || r['الحالة'] || ''}">
+                        <div class="request-top">
+                            <span class="request-ref">#${r.request_number||r['رقم الطلب']||'—'}</span>
+                            <span class="request-status-badge badge-${this._statusClass(r.status||r['الحالة'])}">${r.status||r['الحالة']||'—'}</span>
+                            <span class="request-ref">#${r.request_number || r['رقم الطلب'] || '—'}</span>
+                            <span class="request-status-badge badge-${this._statusClass(r.status || r['الحالة'])}">${r.status || r['الحالة'] || '—'}</span>
+                        </div>
+                        <div class="request-body-grid">
+                            <div class="req-detail"><span class="req-detail-label">التاريخ</span><span class="req-detail-value">${this._fmtDate(r.date||r['التاريخ'])}</span></div>
+                            <div class="req-detail"><span class="req-detail-label">نوع الطلب</span><span class="req-detail-value">${r.type||r['نوع الطلب']||'—'}</span></div>
+                            <div class="req-detail"><span class="req-detail-label">المبلغ</span><span class="req-detail-value req-amount">${(r.amount||r['المبلغ']||0).toLocaleString()} ج.م</span></div>
+                            <div class="req-detail"><span class="req-detail-label">التاريخ</span><span class="req-detail-value">${this._fmtDate(r.date || r['التاريخ'])}</span></div>
+                            <div class="req-detail"><span class="req-detail-label">نوع الطلب</span><span class="req-detail-value">${r.type || r['نوع الطلب'] || '—'}</span></div>
+                            <div class="req-detail"><span class="req-detail-label">المبلغ</span><span class="req-detail-value req-amount">${(r.amount || r['المبلغ'] || 0).toLocaleString()} ج.م</span></div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch(e){console.error('Requests:',e)}
+            } catch (e) { console.error('Requests:', e); }
+        },
+
+        openRequestModal(){
+            if(!_currentMerchant){Toast.show('يجب الاستعلام عن الحساب أولاً','warning');SoundSystem.error();return}
+            document.getElementById('requestModal').classList.add('show');
+        openRequestModal() {
+            if (!_currentMerchant) { Toast.show('يجب الاستعلام عن الحساب أولاً', 'warning'); SoundSystem.error(); return; }
+            DOM.id('requestModal').classList.add('show');
+            SoundSystem.click();
+        },
+        closeRequestModal(){
+            document.getElementById('requestModal').classList.remove('show');
+            document.getElementById('reqType').value='';
+            document.getElementById('reqAmount').value='';
+            document.getElementById('reqNotes').value='';
+        closeRequestModal() {
+            DOM.id('requestModal').classList.remove('show');
+            DOM.id('reqType').value = '';
+            DOM.id('reqAmount').value = '';
+            DOM.id('reqNotes').value = '';
+        },
+
+        async submitRequest(){
+            if(!_currentMerchant){Toast.show('خطأ: لا يوجد تاجر محدد','error');SoundSystem.error();return}
+            const type=document.getElementById('reqType').value;
+            const amount=parseFloat(document.getElementById('reqAmount').value);
+            const notes=document.getElementById('reqNotes').value.trim();
+            if(!type){Toast.show('يرجى اختيار نوع الطلب','error');SoundSystem.error();return}
+            if(!amount||amount<=0){Toast.show('يرجى إدخال مبلغ صحيح','error');SoundSystem.error();return}
+
+            const refNum=`REQ-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${Math.floor(Math.random()*90000)+10000}`;
+            const reqData={
+                request_number:refNum,
+                date:new Date().toISOString().split('T')[0],
+                time:TimeFormatter.short(),
+                created_at:TimeFormatter.iso(),
+                merchant_id:_currentMerchant.id,
+                merchant_name:_currentMerchant['اسم التاجر']||'',
+                activity:_currentMerchant['اسم النشاط']||'',
+                type:type,
+                amount:amount,
+                notes:notes||null,
+                status:'معلق'
+        async submitRequest() {
+            if (!_currentMerchant) { Toast.show('خطأ: لا يوجد تاجر محدد', 'error'); SoundSystem.error(); return; }
+            const type = DOM.id('reqType').value;
+            const amount = parseFloat(DOM.id('reqAmount').value);
+            const notes = DOM.id('reqNotes').value.trim();
+            if (!type) { Toast.show('يرجى اختيار نوع الطلب', 'error'); SoundSystem.error(); return; }
+            if (!amount || amount <= 0) { Toast.show('يرجى إدخال مبلغ صحيح', 'error'); SoundSystem.error(); return; }
+
+            const refNum = `REQ-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(Math.random() * 90000) + 10000}`;
+            const reqData = {
+                request_number: refNum,
+                date: new Date().toISOString().split('T')[0],
+                time: TimeFormatter.short(),
+                created_at: TimeFormatter.iso(),
+                merchant_id: _currentMerchant.id,
+                merchant_name: _currentMerchant['اسم التاجر'] || '',
+                activity: _currentMerchant['اسم النشاط'] || '',
+                type: type,
+                amount: amount,
+                notes: notes || null,
+                status: 'معلق'
+            };
+
+            Toast.show('جاري إرسال الطلب...','info');
+            Toast.show('جاري إرسال الطلب...', 'info');
+            SoundSystem.click();
+
+            try{
+                const{data,error}=await _supabase.from('requests').insert([reqData]).select().single();
+                if(error)throw error;
+            try {
+                const response = await fetch(CONFIG.googleScriptUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reqData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Google Script HTTP ${response.status}`);
+                }
+
+                let result = null;
+                try {
+                    result = await response.json();
+                } catch (parseError) {
+                    result = { success: true };
+                }
+
+                if (result && result.success === false) {
+                    throw new Error(result.message || 'Google Script rejected request');
+                }
+
+                this.closeRequestModal();
+                document.getElementById('successRefId').textContent=data?.request_number||refNum;
+                document.getElementById('successModal').classList.add('show');
+                DOM.id('successRefId').textContent = result?.request_number || result?.data?.request_number || refNum;
+                DOM.id('successModal').classList.add('show');
+                SoundSystem.success();
+                if(_currentMerchant)await this._loadRequests(_currentMerchant.id);
+            }catch(e){
+                console.error('Submit Error:',e);
+                Toast.show('حدث خطأ أثناء إرسال الطلب','error');
+                if (_currentMerchant) await this._loadRequests(_currentMerchant.id);
+            } catch (e) {
+                console.error('Submit Error:', e);
+                Toast.show('تعذر إرسال الطلب حالياً، حاول مرة أخرى', 'error');
+                SoundSystem.error();
+            }
+        },
+
+        closeSuccessAndNew(){
+            document.getElementById('successModal').classList.remove('show');
+            setTimeout(()=>this.openRequestModal(),300);
+        closeSuccessAndNew() {
+            DOM.id('successModal').classList.remove('show');
+            setTimeout(() => this.openRequestModal(), 300);
+        },
+
+        toggleDebug(){
+            const el=document.getElementById('debugInfo');
+        toggleDebug() {
+            const el = DOM.id('debugInfo');
+            el.classList.toggle('show');
+            SoundSystem.click();
+            if(el.classList.contains('show')){
+                el.textContent=`
+            if (el.classList.contains('show')) {
+                el.textContent = `
+╔══════════════════════════════════════╗
+║   AXENTRO PORTAL v7.0 - DEBUG INFO   ║
+╠══════════════════════════════════════╝
+
+🔗 CONNECTION:
+   URL: ${CONFIG.supabaseUrl}
+   Status: ${_supabase?'✅ Connected':'❌ Disconnected'}
+   Status: ${_supabase ? '✅ Connected' : '❌ Disconnected'}
+
+👤 CURRENT STATE:
+   Merchant ID: ${_currentMerchant?.id||'Not loaded'}
+   Account: ${_currentAccountNumber||'Not entered'}
+   
+   Merchant ID: ${_currentMerchant?.id || 'Not loaded'}
+   Account: ${_currentAccountNumber || 'Not entered'}
+
+📊 MERCHANT DATA:
+ ${_currentMerchant?JSON.stringify(_currentMerchant,null,2):'No merchant loaded'}
+ ${_currentMerchant ? JSON.stringify(_currentMerchant, null, 2) : 'No merchant loaded'}
+
+🔍 SEARCH STRATEGY:
+   1. Fetch ALL merchants (limit:100)
+   2. Client-side filtering
+   3. Check these fields:
+      • رقم التاجر
+      • رقم الحساب
+      • اسم التاجر
+      • phone / رقم الهاتف
+      • id (as string)
+
+💡 TIPS:
+   • Try: MER-26-001
+   • Try: 2468
+   • Check exact values in Supabase
+
+⏰ ${new Date().toISOString()}
+                `;
+            }
+        },
+
+        _fmtDate(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'})}catch(e){return d}},
+        _fmtTime(t){if(!t)return'—';try{const d=new Date(t);if(!isNaN(d.getTime()))return d.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit',hour12:true});if(typeof t==='string'&&t.includes(':')){const[h,m]=t.split(':');const ap=parseInt(h)>=12?'م':'ص';return`${parseInt(h)>12?parseInt(h)-12:(parseInt(h)===0?12:parseInt(h))}:${m} ${ap}`}return t}catch(e){return t}},
+        _statusClass(s){if(!s)return'pending';switch(String(s).toLowerCase()){case'معلق':case'pending':return'pending';case'مكتمل':case'completed':case'done':return'completed';case'ملغي':case'cancelled':return'cancelled';default:return'pending'}},
+        _shakeInput(){const i=document.getElementById('merchantAccountId');i.style.animation='none';void i.offsetHeight;i.style.animation='shake 0.5s ease';setTimeout(()=>{i.style.animation=''},500)}
+    };
+
+    // ===== TOAST SYSTEM =====
+    const Toast={
+        show(msg,type='success'){
+            const c=document.getElementById('portalToast');
+            const icons={success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
+            const t=document.createElement('div');
+            t.className=`toast-msg ${type}`;
+            t.innerHTML=`<div class="toast-icon"><i class="fas ${icons[type]||icons.success}"></i></div><span class="toast-text">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button><div class="toast-progress"></div>`;
+            c.appendChild(t);
+            setTimeout(()=>{if(t.parentElement){t.style.animation='toastSlideOut 0.3s forwards';setTimeout(()=>t.remove(),300)}},4500);
+        }
+        _fmtDate(d) { if (!d) return '—'; try { return new Date(d).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (e) { return d; } },
+        _fmtTime(t) { if (!t) return '—'; try { const d = new Date(t); if (!isNaN(d.getTime())) return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true }); if (typeof t === 'string' && t.includes(':')) { const [h, m] = t.split(':'); const ap = parseInt(h) >= 12 ? 'م' : 'ص'; return `${parseInt(h) > 12 ? parseInt(h) - 12 : (parseInt(h) === 0 ? 12 : parseInt(h))}:${m} ${ap}`; } return t; } catch (e) { return t; } },
+        _statusClass(s) { if (!s) return 'pending'; switch (String(s).toLowerCase()) { case 'معلق': case 'pending': return 'pending'; case 'مكتمل': case 'completed': case 'done': return 'completed'; case 'ملغي': case 'cancelled': return 'cancelled'; default: return 'pending'; } },
+        _shakeInput() { const i = DOM.id('merchantAccountId'); i.style.animation = 'none'; void i.offsetHeight; i.style.animation = 'shake 0.5s ease'; setTimeout(() => { i.style.animation = ''; }, 500); }
+    };
+
+    // Add animations
+    const s=document.createElement('style');
+    s.textContent=`@keyframes toastSlideOut{to{opacity:0;transform:translateX(-120px)}}@keyframes shake{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-8px)}50%{transform:translateX(8px)}}`;
+    document.head.appendChild(s);
+    const dynamicStyle = document.createElement('style');
+    dynamicStyle.textContent = `@keyframes toastSlideOut{to{opacity:0;transform:translateX(-120px)}}@keyframes shake{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-8px)}50%{transform:translateX(8px)}}`;
+    document.head.appendChild(dynamicStyle);
+
+    // Init
+    document.addEventListener('DOMContentLoaded',()=>Portal.init());
+    </script>
+    document.addEventListener('DOMContentLoaded', () => Portal.init());
 </script>
 </body>
 </html>
