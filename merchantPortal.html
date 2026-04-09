@@ -7,27 +7,25 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Axentro Portal">
     <title>بوابة التاجر | Axentro OS</title>
 
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial' font-size='50' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Axentro%20Merchant%20Portal%22%2C%22short_name%22%3A%22Axentro%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0f1e%22%2C%22theme_color%22%3A%22%233b82f6%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233b82f6'/%3E%3Ctext x='50' y='68' font-family='Arial' font-size='50' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image/svg+xml%22%7D%5D%7D">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial' font-size='50' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3Ccircle cx='82' cy='82' r='12' fill='%2310b981'/%3E%3Cpath d='M77 82 L80 85 L87 78' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
+    <!-- صوت النجاح -->
+    <audio id="successSound" src="src/assets/done.mp3" preload="auto"></audio>
+
     <style>
         /* ===== CSS RESET & BASE ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-            -webkit-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
         body {
             font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #0a0f1e;
@@ -72,10 +70,7 @@
         /* ===== LOADING SCREEN ===== */
         #bootScreen {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(135deg, #030712 0%, #0a0f1e 50%, #111827 100%);
             display: flex;
             flex-direction: column;
@@ -87,12 +82,7 @@
             min-height: 100vh;
             min-height: -webkit-fill-available;
         }
-
-        #bootScreen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
+        #bootScreen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
         .boot-container {
             width: 100%;
@@ -106,1398 +96,358 @@
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 80px rgba(59, 130, 246, 0.08);
         }
 
-        .boot-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            justify-content: center;
-        }
-
+        .boot-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; justify-content: center; }
         .boot-logo-icon {
-            width: clamp(44px, 10vw, 52px);
-            height: clamp(44px, 10vw, 52px);
+            width: clamp(44px, 10vw, 52px); height: clamp(44px, 10vw, 52px);
             background: linear-gradient(135deg, var(--primary), var(--purple));
             border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(22px, 5vw, 26px);
-            color: white;
-            animation: pulse-glow 2s ease-in-out infinite;
-            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: clamp(22px, 5vw, 26px); color: white;
+            animation: pulse-glow 2s ease-in-out infinite; flex-shrink: 0;
         }
-
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
             50% { box-shadow: 0 0 35px rgba(139, 92, 246, 0.7); }
         }
-
         .boot-logo-text {
-            font-size: clamp(22px, 5vw, 28px);
-            font-weight: 900;
+            font-size: clamp(22px, 5vw, 28px); font-weight: 900;
             background: linear-gradient(135deg, var(--primary-light), var(--purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
             letter-spacing: 2px;
         }
-
-        .boot-subtitle {
-            color: var(--text-muted);
-            font-size: clamp(11px, 2.5vw, 13px);
-            margin-bottom: clamp(24px, 5vw, 32px);
-            text-align: center;
-        }
-
-        .boot-status {
-            color: var(--primary-light);
-            font-size: clamp(12px, 2.8vw, 14px);
-            font-weight: 600;
-            margin-bottom: clamp(14px, 3vw, 18px);
-            min-height: 22px;
-            text-align: center;
-        }
+        .boot-subtitle { color: var(--text-muted); font-size: clamp(11px, 2.5vw, 13px); margin-bottom: clamp(24px, 5vw, 32px); text-align: center; }
+        .boot-status { color: var(--primary-light); font-size: clamp(12px, 2.8vw, 14px); font-weight: 600; margin-bottom: clamp(14px, 3vw, 18px); min-height: 22px; text-align: center; }
 
         .progress-container {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            overflow: hidden;
-            height: 10px;
-            position: relative;
+            width: 100%; background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px; overflow: hidden; height: 10px; position: relative;
         }
-
         .progress-bar {
-            height: 100%;
-            width: 0%;
+            height: 100%; width: 0%;
             background: linear-gradient(90deg, var(--primary), var(--purple), var(--success));
-            transition: width 0.3s ease-out;
-            border-radius: 10px;
-            position: relative;
-            overflow: hidden;
+            transition: width 0.3s ease-out; border-radius: 10px; position: relative; overflow: hidden;
         }
-
         .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
             animation: shimmer 1.5s infinite;
         }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .boot-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: clamp(12px, 3vw, 14px);
-            font-size: clamp(10px, 2.3vw, 12px);
-            color: var(--text-muted);
-        }
-
-        .boot-percent {
-            color: var(--text-primary);
-            font-weight: 700;
-        }
+        .boot-meta { display: flex; justify-content: space-between; align-items: center; margin-top: clamp(12px, 3vw, 14px); font-size: clamp(10px, 2.3vw, 12px); color: var(--text-muted); }
+        .boot-percent { color: var(--text-primary); font-weight: 700; }
 
         /* ===== MAIN APPLICATION ===== */
-        #mainApp {
-            display: none;
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
+        #mainApp { display: none; min-height: 100vh; min-height: -webkit-fill-available; opacity: 0; transition: opacity 0.5s ease; }
+        #mainApp.visible { display: block; opacity: 1; }
 
-        #mainApp.visible {
-            display: block;
-            opacity: 1;
-        }
+        .app-container { width: 100%; max-width: 100%; margin: 0 auto; padding: clamp(12px, 3vw, 24px); }
 
-        /* ===== MOBILE-FIRST LAYOUT ===== */
-        .app-container {
-            width: 100%;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: clamp(12px, 3vw, 24px);
-        }
-
-        /* Top Header Bar - MOBILE FIRST */
+        /* Top Header Bar */
         .top-bar {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: clamp(14px, 3vw, 20px);
-            margin-bottom: clamp(16px, 4vw, 28px);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            box-shadow: var(--shadow-md);
+            background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+            padding: clamp(14px, 3vw, 20px); margin-bottom: clamp(16px, 4vw, 28px);
+            display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-md);
         }
-
-        .top-bar-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .brand-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-            min-width: 0;
-        }
-
+        .top-bar-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .brand-section { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
         .brand-icon {
-            width: clamp(38px, 9vw, 46px);
-            height: clamp(38px, 9vw, 46px);
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(17px, 4vw, 21px);
-            color: white;
-            flex-shrink: 0;
+            width: clamp(38px, 9vw, 46px); height: clamp(38px, 9vw, 46px);
+            background: linear-gradient(135deg, var(--primary), var(--purple)); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: clamp(17px, 4vw, 21px); color: white; flex-shrink: 0;
         }
-
-        .brand-text h1 {
-            font-size: clamp(18px, 4.5vw, 24px);
-            font-weight: 900;
-            letter-spacing: -0.5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .brand-text p {
-            font-size: clamp(10px, 2.3vw, 13px);
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
+        .brand-text h1 { font-size: clamp(18px, 4.5vw, 24px); font-weight: 900; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .brand-text p { font-size: clamp(10px, 2.3vw, 13px); color: var(--text-muted); margin-top: 2px; }
 
         .menu-toggle-btn {
-            width: clamp(38px, 9vw, 42px);
-            height: clamp(38px, 9vw, 42px);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
-            background: var(--bg-glass);
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(16px, 4vw, 18px);
-            transition: all 0.25s ease;
-            flex-shrink: 0;
+            width: clamp(38px, 9vw, 42px); height: clamp(38px, 9vw, 42px);
+            border-radius: var(--radius-md); border: 1px solid var(--border-color);
+            background: var(--bg-glass); color: var(--text-secondary); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: clamp(16px, 4vw, 18px); transition: all 0.25s ease; flex-shrink: 0;
         }
+        .menu-toggle-btn:hover, .menu-toggle-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .menu-toggle-btn:hover,
-        .menu-toggle-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .action-buttons-row {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
+        .action-buttons-row { display: flex; gap: 8px; justify-content: flex-end; }
         .icon-btn-sm {
-            width: clamp(34px, 8vw, 38px);
-            height: clamp(34px, 8vw, 38px);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
-            background: var(--bg-glass);
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(14px, 3.5vw, 16px);
-            transition: all 0.25s ease;
+            width: clamp(34px, 8vw, 38px); height: clamp(34px, 8vw, 38px);
+            border-radius: var(--radius-sm); border: 1px solid var(--border-color);
+            background: var(--bg-glass); color: var(--text-secondary); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: clamp(14px, 3.5vw, 16px); transition: all 0.25s ease;
         }
-
-        .icon-btn-sm:hover {
-            background: var(--bg-secondary);
-            color: var(--primary-light);
-            border-color: var(--primary);
-        }
+        .icon-btn-sm:hover { background: var(--bg-secondary); color: var(--primary-light); border-color: var(--primary); }
 
         /* Mobile Navigation Drawer */
-        .mobile-nav-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 998;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .mobile-nav-overlay.show {
-            display: block;
-            opacity: 1;
-        }
-
+        .mobile-nav-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); z-index: 998; opacity: 0; transition: opacity 0.3s ease; }
+        .mobile-nav-overlay.show { display: block; opacity: 1; }
         .mobile-nav-drawer {
-            position: fixed;
-            top: 0;
-            right: -280px;
-            width: 280px;
-            max-width: 85vw;
-            height: 100vh;
-            height: -webkit-fill-available;
-            background: var(--bg-secondary);
-            border-left: 1px solid var(--border-color);
-            z-index: 999;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            position: fixed; top: 0; right: -280px; width: 280px; max-width: 85vw;
+            height: 100vh; height: -webkit-fill-available;
+            background: var(--bg-secondary); border-left: 1px solid var(--border-color);
+            z-index: 999; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch;
         }
-
-        .mobile-nav-drawer.open {
-            right: 0;
-        }
-
-        .nav-drawer-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .nav-drawer-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
+        .mobile-nav-drawer.open { right: 0; }
+        .nav-drawer-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .nav-drawer-brand { display: flex; align-items: center; gap: 10px; }
         .nav-drawer-close {
-            width: 32px;
-            height: 32px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
-            background: transparent;
-            color: var(--text-muted);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
+            width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);
+            background: transparent; color: var(--text-muted); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
         }
-
-        .nav-drawer-body {
-            padding: 16px 12px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .nav-section-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-muted);
-            font-weight: 700;
-            padding: 8px 12px 10px;
-        }
-
+        .nav-drawer-body { padding: 16px 12px; flex: 1; overflow-y: auto; }
+        .nav-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 700; padding: 8px 12px 10px; }
         .nav-item-mobile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            transition: all 0.25s ease;
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 4px;
-            border: 1px solid transparent;
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            border-radius: var(--radius-md); cursor: pointer; transition: all 0.25s ease;
+            color: var(--text-secondary); font-weight: 600; font-size: 14px;
+            margin-bottom: 4px; border: 1px solid transparent;
         }
-
-        .nav-item-mobile:hover,
-        .nav-item-mobile.active {
-            background: var(--bg-glass);
-            color: var(--primary-light);
-            border-color: rgba(59, 130, 246, 0.2);
-        }
-
-        .nav-item-mobile i {
-            width: 20px;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        .nav-badge-mobile {
-            margin-right: auto;
-            background: var(--primary);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .nav-drawer-footer {
-            padding: 16px 12px;
-            border-top: 1px solid var(--border-color);
-        }
-
+        .nav-item-mobile:hover, .nav-item-mobile.active { background: var(--bg-glass); color: var(--primary-light); border-color: rgba(59, 130, 246, 0.2); }
+        .nav-item-mobile i { width: 20px; text-align: center; font-size: 16px; }
+        .nav-badge-mobile { margin-right: auto; background: var(--primary); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+        .nav-drawer-footer { padding: 16px 12px; border-top: 1px solid var(--border-color); }
         .status-indicator-mobile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            background: var(--success-light);
-            border-radius: var(--radius-md);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+            background: var(--success-light); border-radius: var(--radius-md); border: 1px solid rgba(16, 185, 129, 0.2);
         }
+        .status-dot-mobile { width: 10px; height: 10px; background: var(--success); border-radius: 50%; animation: status-pulse 2s infinite; flex-shrink: 0; }
+        @keyframes status-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.15)} }
+        .status-text-mobile { font-size: 13px; font-weight: 700; color: var(--success); }
 
-        .status-dot-mobile {
-            width: 10px;
-            height: 10px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: status-pulse 2s infinite;
-            flex-shrink: 0;
-        }
-
-        @keyframes status-pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(1.15); }
-        }
-
-        .status-text-mobile {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--success);
-        }
-
-        /* Login Section - FULLY RESPONSIVE */
-        #loginSection {
-            max-width: 520px;
-            margin: clamp(30px, 8vw, 80px) auto;
-            padding: 0 8px;
-        }
-
+        /* Login Section */
+        #loginSection { max-width: 520px; margin: clamp(30px, 8vw, 80px) auto; padding: 0 8px; }
         .login-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-xl);
+            background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color); border-radius: var(--radius-xl);
             padding: clamp(28px, 6vw, 48px) clamp(20px, 5vw, 40px);
-            box-shadow: var(--shadow-lg);
-            position: relative;
-            overflow: hidden;
+            box-shadow: var(--shadow-lg); position: relative; overflow: hidden;
         }
-
         .login-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 150px;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 150px;
             background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, transparent 100%);
             pointer-events: none;
         }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: clamp(24px, 5vw, 36px);
-            position: relative;
-            z-index: 1;
-        }
-
+        .login-header { text-align: center; margin-bottom: clamp(24px, 5vw, 36px); position: relative; z-index: 1; }
         .login-avatar {
-            width: clamp(76px, 18vw, 96px);
-            height: clamp(76px, 18vw, 96px);
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto clamp(16px, 4vw, 24px);
-            font-size: clamp(32px, 8vw, 40px);
-            color: white;
-            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
-            position: relative;
-            animation: float-animation 3s ease-in-out infinite;
+            width: clamp(76px, 18vw, 96px); height: clamp(76px, 18vw, 96px);
+            background: linear-gradient(135deg, var(--primary), var(--purple)); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto clamp(16px, 4vw, 24px); font-size: clamp(32px, 8vw, 40px);
+            color: white; box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
+            position: relative; animation: float-animation 3s ease-in-out infinite;
         }
-
         .login-avatar::after {
-            content: '';
-            position: absolute;
-            inset: -4px;
-            border-radius: 50%;
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-            animation: rotate-slow 15s linear infinite;
+            content: ''; position: absolute; inset: -4px; border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.2); animation: rotate-slow 15s linear infinite;
         }
+        @keyframes float-animation { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes rotate-slow { to { transform: rotate(360deg); } }
+        .login-title { font-size: clamp(22px, 5.5vw, 28px); font-weight: 900; margin-bottom: 10px; letter-spacing: -0.5px; }
+        .login-desc { color: var(--text-secondary); font-size: clamp(13px, 3.2vw, 15px); line-height: 1.7; }
 
-        @keyframes float-animation {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes rotate-slow {
-            to { transform: rotate(360deg); }
-        }
-
-        .login-title {
-            font-size: clamp(22px, 5.5vw, 28px);
-            font-weight: 900;
-            margin-bottom: 10px;
-            letter-spacing: -0.5px;
-        }
-
-        .login-desc {
-            color: var(--text-secondary);
-            font-size: clamp(13px, 3.2vw, 15px);
-            line-height: 1.7;
-        }
-
-        /* Form Elements - TOUCH FRIENDLY */
-        .form-group {
-            margin-bottom: clamp(18px, 4vw, 24px);
-            position: relative;
-            z-index: 1;
-        }
-
-        .form-input-wrapper {
-            position: relative;
-        }
-
+        /* Form Elements */
+        .form-group { margin-bottom: clamp(18px, 4vw, 24px); position: relative; z-index: 1; }
+        .form-input-wrapper { position: relative; }
         .form-input-icon {
-            position: absolute;
-            left: clamp(14px, 3.5vw, 18px);
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: clamp(16px, 4vw, 18px);
-            transition: all 0.25s ease;
-            z-index: 2;
-            pointer-events: none;
+            position: absolute; left: clamp(14px, 3.5vw, 18px); top: 50%;
+            transform: translateY(-50%); color: var(--text-muted);
+            font-size: clamp(16px, 4vw, 18px); transition: all 0.25s ease; z-index: 2; pointer-events: none;
         }
-
         .form-input {
-            width: 100%;
-            padding: clamp(15px, 4vw, 18px) 20px clamp(15px, 4vw, 18px) 48px;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-family: 'Cairo', sans-serif;
-            font-size: clamp(14px, 3.8vw, 16px);
-            direction: rtl;
-            transition: all 0.25s ease;
-            -webkit-appearance: none;
-            appearance: none;
+            width: 100%; padding: clamp(15px, 4vw, 18px) 20px clamp(15px, 4vw, 18px) 48px;
+            background: var(--bg-primary); border: 2px solid var(--border-color);
+            border-radius: var(--radius-md); color: var(--text-primary);
+            font-family: 'Cairo', sans-serif; font-size: clamp(14px, 3.8vw, 16px);
+            direction: rtl; transition: all 0.25s ease; -webkit-appearance: none; appearance: none;
         }
+        .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); background: rgba(17, 24, 39, 0.95); }
+        .form-input:focus ~ .form-input-icon { color: var(--primary-light); transform: translateY(-50%) scale(1.1); }
+        .form-input::placeholder { color: var(--text-muted); }
 
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-            background: rgba(17, 24, 39, 0.95);
-        }
-
-        .form-input:focus ~ .form-input-icon {
-            color: var(--primary-light);
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .form-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: clamp(20px, 5vw, 28px);
-            z-index: 1;
-            position: relative;
-        }
-
-        @media (min-width: 480px) {
-            .btn-group {
-                flex-direction: row;
-            }
-        }
+        .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: clamp(20px, 5vw, 28px); z-index: 1; position: relative; }
+        @media (min-width: 480px) { .btn-group { flex-direction: row; } }
 
         .btn {
-            width: 100%;
-            padding: clamp(14px, 3.5vw, 16px) clamp(20px, 5vw, 28px);
-            border: none;
-            border-radius: var(--radius-md);
-            font-family: 'Cairo', sans-serif;
-            font-size: clamp(14px, 3.5vw, 16px);
-            font-weight: 800;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            width: 100%; padding: clamp(14px, 3.5vw, 16px) clamp(20px, 5vw, 28px);
+            border: none; border-radius: var(--radius-md); font-family: 'Cairo', sans-serif;
+            font-size: clamp(14px, 3.5vw, 16px); font-weight: 800; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            letter-spacing: 0.5px;
+            position: relative; overflow: hidden; letter-spacing: 0.5px;
             -webkit-tap-highlight-color: transparent;
         }
-
-        @media (min-width: 480px) {
-            .btn {
-                flex: 1;
-                width: auto;
-            }
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.45);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--border-color);
-            color: var(--text-secondary);
-        }
-
-        .btn-outline:hover {
-            border-color: var(--primary);
-            color: var(--primary-light);
-            background: rgba(59, 130, 246, 0.05);
-        }
+        @media (min-width: 480px) { .btn { flex: 1; width: auto; } }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(59, 130, 246, 0.45); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-outline { background: transparent; border: 2px solid var(--border-color); color: var(--text-secondary); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary-light); background: rgba(59, 130, 246, 0.05); }
 
         /* Dashboard Section */
-        #dashboardSection {
-            display: none;
-        }
+        #dashboardSection { display: none; }
 
-        /* Stats Grid - RESPONSIVE */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: clamp(12px, 3vw, 20px);
-            margin-bottom: clamp(20px, 5vw, 28px);
-        }
-
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: clamp(12px, 3vw, 20px); margin-bottom: clamp(20px, 5vw, 28px); }
         .stat-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: clamp(16px, 4vw, 24px);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
+            background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+            padding: clamp(16px, 4vw, 24px); position: relative; overflow: hidden; transition: all 0.3s ease;
         }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: var(--shadow-md);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            left: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--purple));
-        }
-
-        .stat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: clamp(10px, 2.5vw, 16px);
-        }
-
-        .stat-icon {
-            width: clamp(40px, 10vw, 48px);
-            height: clamp(40px, 10vw, 48px);
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(17px, 4.5vw, 20px);
-        }
-
+        .stat-card:hover { transform: translateY(-3px); border-color: rgba(59, 130, 246, 0.3); box-shadow: var(--shadow-md); }
+        .stat-card::before { content: ''; position: absolute; top: 0; right: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--purple)); }
+        .stat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: clamp(10px, 2.5vw, 16px); }
+        .stat-icon { width: clamp(40px, 10vw, 48px); height: clamp(40px, 10vw, 48px); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: clamp(17px, 4.5vw, 20px); }
         .stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--primary-light); }
         .stat-icon.red { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
         .stat-icon.green { background: rgba(16, 185, 129, 0.15); color: var(--success); }
         .stat-icon.purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); }
+        .stat-value { font-size: clamp(24px, 6vw, 32px); font-weight: 900; letter-spacing: -1px; margin-bottom: 4px; }
+        .stat-label { font-size: clamp(11px, 2.8vw, 13px); color: var(--text-muted); font-weight: 600; }
 
-        .stat-value {
-            font-size: clamp(24px, 6vw, 32px);
-            font-weight: 900;
-            letter-spacing: -1px;
-            margin-bottom: 4px;
-        }
-
-        .stat-label {
-            font-size: clamp(11px, 2.8vw, 13px);
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        /* Info Card - RESPONSIVE */
+        /* Info Card */
         .info-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-xl);
-            padding: clamp(20px, 5vw, 28px);
-            margin-bottom: clamp(20px, 5vw, 28px);
-            position: relative;
-            overflow: hidden;
+            background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color); border-radius: var(--radius-xl);
+            padding: clamp(20px, 5vw, 28px); margin-bottom: clamp(20px, 5vw, 28px); position: relative; overflow: hidden;
         }
-
-        .info-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--primary), var(--purple));
-        }
-
-        .info-card-header {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-bottom: clamp(18px, 4.5vw, 24px);
-        }
-
-        @media (min-width: 640px) {
-            .info-card-header {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: flex-start;
-            }
-        }
-
-        .merchant-name {
-            font-size: clamp(20px, 5vw, 24px);
-            font-weight: 900;
-            margin-bottom: 8px;
-        }
-
-        .merchant-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .meta-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            font-size: clamp(11px, 2.6vw, 12px);
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        .meta-tag i {
-            color: var(--primary-light);
-            font-size: 10px;
-        }
-
-        .print-btn {
-            padding: 10px 18px;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            color: var(--text-secondary);
-            font-family: 'Cairo', sans-serif;
-            font-weight: 700;
-            font-size: clamp(12px, 3vw, 13px);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.25s ease;
-            white-space: nowrap;
-        }
-
-        .print-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: clamp(10px, 2.5vw, 16px);
-        }
-
-        .info-item {
-            background: var(--bg-primary);
-            padding: clamp(14px, 3.5vw, 18px);
-            border-radius: var(--radius-md);
-            border-right: 3px solid var(--border-color);
-            transition: all 0.25s ease;
-        }
-
-        .info-item:hover {
-            border-right-color: var(--primary);
-        }
-
-        .info-item.highlight {
-            border-right-color: var(--warning);
-            background: rgba(245, 158, 11, 0.05);
-        }
-
-        .info-label {
-            font-size: clamp(10px, 2.5vw, 11px);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .info-value {
-            font-size: clamp(15px, 4vw, 18px);
-            font-weight: 800;
-        }
-
-        .info-item.highlight .info-value {
-            color: var(--warning);
-            font-size: clamp(18px, 4.5vw, 24px);
-        }
+        .info-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: linear-gradient(180deg, var(--primary), var(--purple)); }
+        .info-card-header { display: flex; flex-direction: column; gap: 14px; margin-bottom: clamp(18px, 4.5vw, 24px); }
+        @media (min-width: 640px) { .info-card-header { flex-direction: row; justify-content: space-between; align-items: flex-start; } }
+        .merchant-name { font-size: clamp(20px, 5vw, 24px); font-weight: 900; margin-bottom: 8px; }
+        .merchant-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+        .meta-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: 20px; font-size: clamp(11px, 2.6vw, 12px); font-weight: 600; color: var(--text-secondary); }
+        .meta-tag i { color: var(--primary-light); font-size: 10px; }
+        .print-btn { padding: 10px 18px; background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); font-family: 'Cairo', sans-serif; font-weight: 700; font-size: clamp(12px, 3vw, 13px); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.25s ease; white-space: nowrap; }
+        .print-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: clamp(10px, 2.5vw, 16px); }
+        .info-item { background: var(--bg-primary); padding: clamp(14px, 3.5vw, 18px); border-radius: var(--radius-md); border-right: 3px solid var(--border-color); transition: all 0.25s ease; }
+        .info-item:hover { border-right-color: var(--primary); }
+        .info-item.highlight { border-right-color: var(--warning); background: rgba(245, 158, 11, 0.05); }
+        .info-label { font-size: clamp(10px, 2.5vw, 11px); text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+        .info-value { font-size: clamp(15px, 4vw, 18px); font-weight: 800; }
+        .info-item.highlight .info-value { color: var(--warning); font-size: clamp(18px, 4.5vw, 24px); }
 
         /* Action Buttons Row */
-        .action-row {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-            margin-bottom: clamp(20px, 5vw, 28px);
-        }
-
-        @media (min-width: 480px) {
-            .action-row {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            }
-        }
-
-        .action-btn {
-            padding: clamp(14px, 3.5vw, 16px) 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            color: var(--text-secondary);
-            font-family: 'Cairo', sans-serif;
-            font-size: clamp(13px, 3.2vw, 14px);
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.25s ease;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .action-btn:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: var(--primary);
-            color: var(--primary-light);
-        }
-
-        .action-btn.primary {
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            border-color: transparent;
-            color: white;
-        }
+        .action-row { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: clamp(20px, 5vw, 28px); }
+        @media (min-width: 480px) { .action-row { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); } }
+        .action-btn { padding: clamp(14px, 3.5vw, 16px) 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); font-family: 'Cairo', sans-serif; font-size: clamp(13px, 3.2vw, 14px); font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.25s ease; -webkit-tap-highlight-color: transparent; }
+        .action-btn:hover { background: rgba(59, 130, 246, 0.1); border-color: var(--primary); color: var(--primary-light); }
+        .action-btn.primary { background: linear-gradient(135deg, var(--primary), var(--purple)); border-color: transparent; color: white; }
 
         /* Section Card */
-        .section-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-xl);
-            overflow: hidden;
-            margin-bottom: clamp(20px, 5vw, 28px);
-        }
+        .section-card { background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border-color); border-radius: var(--radius-xl); overflow: hidden; margin-bottom: clamp(20px, 5vw, 28px); }
+        .section-header { padding: clamp(16px, 4vw, 20px) clamp(16px, 4vw, 24px); background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--border-color); }
+        .section-title { font-size: clamp(14px, 3.6vw, 16px); font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .section-title i { color: var(--primary-light); }
 
-        .section-header {
-            padding: clamp(16px, 4vw, 20px) clamp(16px, 4vw, 24px);
-            background: rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .section-title {
-            font-size: clamp(14px, 3.6vw, 16px);
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-title i {
-            color: var(--primary-light);
-        }
-
-        /* Table - HORIZONTAL SCROLL ON MOBILE */
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin;
-        }
-
-        .table-responsive::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .table-responsive::-webkit-scrollbar-track {
-            background: var(--bg-primary);
-        }
-
-        .table-responsive::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
-        }
-
-        .data-table {
-            width: 100%;
-            min-width: 600px;
-            border-collapse: collapse;
-            font-size: clamp(12px, 3.2vw, 14px);
-        }
-
-        .data-table th {
-            background: rgba(255, 255, 255, 0.02);
-            padding: clamp(12px, 3vw, 14px) clamp(10px, 2.5vw, 16px);
-            text-align: right;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-size: clamp(10px, 2.5vw, 11px);
-            letter-spacing: 1px;
-            border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
-
-        .data-table td {
-            padding: clamp(12px, 3vw, 16px) clamp(10px, 2.5vw, 16px);
-            border-bottom: 1px solid var(--border-light);
-            color: var(--text-secondary);
-        }
-
-        .data-table tr:hover td {
-            background: rgba(59, 130, 246, 0.03);
-            color: var(--text-primary);
-        }
-
-        .ref-code {
-            font-family: monospace;
-            background: rgba(59, 130, 246, 0.1);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: clamp(11px, 2.8vw, 12px);
-            color: var(--primary-light);
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
+        /* Table */
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+        .table-responsive::-webkit-scrollbar { height: 6px; }
+        .table-responsive::-webkit-scrollbar-track { background: var(--bg-primary); }
+        .table-responsive::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        .data-table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: clamp(12px, 3.2vw, 14px); }
+        .data-table th { background: rgba(255, 255, 255, 0.02); padding: clamp(12px, 3vw, 14px) clamp(10px, 2.5vw, 16px); text-align: right; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: clamp(10px, 2.5vw, 11px); letter-spacing: 1px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        .data-table td { padding: clamp(12px, 3vw, 16px) clamp(10px, 2.5vw, 16px); border-bottom: 1px solid var(--border-light); color: var(--text-secondary); }
+        .data-table tr:hover td { background: rgba(59, 130, 246, 0.03); color: var(--text-primary); }
+        .ref-code { font-family: monospace; background: rgba(59, 130, 246, 0.1); padding: 4px 8px; border-radius: 6px; font-size: clamp(11px, 2.8vw, 12px); color: var(--primary-light); font-weight: 600; white-space: nowrap; }
         .amount-positive { color: var(--success); font-weight: 700; }
         .amount-negative { color: var(--danger); font-weight: 700; }
-
-        .empty-state {
-            text-align: center;
-            padding: clamp(36px, 8vw, 48px) clamp(16px, 4vw, 24px);
-            color: var(--text-muted);
-        }
-
-        .empty-state i {
-            font-size: clamp(40px, 10vw, 56px);
-            margin-bottom: 12px;
-            opacity: 0.3;
-            display: block;
-        }
+        .empty-state { text-align: center; padding: clamp(36px, 8vw, 48px) clamp(16px, 4vw, 24px); color: var(--text-muted); }
+        .empty-state i { font-size: clamp(40px, 10vw, 56px); margin-bottom: 12px; opacity: 0.3; display: block; }
 
         /* Requests List */
-        .requests-list {
-            padding: clamp(14px, 3.5vw, 20px);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .request-item {
-            background: var(--bg-primary);
-            border-radius: var(--radius-md);
-            padding: clamp(16px, 4vw, 20px);
-            border-right: 4px solid var(--warning);
-            transition: all 0.25s ease;
-            border: 1px solid var(--border-light);
-        }
-
-        .request-item:hover {
-            border-color: var(--border-color);
-        }
-
+        .requests-list { padding: clamp(14px, 3.5vw, 20px); display: flex; flex-direction: column; gap: 12px; }
+        .request-item { background: var(--bg-primary); border-radius: var(--radius-md); padding: clamp(16px, 4vw, 20px); border-right: 4px solid var(--warning); transition: all 0.25s ease; border: 1px solid var(--border-light); }
+        .request-item:hover { border-color: var(--border-color); }
         .request-item.status-completed { border-right-color: var(--success); }
         .request-item.status-cancelled { border-right-color: var(--danger); }
-
-        .request-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .request-ref {
-            font-weight: 900;
-            color: var(--primary-light);
-            font-size: clamp(13px, 3.4vw, 15px);
-        }
-
-        .badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: clamp(11px, 2.8vw, 12px);
-            font-weight: 700;
-        }
-
+        .request-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .request-ref { font-weight: 900; color: var(--primary-light); font-size: clamp(13px, 3.4vw, 15px); }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: clamp(11px, 2.8vw, 12px); font-weight: 700; }
         .badge-pending { background: var(--warning-light); color: var(--warning); }
         .badge-completed { background: var(--success-light); color: var(--success); }
         .badge-cancelled { background: var(--danger-light); color: var(--danger); }
+        .request-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+        .detail-label { font-size: clamp(10px, 2.5vw, 11px); color: var(--text-muted); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
+        .detail-value { font-weight: 700; color: var(--text-primary); font-size: clamp(13px, 3.4vw, 14px); }
+        .detail-value.amount { color: var(--primary-light); font-size: clamp(16px, 4.2vw, 18px); }
 
-        .request-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-        }
-
-        .detail-label {
-            font-size: clamp(10px, 2.5vw, 11px);
-            color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .detail-value {
-            font-weight: 700;
-            color: var(--text-primary);
-            font-size: clamp(13px, 3.4vw, 14px);
-        }
-
-        .detail-value.amount {
-            color: var(--primary-light);
-            font-size: clamp(16px, 4.2vw, 18px);
-        }
-
-        /* Modal - FULL SCREEN ON MOBILE */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: clamp(12px, 3vw, 20px);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            min-height: -webkit-fill-available;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-            opacity: 1;
-        }
-
-        .modal-content {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-xl);
-            width: 100%;
-            max-width: 520px;
-            max-height: calc(100vh - clamp(24px, 6vw, 40px));
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            box-shadow: var(--shadow-lg);
-            animation: modal-in 0.35s ease;
-        }
-
-        @keyframes modal-in {
-            from { opacity: 0; transform: scale(0.95) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .modal-header {
-            padding: clamp(18px, 4.5vw, 24px);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
-
-        .modal-title {
-            font-size: clamp(16px, 4vw, 18px);
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .modal-close {
-            width: clamp(34px, 8vw, 38px);
-            height: clamp(34px, 8vw, 38px);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
-            background: transparent;
-            color: var(--text-muted);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(14px, 3.6vw, 16px);
-            transition: all 0.25s ease;
-            flex-shrink: 0;
-        }
-
-        .modal-close:hover {
-            background: var(--danger);
-            border-color: var(--danger);
-            color: white;
-        }
-
-        .modal-body {
-            padding: clamp(20px, 5vw, 28px);
-        }
-
-        .modal-footer {
-            padding: clamp(16px, 4vw, 20px);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 0 0 var(--radius-xl) var(--radius-xl);
-            position: sticky;
-            bottom: 0;
-        }
-
-        @media (min-width: 480px) {
-            .modal-footer {
-                flex-direction: row;
-            }
-        }
-
-        .form-select {
-            width: 100%;
-            padding: clamp(13px, 3.3vw, 14px) 16px;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-family: 'Cairo', sans-serif;
-            font-size: clamp(13px, 3.4vw, 15px);
-            direction: rtl;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            -webkit-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: left 14px center;
-        }
-
-        .form-select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        textarea.form-input {
-            resize: vertical;
-            min-height: 90px;
-        }
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: clamp(12px, 3vw, 20px); opacity: 0; transition: opacity 0.3s ease; min-height: -webkit-fill-available; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-content { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-xl); width: 100%; max-width: 520px; max-height: calc(100vh - clamp(24px, 6vw, 40px)); overflow-y: auto; -webkit-overflow-scrolling: touch; box-shadow: var(--shadow-lg); animation: modal-in 0.35s ease; }
+        @keyframes modal-in { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-header { padding: clamp(18px, 4.5vw, 24px); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-xl) var(--radius-xl) 0 0; position: sticky; top: 0; z-index: 1; }
+        .modal-title { font-size: clamp(16px, 4vw, 18px); font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .modal-close { width: clamp(34px, 8vw, 38px); height: clamp(34px, 8vw, 38px); border-radius: var(--radius-md); border: 1px solid var(--border-color); background: transparent; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: clamp(14px, 3.6vw, 16px); transition: all 0.25s ease; flex-shrink: 0; }
+        .modal-close:hover { background: var(--danger); border-color: var(--danger); color: white; }
+        .modal-body { padding: clamp(20px, 5vw, 28px); }
+        .modal-footer { padding: clamp(16px, 4vw, 20px); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; background: rgba(255, 255, 255, 0.02); border-radius: 0 0 var(--radius-xl) var(--radius-xl); position: sticky; bottom: 0; }
+        @media (min-width: 480px) { .modal-footer { flex-direction: row; } }
+        .form-select { width: 100%; padding: clamp(13px, 3.3vw, 14px) 16px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); font-family: 'Cairo', sans-serif; font-size: clamp(13px, 3.4vw, 15px); direction: rtl; cursor: pointer; transition: all 0.25s ease; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: left 14px center; }
+        .form-select:focus { outline: none; border-color: var(--primary); }
+        textarea.form-input { resize: vertical; min-height: 90px; }
 
         /* Success Modal */
-        .modal-overlay.success-modal .modal-content {
-            text-align: center;
-            max-width: 460px;
-        }
+        .modal-overlay.success-modal .modal-content { text-align: center; max-width: 460px; }
+        .success-icon { width: clamp(72px, 18vw, 88px); height: clamp(72px, 18vw, 88px); background: linear-gradient(135deg, var(--success), #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(18px, 4.5vw, 24px); font-size: clamp(32px, 8vw, 38px); color: white; animation: success-pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 12px 40px rgba(16, 185, 129, 0.4); }
+        @keyframes success-pop { from { transform: scale(0) rotate(-180deg); } to { transform: scale(1) rotate(0); } }
+        .success-title { font-size: clamp(20px, 5vw, 24px); font-weight: 900; margin-bottom: 10px; }
+        .success-subtitle { color: var(--text-muted); font-size: clamp(13px, 3.4vw, 15px); margin-bottom: clamp(18px, 4.5vw, 24px); }
+        .success-ref { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); padding: clamp(14px, 3.5vw, 18px) clamp(16px, 4vw, 28px); border-radius: var(--radius-md); font-family: monospace; font-size: clamp(16px, 4.2vw, 20px); font-weight: 700; color: var(--primary-light); margin-bottom: clamp(20px, 5vw, 28px); border: 2px dashed rgba(59, 130, 246, 0.3); letter-spacing: 1px; word-break: break-all; }
 
-        .success-icon {
-            width: clamp(72px, 18vw, 88px);
-            height: clamp(72px, 18vw, 88px);
-            background: linear-gradient(135deg, var(--success), #34d399);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto clamp(18px, 4.5vw, 24px);
-            font-size: clamp(32px, 8vw, 38px);
-            color: white;
-            animation: success-pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            box-shadow: 0 12px 40px rgba(16, 185, 129, 0.4);
-        }
-
-        @keyframes success-pop {
-            from { transform: scale(0) rotate(-180deg); }
-            to { transform: scale(1) rotate(0); }
-        }
-
-        .success-title {
-            font-size: clamp(20px, 5vw, 24px);
-            font-weight: 900;
-            margin-bottom: 10px;
-        }
-
-        .success-subtitle {
-            color: var(--text-muted);
-            font-size: clamp(13px, 3.4vw, 15px);
-            margin-bottom: clamp(18px, 4.5vw, 24px);
-        }
-
-        .success-ref {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-            padding: clamp(14px, 3.5vw, 18px) clamp(16px, 4vw, 28px);
-            border-radius: var(--radius-md);
-            font-family: monospace;
-            font-size: clamp(16px, 4.2vw, 20px);
-            font-weight: 700;
-            color: var(--primary-light);
-            margin-bottom: clamp(20px, 5vw, 28px);
-            border: 2px dashed rgba(59, 130, 246, 0.3);
-            letter-spacing: 1px;
-            word-break: break-all;
-        }
-
-        /* Toast Notifications - MOBILE OPTIMIZED */
-        #toastContainer {
-            position: fixed;
-            top: clamp(12px, 3vw, 24px);
-            left: clamp(12px, 3vw, 24px);
-            right: clamp(12px, 3vw, 24px);
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 420px;
-            margin: 0 auto;
-        }
-
-        .toast {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: clamp(12px, 3vw, 16px) clamp(14px, 3.5vw, 20px);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: var(--shadow-lg);
-            animation: toast-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border-right: 4px solid var(--success);
-            position: relative;
-            overflow: hidden;
-        }
-
+        /* Toast Notifications */
+        #toastContainer { position: fixed; top: clamp(12px, 3vw, 24px); left: clamp(12px, 3vw, 24px); right: clamp(12px, 3vw, 24px); z-index: 99999; display: flex; flex-direction: column; gap: 10px; max-width: 420px; margin: 0 auto; }
+        .toast { background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: clamp(12px, 3vw, 16px) clamp(14px, 3.5vw, 20px); display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-lg); animation: toast-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); border-right: 4px solid var(--success); position: relative; overflow: hidden; }
         .toast.error { border-right-color: var(--danger); }
         .toast.warning { border-right-color: var(--warning); }
         .toast.info { border-right-color: var(--primary); }
-
-        @keyframes toast-in {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .toast-icon {
-            width: clamp(32px, 8vw, 36px);
-            height: clamp(32px, 8vw, 36px);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(14px, 3.6vw, 16px);
-            flex-shrink: 0;
-        }
-
+        @keyframes toast-in { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .toast-icon { width: clamp(32px, 8vw, 36px); height: clamp(32px, 8vw, 36px); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(14px, 3.6vw, 16px); flex-shrink: 0; }
         .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
         .toast.error .toast-icon { background: var(--danger-light); color: var(--danger); }
         .toast.warning .toast-icon { background: var(--warning-light); color: var(--warning); }
         .toast.info .toast-icon { background: rgba(59, 130, 246, 0.15); color: var(--primary-light); }
-
-        .toast-message {
-            flex: 1;
-            font-size: clamp(12px, 3.2vw, 14px);
-            font-weight: 700;
-            line-height: 1.4;
-        }
-
-        .toast-close {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: clamp(16px, 4vw, 18px);
-            padding: 4px;
-            flex-shrink: 0;
-        }
-
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: var(--success);
-            animation: toast-progress 4s linear forwards;
-        }
-
+        .toast-message { flex: 1; font-size: clamp(12px, 3.2vw, 14px); font-weight: 700; line-height: 1.4; }
+        .toast-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: clamp(16px, 4vw, 18px); padding: 4px; flex-shrink: 0; }
+        .toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--success); animation: toast-progress 4s linear forwards; }
         .toast.error .toast-progress { background: var(--danger); }
         .toast.warning .toast-progress { background: var(--warning); }
-
-        @keyframes toast-progress {
-            from { width: 100%; }
-            to { width: 0; }
-        }
+        @keyframes toast-progress { from { width: 100%; } to { width: 0; } }
 
         /* Debug Panel */
-        #debugPanel {
-            display: none;
-            background: #0d1117;
-            color: #58a6ff;
-            padding: clamp(16px, 4vw, 24px);
-            border-radius: var(--radius-md);
-            font-family: monospace;
-            font-size: clamp(11px, 2.8vw, 12px);
-            margin-top: clamp(16px, 4vw, 24px);
-            text-align: left;
-            direction: ltr;
-            white-space: pre-wrap;
-            word-break: break-all;
-            line-height: 1.6;
-            max-height: 280px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            border: 1px solid #30363d;
-        }
-
+        #debugPanel { display: none; background: #0d1117; color: #58a6ff; padding: clamp(16px, 4vw, 24px); border-radius: var(--radius-md); font-family: monospace; font-size: clamp(11px, 2.8vw, 12px); margin-top: clamp(16px, 4vw, 24px); text-align: left; direction: ltr; white-space: pre-wrap; word-break: break-all; line-height: 1.6; max-height: 350px; overflow-y: auto; -webkit-overflow-scrolling: touch; border: 1px solid #30363d; }
         #debugPanel.visible { display: block; }
 
         /* CTA Button */
-        .cta-container {
-            text-align: center;
-            margin: clamp(24px, 6vw, 32px) 0;
-        }
-
-        .cta-container .btn {
-            max-width: 320px;
-            margin: 0 auto;
-        }
+        .cta-container { text-align: center; margin: clamp(24px, 6vw, 32px) 0; }
+        .cta-container .btn { max-width: 320px; margin: 0 auto; }
 
         /* Animations */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25%, 75% { transform: translateX(-8px); }
-            50% { transform: translateX(8px); }
-        }
-
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%,75%{transform:translateX(-8px)} 50%{transform:translateX(8px)} }
         .shake { animation: shake 0.5s ease; }
 
         /* Print Styles */
         @media print {
             body * { visibility: hidden !important; }
             #mainApp, #mainApp * { visibility: visible !important; }
-            #mainApp { 
-                position: absolute; 
-                top: 0; 
-                left: 0; 
-                width: 100%; 
-                padding: 20px; 
-            }
-            .mobile-nav-drawer,
-            .mobile-nav-overlay,
-            .action-row,
-            .print-btn,
-            .btn-group,
-            #toastContainer,
-            #debugPanel,
-            .top-bar,
-            .cta-container { 
-                display: none !important; 
-            }
-            .stat-card, .info-item { 
-                break-inside: avoid; 
-                box-shadow: none !important; 
-                border: 1px solid #ddd !important; 
-            }
+            #mainApp { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; }
+            .mobile-nav-drawer, .mobile-nav-overlay, .action-row, .print-btn, .btn-group, #toastContainer, #debugPanel, .top-bar, .cta-container { display: none !important; }
+            .stat-card, .info-item { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd !important; }
         }
 
         /* Safe Area for notch phones */
         @supports (padding: env(safe-area-inset-top)) {
-            body {
-                padding-top: env(safe-area-inset-top);
-                padding-bottom: env(safe-area-inset-bottom);
-                padding-right: env(safe-area-inset-right);
-                padding-left: env(safe-area-inset-left);
-            }
-
-            .mobile-nav-drawer {
-                padding-top: env(safe-area-inset-top);
-                padding-bottom: env(safe-area-inset-bottom);
-            }
+            body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); padding-right: env(safe-area-inset-right); padding-left: env(safe-area-inset-left); }
+            .mobile-nav-drawer { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
         }
     </style>
 </head>
+
 <body>
     <!-- Boot Screen -->
     <div id="bootScreen">
@@ -1506,7 +456,7 @@
                 <div class="boot-logo-icon"><i class="fas fa-microchip"></i></div>
                 <div class="boot-logo-text">AXENTRO OS</div>
             </div>
-            <div class="boot-subtitle">Merchant Runtime Environment v7.0</div>
+            <div class="boot-subtitle">Merchant Runtime Environment v7.1</div>
             <div class="boot-status" id="bootStatus">جاري تهيئة النظام...</div>
             <div class="progress-container">
                 <div class="progress-bar" id="bootProgress"></div>
@@ -1521,57 +471,28 @@
     <!-- Toast Container -->
     <div id="toastContainer"></div>
 
-    <!-- Mobile Navigation Overlay & Drawer -->
+    <!-- Mobile Navigation -->
     <div class="mobile-nav-overlay" id="navOverlay" onclick="closeMobileNav()"></div>
     <nav class="mobile-nav-drawer" id="navDrawer">
         <div class="nav-drawer-header">
             <div class="nav-drawer-brand">
-                <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--primary),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;">
-                    <i class="fas fa-store"></i>
-                </div>
+                <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--primary),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;"><i class="fas fa-store"></i></div>
                 <span style="font-weight:800;font-size:15px;">بوابة التاجر</span>
             </div>
-            <button class="nav-drawer-close" onclick="closeMobileNav()">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="nav-drawer-close" onclick="closeMobileNav()"><i class="fas fa-times"></i></button>
         </div>
-        
         <div class="nav-drawer-body">
             <div class="nav-section-title">القائمة الرئيسية</div>
-            <div class="nav-item-mobile active" onclick="closeMobileNav()">
-                <i class="fas fa-home"></i>
-                <span>لوحة التحكم</span>
-            </div>
-            <div class="nav-item-mobile" onclick="closeMobileNav()">
-                <i class="fas fa-user"></i>
-                <span>الملف الشخصي</span>
-            </div>
-            <div class="nav-item-mobile" onclick="closeMobileNav()">
-                <i class="fas fa-desktop"></i>
-                <span>المكن المسجلة</span>
-                <span class="nav-badge-mobile" id="machinesCountBadge">0</span>
-            </div>
-
+            <div class="nav-item-mobile active" onclick="closeMobileNav()"><i class="fas fa-home"></i><span>لوحة التحكم</span></div>
+            <div class="nav-item-mobile" onclick="closeMobileNav()"><i class="fas fa-user"></i><span>الملف الشخصي</span></div>
+            <div class="nav-item-mobile" onclick="closeMobileNav()"><i class="fas fa-desktop"></i><span>المكن المسجلة</span><span class="nav-badge-mobile" id="machinesCountBadge">0</span></div>
             <div class="nav-section-title" style="margin-top:16px;">العمليات المالية</div>
-            <div class="nav-item-mobile" onclick="closeMobileNav()">
-                <i class="fas fa-arrow-up"></i>
-                <span>التحويلات</span>
-            </div>
-            <div class="nav-item-mobile" onclick="closeMobileNav()">
-                <i class="fas fa-arrow-down"></i>
-                <span>التحصيلات</span>
-            </div>
-            <div class="nav-item-mobile" onclick="openRequestModal(); closeMobileNav();">
-                <i class="fas fa-plus-circle"></i>
-                <span>طلب جديد</span>
-            </div>
+            <div class="nav-item-mobile" onclick="closeMobileNav()"><i class="fas fa-arrow-up"></i><span>التحويلات</span></div>
+            <div class="nav-item-mobile" onclick="closeMobileNav()"><i class="fas fa-arrow-down"></i><span>التحصيلات</span></div>
+            <div class="nav-item-mobile" onclick="openRequestModal(); closeMobileNav();"><i class="fas fa-plus-circle"></i><span>طلب جديد</span></div>
         </div>
-
         <div class="nav-drawer-footer">
-            <div class="status-indicator-mobile">
-                <div class="status-dot-mobile"></div>
-                <span class="status-text-mobile">متصل ✓</span>
-            </div>
+            <div class="status-indicator-mobile"><div class="status-dot-mobile"></div><span class="status-text-mobile">متصل ✓</span></div>
         </div>
     </nav>
 
@@ -1588,21 +509,12 @@
                             <p>Axentro Systems</p>
                         </div>
                     </div>
-                    <button class="menu-toggle-btn" id="menuToggleBtn" onclick="toggleMobileNav()" aria-label="القائمة">
-                        <i class="fas fa-bars"></i>
-                    </button>
+                    <button class="menu-toggle-btn" id="menuToggleBtn" onclick="toggleMobileNav()" aria-label="القائمة"><i class="fas fa-bars"></i></button>
                 </div>
-                
                 <div class="action-buttons-row">
-                    <button class="icon-btn-sm" onclick="refreshData()" title="تحديث">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    <button class="icon-btn-sm" onclick="window.print()" title="طباعة">
-                        <i class="fas fa-print"></i>
-                    </button>
-                    <button class="icon-btn-sm" onclick="toggleDebug()" title="تصحيح">
-                        <i class="fas fa-bug"></i>
-                    </button>
+                    <button class="icon-btn-sm" onclick="refreshData()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
+                    <button class="icon-btn-sm" onclick="window.print()" title="طباعة"><i class="fas fa-print"></i></button>
+                    <button class="icon-btn-sm" onclick="toggleDebug()" title="تصحيح"><i class="fas fa-bug"></i></button>
                 </div>
             </header>
 
@@ -1610,38 +522,26 @@
             <section id="loginSection">
                 <div class="login-card">
                     <div class="login-header">
-                        <div class="login-avatar">
-                            <i class="fas fa-user-circle"></i>
-                        </div>
+                        <div class="login-avatar"><i class="fas fa-user-circle"></i></div>
                         <h2 class="login-title">مرحباً بك في بوابة Axentro</h2>
                         <p class="login-desc">أدخل رقم الحساب أو رقم التاجر لعرض بياناتك الكاملة والتحكم في حسابك</p>
                     </div>
-
                     <div class="form-group">
                         <div class="form-input-wrapper">
                             <input type="text" id="searchInput" class="form-input" placeholder="أدخل رقم الحساب أو رقم التاجر *" autocomplete="off" onkeypress="handleKeyPress(event)">
                             <i class="fas fa-id-card form-input-icon"></i>
                         </div>
                     </div>
-
                     <div class="btn-group">
-                        <button class="btn btn-primary" onclick="searchMerchant()">
-                            <i class="fas fa-search"></i>
-                            عرض بياناتي
-                        </button>
-                        <button class="btn btn-outline" onclick="toggleDebug()">
-                            <i class="fas fa-bug"></i>
-                            تصحيح
-                        </button>
+                        <button class="btn btn-primary" onclick="searchMerchant()"><i class="fas fa-search"></i> عرض بياناتي</button>
+                        <button class="btn btn-outline" onclick="toggleDebug()"><i class="fas fa-bug"></i> تصحيح</button>
                     </div>
-
                     <div id="debugPanel"></div>
                 </div>
             </section>
 
             <!-- Dashboard Section -->
             <section id="dashboardSection">
-                <!-- Merchant Info Card -->
                 <div class="info-card" id="merchantInfoCard" style="display:none;">
                     <div class="info-card-header">
                         <div>
@@ -1652,144 +552,45 @@
                                 <span class="meta-tag"><i class="fas fa-phone"></i><span id="displayPhone">—</span></span>
                             </div>
                         </div>
-                        <button class="print-btn" onclick="window.print()">
-                            <i class="fas fa-print"></i>
-                            طباعة
-                        </button>
+                        <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
                     </div>
                     <div class="info-grid">
-                        <div class="info-item">
-                            <div class="info-label">المنطقة</div>
-                            <div class="info-value" id="displayArea">—</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">العنوان</div>
-                            <div class="info-value" id="displayAddress">—</div>
-                        </div>
-                        <div class="info-item highlight">
-                            <div class="info-label">رصيد مستحق</div>
-                            <div class="info-value" id="displayDebt">0 ج.م</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">حالة الحساب</div>
-                            <div class="info-value" id="displayStatus">—</div>
-                        </div>
+                        <div class="info-item"><div class="info-label">المنطقة</div><div class="info-value" id="displayArea">—</div></div>
+                        <div class="info-item"><div class="info-label">العنوان</div><div class="info-value" id="displayAddress">—</div></div>
+                        <div class="info-item highlight"><div class="info-label">رصيد مستحق</div><div class="info-value" id="displayDebt">0 ج.م</div></div>
+                        <div class="info-item"><div class="info-label">حالة الحساب</div><div class="info-value" id="displayStatus">—</div></div>
                     </div>
                 </div>
 
-                <!-- Stats Grid -->
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-icon blue"><i class="fas fa-arrow-up"></i></div>
-                        </div>
-                        <div class="stat-value" id="totalTransfers">0</div>
-                        <div class="stat-label">إجمالي التحويلات (ج.م)</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-icon green"><i class="fas fa-arrow-down"></i></div>
-                        </div>
-                        <div class="stat-value" id="totalCollections">0</div>
-                        <div class="stat-label">إجمالي التحصيلات (ج.م)</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-icon red"><i class="fas fa-balance-scale"></i></div>
-                        </div>
-                        <div class="stat-value" id="currentBalance">0</div>
-                        <div class="stat-label">الرصيد الحالي (ج.م)</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-icon purple"><i class="fas fa-desktop"></i></div>
-                        </div>
-                        <div class="stat-value" id="machinesCount">0</div>
-                        <div class="stat-label">المكن المسجلة</div>
-                    </div>
+                    <div class="stat-card"><div class="stat-header"><div class="stat-icon blue"><i class="fas fa-arrow-up"></i></div></div><div class="stat-value" id="totalTransfers">0</div><div class="stat-label">إجمالي التحويلات (ج.م)</div></div>
+                    <div class="stat-card"><div class="stat-header"><div class="stat-icon green"><i class="fas fa-arrow-down"></i></div></div><div class="stat-value" id="totalCollections">0</div><div class="stat-label">إجمالي التحصيلات (ج.م)</div></div>
+                    <div class="stat-card"><div class="stat-header"><div class="stat-icon red"><i class="fas fa-balance-scale"></i></div></div><div class="stat-value" id="currentBalance">0</div><div class="stat-label">الرصيد الحالي (ج.م)</div></div>
+                    <div class="stat-card"><div class="stat-header"><div class="stat-icon purple"><i class="fas fa-desktop"></i></div></div><div class="stat-value" id="machinesCount">0</div><div class="stat-label">المكن المسجلة</div></div>
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="action-row">
-                    <button class="action-btn primary" onclick="openRequestModal()">
-                        <i class="fas fa-plus-circle"></i>
-                        تقديم طلب جديد
-                    </button>
-                    <button class="action-btn" onclick="refreshData()">
-                        <i class="fas fa-sync-alt"></i>
-                        تحديث البيانات
-                    </button>
-                    <button class="action-btn" onclick="scrollToInfo()">
-                        <i class="fas fa-user"></i>
-                        بياناتي
-                    </button>
+                    <button class="action-btn primary" onclick="openRequestModal()"><i class="fas fa-plus-circle"></i> تقديم طلب جديد</button>
+                    <button class="action-btn" onclick="refreshData()"><i class="fas fa-sync-alt"></i> تحديث البيانات</button>
+                    <button class="action-btn" onclick="scrollToInfo()"><i class="fas fa-user"></i> بياناتي</button>
                 </div>
 
-                <!-- Transfers Table -->
                 <div class="section-card">
-                    <div class="section-header">
-                        <h3 class="section-title"><i class="fas fa-arrow-up"></i> آخر 5 تحويلات</h3>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>الرقم المرجعي</th>
-                                    <th>التاريخ</th>
-                                    <th>الوقت</th>
-                                    <th>النوع</th>
-                                    <th>القيمة</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transfersTableBody">
-                                <tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <div class="section-header"><h3 class="section-title"><i class="fas fa-arrow-up"></i> آخر 5 تحويلات</h3></div>
+                    <div class="table-responsive"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th></tr></thead><tbody id="transfersTableBody"><tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr></tbody></table></div>
                 </div>
 
-                <!-- Collections Table -->
                 <div class="section-card">
-                    <div class="section-header">
-                        <h3 class="section-title"><i class="fas fa-arrow-down"></i> آخر 5 تحصيلات</h3>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>الرقم المرجعي</th>
-                                    <th>التاريخ</th>
-                                    <th>الوقت</th>
-                                    <th>القيمة</th>
-                                    <th>المتبقي</th>
-                                </tr>
-                            </thead>
-                            <tbody id="collectionsTableBody">
-                                <tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <div class="section-header"><h3 class="section-title"><i class="fas fa-arrow-down"></i> آخر 5 تحصيلات</h3></div>
+                    <div class="table-responsive"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>القيمة</th><th>المتبقي</th></tr></thead><tbody id="collectionsTableBody"><tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr></tbody></table></div>
                 </div>
 
-                <!-- Requests History -->
                 <div class="section-card">
-                    <div class="section-header">
-                        <h3 class="section-title"><i class="fas fa-file-alt"></i> طلباتي السابقة</h3>
-                    </div>
-                    <div class="requests-list" id="requestsList">
-                        <div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>
-                    </div>
+                    <div class="section-header"><h3 class="section-title"><i class="fas fa-file-alt"></i> طلباتي السابقة</h3></div>
+                    <div class="requests-list" id="requestsList"><div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div></div>
                 </div>
 
-                <!-- CTA -->
-                <div class="cta-container">
-                    <button class="btn btn-primary" onclick="openRequestModal()">
-                        <i class="fas fa-paper-plane"></i>
-                        تقديم طلب جديد
-                    </button>
-                </div>
+                <div class="cta-container"><button class="btn btn-primary" onclick="openRequestModal()"><i class="fas fa-paper-plane"></i> تقديم طلب جديد</button></div>
             </section>
         </div>
     </div>
@@ -1797,42 +598,14 @@
     <!-- Request Modal -->
     <div class="modal-overlay" id="requestModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-paper-plane"></i> تقديم طلب جديد</h3>
-                <button class="modal-close" onclick="closeRequestModal()"><i class="fas fa-times"></i></button>
-            </div>
+            <div class="modal-header"><h3 class="modal-title"><i class="fas fa-paper-plane"></i> تقديم طلب جديد</h3><button class="modal-close" onclick="closeRequestModal()"><i class="fas fa-times"></i></button></div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">نوع الطلب *</label>
-                    <select class="form-select" id="requestType">
-                        <option value="">-- اختر نوع الطلب --</option>
-                        <option value="كاش على المكنة">💵 كاش على المكنة</option>
-                        <option value="رصيد خدمات">🔄 رصيد خدمات</option>
-                        <option value="تحويل">➡️ تحويل</option>
-                        <option value="تحصيل">⬅️ تحصيل</option>
-                        <option value="صيانة">🔧 صيانة</option>
-                        <option value="أخرى">📋 أخرى</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">اختر المكنة (اختياري)</label>
-                    <select class="form-select" id="requestMachine">
-                        <option value="">-- جميع المكن --</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">المبلغ المطلوب (جنيه) *</label>
-                    <input type="number" class="form-input" id="requestAmount" placeholder="مثال: 5000" min="1" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">ملاحظات (اختياري)</label>
-                    <textarea class="form-input" id="requestNotes" placeholder="أي تفاصيل إضافية..."></textarea>
-                </div>
+                <div class="form-group"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">نوع الطلب *</label><select class="form-select" id="requestType"><option value="">-- اختر نوع الطلب --</option><option value="كاش على المكنة">💵 كاش على المكنة</option><option value="رصيد خدمات">🔄 رصيد خدمات</option><option value="تحويل">➡️ تحويل</option><option value="تحصيل">⬅️ تحصيل</option><option value="صيانة">🔧 صيانة</option><option value="أخرى">📋 أخرى</option></select></div>
+                <div class="form-group"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">اختر المكنة (اختياري)</label><select class="form-select" id="requestMachine"><option value="">-- جميع المكن --</option></select></div>
+                <div class="form-group"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">المبلغ المطلوب (جنيه) *</label><input type="number" class="form-input" id="requestAmount" placeholder="مثال: 5000" min="1" step="0.01"></div>
+                <div class="form-group"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">ملاحظات (اختياري)</label><textarea class="form-input" id="requestNotes" placeholder="أي تفاصيل إضافية..."></textarea></div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="submitRequest()" style="flex:1;"><i class="fas fa-paper-plane"></i> إرسال الطلب</button>
-                <button class="btn btn-outline" onclick="closeRequestModal()">إلغاء</button>
-            </div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="submitRequest()" style="flex:1;"><i class="fas fa-paper-plane"></i> إرسال الطلب</button><button class="btn btn-outline" onclick="closeRequestModal()">إلغاء</button></div>
         </div>
     </div>
 
@@ -1844,12 +617,8 @@
                 <h3 class="success-title">تم الإرسال بنجاح! 🎉</h3>
                 <p class="success-subtitle">تم تسجيل طلبك وسيتم مراجعته قريباً</p>
                 <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">رقم المرجع:</p>
-                <div class="success-ref" id="successRefNumber">REQ-XX-XXXXX</div>
-                <br>
-                <button class="btn btn-primary" onclick="closeSuccessAndNew()" style="width:100%;max-width:280px;margin:0 auto;">
-                    <i class="fas fa-plus"></i>
-                    تقديم طلب آخر
-                </button>
+                <div class="success-ref" id="successRefNumber">REQ-XX-XXXXX</div><br>
+                <button class="btn btn-primary" onclick="closeSuccessAndNew()" style="width:100%;max-width:280px;margin:0 auto;"><i class="fas fa-plus"></i> تقديم طلب آخر</button>
             </div>
         </div>
     </div>
@@ -1861,9 +630,12 @@
     <script>
     /**
      * ============================================
-     * AXENTRO MERCHANT PORTAL v7.0
-     * ✅ FULLY RESPONSIVE - MOBILE COMPATIBLE
-     * ✅ DATABASE-COMPATIBLE SEARCH
+     * AXENTRO MERCHANT PORTAL v7.1
+     * ✅ DARK MODE PROFESSIONAL UI
+     * ✅ SOUND SYSTEM INTEGRATED
+     * ✅ HAPTIC FEEDBACK FOR MOBILE
+     * ✅ ENHANCED DEBUG PANEL
+     * ✅ PWA READY
      * ============================================
      */
 
@@ -1874,7 +646,7 @@
         googleScriptUrl: 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec'
     };
 
-    // Database client (initialized once)
+    // Database client
     let db = null;
 
     // State
@@ -1882,32 +654,112 @@
     let currentAccountNumber = null;
 
     // DOM Helper
-    function getEl(id) {
-        return document.getElementById(id);
-    }
+    function getEl(id) { return document.getElementById(id); }
 
-    // Initialize database safely
+    // Initialize database
     function initDatabase() {
         try {
             if (window.supabase && !db) {
                 db = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
                 console.log('✅ Database initialized');
             }
-        } catch (e) {
-            console.error('❌ DB Init Error:', e);
-        }
+        } catch (e) { console.error('❌ DB Init Error:', e); }
         return db;
     }
 
+    // ========== SOUND SYSTEM ==========
+    const Sound = {
+        ctx: null,
+        init() { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} },
+        get() { if(!this.ctx)this.init(); if(this.ctx?.state==='suspended')this.ctx.resume(); return this.ctx; },
+        
+        // Click sound - light and clear
+        click() {
+            try {
+                const c=this.get();if(!c)return;
+                const o=c.createOscillator(),g=c.createGain();
+                o.connect(g);g.connect(c.destination);
+                o.type='sine';o.frequency.setValueAtTime(1200,c.currentTime);
+                o.frequency.exponentialRampToValueAtTime(800,c.currentTime+0.05);
+                g.gain.setValueAtTime(0.12,c.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.08);
+                o.start(c.currentTime);o.stop(c.currentTime+0.08);
+                this._vibrate(10);
+            } catch(e){}
+        },
+        
+        // Success sound - your done.mp3 + tones
+        success() {
+            const a=document.getElementById('successSound');
+            if(a){a.currentTime=0;a.play().catch(()=>{})}
+            try{
+                const c=this.get();if(!c)return;
+                const n=c.currentTime;
+                [523.25,659.25,783.99].forEach((f,i)=>{
+                    const o=c.createOscillator(),g=c.createGain();
+                    o.connect(g);g.connect(c.destination);
+                    o.type='sine';o.frequency.setValueAtTime(f,n+i*0.1);
+                    g.gain.setValueAtTime(0.001,n+i*0.1);
+                    g.gain.linearRampToValueAtTime(0.2,n+i*0.1+0.02);
+                    g.gain.exponentialRampToValueAtTime(0.001,n+i*0.1+0.2);
+                    o.start(n+i*0.1);o.stop(n+i*0.1+0.2);
+                });
+                this._vibrate([50,30]);
+            } catch(e){}
+        },
+        
+        // Error sound - warning tone
+        error() {
+            try{
+                const c=this.get();if(!c)return;
+                const n=c.currentTime,o=c.createOscillator(),g=c.createGain();
+                o.connect(g);g.connect(c.destination);
+                o.type='square';o.frequency.setValueAtTime(220,n);
+                o.frequency.setValueAtTime(196,n+0.1);
+                g.gain.setValueAtTime(0.18,n);
+                g.gain.exponentialRampToValueAtTime(0.001,n+0.2);
+                o.start(n);o.stop(n+0.2);
+                this._vibrate([30,50,30]);
+            } catch(e){}
+        },
+        
+        // Connection error sound
+        connectionError() {
+            try{
+                const c=this.get();if(!c)return;
+                const n=c.currentTime,o=c.createOscillator(),g=c.createGain();
+                o.connect(g);g.connect(c.destination);
+                o.type='sawtooth';o.frequency.setValueAtTime(150,n);
+                o.frequency.exponentialRampToValueAtTime(80,n+0.3);
+                g.gain.setValueAtTime(0.22,n);
+                g.gain.exponentialRampToValueAtTime(0.001,n+0.4);
+                o.start(n);o.stop(n+0.4);
+                this._vibrate([100,50,100,50]);
+            } catch(e){}
+        },
+        
+        // Haptic feedback helper
+        _vibrate(pattern) {
+            if ('vibrate' in navigator) {
+                try { navigator.vibrate(pattern); } catch(e) {}
+            }
+        }
+    };
+
     // Toast notification system
-    function showToast(message, type = 'success') {
+    function showToast(message, type = 'success', playSound = true) {
         const container = getEl('toastContainer');
-        const icons = {
-            success: 'fa-check-circle',
-            error: 'fa-exclamation-circle',
-            warning: 'fa-exclamation-triangle',
-            info: 'fa-info-circle'
-        };
+        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+        
+        // Play appropriate sound
+        if (playSound) {
+            switch(type) {
+                case 'success': Sound.success(); break;
+                case 'error': Sound.error(); break;
+                case 'warning': Sound.connectionError(); break;
+                default: Sound.click(); break;
+            }
+        }
 
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
@@ -1928,7 +780,7 @@
         }, 4500);
     }
 
-    // Boot sequence
+    // Boot sequence with enhanced steps
     async function runBootSequence() {
         const progress = getEl('bootProgress');
         const status = getEl('bootStatus');
@@ -1936,165 +788,123 @@
         const percent = getEl('bootPercent');
 
         const steps = [
-            { p: 15, s: 'تهيئة النظام...', ph: 'System Core' },
-            { p: 35, s: 'تحميل الوحدات...', ph: 'Modules' },
-            { p: 55, s: 'الاتصال بقاعدة البيانات...', ph: 'Database' },
-            { p: 75, s: 'التحقق من الأمان...', ph: 'Security' },
-            { p: 90, s: 'تحضير واجهة المستخدم...', ph: 'Interface' },
-            { p: 100, s: 'جاهز!', ph: 'Complete' }
+            { p: 10, s: 'تهيئة النظام الأساسي...', ph: 'System Core' },
+            { p: 25, s: 'تحميل مكتبات الصوت...', ph: 'Audio Engine' },
+            { p: 40, s: 'الاتصال بقاعدة البيانات...', ph: 'Database Link' },
+            { p: 55, s: 'التحقق من الاتصال...', ph: 'Connection Test' },
+            { p: 70, s: 'تحميل واجهة المستخدم...', ph: 'UI Renderer' },
+            { p: 85, s: 'تهيئة التنبيهات...', ph: 'Notifications' },
+            { p: 95, s: 'تجهيز الأمان...', ph: 'Security Check' },
+            { p: 100, s: 'جاهز للتشغيل! ✓', ph: 'Complete' }
         ];
 
         let current = 0;
-
         for (const step of steps) {
             while (current < step.p) {
-                current += Math.min(3, step.p - current);
+                current += Math.min(2 + Math.random() * 3, step.p - current);
                 progress.style.width = current + '%';
-                percent.textContent = current + '%';
-                await new Promise(r => setTimeout(r, 30));
+                percent.textContent = Math.round(current) + '%';
+                await new Promise(r => setTimeout(r, 25 + Math.random() * 30));
             }
             status.textContent = step.s;
             phase.textContent = step.ph;
-            await new Promise(r => setTimeout(r, 200));
+            await new Promise(r => setTimeout(r, 150 + Math.random() * 100));
         }
 
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 500));
 
         // Initialize database AFTER boot
         initDatabase();
 
-        // Show app
-        getEl('bootScreen').classList.add('hidden');
-        getEl('mainApp').classList.add('visible');
+        // Play boot complete sound
+        Sound.success();
 
-        // Load saved account
-        const saved = localStorage.getItem('ax_merchant_account');
-        if (saved) {
-            getEl('searchInput').value = saved;
-        }
+        // Show app with animation
+        getEl('bootScreen').classList.add('hidden');
+        
+        setTimeout(() => {
+            getEl('mainApp').classList.add('visible');
+            
+            // Load saved account
+            const saved = localStorage.getItem('ax_merchant_account');
+            if (saved) getEl('searchInput').value = saved;
+        }, 300);
     }
 
     // Handle Enter key
     function handleKeyPress(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            searchMerchant();
-        }
+        if (event.key === 'Enter') { event.preventDefault(); searchMerchant(); }
     }
 
     // ========== MOBILE NAVIGATION ==========
     function toggleMobileNav() {
-        const drawer = getEl('navDrawer');
-        const overlay = getEl('navOverlay');
-        const btn = getEl('menuToggleBtn');
-
-        drawer.classList.toggle('open');
-        overlay.classList.toggle('show');
-        btn.classList.toggle('active');
-
-        // Prevent body scroll when menu open
+        const drawer = getEl('navDrawer'), overlay = getEl('navOverlay'), btn = getEl('menuToggleBtn');
+        drawer.classList.toggle('open'); overlay.classList.toggle('show'); btn.classList.toggle('active');
         document.body.style.overflow = drawer.classList.contains('open') ? 'hidden' : '';
+        Sound.click();
     }
 
     function closeMobileNav() {
-        const drawer = getEl('navDrawer');
-        const overlay = getEl('navOverlay');
-        const btn = getEl('menuToggleBtn');
-
-        drawer.classList.remove('open');
-        overlay.classList.remove('show');
-        btn.classList.remove('active');
+        const drawer = getEl('navDrawer'), overlay = getEl('navOverlay'), btn = getEl('menuToggleBtn');
+        drawer.classList.remove('open'); overlay.classList.remove('show'); btn.classList.remove('active');
         document.body.style.overflow = '';
     }
 
-    // ========== MAIN SEARCH FUNCTION - FIXED FOR YOUR DATABASE ==========
+    // ========== MAIN SEARCH FUNCTION ==========
     async function searchMerchant(retryCount = 0) {
         const searchTerm = getEl('searchInput').value.trim();
 
         if (!searchTerm) {
             showToast('يرجى إدخال رقم الحساب أو رقم التاجر', 'error');
             getEl('searchInput').classList.add('shake');
+            Sound.error();
             setTimeout(() => getEl('searchInput').classList.remove('shake'), 500);
             return;
         }
 
-        // Ensure database is ready
-        if (!db) {
-            initDatabase();
-            if (!db) {
-                showToast('قاعدة البيانات غير جاهزة', 'error');
-                return;
-            }
-        }
+        if (!db) { initDatabase(); if (!db) { showToast('قاعدة البيانات غير جاهزة', 'error'); return; } }
 
         showToast('جاري البحث عن البيانات...', 'info');
 
         try {
-            console.log(`🔍 Searching for: "${searchTerm}" (attempt ${retryCount + 1}/3)`);
+            console.log(`🔍 Searching for: "${searchTerm}" (${retryCount + 1}/3)`);
 
-            // ============================================================
-            // ✅ FIXED STRATEGY: Fetch ALL data first, then filter client-side
-            // This avoids "column does not exist" errors!
-            // ============================================================
-            
-            const { data: allMerchants, error: fetchError } = await db
-                .from('merchants')
-                .select('*')
-                .limit(200);
-
+            const { data: allMerchants, error: fetchError } = await db.from('merchants').select('*').limit(200);
             if (fetchError) throw fetchError;
 
-            console.log(`📦 Fetched ${allMerchants?.length || 0} merchants from database`);
+            console.log(`📦 Fetched ${allMerchants?.length || 0} merchants`);
 
-            // Client-side filtering - checks EVERY field automatically
             let foundMerchant = null;
-
-            if (allMerchants && allMerchants.length > 0) {
+            if (allMerchants?.length > 0) {
                 const searchLower = searchTerm.toLowerCase().trim();
-
-                // Log first merchant structure for debugging
-                console.log('📋 Sample merchant structure:', allMerchants[0]);
+                
+                // Log structure for debugging
+                if (retryCount === 0) {
+                    console.log('📋 Merchant table columns:', Object.keys(allMerchants[0]));
+                }
 
                 foundMerchant = allMerchants.find(m => {
-                    // Check ALL string and number fields in the merchant object
-                    const allValues = Object.values(m).map(val => {
-                        if (val === null || val === undefined) return '';
-                        return String(val).toLowerCase().trim();
-                    });
-
-                    // Look for exact match OR partial match
-                    return allValues.some(val => 
-                        val === searchLower || 
-                        val.includes(searchLower) ||
-                        searchLower.includes(val)
-                    );
+                    const values = Object.values(m).map(v => String(v ?? '').toLowerCase());
+                    return values.some(v => v === searchLower || v.includes(searchLower));
                 });
             }
 
             if (!foundMerchant && retryCount < 2) {
-                console.warn(`⚠️ Not found, retrying... (${retryCount + 1}/3)`);
-                await new Promise(r => setTimeout(r, 1000));
+                console.warn(`⚠️ Not found, retrying...`);
+                await new Promise(r => setTimeout(r, 1200));
                 return searchMerchant(retryCount + 1);
             }
 
             if (!foundMerchant) {
                 showToast('لم يتم العثور على تاجر بهذا الرقم', 'error');
-                console.error('❌ Merchant not found:', searchTerm);
-
-                updateDebugInfo({
-                    searchTerm,
-                    totalFetched: allMerchants?.length || 0,
-                    sampleData: allMerchants?.[0] ? Object.keys(allMerchants[0]) : [],
-                    message: 'Merchant not found in database',
-                    suggestion: 'Check if account number exists in your Supabase merchants table'
-                });
+                Sound.connectionError();
+                updateDebugInfo({ searchTerm, totalFetched: allMerchants?.length || 0, columns: allMerchants?.[0] ? Object.keys(allMerchants[0]) : [], error: 'Not found' });
                 return;
             }
 
             // SUCCESS!
             currentMerchant = foundMerchant;
             currentAccountNumber = searchTerm;
-
             localStorage.setItem('ax_merchant_account', searchTerm);
 
             console.log('✅ Found merchant:', foundMerchant);
@@ -2104,91 +914,35 @@
             getEl('loginSection').style.display = 'none';
             getEl('dashboardSection').style.display = 'block';
 
-            // Try to extract name for greeting
-            const merchantName = foundMerchant.name || foundMerchant['اسم'] || foundMerchant['اسم_التاجر'] || foundMerchant['merchant_name'] || 'التاجر';
-            showToast(`مرحباً ${merchantName} 👋`, 'success');
+            const name = foundMerchant.name || foundMerchant['اسم'] || foundMerchant['اسم_التاجر'] || 'التاجر';
+            showToast(`مرحباً ${name} 👋`, 'success');
 
         } catch (error) {
             console.error('❌ Search Error:', error);
-
+            
             if (retryCount < 2) {
                 await new Promise(r => setTimeout(r, 1500));
                 return searchMerchant(retryCount + 1);
             }
-
-            showToast('حدث خطأ في البحث، حاول مرة أخرى', 'error');
-
-            updateDebugInfo({
-                error: error.message,
-                searchTerm,
-                hint: error.message?.includes('column') ? 'Database column names may differ from expected' : 'Network or permission issue'
-            });
+            
+            showToast('حدث خطأ في البحث', 'error');
+            Sound.connectionError();
+            updateDebugInfo({ error: error.message, searchTerm });
         }
     }
 
     // Render dashboard
     async function renderDashboard(merchant) {
-        // Update info card - handle both English AND Arabic field names
         getEl('merchantInfoCard').style.display = 'block';
         
-        // Smart field extraction (tries multiple possible field names)
-        getEl('displayName').textContent = 
-            merchant.name || 
-            merchant['اسم'] || 
-            merchant['اسم_التاجر'] || 
-            merchant['اسم التاجر'] || 
-            merchant.merchant_name || 
-            merchant.full_name ||
-            '—';
+        getEl('displayName').textContent = merchant.name || merchant['اسم'] || merchant['اسم_التاجر'] || merchant.merchant_name || '—';
+        getEl('displayNumber').textContent = merchant.merchant_number || merchant['رقم_التاجر'] || merchant['رقم التاجر'] || merchant.id || '—';
+        getEl('displayActivity').textContent = merchant.activity || merchant['نشاط'] || merchant['اسم_النشاط'] || merchant['اسم النشاط'] || '—';
+        getEl('displayPhone').textContent = merchant.phone || merchant['هاتف'] || merchant['رقم_الهاتف'] || merchant['رقم الهاتف'] || '—';
+        getEl('displayArea').textContent = merchant.area || merchant['منطقة'] || merchant['المنطقة'] || '—';
+        getEl('displayAddress').textContent = merchant.address || merchant['عنوان'] || merchant['العنوان'] || '—';
+        getEl('displayStatus').textContent = merchant.status || merchant['حالة'] || merchant['الحالة'] || 'نشط';
 
-        getEl('displayNumber').textContent = 
-            merchant.merchant_number || 
-            merchant['رقم_التاجر'] || 
-            merchant['رقم التاجر'] ||
-            merchant.account_number ||
-            merchant.id ||
-            '—';
-
-        getEl('displayActivity').textContent = 
-            merchant.activity || 
-            merchant['نشاط'] ||
-            merchant['اسم_النشاط'] || 
-            merchant['اسم النشاط'] ||
-            merchant.business_name ||
-            '—';
-
-        getEl('displayPhone').textContent = 
-            merchant.phone || 
-            merchant['هاتف'] ||
-            merchant['رقم_الهاتف'] || 
-            merchant['رقم الهاتف'] ||
-            merchant.mobile ||
-            '—';
-
-        getEl('displayArea').textContent = 
-            merchant.area || 
-            merchant['منطقة'] ||
-            merchant['المنطقة'] || 
-            merchant.region ||
-            merchant.city ||
-            '—';
-
-        getEl('displayAddress').textContent = 
-            merchant.address || 
-            merchant['عنوان'] ||
-            merchant['العنوان'] || 
-            merchant.location ||
-            '—';
-
-        getEl('displayStatus').textContent = 
-            merchant.status || 
-            merchant['حالة'] ||
-            merchant['الحالة'] || 
-            merchant.state ||
-            merchant.active !== undefined ? (merchant.active ? 'نشط' : 'غير نشط') :
-            'نشط';
-
-        // Load data in parallel
         await Promise.all([
             loadMachines(merchant.id),
             calculateStats(merchant.id),
@@ -2198,407 +952,144 @@
         ]);
     }
 
-    // Load machines
-    async function loadMachines(merchantId) {
+    async function loadMachines(id) {
         try {
-            const { data, error } = await db
-                .from('machines')
-                .select('*')
-                .eq('merchant_id', merchantId)
-                .limit(50);
-
+            const { data, error } = await db.from('machines').select('*').eq('merchant_id', id).limit(50);
             if (error) throw error;
-
-            const count = data?.length || 0;
-            getEl('machinesCount').textContent = count;
-            getEl('machinesCountBadge').textContent = count;
-
-            console.log(`💻 Machines: ${count}`);
-        } catch (e) {
-            console.error('❌ Machines Error:', e);
-        }
+            const c = data?.length || 0;
+            getEl('machinesCount').textContent = c;
+            getEl('machinesCountBadge').textContent = c;
+        } catch(e) { console.error('❌ Machines:', e); }
     }
 
-    // Calculate stats
-    async function calculateStats(merchantId) {
+    async function calculateStats(id) {
         try {
             const [tRes, cRes] = await Promise.all([
-                db.from('transfers').select('amount').eq('merchant_id', merchantId),
-                db.from('collections').select('amount,remaining').eq('merchant_id', merchantId)
+                db.from('transfers').select('amount').eq('merchant_id', id),
+                db.from('collections').select('amount,remaining').eq('merchant_id', id)
             ]);
-
-            const tTotal = tRes.data?.reduce((sum, t) => {
-                const amt = parseFloat(t.amount) || 0;
-                return sum + amt;
-            }, 0) || 0;
-
-            const cTotal = cRes.data?.reduce((sum, c) => {
-                const amt = parseFloat(c.amount) || 0;
-                return sum + amt;
-            }, 0) || 0;
-
-            const balance = tTotal - cTotal;
-
-            getEl('totalTransfers').textContent = tTotal.toLocaleString();
-            getEl('totalCollections').textContent = cTotal.toLocaleString();
-            getEl('currentBalance').textContent = balance.toLocaleString();
-            getEl('displayDebt').textContent = `${balance.toLocaleString()} ج.م`;
-
-            console.log(`📊 Stats: T=${tTotal}, C=${cTotal}, B=${balance}`);
-        } catch (e) {
-            console.error('❌ Stats Error:', e);
-        }
+            const tT = tRes.data?.reduce((s,t)=>s+(parseFloat(t.amount)||0),0)||0;
+            const cT = cRes.data?.reduce((s,c)=>s+(parseFloat(c.amount)||0),0)||0;
+            const b = tT-cT;
+            getEl('totalTransfers').textContent = tT.toLocaleString();
+            getEl('totalCollections').textContent = cT.toLocaleString();
+            getEl('currentBalance').textContent = b.toLocaleString();
+            getEl('displayDebt').textContent = `${b.toLocaleString()} ج.م`;
+        } catch(e) { console.error('❌ Stats:', e); }
     }
 
-    // Load transfers
-    async function loadTransfers(merchantId) {
+    async function loadTransfers(id) {
         try {
-            const { data, error } = await db
-                .from('transfers')
-                .select('*')
-                .eq('merchant_id', merchantId)
-                .order('created_at', { ascending: false })
-                .limit(5);
-
-            if (error) throw error;
-
-            const tbody = getEl('transfersTableBody');
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = data.map((t, i) => `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td><span class="ref-code">${t.ref_number || t.reference || '—'}</span></td>
-                    <td>${formatDate(t.date || t.created_at)}</td>
-                    <td>${formatTime(t.time || t.created_at)}</td>
-                    <td>${t.type || t.transfer_type || '—'}</td>
-                    <td class="amount-negative">${(parseFloat(t.amount) || 0).toLocaleString()} ج.م</td>
-                </tr>
-            `).join('');
-        } catch (e) {
-            console.error('❌ Transfers Error:', e);
-        }
+            const { data, error } = await db.from('transfers').select('*').eq('merchant_id',id).order('created_at',{ascending:false}).limit(5);
+            if(error) throw error;
+            const tb=getEl('transfersTableBody');
+            if(!data?.length){tb.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>';return}
+            tb.innerHTML=data.map((t,i)=>`<tr><td>${i+1}</td><td><span class="ref-code">${t.ref_number||t.reference||'—'}</span></td><td>${fmtDate(t.date||t.created_at)}</td><td>${fmtTime(t.time||t.created_at)}</td><td>${t.type||t.transfer_type||'—'}</td><td class="amount-negative">${(parseFloat(t.amount)||0).toLocaleString()} ج.م</td></tr>`).join('');
+        }catch(e){console.error('❌ Transfers:',e)}
     }
 
-    // Load collections
-    async function loadCollections(merchantId) {
+    async function loadCollections(id) {
         try {
-            const { data, error } = await db
-                .from('collections')
-                .select('*')
-                .eq('merchant_id', merchantId)
-                .order('created_at', { ascending: false })
-                .limit(5);
-
-            if (error) throw error;
-
-            const tbody = getEl('collectionsTableBody');
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = data.map((c, i) => `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td><span class="ref-code">${c.ref_number || c.reference || '—'}</span></td>
-                    <td>${formatDate(c.date || c.created_at)}</td>
-                    <td>${formatTime(c.time || c.created_at)}</td>
-                    <td class="amount-positive">${(parseFloat(c.amount) || 0).toLocaleString()} ج.م</td>
-                    <td class="amount-negative">${(parseFloat(c.remaining) || parseFloat(c.balance) || 0).toLocaleString()} ج.م</td>
-                </tr>
-            `).join('');
-        } catch (e) {
-            console.error('❌ Collections Error:', e);
-        }
+            const { data, error } = await db.from('collections').select('*').eq('merchant_id',id).order('created_at',{ascending:false}).limit(5);
+            if(error) throw error;
+            const tb=getEl('collectionsTableBody');
+            if(!data?.length){tb.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>';return}
+            tb.innerHTML=data.map((c,i)=>`<tr><td>${i+1}</td><td><span class="ref-code">${c.ref_number||c.reference||'—'}</span></td><td>${fmtDate(c.date||c.created_at)}</td><td>${fmtTime(c.time||c.created_at)}</td><td class="amount-positive">${(parseFloat(c.amount)||0).toLocaleString()} ج.م</td><td class="amount-negative">${(parseFloat(c.remaining)||parseFloat(c.balance)||0).toLocaleString()} ج.م</td></tr>`).join('');
+        }catch(e){console.error('❌ Collections:',e)}
     }
 
-    // Load requests
-    async function loadRequests(merchantId) {
+    async function loadRequests(id) {
         try {
-            const { data, error } = await db
-                .from('requests')
-                .select('*')
-                .eq('merchant_id', merchantId)
-                .order('created_at', { ascending: false })
-                .limit(15);
-
-            if (error) throw error;
-
-            const container = getEl('requestsList');
-
-            if (!data || data.length === 0) {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>';
-                return;
-            }
-
-            container.innerHTML = data.map(r => {
-                const statusClass = getStatusClass(r.status);
-                return `
-                    <div class="request-item ${statusClass}">
-                        <div class="request-header">
-                            <span class="request-ref">#${r.request_number || r.ref || '—'}</span>
-                            <span class="badge badge-${statusClass}">${r.status || '—'}</span>
-                        </div>
-                        <div class="request-grid">
-                            <div>
-                                <div class="detail-label">التاريخ</div>
-                                <div class="detail-value">${formatDate(r.date || r.created_at)}</div>
-                            </div>
-                            <div>
-                                <div class="detail-label">نوع الطلب</div>
-                                <div class="detail-value">${r.type || r.request_type || '—'}</div>
-                            </div>
-                            <div>
-                                <div class="detail-label">المبلغ</div>
-                                <div class="detail-value amount">${(parseFloat(r.amount) || 0).toLocaleString()} ج.م</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+            const { data, error } = await db.from('requests').select('*').eq('merchant_id',id).order('created_at',{ascending:false}).limit(15);
+            if(error) throw error;
+            const c=getEl('requestsList');
+            if(!data?.length){c.innerHTML='<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>';return}
+            c.innerHTML=data.map(r=>{
+                const sc=statusClass(r.status);
+                return`<div class="request-item ${sc}"><div class="request-header"><span class="request-ref">#${r.request_number||r.ref||'—'}</span><span class="badge badge-${sc}">${r.status||'—'}</span></div><div class="request-grid"><div><div class="detail-label">التاريخ</div><div class="detail-value">${fmtDate(r.date||r.created_at)}</div></div><div><div class="detail-label">نوع الطلب</div><div class="detail-value">${r.type||r.request_type||'—'}</div></div><div><div class="detail-label">المبلغ</div><div class="detail-value amount">${(parseFloat(r.amount)||0).toLocaleString()} ج.م</div></div></div></div>`;
             }).join('');
-        } catch (e) {
-            console.error('❌ Requests Error:', e);
-        }
+        }catch(e){console.error('❌ Requests:',e)}
     }
 
-    // Format date
-    function formatDate(dateStr) {
-        if (!dateStr) return '—';
-        try {
-            const date = new Date(dateStr);
-            if (isNaN(date.getTime())) return dateStr;
-            return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-        } catch (e) {
-            return String(dateStr);
-        }
-    }
+    function fmtDate(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'})}catch(e){return d}}
+    function fmtTime(t){if(!t)return'—';try{const d=new Date(t);if(!isNaN(d.getTime()))return d.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit',hour12:true});if(typeof t==='string'&&t.includes(':')){const[h,m]=t.split(':');const ap=parseInt(h)>=12?'م':'ص';return`${parseInt(h)>12?parseInt(h)-12:(parseInt(h)===0?12:parseInt(h))}:${m} ${ap}`}return t}catch(e){return t}}
+    function statusClass(s){if(!s)return'pending';const st=String(s).toLowerCase();if(st.includes('pending')||st.includes('معلق'))return'pending';if(st.includes('completed')||st.includes('done')||st.includes('مكتمل'))return'completed';if(st.includes('cancelled')||st.includes('canceled')||st.includes('ملغي'))return'cancelled';return'pending'}
 
-    // Format time
-    function formatTime(timeStr) {
-        if (!timeStr) return '—';
-        try {
-            const date = new Date(timeStr);
-            if (!isNaN(date.getTime())) {
-                return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true });
-            }
-            if (typeof timeStr === 'string' && timeStr.includes(':')) {
-                const parts = timeStr.split(':');
-                const h = parseInt(parts[0]) || 0;
-                const m = parts[1] || '00';
-                const period = h >= 12 ? 'م' : 'ص';
-                const displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-                return `${displayH}:${m} ${period}`;
-            }
-            return String(timeStr);
-        } catch (e) {
-            return String(timeStr);
-        }
-    }
+    function openRequestModal(){if(!currentMerchant){showToast('يجب البحث عن الحساب أولاً','warning');Sound.error();return}getEl('requestModal').classList.add('show');Sound.click()}
+    function closeRequestModal(){getEl('requestModal').classList.remove('show');getEl('requestType').value='';getEl('requestAmount').value='';getEl('requestNotes').value=''}
 
-    // Get status class
-    function getStatusClass(status) {
-        if (!status) return 'pending';
-        const s = String(status).toLowerCase();
-        if (s.includes('pending') || s.includes('معلق')) return 'pending';
-        if (s.includes('completed') || s.includes('done') || s.includes('مكتمل')) return 'completed';
-        if (s.includes('cancelled') || s.includes('canceled') || s.includes('ملغي')) return 'cancelled';
-        return 'pending';
-    }
+    async function submitRequest(){
+        if(!currentMerchant){showToast('خطأ: لا يوجد تاجر محدد','error');Sound.error();return}
+        const type=getEl('requestType').value,amount=parseFloat(getEl('requestAmount').value),notes=getEl('requestNotes').value.trim();
+        if(!type){showToast('يرجى اختيار نوع الطلب','error');Sound.error();return}
+        if(!amount||amount<=0){showToast('يرجى إدخال مبلغ صحيح','error');Sound.error();return}
 
-    // Open request modal
-    function openRequestModal() {
-        if (!currentMerchant) {
-            showToast('يجب البحث عن الحساب أولاً', 'warning');
-            return;
-        }
-        getEl('requestModal').classList.add('show');
-    }
+        const ref=`REQ-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${Math.floor(Math.random()*90000)+10000}`;
+        const req={request_number:ref,date:new Date().toISOString().split('T')[0],time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false}),created_at:new Date().toISOString(),merchant_id:currentMerchant.id,merchant_name:currentMerchant.name||currentMerchant['اسم']||'',activity:currentMerchant.activity||currentMerchant['نشاط']||'',type:type,amount:amount,notes:notes||null,status:'معلق'};
 
-    // Close request modal
-    function closeRequestModal() {
-        getEl('requestModal').classList.remove('show');
-        getEl('requestType').value = '';
-        getEl('requestAmount').value = '';
-        getEl('requestNotes').value = '';
-    }
+        showToast('جاري إرسال الطلب...','info');
+        Sound.click();
 
-    // Submit request
-    async function submitRequest() {
-        if (!currentMerchant) {
-            showToast('خطأ: لا يوجد تاجر محدد', 'error');
-            return;
-        }
-
-        const type = getEl('requestType').value;
-        const amount = parseFloat(getEl('requestAmount').value);
-        const notes = getEl('requestNotes').value.trim();
-
-        if (!type) {
-            showToast('يرجى اختيار نوع الطلب', 'error');
-            return;
-        }
-
-        if (!amount || amount <= 0) {
-            showToast('يرجى إدخال مبلغ صحيح', 'error');
-            return;
-        }
-
-        const refNum = `REQ-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(Math.random() * 90000) + 10000}`;
-
-        const requestData = {
-            request_number: refNum,
-            date: new Date().toISOString().split('T')[0],
-            time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }),
-            created_at: new Date().toISOString(),
-            merchant_id: currentMerchant.id,
-            merchant_name: currentMerchant.name || currentMerchant['اسم'] || '',
-            activity: currentMerchant.activity || currentMerchant['نشاط'] || '',
-            type: type,
-            amount: amount,
-            notes: notes || null,
-            status: 'معلق'
-        };
-
-        showToast('جاري إرسال الطلب...', 'info');
-
-        try {
-            const response = await fetch(CONFIG.googleScriptUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
-            });
-
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-            let result = null;
-            try { result = await response.json(); } catch (e) { result = { success: true }; }
-
+        try{
+            const res=await fetch(CONFIG.googleScriptUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req)});
+            if(!res.ok)throw new Error(`HTTP ${res.status}`);
             closeRequestModal();
-            getEl('successRefNumber').textContent = result?.request_number || refNum;
+            getEl('successRefNumber').textContent=ref;
             getEl('successModal').classList.add('show');
-
-            if (currentMerchant) await loadRequests(currentMerchant.id);
-
-            showToast('تم إرسال الطلب بنجاح! 🎉', 'success');
-        } catch (e) {
-            console.error('❌ Submit Error:', e);
-            showToast('تعذر إرسال الطلب، حاول مرة أخرى', 'error');
+            Sound.success();
+            if(currentMerchant)await loadRequests(currentMerchant.id);
+        }catch(e){
+            console.error('❌ Submit:',e);
+            showToast('تعذر إرسال الطلب','error');
+            Sound.error();
         }
     }
 
-    // Close success modal
-    function closeSuccessAndNew() {
-        getEl('successModal').classList.remove('show');
-        setTimeout(() => openRequestModal(), 300);
-    }
+    function closeSuccessAndNew(){getEl('successModal').classList.remove('show');setTimeout(()=>openRequestModal(),300)}
 
-    // Refresh data
-    async function refreshData() {
-        if (!currentMerchant) {
-            showToast('لا توجد بيانات لتحديثها', 'warning');
-            return;
-        }
-        showToast('جاري التحديث...', 'info');
+    async function refreshData(){
+        if(!currentMerchant){showToast('لا توجد بيانات لتحديثها','warning');return}
+        showToast('جاري التحديث...','info');
+        Sound.click();
         await renderDashboard(currentMerchant);
-        showToast('تم التحديث بنجاح ✅', 'success');
+        showToast('تم التحديث بنجاح ✅','success');
     }
 
-    // Scroll to info
-    function scrollToInfo() {
-        const card = getEl('merchantInfoCard');
-        if (card) {
-            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
+    function scrollToInfo(){const c=getEl('merchantInfoCard');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})}
 
-    // Toggle debug panel
-    function toggleDebug() {
-        const panel = getEl('debugPanel');
-        panel.classList.toggle('visible');
-
-        if (panel.classList.contains('visible') && currentMerchant) {
-            updateDebugInfo({
-                merchant: currentMerchant,
-                accountNumber: currentAccountNumber,
-                timestamp: new Date().toISOString()
-            });
+    function toggleDebug(){
+        const p=getEl('debugPanel');p.classList.toggle('visible');
+        Sound.click();
+        if(p.classList.contains('visible')&&currentMerchant){
+            updateDebugInfo({merchant:currentMerchant,account:currentAccountNumber,ts:new Date().toISOString()})
         }
     }
 
-    // Update debug info
-    function updateDebugInfo(data) {
-        const panel = getEl('debugPanel');
-        
-        let info = `╔══════════════════════════════════════╗\n`;
-        info += `║   AXENTRO PORTAL v7.0 - DEBUG INFO   ║\n`;
-        info += `╠══════════════════════════════════════╝\n\n`;
-        info += `🔗 CONNECTION:\n`;
-        info += `   • URL: ${CONFIG.supabaseUrl}\n`;
-        info += `   • Status: ${db ? '✅ Ready' : '❌ Not Ready'}\n\n`;
-        
-        if (data.merchant) {
-            info += `👤 CURRENT MERCHANT:\n`;
-            info += `   • ID: ${data.merchant.id}\n`;
-            info += `   • Account: ${data.accountNumber || '—'}\n`;
-            info += `   • Keys: ${Object.keys(data.merchant).join(', ')}\n\n`;
+    function updateDebugInfo(data){
+        const p=getEl('debugPanel');
+        let info=`╔══════════════════════════════════════╗\n`;
+        info+=`║   AXENTRO PORTAL v7.1 - DEBUG PANEL   ║\n`;
+        info+=`╠══════════════════════════════════════╝\n\n`;
+        info+=`🔗 CONNECTION:\n   URL: ${CONFIG.supabaseUrl}\n   DB: ${db?'✅ Ready':'❌ Not Ready'}\n\n`;
+        if(data.merchant){
+            info+=`👤 MERCHANT:\n   ID: ${data.merchant.id}\n   Account: ${data.account||'—'}\n   Fields: ${Object.keys(data.merchant).join(', ')}\n\n`;
         }
-
-        if (data.totalFetched !== undefined) {
-            info += `📊 SEARCH RESULTS:\n`;
-            info += `   • Total records fetched: ${data.totalFetched}\n`;
-            info += `   • Searched for: "${data.searchTerm}"\n`;
-            if (data.sampleData?.length) {
-                info += `   • Available columns: ${data.sampleData.join(', ')}\n`;
-            }
-            info += `\n`;
+        if(data.totalFetched!==undefined){
+            info+=`📊 SEARCH:\n   Records: ${data.totalFetched}\n   Searched: "${data.searchTerm}"\n   Columns: ${(data.columns||[]).join(', ')||'—'}\n\n`;
         }
-
-        if (data.error) {
-            info += `❌ ERROR:\n`;
-            info += `   ${data.error}\n`;
-            if (data.hint) {
-                info += `   💡 Hint: ${data.hint}\n`;
-            }
-            info += `\n`;
-        }
-
-        if (data.message) {
-            info += `📝 MESSAGE:\n`;
-            info += `   ${data.message}\n\n`;
-        }
-
-        if (data.suggestion) {
-            info += `💡 SUGGESTION:\n`;
-            info += `   ${data.suggestion}\n\n`;
-        }
-
-        info += `⏰ Time: ${data.timestamp || new Date().toISOString()}`;
-
-        panel.textContent = info;
+        if(data.error){info+=`❌ ERROR: ${data.error}\n\n`}
+        info+=`⏰ Time: ${data.ts||new Date().toISOString()}`;
+        p.textContent=info;
     }
 
-    // Initialize app
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('🚀 Axentro Portal v7.0 Starting...');
+    // Initialize
+    document.addEventListener('DOMContentLoaded',()=>{
+        console.log('🚀 Axentro Portal v7.1 Starting...');
         runBootSequence();
     });
 
-    // Close nav on escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeMobileNav();
-            closeRequestModal();
-            const successModal = getEl('successModal');
-            if (successModal.classList.contains('show')) {
-                successModal.classList.remove('show');
-            }
-        }
+    document.addEventListener('keydown',(e)=>{
+        if(e.key==='Escape'){closeMobileNav();closeRequestModal();const sm=getEl('successModal');if(sm.classList.contains('show'))sm.classList.remove('show')}
     });
     </script>
 </body>
