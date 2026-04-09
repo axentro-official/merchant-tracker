@@ -1,69 +1,1951 @@
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#0a0f1e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>بوابة التاجر | Axentro OS</title>
 
-<script>
-    // ============================================
-    // AXENTRO MERCHANT PORTAL v7.0 - FIXED & ROBUST
-    // ============================================
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial' font-size='50' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== CSS RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0f1e;
+            color: #f9fafb;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ===== DESIGN TOKENS ===== */
+        :root {
+            --bg-primary: #0a0f1e;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.95);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --success: #10b981;
+            --success-light: rgba(16, 185, 129, 0.15);
+            --danger: #ef4444;
+            --danger-light: rgba(239, 68, 68, 0.15);
+            --warning: #f59e0b;
+            --warning-light: rgba(245, 158, 11, 0.15);
+            --purple: #8b5cf6;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-light: rgba(255, 255, 255, 0.04);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        /* ===== LOADING SCREEN ===== */
+        #bootScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #030712 0%, #0a0f1e 50%, #111827 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.8s ease, visibility 0.8s;
+            padding: 20px;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
+
+        #bootScreen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .boot-container {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 20px;
+            padding: clamp(24px, 5vw, 40px);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 80px rgba(59, 130, 246, 0.08);
+        }
+
+        .boot-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            justify-content: center;
+        }
+
+        .boot-logo-icon {
+            width: clamp(44px, 10vw, 52px);
+            height: clamp(44px, 10vw, 52px);
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(22px, 5vw, 26px);
+            color: white;
+            animation: pulse-glow 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 35px rgba(139, 92, 246, 0.7); }
+        }
+
+        .boot-logo-text {
+            font-size: clamp(22px, 5vw, 28px);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-light), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        .boot-subtitle {
+            color: var(--text-muted);
+            font-size: clamp(11px, 2.5vw, 13px);
+            margin-bottom: clamp(24px, 5vw, 32px);
+            text-align: center;
+        }
+
+        .boot-status {
+            color: var(--primary-light);
+            font-size: clamp(12px, 2.8vw, 14px);
+            font-weight: 600;
+            margin-bottom: clamp(14px, 3vw, 18px);
+            min-height: 22px;
+            text-align: center;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 10px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--purple), var(--success));
+            transition: width 0.3s ease-out;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .boot-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: clamp(12px, 3vw, 14px);
+            font-size: clamp(10px, 2.3vw, 12px);
+            color: var(--text-muted);
+        }
+
+        .boot-percent {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        /* ===== MAIN APPLICATION ===== */
+        #mainApp {
+            display: none;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #mainApp.visible {
+            display: block;
+            opacity: 1;
+        }
+
+        /* ===== MOBILE-FIRST LAYOUT ===== */
+        .app-container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: clamp(12px, 3vw, 24px);
+        }
+
+        /* Top Header Bar - MOBILE FIRST */
+        .top-bar {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: clamp(14px, 3vw, 20px);
+            margin-bottom: clamp(16px, 4vw, 28px);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .top-bar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .brand-icon {
+            width: clamp(38px, 9vw, 46px);
+            height: clamp(38px, 9vw, 46px);
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(17px, 4vw, 21px);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .brand-text h1 {
+            font-size: clamp(18px, 4.5vw, 24px);
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .brand-text p {
+            font-size: clamp(10px, 2.3vw, 13px);
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .menu-toggle-btn {
+            width: clamp(38px, 9vw, 42px);
+            height: clamp(38px, 9vw, 42px);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(16px, 4vw, 18px);
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .menu-toggle-btn:hover,
+        .menu-toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .action-buttons-row {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .icon-btn-sm {
+            width: clamp(34px, 8vw, 38px);
+            height: clamp(34px, 8vw, 38px);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(14px, 3.5vw, 16px);
+            transition: all 0.25s ease;
+        }
+
+        .icon-btn-sm:hover {
+            background: var(--bg-secondary);
+            color: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        /* Mobile Navigation Drawer */
+        .mobile-nav-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-nav-overlay.show {
+            display: block;
+            opacity: 1;
+        }
+
+        .mobile-nav-drawer {
+            position: fixed;
+            top: 0;
+            right: -280px;
+            width: 280px;
+            max-width: 85vw;
+            height: 100vh;
+            height: -webkit-fill-available;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            z-index: 999;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .mobile-nav-drawer.open {
+            right: 0;
+        }
+
+        .nav-drawer-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-drawer-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-drawer-close {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .nav-drawer-body {
+            padding: 16px 12px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            padding: 8px 12px 10px;
+        }
+
+        .nav-item-mobile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            border: 1px solid transparent;
+        }
+
+        .nav-item-mobile:hover,
+        .nav-item-mobile.active {
+            background: var(--bg-glass);
+            color: var(--primary-light);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-item-mobile i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .nav-badge-mobile {
+            margin-right: auto;
+            background: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .nav-drawer-footer {
+            padding: 16px 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .status-indicator-mobile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--success-light);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-dot-mobile {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: status-pulse 2s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes status-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.15); }
+        }
+
+        .status-text-mobile {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        /* Login Section - FULLY RESPONSIVE */
+        #loginSection {
+            max-width: 520px;
+            margin: clamp(30px, 8vw, 80px) auto;
+            padding: 0 8px;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: clamp(28px, 6vw, 48px) clamp(20px, 5vw, 40px);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 150px;
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: clamp(24px, 5vw, 36px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-avatar {
+            width: clamp(76px, 18vw, 96px);
+            height: clamp(76px, 18vw, 96px);
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto clamp(16px, 4vw, 24px);
+            font-size: clamp(32px, 8vw, 40px);
+            color: white;
+            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
+            position: relative;
+            animation: float-animation 3s ease-in-out infinite;
+        }
+
+        .login-avatar::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            animation: rotate-slow 15s linear infinite;
+        }
+
+        @keyframes float-animation {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes rotate-slow {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-title {
+            font-size: clamp(22px, 5.5vw, 28px);
+            font-weight: 900;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .login-desc {
+            color: var(--text-secondary);
+            font-size: clamp(13px, 3.2vw, 15px);
+            line-height: 1.7;
+        }
+
+        /* Form Elements - TOUCH FRIENDLY */
+        .form-group {
+            margin-bottom: clamp(18px, 4vw, 24px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-input-wrapper {
+            position: relative;
+        }
+
+        .form-input-icon {
+            position: absolute;
+            left: clamp(14px, 3.5vw, 18px);
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: clamp(16px, 4vw, 18px);
+            transition: all 0.25s ease;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: clamp(15px, 4vw, 18px) 20px clamp(15px, 4vw, 18px) 48px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: 'Cairo', sans-serif;
+            font-size: clamp(14px, 3.8vw, 16px);
+            direction: rtl;
+            transition: all 0.25s ease;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: rgba(17, 24, 39, 0.95);
+        }
+
+        .form-input:focus ~ .form-input-icon {
+            color: var(--primary-light);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: clamp(20px, 5vw, 28px);
+            z-index: 1;
+            position: relative;
+        }
+
+        @media (min-width: 480px) {
+            .btn-group {
+                flex-direction: row;
+            }
+        }
+
+        .btn {
+            width: 100%;
+            padding: clamp(14px, 3.5vw, 16px) clamp(20px, 5vw, 28px);
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: 'Cairo', sans-serif;
+            font-size: clamp(14px, 3.5vw, 16px);
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (min-width: 480px) {
+            .btn {
+                flex: 1;
+                width: auto;
+            }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.45);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Dashboard Section */
+        #dashboardSection {
+            display: none;
+        }
+
+        /* Stats Grid - RESPONSIVE */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: clamp(12px, 3vw, 20px);
+            margin-bottom: clamp(20px, 5vw, 28px);
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: clamp(16px, 4vw, 24px);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--purple));
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: clamp(10px, 2.5vw, 16px);
+        }
+
+        .stat-icon {
+            width: clamp(40px, 10vw, 48px);
+            height: clamp(40px, 10vw, 48px);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(17px, 4.5vw, 20px);
+        }
+
+        .stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--primary-light); }
+        .stat-icon.red { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .stat-icon.green { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .stat-icon.purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); }
+
+        .stat-value {
+            font-size: clamp(24px, 6vw, 32px);
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: clamp(11px, 2.8vw, 13px);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Info Card - RESPONSIVE */
+        .info-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: clamp(20px, 5vw, 28px);
+            margin-bottom: clamp(20px, 5vw, 28px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary), var(--purple));
+        }
+
+        .info-card-header {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: clamp(18px, 4.5vw, 24px);
+        }
+
+        @media (min-width: 640px) {
+            .info-card-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: flex-start;
+            }
+        }
+
+        .merchant-name {
+            font-size: clamp(20px, 5vw, 24px);
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .merchant-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: clamp(11px, 2.6vw, 12px);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .meta-tag i {
+            color: var(--primary-light);
+            font-size: 10px;
+        }
+
+        .print-btn {
+            padding: 10px 18px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: clamp(12px, 3vw, 13px);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .print-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: clamp(10px, 2.5vw, 16px);
+        }
+
+        .info-item {
+            background: var(--bg-primary);
+            padding: clamp(14px, 3.5vw, 18px);
+            border-radius: var(--radius-md);
+            border-right: 3px solid var(--border-color);
+            transition: all 0.25s ease;
+        }
+
+        .info-item:hover {
+            border-right-color: var(--primary);
+        }
+
+        .info-item.highlight {
+            border-right-color: var(--warning);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .info-label {
+            font-size: clamp(10px, 2.5vw, 11px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .info-value {
+            font-size: clamp(15px, 4vw, 18px);
+            font-weight: 800;
+        }
+
+        .info-item.highlight .info-value {
+            color: var(--warning);
+            font-size: clamp(18px, 4.5vw, 24px);
+        }
+
+        /* Action Buttons Row */
+        .action-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: clamp(20px, 5vw, 28px);
+        }
+
+        @media (min-width: 480px) {
+            .action-row {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+
+        .action-btn {
+            padding: clamp(14px, 3.5vw, 16px) 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-family: 'Cairo', sans-serif;
+            font-size: clamp(13px, 3.2vw, 14px);
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .action-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-color: transparent;
+            color: white;
+        }
+
+        /* Section Card */
+        .section-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            margin-bottom: clamp(20px, 5vw, 28px);
+        }
+
+        .section-header {
+            padding: clamp(16px, 4vw, 20px) clamp(16px, 4vw, 24px);
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: clamp(14px, 3.6vw, 16px);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary-light);
+        }
+
+        /* Table - HORIZONTAL SCROLL ON MOBILE */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        .table-responsive::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .data-table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            font-size: clamp(12px, 3.2vw, 14px);
+        }
+
+        .data-table th {
+            background: rgba(255, 255, 255, 0.02);
+            padding: clamp(12px, 3vw, 14px) clamp(10px, 2.5vw, 16px);
+            text-align: right;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: clamp(10px, 2.5vw, 11px);
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: clamp(12px, 3vw, 16px) clamp(10px, 2.5vw, 16px);
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(59, 130, 246, 0.03);
+            color: var(--text-primary);
+        }
+
+        .ref-code {
+            font-family: monospace;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: clamp(11px, 2.8vw, 12px);
+            color: var(--primary-light);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .amount-positive { color: var(--success); font-weight: 700; }
+        .amount-negative { color: var(--danger); font-weight: 700; }
+
+        .empty-state {
+            text-align: center;
+            padding: clamp(36px, 8vw, 48px) clamp(16px, 4vw, 24px);
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: clamp(40px, 10vw, 56px);
+            margin-bottom: 12px;
+            opacity: 0.3;
+            display: block;
+        }
+
+        /* Requests List */
+        .requests-list {
+            padding: clamp(14px, 3.5vw, 20px);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .request-item {
+            background: var(--bg-primary);
+            border-radius: var(--radius-md);
+            padding: clamp(16px, 4vw, 20px);
+            border-right: 4px solid var(--warning);
+            transition: all 0.25s ease;
+            border: 1px solid var(--border-light);
+        }
+
+        .request-item:hover {
+            border-color: var(--border-color);
+        }
+
+        .request-item.status-completed { border-right-color: var(--success); }
+        .request-item.status-cancelled { border-right-color: var(--danger); }
+
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .request-ref {
+            font-weight: 900;
+            color: var(--primary-light);
+            font-size: clamp(13px, 3.4vw, 15px);
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: clamp(11px, 2.8vw, 12px);
+            font-weight: 700;
+        }
+
+        .badge-pending { background: var(--warning-light); color: var(--warning); }
+        .badge-completed { background: var(--success-light); color: var(--success); }
+        .badge-cancelled { background: var(--danger-light); color: var(--danger); }
+
+        .request-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .detail-label {
+            font-size: clamp(10px, 2.5vw, 11px);
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .detail-value {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: clamp(13px, 3.4vw, 14px);
+        }
+
+        .detail-value.amount {
+            color: var(--primary-light);
+            font-size: clamp(16px, 4.2vw, 18px);
+        }
+
+        /* Modal - FULL SCREEN ON MOBILE */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: clamp(12px, 3vw, 20px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            min-height: -webkit-fill-available;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 520px;
+            max-height: calc(100vh - clamp(24px, 6vw, 40px));
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: var(--shadow-lg);
+            animation: modal-in 0.35s ease;
+        }
+
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            padding: clamp(18px, 4.5vw, 24px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .modal-title {
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            width: clamp(34px, 8vw, 38px);
+            height: clamp(34px, 8vw, 38px);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(14px, 3.6vw, 16px);
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .modal-close:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        .modal-body {
+            padding: clamp(20px, 5vw, 28px);
+        }
+
+        .modal-footer {
+            padding: clamp(16px, 4vw, 20px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+            position: sticky;
+            bottom: 0;
+        }
+
+        @media (min-width: 480px) {
+            .modal-footer {
+                flex-direction: row;
+            }
+        }
+
+        .form-select {
+            width: 100%;
+            padding: clamp(13px, 3.3vw, 14px) 16px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: 'Cairo', sans-serif;
+            font-size: clamp(13px, 3.4vw, 15px);
+            direction: rtl;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 14px center;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        /* Success Modal */
+        .modal-overlay.success-modal .modal-content {
+            text-align: center;
+            max-width: 460px;
+        }
+
+        .success-icon {
+            width: clamp(72px, 18vw, 88px);
+            height: clamp(72px, 18vw, 88px);
+            background: linear-gradient(135deg, var(--success), #34d399);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto clamp(18px, 4.5vw, 24px);
+            font-size: clamp(32px, 8vw, 38px);
+            color: white;
+            animation: success-pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 12px 40px rgba(16, 185, 129, 0.4);
+        }
+
+        @keyframes success-pop {
+            from { transform: scale(0) rotate(-180deg); }
+            to { transform: scale(1) rotate(0); }
+        }
+
+        .success-title {
+            font-size: clamp(20px, 5vw, 24px);
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        .success-subtitle {
+            color: var(--text-muted);
+            font-size: clamp(13px, 3.4vw, 15px);
+            margin-bottom: clamp(18px, 4.5vw, 24px);
+        }
+
+        .success-ref {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            padding: clamp(14px, 3.5vw, 18px) clamp(16px, 4vw, 28px);
+            border-radius: var(--radius-md);
+            font-family: monospace;
+            font-size: clamp(16px, 4.2vw, 20px);
+            font-weight: 700;
+            color: var(--primary-light);
+            margin-bottom: clamp(20px, 5vw, 28px);
+            border: 2px dashed rgba(59, 130, 246, 0.3);
+            letter-spacing: 1px;
+            word-break: break-all;
+        }
+
+        /* Toast Notifications - MOBILE OPTIMIZED */
+        #toastContainer {
+            position: fixed;
+            top: clamp(12px, 3vw, 24px);
+            left: clamp(12px, 3vw, 24px);
+            right: clamp(12px, 3vw, 24px);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: clamp(12px, 3vw, 16px) clamp(14px, 3.5vw, 20px);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow-lg);
+            animation: toast-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-right: 4px solid var(--success);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast.error { border-right-color: var(--danger); }
+        .toast.warning { border-right-color: var(--warning); }
+        .toast.info { border-right-color: var(--primary); }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast-icon {
+            width: clamp(32px, 8vw, 36px);
+            height: clamp(32px, 8vw, 36px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(14px, 3.6vw, 16px);
+            flex-shrink: 0;
+        }
+
+        .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
+        .toast.error .toast-icon { background: var(--danger-light); color: var(--danger); }
+        .toast.warning .toast-icon { background: var(--warning-light); color: var(--warning); }
+        .toast.info .toast-icon { background: rgba(59, 130, 246, 0.15); color: var(--primary-light); }
+
+        .toast-message {
+            flex: 1;
+            font-size: clamp(12px, 3.2vw, 14px);
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: clamp(16px, 4vw, 18px);
+            padding: 4px;
+            flex-shrink: 0;
+        }
+
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: var(--success);
+            animation: toast-progress 4s linear forwards;
+        }
+
+        .toast.error .toast-progress { background: var(--danger); }
+        .toast.warning .toast-progress { background: var(--warning); }
+
+        @keyframes toast-progress {
+            from { width: 100%; }
+            to { width: 0; }
+        }
+
+        /* Debug Panel */
+        #debugPanel {
+            display: none;
+            background: #0d1117;
+            color: #58a6ff;
+            padding: clamp(16px, 4vw, 24px);
+            border-radius: var(--radius-md);
+            font-family: monospace;
+            font-size: clamp(11px, 2.8vw, 12px);
+            margin-top: clamp(16px, 4vw, 24px);
+            text-align: left;
+            direction: ltr;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.6;
+            max-height: 280px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid #30363d;
+        }
+
+        #debugPanel.visible { display: block; }
+
+        /* CTA Button */
+        .cta-container {
+            text-align: center;
+            margin: clamp(24px, 6vw, 32px) 0;
+        }
+
+        .cta-container .btn {
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25%, 75% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+        }
+
+        .shake { animation: shake 0.5s ease; }
+
+        /* Print Styles */
+        @media print {
+            body * { visibility: hidden !important; }
+            #mainApp, #mainApp * { visibility: visible !important; }
+            #mainApp { 
+                position: absolute; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                padding: 20px; 
+            }
+            .mobile-nav-drawer,
+            .mobile-nav-overlay,
+            .action-row,
+            .print-btn,
+            .btn-group,
+            #toastContainer,
+            #debugPanel,
+            .top-bar,
+            .cta-container { 
+                display: none !important; 
+            }
+            .stat-card, .info-item { 
+                break-inside: avoid; 
+                box-shadow: none !important; 
+                border: 1px solid #ddd !important; 
+            }
+        }
+
+        /* Safe Area for notch phones */
+        @supports (padding: env(safe-area-inset-top)) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-right: env(safe-area-inset-right);
+                padding-left: env(safe-area-inset-left);
+            }
+
+            .mobile-nav-drawer {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Boot Screen -->
+    <div id="bootScreen">
+        <div class="boot-container">
+            <div class="boot-logo">
+                <div class="boot-logo-icon"><i class="fas fa-microchip"></i></div>
+                <div class="boot-logo-text">AXENTRO OS</div>
+            </div>
+            <div class="boot-subtitle">Merchant Runtime Environment v7.0</div>
+            <div class="boot-status" id="bootStatus">جاري تهيئة النظام...</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="bootProgress"></div>
+            </div>
+            <div class="boot-meta">
+                <span id="bootPhase">تشغيل النظام</span>
+                <span class="boot-percent" id="bootPercent">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Mobile Navigation Overlay & Drawer -->
+    <div class="mobile-nav-overlay" id="navOverlay" onclick="closeMobileNav()"></div>
+    <nav class="mobile-nav-drawer" id="navDrawer">
+        <div class="nav-drawer-header">
+            <div class="nav-drawer-brand">
+                <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--primary),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;">
+                    <i class="fas fa-store"></i>
+                </div>
+                <span style="font-weight:800;font-size:15px;">بوابة التاجر</span>
+            </div>
+            <button class="nav-drawer-close" onclick="closeMobileNav()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="nav-drawer-body">
+            <div class="nav-section-title">القائمة الرئيسية</div>
+            <div class="nav-item-mobile active" onclick="closeMobileNav()">
+                <i class="fas fa-home"></i>
+                <span>لوحة التحكم</span>
+            </div>
+            <div class="nav-item-mobile" onclick="closeMobileNav()">
+                <i class="fas fa-user"></i>
+                <span>الملف الشخصي</span>
+            </div>
+            <div class="nav-item-mobile" onclick="closeMobileNav()">
+                <i class="fas fa-desktop"></i>
+                <span>المكن المسجلة</span>
+                <span class="nav-badge-mobile" id="machinesCountBadge">0</span>
+            </div>
+
+            <div class="nav-section-title" style="margin-top:16px;">العمليات المالية</div>
+            <div class="nav-item-mobile" onclick="closeMobileNav()">
+                <i class="fas fa-arrow-up"></i>
+                <span>التحويلات</span>
+            </div>
+            <div class="nav-item-mobile" onclick="closeMobileNav()">
+                <i class="fas fa-arrow-down"></i>
+                <span>التحصيلات</span>
+            </div>
+            <div class="nav-item-mobile" onclick="openRequestModal(); closeMobileNav();">
+                <i class="fas fa-plus-circle"></i>
+                <span>طلب جديد</span>
+            </div>
+        </div>
+
+        <div class="nav-drawer-footer">
+            <div class="status-indicator-mobile">
+                <div class="status-dot-mobile"></div>
+                <span class="status-text-mobile">متصل ✓</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application -->
+    <div id="mainApp">
+        <div class="app-container">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-header">
+                    <div class="brand-section">
+                        <div class="brand-icon"><i class="fas fa-store"></i></div>
+                        <div class="brand-text">
+                            <h1>بوابة التاجر</h1>
+                            <p>Axentro Systems</p>
+                        </div>
+                    </div>
+                    <button class="menu-toggle-btn" id="menuToggleBtn" onclick="toggleMobileNav()" aria-label="القائمة">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+                
+                <div class="action-buttons-row">
+                    <button class="icon-btn-sm" onclick="refreshData()" title="تحديث">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="icon-btn-sm" onclick="window.print()" title="طباعة">
+                        <i class="fas fa-print"></i>
+                    </button>
+                    <button class="icon-btn-sm" onclick="toggleDebug()" title="تصحيح">
+                        <i class="fas fa-bug"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Login Section -->
+            <section id="loginSection">
+                <div class="login-card">
+                    <div class="login-header">
+                        <div class="login-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <h2 class="login-title">مرحباً بك في بوابة Axentro</h2>
+                        <p class="login-desc">أدخل رقم الحساب أو رقم التاجر لعرض بياناتك الكاملة والتحكم في حسابك</p>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-input-wrapper">
+                            <input type="text" id="searchInput" class="form-input" placeholder="أدخل رقم الحساب أو رقم التاجر *" autocomplete="off" onkeypress="handleKeyPress(event)">
+                            <i class="fas fa-id-card form-input-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="searchMerchant()">
+                            <i class="fas fa-search"></i>
+                            عرض بياناتي
+                        </button>
+                        <button class="btn btn-outline" onclick="toggleDebug()">
+                            <i class="fas fa-bug"></i>
+                            تصحيح
+                        </button>
+                    </div>
+
+                    <div id="debugPanel"></div>
+                </div>
+            </section>
+
+            <!-- Dashboard Section -->
+            <section id="dashboardSection">
+                <!-- Merchant Info Card -->
+                <div class="info-card" id="merchantInfoCard" style="display:none;">
+                    <div class="info-card-header">
+                        <div>
+                            <h2 class="merchant-name" id="displayName">—</h2>
+                            <div class="merchant-meta">
+                                <span class="meta-tag"><i class="fas fa-hashtag"></i><span id="displayNumber">—</span></span>
+                                <span class="meta-tag"><i class="fas fa-briefcase"></i><span id="displayActivity">—</span></span>
+                                <span class="meta-tag"><i class="fas fa-phone"></i><span id="displayPhone">—</span></span>
+                            </div>
+                        </div>
+                        <button class="print-btn" onclick="window.print()">
+                            <i class="fas fa-print"></i>
+                            طباعة
+                        </button>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">المنطقة</div>
+                            <div class="info-value" id="displayArea">—</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">العنوان</div>
+                            <div class="info-value" id="displayAddress">—</div>
+                        </div>
+                        <div class="info-item highlight">
+                            <div class="info-label">رصيد مستحق</div>
+                            <div class="info-value" id="displayDebt">0 ج.م</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">حالة الحساب</div>
+                            <div class="info-value" id="displayStatus">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon blue"><i class="fas fa-arrow-up"></i></div>
+                        </div>
+                        <div class="stat-value" id="totalTransfers">0</div>
+                        <div class="stat-label">إجمالي التحويلات (ج.م)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon green"><i class="fas fa-arrow-down"></i></div>
+                        </div>
+                        <div class="stat-value" id="totalCollections">0</div>
+                        <div class="stat-label">إجمالي التحصيلات (ج.م)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon red"><i class="fas fa-balance-scale"></i></div>
+                        </div>
+                        <div class="stat-value" id="currentBalance">0</div>
+                        <div class="stat-label">الرصيد الحالي (ج.م)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon purple"><i class="fas fa-desktop"></i></div>
+                        </div>
+                        <div class="stat-value" id="machinesCount">0</div>
+                        <div class="stat-label">المكن المسجلة</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-row">
+                    <button class="action-btn primary" onclick="openRequestModal()">
+                        <i class="fas fa-plus-circle"></i>
+                        تقديم طلب جديد
+                    </button>
+                    <button class="action-btn" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i>
+                        تحديث البيانات
+                    </button>
+                    <button class="action-btn" onclick="scrollToInfo()">
+                        <i class="fas fa-user"></i>
+                        بياناتي
+                    </button>
+                </div>
+
+                <!-- Transfers Table -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3 class="section-title"><i class="fas fa-arrow-up"></i> آخر 5 تحويلات</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الرقم المرجعي</th>
+                                    <th>التاريخ</th>
+                                    <th>الوقت</th>
+                                    <th>النوع</th>
+                                    <th>القيمة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transfersTableBody">
+                                <tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Collections Table -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3 class="section-title"><i class="fas fa-arrow-down"></i> آخر 5 تحصيلات</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الرقم المرجعي</th>
+                                    <th>التاريخ</th>
+                                    <th>الوقت</th>
+                                    <th>القيمة</th>
+                                    <th>المتبقي</th>
+                                </tr>
+                            </thead>
+                            <tbody id="collectionsTableBody">
+                                <tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Requests History -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3 class="section-title"><i class="fas fa-file-alt"></i> طلباتي السابقة</h3>
+                    </div>
+                    <div class="requests-list" id="requestsList">
+                        <div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <div class="cta-container">
+                    <button class="btn btn-primary" onclick="openRequestModal()">
+                        <i class="fas fa-paper-plane"></i>
+                        تقديم طلب جديد
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Request Modal -->
+    <div class="modal-overlay" id="requestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-paper-plane"></i> تقديم طلب جديد</h3>
+                <button class="modal-close" onclick="closeRequestModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">نوع الطلب *</label>
+                    <select class="form-select" id="requestType">
+                        <option value="">-- اختر نوع الطلب --</option>
+                        <option value="كاش على المكنة">💵 كاش على المكنة</option>
+                        <option value="رصيد خدمات">🔄 رصيد خدمات</option>
+                        <option value="تحويل">➡️ تحويل</option>
+                        <option value="تحصيل">⬅️ تحصيل</option>
+                        <option value="صيانة">🔧 صيانة</option>
+                        <option value="أخرى">📋 أخرى</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">اختر المكنة (اختياري)</label>
+                    <select class="form-select" id="requestMachine">
+                        <option value="">-- جميع المكن --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">المبلغ المطلوب (جنيه) *</label>
+                    <input type="number" class="form-input" id="requestAmount" placeholder="مثال: 5000" min="1" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">ملاحظات (اختياري)</label>
+                    <textarea class="form-input" id="requestNotes" placeholder="أي تفاصيل إضافية..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="submitRequest()" style="flex:1;"><i class="fas fa-paper-plane"></i> إرسال الطلب</button>
+                <button class="btn btn-outline" onclick="closeRequestModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay success-modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-body" style="padding: clamp(32px, 8vw, 48px) clamp(24px, 6vw, 36px);">
+                <div class="success-icon"><i class="fas fa-check"></i></div>
+                <h3 class="success-title">تم الإرسال بنجاح! 🎉</h3>
+                <p class="success-subtitle">تم تسجيل طلبك وسيتم مراجعته قريباً</p>
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">رقم المرجع:</p>
+                <div class="success-ref" id="successRefNumber">REQ-XX-XXXXX</div>
+                <br>
+                <button class="btn btn-primary" onclick="closeSuccessAndNew()" style="width:100%;max-width:280px;margin:0 auto;">
+                    <i class="fas fa-plus"></i>
+                    تقديم طلب آخر
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Main Application Script -->
+    <script>
+    /**
+     * ============================================
+     * AXENTRO MERCHANT PORTAL v7.0
+     * ✅ FULLY RESPONSIVE - MOBILE COMPATIBLE
+     * ✅ DATABASE-COMPATIBLE SEARCH
+     * ============================================
+     */
+
+    // Configuration
     const CONFIG = {
         supabaseUrl: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
         supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
         googleScriptUrl: 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec'
     };
 
-    const supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+    // Database client (initialized once)
+    let db = null;
 
+    // State
     let currentMerchant = null;
     let currentAccountNumber = null;
 
-    // Helper: قراءة حقل من merchant بمحاولة أسماء متعددة
-    function getMerchantField(merchant, possibleNames, defaultValue = '—') {
-        if (!merchant) return defaultValue;
-        for (let name of possibleNames) {
-            if (merchant[name] !== undefined && merchant[name] !== null && merchant[name] !== '')
-                return merchant[name];
+    // DOM Helper
+    function getEl(id) {
+        return document.getElementById(id);
+    }
+
+    // Initialize database safely
+    function initDatabase() {
+        try {
+            if (window.supabase && !db) {
+                db = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+                console.log('✅ Database initialized');
+            }
+        } catch (e) {
+            console.error('❌ DB Init Error:', e);
         }
-        return defaultValue;
+        return db;
     }
 
-    // Helper: الحصول على ID التاجر (محاولة id, merchant_id, رقم_التاجر)
-    function getMerchantId(merchant) {
-        return getMerchantField(merchant, ['id', 'merchant_id', 'رقم_التاجر', 'merchantId'], null);
-    }
-
-    // Toast notifications (نفس الكود الأصلي)
-    function $(id) { return document.getElementById(id); }
-
+    // Toast notification system
     function showToast(message, type = 'success') {
-        const container = $('toastContainer');
-        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+        const container = getEl('toastContainer');
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle'
+        };
+
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         toast.innerHTML = `
-            <div class="toast-icon"><i class="fas ${icons[type]}"></i></div>
+            <div class="toast-icon"><i class="fas ${icons[type] || icons.success}"></i></div>
             <span class="toast-message">${message}</span>
             <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
             <div class="toast-progress"></div>
         `;
         container.appendChild(toast);
-        setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4500);
+
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 4500);
     }
 
-    // Boot sequence (بدون تغيير كبير)
+    // Boot sequence
     async function runBootSequence() {
-        const progress = $('bootProgress');
-        const status = $('bootStatus');
-        const phase = $('bootPhase');
-        const percent = $('bootPercent');
+        const progress = getEl('bootProgress');
+        const status = getEl('bootStatus');
+        const phase = getEl('bootPhase');
+        const percent = getEl('bootPercent');
+
         const steps = [
-            { p: 15, s: 'تهيئة النظام الأساسي...', ph: 'System Core' },
+            { p: 15, s: 'تهيئة النظام...', ph: 'System Core' },
             { p: 35, s: 'تحميل الوحدات...', ph: 'Modules' },
             { p: 55, s: 'الاتصال بقاعدة البيانات...', ph: 'Database' },
             { p: 75, s: 'التحقق من الأمان...', ph: 'Security' },
             { p: 90, s: 'تحضير واجهة المستخدم...', ph: 'Interface' },
             { p: 100, s: 'جاهز!', ph: 'Complete' }
         ];
+
         let current = 0;
+
         for (const step of steps) {
             while (current < step.p) {
                 current += Math.min(3, step.p - current);
@@ -75,270 +1957,649 @@
             phase.textContent = step.ph;
             await new Promise(r => setTimeout(r, 200));
         }
+
         await new Promise(r => setTimeout(r, 400));
-        $('bootScreen').classList.add('hidden');
-        $('mainApp').classList.add('visible');
+
+        // Initialize database AFTER boot
+        initDatabase();
+
+        // Show app
+        getEl('bootScreen').classList.add('hidden');
+        getEl('mainApp').classList.add('visible');
+
+        // Load saved account
         const saved = localStorage.getItem('ax_merchant_account');
-        if (saved) $('searchInput').value = saved;
+        if (saved) {
+            getEl('searchInput').value = saved;
+        }
     }
 
-    // دالة البحث الرئيسية (مُحسّنة)
+    // Handle Enter key
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            searchMerchant();
+        }
+    }
+
+    // ========== MOBILE NAVIGATION ==========
+    function toggleMobileNav() {
+        const drawer = getEl('navDrawer');
+        const overlay = getEl('navOverlay');
+        const btn = getEl('menuToggleBtn');
+
+        drawer.classList.toggle('open');
+        overlay.classList.toggle('show');
+        btn.classList.toggle('active');
+
+        // Prevent body scroll when menu open
+        document.body.style.overflow = drawer.classList.contains('open') ? 'hidden' : '';
+    }
+
+    function closeMobileNav() {
+        const drawer = getEl('navDrawer');
+        const overlay = getEl('navOverlay');
+        const btn = getEl('menuToggleBtn');
+
+        drawer.classList.remove('open');
+        overlay.classList.remove('show');
+        btn.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // ========== MAIN SEARCH FUNCTION - FIXED FOR YOUR DATABASE ==========
     async function searchMerchant(retryCount = 0) {
-        const searchTerm = $('searchInput').value.trim();
+        const searchTerm = getEl('searchInput').value.trim();
+
         if (!searchTerm) {
             showToast('يرجى إدخال رقم الحساب أو رقم التاجر', 'error');
-            $('searchInput').classList.add('shake');
-            setTimeout(() => $('searchInput').classList.remove('shake'), 500);
+            getEl('searchInput').classList.add('shake');
+            setTimeout(() => getEl('searchInput').classList.remove('shake'), 500);
             return;
         }
 
+        // Ensure database is ready
+        if (!db) {
+            initDatabase();
+            if (!db) {
+                showToast('قاعدة البيانات غير جاهزة', 'error');
+                return;
+            }
+        }
+
         showToast('جاري البحث عن البيانات...', 'info');
-        console.log('🔍 Searching for:', searchTerm);
 
         try {
-            // محاولة 1: البحث المباشر باستخدام OR
-            let { data: merchants, error } = await supabase
+            console.log(`🔍 Searching for: "${searchTerm}" (attempt ${retryCount + 1}/3)`);
+
+            // ============================================================
+            // ✅ FIXED STRATEGY: Fetch ALL data first, then filter client-side
+            // This avoids "column does not exist" errors!
+            // ============================================================
+            
+            const { data: allMerchants, error: fetchError } = await db
                 .from('merchants')
                 .select('*')
-                .or(`رقم_التاجر.eq.${searchTerm},رقم الحساب.eq.${searchTerm},account_number.eq.${searchTerm},merchant_id.eq.${searchTerm},id.eq.${searchTerm}`)
-                .limit(10);
+                .limit(200);
 
-            if (error) throw error;
+            if (fetchError) throw fetchError;
 
-            // محاولة 2: إذا لم ينجح، نجلب كل التجار ونفلتر يدوياً (مرن أكثر)
-            if (!merchants || merchants.length === 0) {
-                console.log('🔄 Exact match failed, fetching all merchants for client-side filtering...');
-                const { data: all, error: fetchError } = await supabase.from('merchants').select('*').limit(500);
-                if (fetchError) throw fetchError;
+            console.log(`📦 Fetched ${allMerchants?.length || 0} merchants from database`);
 
-                if (all && all.length) {
-                    merchants = all.filter(m => {
-                        const term = searchTerm.toLowerCase();
-                        const fields = [
-                            m['رقم_التاجر'], m['رقم الحساب'], m['account_number'],
-                            m['merchant_id'], m['id'], m['phone'], m['رقم_الهاتف']
-                        ].map(v => String(v || '').toLowerCase());
-                        return fields.some(f => f === term || f.includes(term));
+            // Client-side filtering - checks EVERY field automatically
+            let foundMerchant = null;
+
+            if (allMerchants && allMerchants.length > 0) {
+                const searchLower = searchTerm.toLowerCase().trim();
+
+                // Log first merchant structure for debugging
+                console.log('📋 Sample merchant structure:', allMerchants[0]);
+
+                foundMerchant = allMerchants.find(m => {
+                    // Check ALL string and number fields in the merchant object
+                    const allValues = Object.values(m).map(val => {
+                        if (val === null || val === undefined) return '';
+                        return String(val).toLowerCase().trim();
                     });
-                }
+
+                    // Look for exact match OR partial match
+                    return allValues.some(val => 
+                        val === searchLower || 
+                        val.includes(searchLower) ||
+                        searchLower.includes(val)
+                    );
+                });
             }
 
-            if (!merchants || merchants.length === 0) {
-                if (retryCount < 2) {
-                    await new Promise(r => setTimeout(r, 1000));
-                    return searchMerchant(retryCount + 1);
-                }
-                showToast('❌ لم يتم العثور على تاجر بهذا الرقم', 'error');
-                updateDebugPanel({ searchTerm, message: 'Merchant not found', suggestion: 'تأكد من رقم التاجر أو جرب رقماً آخر' });
+            if (!foundMerchant && retryCount < 2) {
+                console.warn(`⚠️ Not found, retrying... (${retryCount + 1}/3)`);
+                await new Promise(r => setTimeout(r, 1000));
+                return searchMerchant(retryCount + 1);
+            }
+
+            if (!foundMerchant) {
+                showToast('لم يتم العثور على تاجر بهذا الرقم', 'error');
+                console.error('❌ Merchant not found:', searchTerm);
+
+                updateDebugInfo({
+                    searchTerm,
+                    totalFetched: allMerchants?.length || 0,
+                    sampleData: allMerchants?.[0] ? Object.keys(allMerchants[0]) : [],
+                    message: 'Merchant not found in database',
+                    suggestion: 'Check if account number exists in your Supabase merchants table'
+                });
                 return;
             }
 
-            // نجاح
-            currentMerchant = merchants[0];
+            // SUCCESS!
+            currentMerchant = foundMerchant;
             currentAccountNumber = searchTerm;
+
             localStorage.setItem('ax_merchant_account', searchTerm);
 
-            console.log('✅ Merchant loaded:', currentMerchant);
-            await renderDashboard(currentMerchant);
+            console.log('✅ Found merchant:', foundMerchant);
 
-            $('loginSection').style.display = 'none';
-            $('dashboardSection').style.display = 'block';
-            showToast(`مرحباً ${getMerchantField(currentMerchant, ['اسم_التاجر', 'اسم التاجر', 'name'])} 👋`, 'success');
+            await renderDashboard(foundMerchant);
+
+            getEl('loginSection').style.display = 'none';
+            getEl('dashboardSection').style.display = 'block';
+
+            // Try to extract name for greeting
+            const merchantName = foundMerchant.name || foundMerchant['اسم'] || foundMerchant['اسم_التاجر'] || foundMerchant['merchant_name'] || 'التاجر';
+            showToast(`مرحباً ${merchantName} 👋`, 'success');
 
         } catch (error) {
-            console.error('❌ Search error:', error);
+            console.error('❌ Search Error:', error);
+
             if (retryCount < 2) {
                 await new Promise(r => setTimeout(r, 1500));
                 return searchMerchant(retryCount + 1);
             }
-            showToast('حدث خطأ في الاتصال بقاعدة البيانات', 'error');
-            updateDebugPanel({ error: error.message, searchTerm, suggestion: 'تحقق من اتصال الإنترنت أو توفر الجداول' });
+
+            showToast('حدث خطأ في البحث، حاول مرة أخرى', 'error');
+
+            updateDebugInfo({
+                error: error.message,
+                searchTerm,
+                hint: error.message?.includes('column') ? 'Database column names may differ from expected' : 'Network or permission issue'
+            });
         }
     }
 
-    // عرض لوحة التحكم (مع حماية ضد الحقول المفقودة)
+    // Render dashboard
     async function renderDashboard(merchant) {
-        $('merchantInfoCard').style.display = 'block';
-        $('displayName').textContent = getMerchantField(merchant, ['اسم_التاجر', 'اسم التاجر', 'name']);
-        $('displayNumber').textContent = getMerchantField(merchant, ['رقم_التاجر', 'merchant_id', 'id']);
-        $('displayActivity').textContent = getMerchantField(merchant, ['اسم_النشاط', 'اسم النشاط', 'activity']);
-        $('displayPhone').textContent = getMerchantField(merchant, ['رقم_الهاتف', 'phone']);
-        $('displayArea').textContent = getMerchantField(merchant, ['المنطقة', 'area']);
-        $('displayAddress').textContent = getMerchantField(merchant, ['العنوان', 'address']);
-        $('displayStatus').textContent = getMerchantField(merchant, ['الحالة', 'status'], 'نشط');
+        // Update info card - handle both English AND Arabic field names
+        getEl('merchantInfoCard').style.display = 'block';
+        
+        // Smart field extraction (tries multiple possible field names)
+        getEl('displayName').textContent = 
+            merchant.name || 
+            merchant['اسم'] || 
+            merchant['اسم_التاجر'] || 
+            merchant['اسم التاجر'] || 
+            merchant.merchant_name || 
+            merchant.full_name ||
+            '—';
 
-        const merchantId = getMerchantId(merchant);
-        if (!merchantId) {
-            console.warn('⚠️ No merchant ID found, using fallback');
-            showToast('تعذر العثور على معرف التاجر، بعض البيانات غير متوفرة', 'warning');
-            return;
-        }
+        getEl('displayNumber').textContent = 
+            merchant.merchant_number || 
+            merchant['رقم_التاجر'] || 
+            merchant['رقم التاجر'] ||
+            merchant.account_number ||
+            merchant.id ||
+            '—';
 
+        getEl('displayActivity').textContent = 
+            merchant.activity || 
+            merchant['نشاط'] ||
+            merchant['اسم_النشاط'] || 
+            merchant['اسم النشاط'] ||
+            merchant.business_name ||
+            '—';
+
+        getEl('displayPhone').textContent = 
+            merchant.phone || 
+            merchant['هاتف'] ||
+            merchant['رقم_الهاتف'] || 
+            merchant['رقم الهاتف'] ||
+            merchant.mobile ||
+            '—';
+
+        getEl('displayArea').textContent = 
+            merchant.area || 
+            merchant['منطقة'] ||
+            merchant['المنطقة'] || 
+            merchant.region ||
+            merchant.city ||
+            '—';
+
+        getEl('displayAddress').textContent = 
+            merchant.address || 
+            merchant['عنوان'] ||
+            merchant['العنوان'] || 
+            merchant.location ||
+            '—';
+
+        getEl('displayStatus').textContent = 
+            merchant.status || 
+            merchant['حالة'] ||
+            merchant['الحالة'] || 
+            merchant.state ||
+            merchant.active !== undefined ? (merchant.active ? 'نشط' : 'غير نشط') :
+            'نشط';
+
+        // Load data in parallel
         await Promise.all([
-            loadMachines(merchantId),
-            calculateStats(merchantId),
-            loadTransfers(merchantId),
-            loadCollections(merchantId),
-            loadRequests(merchantId)
+            loadMachines(merchant.id),
+            calculateStats(merchant.id),
+            loadTransfers(merchant.id),
+            loadCollections(merchant.id),
+            loadRequests(merchant.id)
         ]);
     }
 
-    // تحميل المكنات (مع تجاهل الأخطاء)
+    // Load machines
     async function loadMachines(merchantId) {
         try {
-            const { data, error } = await supabase.from('machines').select('*').eq('merchant_id', merchantId).limit(50);
+            const { data, error } = await db
+                .from('machines')
+                .select('*')
+                .eq('merchant_id', merchantId)
+                .limit(50);
+
             if (error) throw error;
+
             const count = data?.length || 0;
-            $('machinesCount').textContent = count;
-            $('machinesCountBadge').textContent = count;
-        } catch (e) { console.error('Machines error:', e); $('machinesCount').textContent = '0'; }
+            getEl('machinesCount').textContent = count;
+            getEl('machinesCountBadge').textContent = count;
+
+            console.log(`💻 Machines: ${count}`);
+        } catch (e) {
+            console.error('❌ Machines Error:', e);
+        }
     }
 
-    // حساب الإحصائيات
+    // Calculate stats
     async function calculateStats(merchantId) {
         try {
-            const [transfersRes, collectionsRes] = await Promise.all([
-                supabase.from('transfers').select('amount').eq('merchant_id', merchantId),
-                supabase.from('collections').select('amount,remaining').eq('merchant_id', merchantId)
+            const [tRes, cRes] = await Promise.all([
+                db.from('transfers').select('amount').eq('merchant_id', merchantId),
+                db.from('collections').select('amount,remaining').eq('merchant_id', merchantId)
             ]);
-            const transfersTotal = transfersRes.data?.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0) || 0;
-            const collectionsTotal = collectionsRes.data?.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0) || 0;
-            const balance = transfersTotal - collectionsTotal;
-            $('totalTransfers').textContent = transfersTotal.toLocaleString();
-            $('totalCollections').textContent = collectionsTotal.toLocaleString();
-            $('currentBalance').textContent = balance.toLocaleString();
-            $('displayDebt').textContent = `${balance.toLocaleString()} ج.م`;
-        } catch (e) { console.error('Stats error:', e); }
+
+            const tTotal = tRes.data?.reduce((sum, t) => {
+                const amt = parseFloat(t.amount) || 0;
+                return sum + amt;
+            }, 0) || 0;
+
+            const cTotal = cRes.data?.reduce((sum, c) => {
+                const amt = parseFloat(c.amount) || 0;
+                return sum + amt;
+            }, 0) || 0;
+
+            const balance = tTotal - cTotal;
+
+            getEl('totalTransfers').textContent = tTotal.toLocaleString();
+            getEl('totalCollections').textContent = cTotal.toLocaleString();
+            getEl('currentBalance').textContent = balance.toLocaleString();
+            getEl('displayDebt').textContent = `${balance.toLocaleString()} ج.م`;
+
+            console.log(`📊 Stats: T=${tTotal}, C=${cTotal}, B=${balance}`);
+        } catch (e) {
+            console.error('❌ Stats Error:', e);
+        }
     }
 
-    // باقي الدوال (loadTransfers, loadCollections, loadRequests) بنفس المنطق ولكن مع تحسين قراءة الحقول
+    // Load transfers
     async function loadTransfers(merchantId) {
         try {
-            const { data, error } = await supabase.from('transfers').select('*').eq('merchant_id', merchantId).order('created_at', { ascending: false }).limit(5);
+            const { data, error } = await db
+                .from('transfers')
+                .select('*')
+                .eq('merchant_id', merchantId)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
             if (error) throw error;
-            const tbody = $('transfersTableBody');
-            if (!data?.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>'; return; }
+
+            const tbody = getEl('transfersTableBody');
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحويلات</p></div></td></tr>';
+                return;
+            }
+
             tbody.innerHTML = data.map((t, i) => `
                 <tr>
-                    <td>${i+1}</td>
-                    <td><span class="ref-code">${t.ref_number || t['الرقم المرجعي'] || '—'}</span></td>
-                    <td>${formatDate(t.date || t['التاريخ'])}</td>
-                    <td>${formatTime(t.time || t['الوقت'])}</td>
-                    <td>${t.type || t['نوع التحويل'] || '—'}</td>
+                    <td>${i + 1}</td>
+                    <td><span class="ref-code">${t.ref_number || t.reference || '—'}</span></td>
+                    <td>${formatDate(t.date || t.created_at)}</td>
+                    <td>${formatTime(t.time || t.created_at)}</td>
+                    <td>${t.type || t.transfer_type || '—'}</td>
                     <td class="amount-negative">${(parseFloat(t.amount) || 0).toLocaleString()} ج.م</td>
                 </tr>
             `).join('');
-        } catch(e) { console.error(e); }
+        } catch (e) {
+            console.error('❌ Transfers Error:', e);
+        }
     }
 
+    // Load collections
     async function loadCollections(merchantId) {
         try {
-            const { data, error } = await supabase.from('collections').select('*').eq('merchant_id', merchantId).order('created_at', { ascending: false }).limit(5);
+            const { data, error } = await db
+                .from('collections')
+                .select('*')
+                .eq('merchant_id', merchantId)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
             if (error) throw error;
-            const tbody = $('collectionsTableBody');
-            if (!data?.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>'; return; }
+
+            const tbody = getEl('collectionsTableBody');
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد تحصيلات</p></div></td></tr>';
+                return;
+            }
+
             tbody.innerHTML = data.map((c, i) => `
                 <tr>
-                    <td>${i+1}</td>
-                    <td><span class="ref-code">${c.ref_number || c['الرقم المرجعي'] || '—'}</span></td>
-                    <td>${formatDate(c.date || c['التاريخ'])}</td>
-                    <td>${formatTime(c.time || c['الوقت'])}</td>
+                    <td>${i + 1}</td>
+                    <td><span class="ref-code">${c.ref_number || c.reference || '—'}</span></td>
+                    <td>${formatDate(c.date || c.created_at)}</td>
+                    <td>${formatTime(c.time || c.created_at)}</td>
                     <td class="amount-positive">${(parseFloat(c.amount) || 0).toLocaleString()} ج.م</td>
-                    <td class="amount-negative">${(parseFloat(c.remaining) || 0).toLocaleString()} ج.م</td>
+                    <td class="amount-negative">${(parseFloat(c.remaining) || parseFloat(c.balance) || 0).toLocaleString()} ج.م</td>
                 </tr>
             `).join('');
-        } catch(e) { console.error(e); }
+        } catch (e) {
+            console.error('❌ Collections Error:', e);
+        }
     }
 
+    // Load requests
     async function loadRequests(merchantId) {
         try {
-            const { data, error } = await supabase.from('requests').select('*').eq('merchant_id', merchantId).order('created_at', { ascending: false }).limit(15);
+            const { data, error } = await db
+                .from('requests')
+                .select('*')
+                .eq('merchant_id', merchantId)
+                .order('created_at', { ascending: false })
+                .limit(15);
+
             if (error) throw error;
-            const container = $('requestsList');
-            if (!data?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>'; return; }
+
+            const container = getEl('requestsList');
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات سابقة</p></div>';
+                return;
+            }
+
             container.innerHTML = data.map(r => {
-                const statusClass = getStatusClass(r.status || r['الحالة']);
+                const statusClass = getStatusClass(r.status);
                 return `
                     <div class="request-item ${statusClass}">
                         <div class="request-header">
-                            <span class="request-ref">#${r.request_number || r['رقم الطلب'] || '—'}</span>
-                            <span class="badge badge-${statusClass}">${r.status || r['الحالة'] || '—'}</span>
+                            <span class="request-ref">#${r.request_number || r.ref || '—'}</span>
+                            <span class="badge badge-${statusClass}">${r.status || '—'}</span>
                         </div>
                         <div class="request-grid">
-                            <div class="detail-item"><div class="detail-label">التاريخ</div><div class="detail-value">${formatDate(r.date || r['التاريخ'])}</div></div>
-                            <div class="detail-item"><div class="detail-label">نوع الطلب</div><div class="detail-value">${r.type || r['نوع الطلب'] || '—'}</div></div>
-                            <div class="detail-item"><div class="detail-label">المبلغ</div><div class="detail-value amount">${(parseFloat(r.amount) || 0).toLocaleString()} ج.م</div></div>
+                            <div>
+                                <div class="detail-label">التاريخ</div>
+                                <div class="detail-value">${formatDate(r.date || r.created_at)}</div>
+                            </div>
+                            <div>
+                                <div class="detail-label">نوع الطلب</div>
+                                <div class="detail-value">${r.type || r.request_type || '—'}</div>
+                            </div>
+                            <div>
+                                <div class="detail-label">المبلغ</div>
+                                <div class="detail-value amount">${(parseFloat(r.amount) || 0).toLocaleString()} ج.م</div>
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
-        } catch(e) { console.error(e); }
+        } catch (e) {
+            console.error('❌ Requests Error:', e);
+        }
     }
 
-    // دوال مساعدة (formatDate, formatTime, getStatusClass) كما هي مع تحسين طفيف
+    // Format date
     function formatDate(dateStr) {
         if (!dateStr) return '—';
-        try { return new Date(dateStr).toLocaleDateString('ar-EG'); } catch(e) { return dateStr; }
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+        } catch (e) {
+            return String(dateStr);
+        }
     }
+
+    // Format time
     function formatTime(timeStr) {
         if (!timeStr) return '—';
-        try { return new Date(timeStr).toLocaleTimeString('ar-EG', { hour:'2-digit', minute:'2-digit' }); } catch(e) { return timeStr; }
+        try {
+            const date = new Date(timeStr);
+            if (!isNaN(date.getTime())) {
+                return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true });
+            }
+            if (typeof timeStr === 'string' && timeStr.includes(':')) {
+                const parts = timeStr.split(':');
+                const h = parseInt(parts[0]) || 0;
+                const m = parts[1] || '00';
+                const period = h >= 12 ? 'م' : 'ص';
+                const displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+                return `${displayH}:${m} ${period}`;
+            }
+            return String(timeStr);
+        } catch (e) {
+            return String(timeStr);
+        }
     }
+
+    // Get status class
     function getStatusClass(status) {
-        const s = String(status || '').toLowerCase();
-        if (s.includes('معلق')) return 'pending';
-        if (s.includes('مكتمل')) return 'completed';
-        if (s.includes('ملغي')) return 'cancelled';
+        if (!status) return 'pending';
+        const s = String(status).toLowerCase();
+        if (s.includes('pending') || s.includes('معلق')) return 'pending';
+        if (s.includes('completed') || s.includes('done') || s.includes('مكتمل')) return 'completed';
+        if (s.includes('cancelled') || s.includes('canceled') || s.includes('ملغي')) return 'cancelled';
         return 'pending';
     }
 
-    // إرسال الطلب (مع تحسين)
-    async function submitRequest() {
-        if (!currentMerchant) { showToast('خطأ: لا يوجد تاجر محدد', 'error'); return; }
-        const type = $('requestType').value;
-        const amount = parseFloat($('requestAmount').value);
-        const notes = $('requestNotes').value.trim();
-        if (!type) { showToast('يرجى اختيار نوع الطلب', 'error'); return; }
-        if (!amount || amount <= 0) { showToast('يرجى إدخال مبلغ صحيح', 'error'); return; }
+    // Open request modal
+    function openRequestModal() {
+        if (!currentMerchant) {
+            showToast('يجب البحث عن الحساب أولاً', 'warning');
+            return;
+        }
+        getEl('requestModal').classList.add('show');
+    }
 
-        const refNum = `REQ-${Date.now()}-${Math.floor(Math.random()*10000)}`;
+    // Close request modal
+    function closeRequestModal() {
+        getEl('requestModal').classList.remove('show');
+        getEl('requestType').value = '';
+        getEl('requestAmount').value = '';
+        getEl('requestNotes').value = '';
+    }
+
+    // Submit request
+    async function submitRequest() {
+        if (!currentMerchant) {
+            showToast('خطأ: لا يوجد تاجر محدد', 'error');
+            return;
+        }
+
+        const type = getEl('requestType').value;
+        const amount = parseFloat(getEl('requestAmount').value);
+        const notes = getEl('requestNotes').value.trim();
+
+        if (!type) {
+            showToast('يرجى اختيار نوع الطلب', 'error');
+            return;
+        }
+
+        if (!amount || amount <= 0) {
+            showToast('يرجى إدخال مبلغ صحيح', 'error');
+            return;
+        }
+
+        const refNum = `REQ-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(Math.random() * 90000) + 10000}`;
+
         const requestData = {
             request_number: refNum,
             date: new Date().toISOString().split('T')[0],
-            time: new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }),
+            time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }),
             created_at: new Date().toISOString(),
-            merchant_id: getMerchantId(currentMerchant),
-            merchant_name: getMerchantField(currentMerchant, ['اسم_التاجر', 'اسم التاجر']),
-            activity: getMerchantField(currentMerchant, ['اسم_النشاط', 'اسم النشاط']),
-            type, amount, notes: notes || null, status: 'معلق'
+            merchant_id: currentMerchant.id,
+            merchant_name: currentMerchant.name || currentMerchant['اسم'] || '',
+            activity: currentMerchant.activity || currentMerchant['نشاط'] || '',
+            type: type,
+            amount: amount,
+            notes: notes || null,
+            status: 'معلق'
         };
+
         showToast('جاري إرسال الطلب...', 'info');
+
         try {
-            const response = await fetch(CONFIG.googleScriptUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestData) });
+            const response = await fetch(CONFIG.googleScriptUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            await response.json();
+
+            let result = null;
+            try { result = await response.json(); } catch (e) { result = { success: true }; }
+
             closeRequestModal();
-            $('successRefNumber').textContent = refNum;
-            $('successModal').classList.add('show');
-            if (currentMerchant) await loadRequests(getMerchantId(currentMerchant));
-            showToast('تم إرسال الطلب بنجاح!', 'success');
-        } catch(e) {
-            console.error(e);
+            getEl('successRefNumber').textContent = result?.request_number || refNum;
+            getEl('successModal').classList.add('show');
+
+            if (currentMerchant) await loadRequests(currentMerchant.id);
+
+            showToast('تم إرسال الطلب بنجاح! 🎉', 'success');
+        } catch (e) {
+            console.error('❌ Submit Error:', e);
             showToast('تعذر إرسال الطلب، حاول مرة أخرى', 'error');
         }
     }
 
-    // باقي الدوال المساعدة (openRequestModal, closeRequestModal, closeSuccessAndNew, refreshData, scrollToInfo, toggleDebug, updateDebugPanel, showSection, handleKeyPress)
-    function openRequestModal() { if(!currentMerchant) showToast('يجب البحث عن الحساب أولاً','warning'); else $('requestModal').classList.add('show'); }
-    function closeRequestModal() { $('requestModal').classList.remove('show'); $('requestType').value=''; $('requestAmount').value=''; $('requestNotes').value=''; }
-    function closeSuccessAndNew() { $('successModal').classList.remove('show'); setTimeout(()=>openRequestModal(),300); }
-    async function refreshData() { if(!currentMerchant) showToast('لا توجد بيانات','warning'); else { showToast('جاري التحديث...','info'); await renderDashboard(currentMerchant); showToast('تم التحديث ✅','success'); } }
-    function scrollToInfo() { $('merchantInfoCard').scrollIntoView({ behavior:'smooth' }); }
-    function toggleDebug() { $('debugPanel').classList.toggle('visible'); if($('debugPanel').classList.contains('visible') && currentMerchant) updateDebugPanel({ merchant:currentMerchant, accountNumber:currentAccountNumber }); }
-    function updateDebugPanel(data) { $('debugPanel').textContent = `DEBUG INFO:\n${JSON.stringify(data, null, 2)}`; }
-    function showSection(sectionName) { console.log('Navigate to', sectionName); }
-    function handleKeyPress(event) { if(event.key === 'Enter') searchMerchant(); }
+    // Close success modal
+    function closeSuccessAndNew() {
+        getEl('successModal').classList.remove('show');
+        setTimeout(() => openRequestModal(), 300);
+    }
 
-    // بدء التطبيق
-    document.addEventListener('DOMContentLoaded', () => { runBootSequence(); });
-</script>
+    // Refresh data
+    async function refreshData() {
+        if (!currentMerchant) {
+            showToast('لا توجد بيانات لتحديثها', 'warning');
+            return;
+        }
+        showToast('جاري التحديث...', 'info');
+        await renderDashboard(currentMerchant);
+        showToast('تم التحديث بنجاح ✅', 'success');
+    }
+
+    // Scroll to info
+    function scrollToInfo() {
+        const card = getEl('merchantInfoCard');
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    // Toggle debug panel
+    function toggleDebug() {
+        const panel = getEl('debugPanel');
+        panel.classList.toggle('visible');
+
+        if (panel.classList.contains('visible') && currentMerchant) {
+            updateDebugInfo({
+                merchant: currentMerchant,
+                accountNumber: currentAccountNumber,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+
+    // Update debug info
+    function updateDebugInfo(data) {
+        const panel = getEl('debugPanel');
+        
+        let info = `╔══════════════════════════════════════╗\n`;
+        info += `║   AXENTRO PORTAL v7.0 - DEBUG INFO   ║\n`;
+        info += `╠══════════════════════════════════════╝\n\n`;
+        info += `🔗 CONNECTION:\n`;
+        info += `   • URL: ${CONFIG.supabaseUrl}\n`;
+        info += `   • Status: ${db ? '✅ Ready' : '❌ Not Ready'}\n\n`;
+        
+        if (data.merchant) {
+            info += `👤 CURRENT MERCHANT:\n`;
+            info += `   • ID: ${data.merchant.id}\n`;
+            info += `   • Account: ${data.accountNumber || '—'}\n`;
+            info += `   • Keys: ${Object.keys(data.merchant).join(', ')}\n\n`;
+        }
+
+        if (data.totalFetched !== undefined) {
+            info += `📊 SEARCH RESULTS:\n`;
+            info += `   • Total records fetched: ${data.totalFetched}\n`;
+            info += `   • Searched for: "${data.searchTerm}"\n`;
+            if (data.sampleData?.length) {
+                info += `   • Available columns: ${data.sampleData.join(', ')}\n`;
+            }
+            info += `\n`;
+        }
+
+        if (data.error) {
+            info += `❌ ERROR:\n`;
+            info += `   ${data.error}\n`;
+            if (data.hint) {
+                info += `   💡 Hint: ${data.hint}\n`;
+            }
+            info += `\n`;
+        }
+
+        if (data.message) {
+            info += `📝 MESSAGE:\n`;
+            info += `   ${data.message}\n\n`;
+        }
+
+        if (data.suggestion) {
+            info += `💡 SUGGESTION:\n`;
+            info += `   ${data.suggestion}\n\n`;
+        }
+
+        info += `⏰ Time: ${data.timestamp || new Date().toISOString()}`;
+
+        panel.textContent = info;
+    }
+
+    // Initialize app
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('🚀 Axentro Portal v7.0 Starting...');
+        runBootSequence();
+    });
+
+    // Close nav on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeMobileNav();
+            closeRequestModal();
+            const successModal = getEl('successModal');
+            if (successModal.classList.contains('show')) {
+                successModal.classList.remove('show');
+            }
+        }
+    });
+    </script>
+</body>
+</html>
