@@ -2,2126 +2,783 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Axentro System v5.0 - نظام إدارة التجار والمكن</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#0a0f1e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>نظام Axentro | لوحة التحكم</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Axentro%20Admin%20Panel%22%2C%22short_name%22%3A%22Axentro%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0f1e%22%2C%22theme_color%22%3A%22%23b82f6%22%7D">
     
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3Crect width='100' height='100' rx='20' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial Black,sans-serif' font-size='50' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3Ccircle cx='82' cy='82' r='12' fill='%2310b981'/%3E%3Cpath d='M77 82 L80 85 L87 78' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233b82f6'/%3E%3Ctext x='50' y='68' font-family='Arial' font-size='50' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Sounds -->
+    <audio id="bootSound" src="src/assets/done.mp3" preload="auto"></audio>
+    <audio id="clickSound" src="src/assets/scan.mp3" preload="auto"></audio>
+    <audio id="successSound" src="src/assets/login-success.mp3" preload="auto"></audio>
+    <audio id="errorSound" src="src/assets/login-error.mp3" preload="auto"></audio>
+    <audio id="logoutSound" src="src/assets/logout-success.mp3" preload="auto"></audio>
+
     <style>
-        /* ============================================================
-           GLOBAL STYLES & CSS VARIABLES
-           ============================================================ */
-        :root {
-            --primary-color: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary-color: #8b5cf6;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --info-color: #3b82f6;
-            
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-card: #1e293b;
-            --bg-input: #334155;
-            
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            
-            --border-color: #334155;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
-            
-            --radius-sm: 0.375rem;
-            --radius-md: 0.5rem;
-            --radius-lg: 0.75rem;
-            --radius-xl: 1rem;
-            
-            --transition-fast: 150ms ease;
-            --transition-normal: 300ms ease;
-            --transition-slow: 500ms ease;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        /* ===== CSS RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
         body {
-            font-family: 'Cairo', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0f1e;
+            color: #f9fafb;
             min-height: 100vh;
+            min-height: -webkit-fill-available;
+            line-height: 1.6;
             overflow-x: hidden;
+            position: relative;
         }
-        
-        /* ============================================================
-           LOADING SCREEN
-           ============================================================ */
-        #globalLoading {
+
+        /* ===== DESIGN TOKENS ===== */
+        :root {
+            --bg-primary: #0a0f1e;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.95);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --success: #10b981;
+            --success-light: rgba(16, 185, 129, 0.15);
+            --danger: #ef4444;
+            --danger-light: rgba(239, 68, 68, 0.15);
+            --warning: #f59e0b;
+            --warning-light: rgba(245, 158, 11, 0.15);
+            --purple: #8b5cf6;
+            --purple-light: rgba(139, 92, 246, 0.15);
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-light: rgba(255, 255, 255, 0.04);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+            --shadow-lg: 0 16px 48px rgba(0,0,0,0.5);
+            --shadow-xl: 0 25px 60px rgba(0,0,0,0.6);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ===== BOOT SCREEN ===== */
+        #bootScreen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            inset: 0;
+            background: linear-gradient(135deg, #030712 0%, #0a0f1e 50%, #111827 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
+            z-index: 99999;
+            transition: opacity 0.8s ease, visibility 0.8s;
+            padding: 20px;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
         }
-        
-        #globalLoading.hidden {
-            opacity: 0;
-            visibility: hidden;
+        #bootScreen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .boot-container {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 20px;
+            padding: clamp(28px, 6vw, 44px);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 80px rgba(59, 130, 246, 0.1);
         }
-        
-        .loading-logo {
-            width: 120px;
-            height: 120px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-radius: 30px;
+
+        .boot-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+        .boot-logo-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
-            font-weight: 900;
+            font-size: 26px;
             color: white;
-            margin-bottom: 40px;
-            animation: pulse-glow 2s infinite;
-            box-shadow: 0 0 60px rgba(99, 102, 241, 0.5);
+            animation: pulse-glow 2s ease-in-out infinite;
+            flex-shrink: 0;
         }
-        
         @keyframes pulse-glow {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(99, 102, 241, 0.5); }
-            50% { transform: scale(1.05); box-shadow: 0 0 80px rgba(99, 102, 241, 0.7); }
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 35px rgba(139, 92, 246, 0.7); }
         }
-        
-        .loading-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        .boot-logo-text {
+            font-size: 26px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-light), var(--purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: 2px;
         }
-        
-        .loading-subtitle {
-            font-size: 16px;
-            color: var(--text-secondary);
-            margin-bottom: 40px;
+        .boot-subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 28px;
+            text-align: center;
         }
-        
         .progress-container {
-            width: 300px;
-            height: 6px;
-            background: var(--bg-input);
-            border-radius: 3px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
             overflow: hidden;
-            margin-bottom: 20px;
+            height: 10px;
+            position: relative;
         }
-        
         .progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            border-radius: 3px;
             width: 0%;
-            transition: width 0.3s ease;
-            animation: loading-progress 2s ease-in-out forwards;
-        }
-        
-        @keyframes loading-progress {
-            0% { width: 0%; }
-            50% { width: 70%; }
-            100% { width: 100%; }
-        }
-        
-        .loading-text {
-            font-size: 14px;
-            color: var(--text-muted);
-            animation: fade-pulse 1.5s infinite;
-        }
-        
-        @keyframes fade-pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-        
-        /* ============================================================
-           LOGIN SECTION
-           ============================================================ */
-        #loginSection {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            padding: 20px;
-        }
-        
-        .login-container {
-            background: var(--bg-card);
-            border-radius: var(--radius-xl);
-            padding: 50px 40px;
-            box-shadow: var(--shadow-xl);
-            width: 100%;
-            max-width: 420px;
-            text-align: center;
-            animation: slideUp 0.6s ease;
-            border: 1px solid var(--border-color);
-        }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .login-logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            font-weight: 900;
-            color: white;
-            margin: 0 auto 25px;
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
-        }
-        
-        .login-title {
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-        
-        .login-subtitle {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 35px;
-        }
-        
-        .input-group {
+            background: linear-gradient(90deg, var(--primary), var(--purple), var(--success));
+            transition: width 0.3s ease-out;
+            border-radius: 10px;
             position: relative;
-            margin-bottom: 25px;
+            overflow: hidden;
         }
-        
-        .input-group i {
+        .progress-bar::after {
+            content: '';
             position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 18px;
-            transition: var(--transition-fast);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
         }
-        
-        .form-input {
-            width: 100%;
-            padding: 15px 45px 15px 16px;
-            background: var(--bg-input);
-            border: 2px solid transparent;
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-size: 16px;
-            font-family: 'Cairo', sans-serif;
-            transition: var(--transition-fast);
-            outline: none;
-        }
-        
-        .form-input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-        
-        .form-input:focus + i,
-        .form-input:not(:placeholder-shown) + i {
-            color: var(--primary-color);
-        }
-        
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: var(--danger-color);
-            padding: 12px 16px;
-            border-radius: var(--radius-md);
-            font-size: 14px;
-            margin-bottom: 20px;
-            display: none;
-            animation: shake 0.5s ease;
-        }
-        
-        .error-message.show {
-            display: block;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-        
-        .btn-login {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border: none;
-            border-radius: var(--radius-md);
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer;
-            transition: var(--transition-normal);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
-        }
-        
-        .btn-login:active {
-            transform: translateY(0);
-        }
-        
-        .login-qr {
-            margin-top: 30px;
-            padding-top: 25px;
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .qr-code {
-            width: 90px;
-            height: 90px;
-            margin: 15px auto;
-            border-radius: var(--radius-md);
-            overflow: hidden;
-        }
-        
-        .qr-code img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .qr-text {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-        
-        /* ============================================================
-           APP CONTAINER & LAYOUT
-           ============================================================ */
-        #appContainer {
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .boot-status { color: var(--primary-light); font-size: 13px; font-weight: 600; margin-bottom: 18px; min-height: 22px; text-align: center; }
+        .boot-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); }
+
+        /* ===== MAIN APP ===== */
+        #mainApp {
             display: none;
             min-height: 100vh;
-            flex-direction: column;
+            min-height: -webkit-fill-available;
+            opacity: 0;
+            transition: opacity 0.5s ease;
         }
-        
-        /* Header */
-        .app-header {
+        #mainApp.visible { display: block; opacity: 1; }
+
+        /* ===== SIDEBAR NAVIGATION ===== */
+        .app-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+            gap: 0;
+        }
+
+        .sidebar {
             background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 15px 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
+            border-left: 1px solid var(--border-color);
+            padding: 20px 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             z-index: 100;
-            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        
-        .header-brand {
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        
-        .header-logo {
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sidebar-logo {
             width: 42px;
             height: 42px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, var(--primary), var(--purple));
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            font-weight: 900;
+            font-size: 20px;
             color: white;
         }
-        
-        .header-title {
-            font-size: 22px;
-            font-weight: 700;
-        }
-        
-        .connection-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-        
-        .connection-status.live {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-        }
-        
-        .connection-status.error {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger-color);
-        }
-        
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-            animation: pulse-dot 2s infinite;
-        }
-        
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .btn-header {
-            padding: 8px 18px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 800;
             color: var(--text-primary);
-            font-size: 14px;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer;
-            transition: var(--transition-fast);
+        }
+        .sidebar-nav {
+            flex: 1;
             display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            gap: 4px;
+            padding: 8px 0;
         }
-        
-        .btn-header:hover {
-            background: var(--bg-card);
-            border-color: var(--primary-color);
-        }
-        
-        .btn-header.danger:hover {
-            border-color: var(--danger-color);
-            color: var(--danger-color);
-        }
-        
-        /* Navigation Sidebar */
-        .app-nav {
-            background: var(--bg-secondary);
-            border-left: 1px solid var(--border-color);
-            width: 260px;
-            min-height: calc(100vh - 73px);
-            padding: 20px 0;
-            overflow-y: auto;
-        }
-        
-        .nav-section-title {
-            padding: 0 20px;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-        }
-        
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 13px 20px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            transition: var(--transition-fast);
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            border-right: 3px solid transparent;
-            position: relative;
+            transition: all 0.25s ease;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
         }
-        
-        .nav-item:hover {
-            background: rgba(99, 102, 241, 0.05);
-            color: var(--text-primary);
+        .nav-item:hover, .nav-item.active {
+            background: var(--bg-glass);
+            color: var(--primary-light);
+            border-color: rgba(59, 130, 246, 0.2);
         }
-        
-        .nav-item.active {
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--primary-color);
-            border-right-color: var(--primary-color);
-        }
-        
         .nav-item i {
             width: 20px;
             text-align: center;
             font-size: 16px;
         }
-        
-        .nav-badge {
-            margin-right: auto;
-            background: var(--danger-color);
-            color: white;
+        .nav-section-title {
             font-size: 11px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 10px;
-            min-width: 20px;
-            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            padding: 12px 16px 8px;
         }
-        
-        .nav-qr {
+        .sidebar-footer {
             margin-top: auto;
-            padding: 20px;
+            padding: 16px;
             border-top: 1px solid var(--border-color);
-            text-align: center;
         }
-        
-        /* Main Content Area */
-        .app-main {
-            flex: 1;
-            padding: 25px;
-            overflow-y: auto;
+        .user-info-mini {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--success-light);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: status-pulse 2s infinite;
+        }
+        @keyframes status-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+        /* ===== MAIN CONTENT AREA ===== */
+        .main-content {
             background: var(--bg-primary);
-        }
-        
-        .page-container {
-            display: none;
-            animation: fadeIn 0.4s ease;
-        }
-        
-        .page-container.active {
-            display: block;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* ============================================================
-           DASHBOARD CARDS & STATS
-           ============================================================ */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
             padding: 24px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ===== TOP HEADER ===== */
+        .top-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
-            transition: var(--transition-normal);
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        .header-title h1 { font-size: 20px; font-weight: 800; color: var(--text-primary); }
+        .header-actions { display: flex; gap: 8px; }
+        .icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.25s ease;
+        }
+        .icon-btn:hover { background: var(--bg-secondary); color: var(--primary-light); border-color: var(--primary); }
+
+        /* ===== LOGIN SECTION ===== */
+        .login-container {
+            max-width: 480px;
+            margin: 80px auto;
+            padding: 40px 32px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
             position: relative;
             overflow: hidden;
         }
-        
-        .stat-card::before {
+        .login-container::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            top: 0; left: 0; right: 0;
+            height: 150px;
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, transparent 100%);
+            pointer-events: none;
         }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--primary-color);
-        }
-        
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            margin-bottom: 16px;
-        }
-        
-        .stat-icon.purple { background: rgba(99, 102, 241, 0.15); color: var(--primary-color); }
-        .stat-icon.green { background: rgba(16, 185, 129, 0.15); color: var(--success-color); }
-        .stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--info-color); }
-        .stat-icon.orange { background: rgba(245, 158, 11, 0.15); color: var(--warning-color); }
-        
-        .stat-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            font-weight: 500;
-        }
-        
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--text-primary);
-            line-height: 1.2;
-        }
-        
-        .stat-change {
-            font-size: 12px;
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .stat-change.positive { color: var(--success-color); }
-        .stat-change.negative { color: var(--danger-color); }
-        
-        /* Target Progress Section */
-        .targets-section {
-            background: var(--bg-card);
-            border-radius: var(--radius-xl);
-            padding: 28px;
-            border: 1px solid var(--border-color);
-            margin-top: 30px;
-        }
-        
-        .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-        }
-        
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .target-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .target-table th {
-            background: var(--bg-input);
-            padding: 14px 16px;
-            text-align: right;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            border-bottom: 2px solid var(--border-color);
-        }
-        
-        .target-table td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 14px;
-        }
-        
-        .target-table tr:hover {
-            background: rgba(99, 102, 241, 0.03);
-        }
-        
-        .progress-bar-container {
-            width: 120px;
-            height: 8px;
-            background: var(--bg-input);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-        
-        .progress-fill.low { background: var(--danger-color); }
-        .progress-fill.medium { background: var(--warning-color); }
-        .progress-fill.high { background: var(--success-color); }
-        
-        .badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .badge.success { background: rgba(16, 185, 129, 0.15); color: var(--success-color); }
-        .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning-color); }
-        .badge.danger { background: rgba(239, 68, 68, 0.15); color: var(--danger-color); }
-        
-        /* ============================================================
-           DATA TABLES
-           ============================================================ */
-        .table-container {
-            background: var(--bg-card);
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
-        
-        .table-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .table-title {
-            font-size: 18px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .data-table th {
-            background: var(--bg-secondary);
-            padding: 14px 16px;
-            text-align: right;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            border-bottom: 2px solid var(--border-color);
-            white-space: nowrap;
-        }
-        
-        .data-table td {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 14px;
-            color: var(--text-primary);
-        }
-        
-        .data-table tbody tr {
-            transition: var(--transition-fast);
-        }
-        
-        .data-table tbody tr:hover {
-            background: rgba(99, 102, 241, 0.03);
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn-action {
-            padding: 6px 12px;
-            border-radius: var(--radius-sm);
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-            font-family: 'Cairo', sans-serif;
-            transition: var(--transition-fast);
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .btn-action.edit {
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--info-color);
-        }
-        
-        .btn-action.delete {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger-color);
-        }
-        
-        .btn-action.view {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success-color);
-        }
-        
-        .btn-action:hover {
-            transform: scale(1.05);
-        }
-        
-        /* ============================================================
-           MODALS
-           ============================================================ */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-overlay.show {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-xl);
-            width: 100%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-xl);
-            animation: modalSlideIn 0.3s ease;
-            border: 1px solid var(--border-color);
-        }
-        
-        @keyframes modalSlideIn {
-            from { opacity: 0; transform: scale(0.95) translateY(-20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .modal-title {
-            font-size: 20px;
-            font-weight: 700;
-        }
-        
-        .modal-close {
-            width: 36px;
-            height: 36px;
-            border-radius: var(--radius-md);
-            background: var(--bg-input);
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition-fast);
-        }
-        
-        .modal-close:hover {
-            background: var(--danger-color);
-            color: white;
-        }
-        
-        .modal-body {
-            padding: 24px;
-        }
-        
-        .modal-footer {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-start;
-            padding: 20px 24px;
-            border-top: 1px solid var(--border-color);
-        }
-        
-        /* Form Grid in Modals */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-        
-        .form-label {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-        
-        .form-select {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--bg-input);
-            border: 2px solid transparent;
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-size: 14px;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer;
-            outline: none;
-            transition: var(--transition-fast);
-        }
-        
-        .form-select:focus {
-            border-color: var(--primary-color);
-        }
-        
-        .btn-primary {
-            padding: 12px 28px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border: none;
-            border-radius: var(--radius-md);
-            color: white;
-            font-size: 15px;
-            font-weight: 600;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer;
-            transition: var(--transition-normal);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
-        }
-        
-        .btn-secondary {
-            padding: 12px 28px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-size: 15px;
-            font-weight: 600;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer;
-            transition: var(--transition-fast);
-        }
-        
-        .btn-secondary:hover {
-            background: var(--bg-card);
-        }
-        
-        /* ============================================================
-           SEARCH COMPONENT
-           ============================================================ */
-        .search-wrapper {
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
             position: relative;
-            margin-bottom: 20px;
+            z-index: 1;
         }
-        
-        .search-input {
-            width: 100%;
-            padding: 14px 50px 14px 18px;
-            background: var(--bg-card);
-            border: 2px solid var(--border-color);
+        .login-avatar {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 36px;
+            color: white;
+            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
+            animation: float-anim 3s ease-in-out infinite;
+        }
+        @keyframes float-anim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .login-title { font-size: 26px; font-weight: 900; margin-bottom: 8px; color: var(--text-primary); }
+        .login-desc { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; line-height: 1.7; }
+
+        /* QR Scanner Section */
+        .qr-scanner-area {
+            background: var(--bg-primary);
+            border: 2px dashed var(--border-color);
             border-radius: var(--radius-lg);
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 32px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .qr-scanner-area:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+        .qr-code-img {
+            width: 120px;
+            height: 120px;
+            border-radius: var(--radius-md);
+            padding: 8px;
+            background: white;
+            margin: 0 auto 16px;
+        }
+        .qr-hint { font-size: 13px; color: var(--text-muted); margin-top: 12px; }
+
+        /* Form Elements */
+        .form-group { margin-bottom: 20px; position: relative; }
+        .form-input {
+            width: 100%;
+            padding: 16px 20px 16px 48px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
             color: var(--text-primary);
-            font-size: 15px;
             font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            direction: rtl;
+            transition: all 0.25s ease;
+        }
+        .form-input:focus {
             outline: none;
-            transition: var(--transition-fast);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
         }
-        
-        .search-input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-        
-        .search-icon {
+        .form-input-icon {
             position: absolute;
-            left: 18px;
+            left: 16px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
             font-size: 18px;
+            pointer-events: none;
+            transition: all 0.25s ease;
         }
-        
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            max-height: 300px;
-            overflow-y: auto;
-            margin-top: 8px;
-            box-shadow: var(--shadow-lg);
-            z-index: 100;
-            display: none;
-        }
-        
-        .search-results.show {
-            display: block;
-            animation: fadeIn 0.2s ease;
-        }
-        
-        .search-result-item {
-            padding: 12px 18px;
-            cursor: pointer;
-            transition: var(--transition-fast);
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-        
-        .search-result-item:hover {
-            background: rgba(99, 102, 241, 0.1);
-        }
-        
-        .result-name {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-        
-        .result-details {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-        
-        /* ============================================================
-           SCANNER COMPONENT
-           ============================================================ */
-        .scanner-btn {
-            padding: 12px 20px;
-            background: linear-gradient(135deg, var(--info-color), var(--primary-color));
+        .btn-group { display: flex; gap: 12px; margin-top: 28px; }
+        .btn {
+            flex: 1;
+            padding: 16px 28px;
             border: none;
             border-radius: var(--radius-md);
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
             font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            font-weight: 800;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
-            transition: var(--transition-normal);
-        }
-        
-        .scanner-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
-        }
-        
-        .scanner-modal .modal-content {
-            max-width: 500px;
-        }
-        
-        .scanner-preview {
-            width: 100%;
-            height: 400px;
-            background: #000;
-            border-radius: var(--radius-lg);
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            margin-bottom: 20px;
         }
-        
-        .scanner-preview video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .scanner-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 200px;
-            border: 3px solid var(--primary-color);
-            border-radius: var(--radius-lg);
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
-        }
-        
-        .scanner-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
-            animation: scanLine 2s linear infinite;
-        }
-        
-        @keyframes scanLine {
-            0% { top: 0; }
-            100% { top: 100%; }
-        }
-        
-        .scanner-controls {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-        
-        .scanner-control-btn {
-            padding: 12px 24px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-size: 14px;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition-fast);
-        }
-        
-        .scanner-control-btn:hover {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        
-        .scanner-control-btn.active {
-            background: var(--warning-color);
-            border-color: var(--warning-color);
-        }
-        
-        /* ============================================================
-           AI ASSISTANT
-           ============================================================ */
-        .ai-assistant-toggle {
-            position: fixed;
-            bottom: 30px;
-            left: 30px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
-            transition: var(--transition-normal);
-            z-index: 999;
-            animation: pulse-glow 2s infinite;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
         }
-        
-        .ai-assistant-toggle:hover {
-            transform: scale(1.1);
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(59, 130, 246, 0.45); }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
         }
-        
-        .ai-panel {
-            position: fixed;
-            bottom: 100px;
-            left: 30px;
-            width: 380px;
-            max-height: 500px;
-            background: var(--bg-secondary);
-            border-radius: var(--radius-xl);
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary-light); background: rgba(59, 130, 246, 0.05); }
+
+        /* ===== DASHBOARD GRID ===== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .dash-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-xl);
-            display: none;
-            flex-direction: column;
-            z-index: 998;
-            animation: slideUp 0.3s ease;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            transition: all 0.3s ease;
         }
-        
-        .ai-panel.show {
-            display: flex;
+        .dash-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
         }
-        
-        .ai-panel-header {
-            padding: 18px 20px;
-            border-bottom: 1px solid var(--border-color);
+        .dash-card-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
         }
-        
-        .ai-panel-title {
+        .dash-card-title {
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 800;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
-        .ai-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            max-height: 320px;
-        }
-        
-        .ai-message {
-            margin-bottom: 16px;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .ai-message.user {
-            text-align: left;
-        }
-        
-        .ai-message.ai {
-            text-align: right;
-        }
-        
-        .message-bubble {
-            display: inline-block;
-            padding: 12px 16px;
-            border-radius: var(--radius-lg);
-            max-width: 85%;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        
-        .ai-message.user .message-bubble {
-            background: var(--primary-color);
-            color: white;
-            border-bottom-left-radius: 4px;
-        }
-        
-        .ai-message.ai .message-bubble {
-            background: var(--bg-input);
-            color: var(--text-primary);
-            border-bottom-right-radius: 4px;
-        }
-        
-        .ai-input-area {
-            padding: 16px 20px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 10px;
-        }
-        
-        .ai-input {
-            flex: 1;
-            padding: 12px 16px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            color: var(--text-primary);
-            font-size: 14px;
-            font-family: 'Cairo', sans-serif;
-            outline: none;
-        }
-        
-        .ai-input:focus {
-            border-color: var(--primary-color);
-        }
-        
-        .ai-send-btn {
+        .dash-card-icon {
             width: 44px;
             height: 44px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border: none;
-            border-radius: var(--radius-md);
-            color: white;
-            cursor: pointer;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: var(--transition-fast);
+            font-size: 20px;
         }
-        
-        .ai-send-btn:hover {
-            transform: scale(1.05);
+        .stat-value { font-size: 28px; font-weight: 900; color: var(--text-primary); }
+        .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
+
+        /* Tables */
+        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
         }
-        
-        /* ============================================================
-           TOAST NOTIFICATIONS
-           ============================================================ */
-        .toast-container {
+        .data-table th {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 12px 16px;
+            text-align: right;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-secondary);
+        }
+        .data-table tr:hover td { background: rgba(59, 130, 246, 0.05); }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-success { background: var(--success-light); color: var(--success); }
+        .badge-danger { background: var(--danger-light); color: var(--danger); }
+        .badge-warning { background: var(--warning-light); color: var(--warning); }
+        .badge-info { background: var(--purple-light); color: var(--purple); }
+
+        /* Toast Notifications */
+        #toastContainer {
             position: fixed;
             top: 20px;
             left: 20px;
-            z-index: 9999;
+            z-index: 99999;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            max-width: 400px;
         }
-        
         .toast {
-            background: var(--bg-secondary);
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 16px 20px;
-            min-width: 320px;
-            max-width: 420px;
-            box-shadow: var(--shadow-lg);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
             display: flex;
             align-items: center;
             gap: 12px;
-            animation: toastSlideIn 0.4s ease;
-            border-right: 4px solid var(--primary-color);
+            box-shadow: var(--shadow-lg);
+            animation: toast-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-right: 4px solid var(--success);
         }
-        
-        .toast.success { border-right-color: var(--success-color); }
-        .toast.error { border-right-color: var(--danger-color); }
-        .toast.warning { border-right-color: var(--warning-color); }
-        .toast.info { border-right-color: var(--info-color); }
-        
-        @keyframes toastSlideIn {
-            from { opacity: 0; transform: translateX(-100%); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        .toast-icon {
-            font-size: 20px;
-        }
-        
-        .toast.success .toast-icon { color: var(--success-color); }
-        .toast.error .toast-icon { color: var(--danger-color); }
-        .toast.warning .toast-icon { color: var(--warning-color); }
-        .toast.info .toast-icon { color: var(--info-color); }
-        
-        .toast-content {
-            flex: 1;
-        }
-        
-        .toast-title {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-        
-        .toast-message {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        
-        .toast-close {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 18px;
-            padding: 4px;
-        }
-        
-        /* ============================================================
-           RESPONSIVE DESIGN
-           ============================================================ */
+        .toast.error { border-right-color: var(--danger); }
+        .toast.warning { border-right-color: var(--warning); }
+        .toast.info { border-right-color: var(--primary); }
+        @keyframes toast-in { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Responsive */
         @media (max-width: 1024px) {
-            .app-nav {
-                width: 220px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .app-nav {
+            .app-layout { grid-template-columns: 1fr; }
+            .sidebar {
                 position: fixed;
-                right: -260px;
-                top: 73px;
-                height: calc(100vh - 73px);
-                z-index: 200;
-                transition: right 0.3s ease;
+                top: 0; right: -280px;
+                width: 280px;
+                height: 100vh;
+                height: -webkit-fill-available;
+                background: var(--bg-secondary);
+                border-left: 1px solid var(--border-color);
+                z-index: 1000;
+                transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: -5px 0 30px rgba(0,0,0,0.5);
             }
-            
-            .app-nav.open {
-                right: 0;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .ai-panel {
-                width: calc(100vw - 60px);
-                left: 30px;
-                right: 30px;
-            }
+            .sidebar.open { right: 0; }
+            .sidebar-toggle { display: flex; }
         }
         
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
+        @media (max-width: 640px) {
+            .top-header { flex-direction: column; gap: 12px; }
+            .header-left { flex-wrap: wrap; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .btn-group { flex-direction: column; }
+            .login-container { padding: 24px 20px; margin: 40px 12px; }
+            .login-avatar { width: 70px; height: 70px; font-size: 28px; }
+            .login-title { font-size: 22px; }
+            .qr-scanner-area { padding: 28px 20px; }
+            .qr-code-img { width: 90px; height: 90px; }
         }
-        
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        .empty-state h3 {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: var(--text-secondary);
-        }
-        
-        .empty-state p {
-            font-size: 14px;
+
+        /* Safe Area for notch phones */
+        @supports (padding: env(safe-area-inset-top)) {
+            body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
         }
     </style>
 </head>
 <body>
 
-<!-- ============================================================
-     LOADING SCREEN
-     ============================================================ -->
-<div id="globalLoading">
-    <div class="loading-logo">A</div>
-    <div class="loading-title">Axentro System</div>
-    <div class="loading-subtitle">نظام إدارة التجار والمكن v5.0</div>
-    <div class="progress-container">
-        <div class="progress-bar"></div>
-    </div>
-    <div class="loading-text">جاري تهيئة النظام...</div>
-</div>
-
-<!-- ============================================================
-     LOGIN SECTION
-     ============================================================ -->
-<div id="loginSection">
-    <div class="login-container">
-        <div class="login-logo">A</div>
-        <h1 class="login-title">Axentro System</h1>
-        <p class="login-subtitle">نظام إدارة التجار والمكن v5.0</p>
-        
-        <div id="loginErrorMsg" class="error-message">
-            <i class="fas fa-exclamation-circle"></i> كلمة المرور غير صحيحة!
+<!-- Boot Screen -->
+<div id="bootScreen">
+    <div class="boot-container">
+        <div class="boot-logo">
+            <div class="boot-logo-icon"><i class="fas fa-microchip"></i></div>
+            <div class="boot-logo-text">AXENTRO</div>
         </div>
-        
-        <div class="input-group">
-            <input type="password" id="passwordInput" class="form-input" placeholder="أدخل كلمة المرور">
-            <i class="fas fa-lock"></i>
+        <div class="boot-subtitle">نظام إدارة التجار والمكن v7.1</div>
+        <div class="boot-status" id="bootStatus">جاري تهيئة النظام...</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="bootProgress"></div>
         </div>
-        
-        <button onclick="App.login()" class="btn-login">
-            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
-        </button>
-        
-        <div class="login-qr">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://axentro-official.github.io/axentro-website/links.html" alt="QR Code" class="qr-code">
-            <p class="qr-text">Scan Me > Click On Me</p>
+        <div class="boot-meta">
+            <span id="bootPhase">System Core</span>
+            <span class="boot-percent" id="bootPercent">0%</span>
         </div>
-    </div>
-</div>
-
-<!-- ============================================================
-     APP CONTAINER
-     ============================================================ -->
-<div id="appContainer">
-    
-    <!-- Header -->
-    <header class="app-header">
-        <div class="header-brand">
-            <div class="header-logo">A</div>
-            <span class="header-title">Axentro</span>
-        </div>
-        
-        <div id="connectionStatus" class="connection-status live">
-            <span class="status-dot"></span>
-            <span>متصل</span>
-        </div>
-        
-        <div class="header-actions">
-            <button onclick="App.refreshData()" class="btn-header">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button onclick="App.logout()" class="btn-header danger">
-                <i class="fas fa-sign-out-alt"></i> خروج
-            </button>
-        </div>
-    </header>
-    
-    <!-- Layout Container -->
-    <div style="display: flex;">
-        
-        <!-- Navigation Sidebar -->
-        <nav class="app-nav" id="appNav">
-            <div class="nav-section-title">القائمة الرئيسية</div>
-            
-            <a class="nav-item active" data-page="dashboard" onclick="App.navigateTo('dashboard')">
-                <i class="fas fa-home"></i>
-                <span>الرئيسية</span>
-            </a>
-            
-            <a class="nav-item" data-page="merchants" onclick="App.navigateTo('merchants')">
-                <i class="fas fa-users"></i>
-                <span>التجار</span>
-            </a>
-            
-            <a class="nav-item" data-page="machines" onclick="App.navigateTo('machines')">
-                <i class="fas fa-desktop"></i>
-                <span>المكن</span>
-            </a>
-            
-            <a class="nav-item" data-page="transfers" onclick="App.navigateTo('transfers')">
-                <i class="fas fa-exchange-alt"></i>
-                <span>التحويلات</span>
-            </a>
-            
-            <a class="nav-item" data-page="collections" onclick="App.navigateTo('collections')">
-                <i class="fas fa-hand-holding-usd"></i>
-                <span>التحصيلات</span>
-            </a>
-            
-            <a class="nav-item" data-page="archive" onclick="App.navigateTo('archive')">
-                <i class="fas fa-archive"></i>
-                <span>الأرشيف</span>
-                <span id="pendingBadge" class="nav-badge" style="display:none;">0</span>
-            </a>
-            
-            <a class="nav-item" data-page="requests" onclick="App.navigateTo('requests')">
-                <i class="fas fa-bell"></i>
-                <span>الطلبات</span>
-                <span id="requestsBadge" class="nav-badge" style="display:none;">0</span>
-            </a>
-            
-            <div class="nav-qr">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://axentro-official.github.io/axentro-website/links.html" alt="QR" style="width:80px;height:80px;border-radius:8px;">
-                <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">Scan Me > Click On Me</p>
-            </div>
-        </nav>
-        
-        <!-- Main Content -->
-        <main class="app-main">
-            
-            <!-- Dashboard Page -->
-            <div id="page-dashboard" class="page-container active">
-                <h2 style="font-size:24px;font-weight:700;margin-bottom:25px;display:flex;align-items:center;gap:12px;">
-                    <i class="fas fa-chart-line" style="color:var(--primary-color)"></i>
-                    الإحصائيات
-                </h2>
-                
-                <!-- Stats Cards -->
-                <div class="stats-grid" id="statsGrid">
-                    <!-- Stats will be rendered by JavaScript -->
-                </div>
-                
-                <!-- Top Performing Machines -->
-                <div class="targets-section">
-                    <div class="section-header">
-                        <h3 class="section-title">
-                            <i class="fas fa-trophy" style="color:var(--warning-color)"></i>
-                            أعلى المكن أداءً
-                        </h3>
-                    </div>
-                    
-                    <div style="overflow-x:auto;">
-                        <table class="target-table" id="topMachinesTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>رقم المكنة</th>
-                                    <th>اسم التاجر</th>
-                                    <th>النشاط</th>
-                                    <th>التارجت</th>
-                                    <th>المحقق</th>
-                                    <th>النسبة</th>
-                                </tr>
-                            </thead>
-                            <tbody id="topMachinesBody">
-                                <!-- Data will be rendered by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Merchants Page -->
-            <div id="page-merchants" class="page-container">
-                <div class="table-header">
-                    <h2 class="table-title">
-                        <i class="fas fa-users" style="color:var(--primary-color)"></i>
-                        التجار
-                    </h2>
-                    <button onclick="MerchantsPage.openAddModal()" class="btn-primary">
-                        <i class="fas fa-plus"></i> إضافة تاجر
-                    </button>
-                </div>
-                
-                <div class="table-container">
-                    <div style="overflow-x:auto;">
-                        <table class="data-table" id="merchantsTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>رقم التاجر</th>
-                                    <th>الاسم</th>
-                                    <th>النشاط</th>
-                                    <th>الهاتف</th>
-                                    <th>العنوان</th>
-                                    <th>المنطقة</th>
-                                    <th>الحالة</th>
-                                    <th>إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="merchantsBody">
-                                <!-- Data will be rendered by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Machines Page -->
-            <div id="page-machines" class="page-container">
-                <div class="table-header">
-                    <h2 class="table-title">
-                        <i class="fas fa-desktop" style="color:var(--primary-color)"></i>
-                        المكن
-                    </h2>
-                    <button onclick="MachinesPage.openAddModal()" class="btn-primary">
-                        <i class="fas fa-plus"></i> إضافة مكنة
-                    </button>
-                </div>
-                
-                <div class="table-container">
-                    <div style="overflow-x:auto;">
-                        <table class="data-table" id="machinesTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>رقم المكنة</th>
-                                    <th>التاجر</th>
-                                    <th>النشاط</th>
-                                    <th>الرقم التسلسلي</th>
-                                    <th>التارجت</th>
-                                    <th>الحالة</th>
-                                    <th>إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="machinesBody">
-                                <!-- Data will be rendered by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Transfers Page -->
-            <div id="page-transfers" class="page-container">
-                <div class="table-header">
-                    <h2 class="table-title">
-                        <i class="fas fa-exchange-alt" style="color:var(--primary-color)"></i>
-                        التحويلات
-                    </h2>
-                    <button onclick="TransfersPage.openAddModal()" class="btn-primary">
-                        <i class="fas fa-plus"></i> تحويل جديد
-                    </button>
-                </div>
-                
-                <div class="table-container">
-                    <div style="overflow-x:auto;">
-                        <table class="data-table" id="transfersTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>الرقم المرجعي</th>
-                                    <th>التاريخ</th>
-                                    <th>الوقت</th>
-                                    <th>التاجر</th>
-                                    <th>النوع</th>
-                                    <th>القيمة</th>
-                                    <th>ملاحظات</th>
-                                    <th>إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transfersBody">
-                                <!-- Data will be rendered by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Collections Page -->
-            <div id="page-collections" class="page-container">
-                <div class="table-header">
-                    <h2 class="table-title">
-                        <i class="fas fa-hand-holding-usd" style="color:var(--primary-color)"></i>
-                        التحصيلات
-                    </h2>
-                    <button onclick="CollectionsPage.openAddModal()" class="btn-primary">
-                        <i class="fas fa-plus"></i> تحصيل جديد
-                    </button>
-                </div>
-                
-                <div class="table-container">
-                    <div style="overflow-x:auto;">
-                        <table class="data-table" id="collectionsTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>الرقم المرجعي</th>
-                                    <th>التاريخ</th>
-                                    <th>الوقت</th>
-                                    <th>التاجر</th>
-                                    <th>القيمة</th>
-                                    <th>النوع</th>
-                                    <th>المتبقي</th>
-                                    <th>إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="collectionsBody">
-                                <!-- Data will be rendered by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Archive Page -->
-            <div id="page-archive" class="page-container">
-                <div class="table-header">
-                    <h2 class="table-title">
-                        <i class="fas fa-archive" style="color:var(--primary-color)"></i>
-                        الأرشيف
-                    </h2>
-                    <button onclick="ArchivePage.closeMonth()" class="btn-primary">
-                        <i class="fas fa-folder-plus"></i> إغلاق الشهر
-                    </button>
-                </div>
-                
-                <div class="table-container">
-                    <div style="overflow-x:auto;">
-                        <table class="data-table" id="archiveTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>الشهر</th>
-                                    <th>عدد التحويلات</th>
-                                    <th>إجمالي التحويلات</th>
-                                    <th>عدد التحصيلات</th>
-                                    <th>إجمالي التحصيلات</th>
-                                    <th>المتبقي</th>
-                                    <th>إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="archiveBody">
-                                <!-- Data will be rendered by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Requests Page -->
-            <div id="page-requests" class="page-container">
-                <div class="table-header">
-                    <h2 class="table-title">
-                        <i class="fas fa-bell" style="color:var(--warning-color)"></i>
-                        الطلبات
-                        <span id="requestsCountBadge" class="badge warning" style="display:none;margin-right:10px;">0 طلب معلق</span>
-                    </h2>
-                </div>
-                
-                <div class="table-container">
-                    <div style="overflow-x:auto;">
-                        <table class="data-table" id="requestsTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>رقم الطلب</th>
-                                    <th>التاجر</th>
-                                    <th>المبلغ المطلوب</th>
-                                    <th>نوع الطلب</th>
-                                    <th>المديونية</th>
-                                    <th>الحالة</th>
-                                    <th>التاريخ</th>
-                                    <th>إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="requestsBody">
-                                <!-- Data will be rendered by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-        </main>
-    </div>
-</div>
-
-<!-- ============================================================
-     MODALS
-     ============================================================ -->
-
-<!-- Merchant Modal -->
-<div id="merchantModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title" id="merchantModalTitle">إضافة تاجر جديد</h3>
-            <button onclick="UI.closeModal('merchantModal')" class="modal-close"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <form id="merchantForm" class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">اسم التاجر *</label>
-                    <input type="text" id="merchantName" class="form-input" placeholder="أدخل اسم التاجر" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">اسم النشاط *</label>
-                    <input type="text" id="merchantActivity" class="form-input" placeholder="أدخل اسم النشاط" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">رقم الهاتف</label>
-                    <input type="tel" id="merchantPhone" class="form-input" placeholder="01xxxxxxxxx">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">المنطقة</label>
-                    <input type="text" id="merchantRegion" class="form-input" placeholder="أدخل المنطقة">
-                </div>
-                <div class="form-group full-width">
-                    <label class="form-label">العنوان</label>
-                    <input type="text" id="merchantAddress" class="form-input" placeholder="أدخل العنوان التفصيلي">
-                </div>
-                <div class="form-group full-width">
-                    <label class="form-label">ملاحظات</label>
-                    <textarea id="merchantNotes" class="form-input" rows="3" placeholder="ملاحظات إضافية..."></textarea>
-                </div>
-                <input type="hidden" id="merchantId">
-                <input type="hidden" id="merchantNumber">
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button type="button" onclick="MerchantsPage.saveMerchant()" class="btn-primary">
-                <i class="fas fa-save"></i> حفظ
-            </button>
-            <button type="button" onclick="UI.closeModal('merchantModal')" class="btn-secondary">إلغاء</button>
-        </div>
-    </div>
-</div>
-
-<!-- Machine Modal -->
-<div id="machineModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title" id="machineModalTitle">إضافة مكنة جديدة</h3>
-            <button onclick="UI.closeModal('machineModal')" class="modal-close"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <form id="machineForm" class="form-grid">
-                <div class="form-group full-width">
-                    <label class="form-label">اختر التاجر *</label>
-                    <div class="search-wrapper">
-                        <select id="machineMerchantSelect" class="form-select" required>
-                            <option value="">-- اختر التاجر --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">الرقم التسلسلي *</label>
-                    <div style="display:flex;gap:10px;">
-                        <input type="text" id="machineSerial" class="form-input" placeholder="أدخل أو امسح الرقم التسلسلي" required style="flex:1;">
-                        <button type="button" onclick="Scanner.openForMachine()" class="scanner-btn">
-                            <i class="fas fa-camera"></i> مسح
-                        </button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">التارجت الشهري</label>
-                    <input type="number" id="machineTarget" class="form-input" placeholder="0" value="0" min="0">
-                </div>
-                <div class="form-group full-width">
-                    <label class="form-label">ملاحظات</label>
-                    <textarea id="machineNotes" class="form-input" rows="3" placeholder="ملاحظات إضافية..."></textarea>
-                </div>
-                <input type="hidden" id="machineId">
-                <input type="hidden" id="machineNumber">
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button type="button" onclick="MachinesPage.saveMachine()" class="btn-primary">
-                <i class="fas fa-save"></i> حفظ
-            </button>
-            <button type="button" onclick="UI.closeModal('machineModal')" class="btn-secondary">إلغاء</button>
-        </div>
-    </div>
-</div>
-
-<!-- Transfer Modal -->
-<div id="transferModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title" id="transferModalTitle">تحويل جديد</h3>
-            <button onclick="UI.closeModal('transferModal')" class="modal-close"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <form id="transferForm" class="form-grid">
-                <div class="form-group full-width">
-                    <label class="form-label">اختر التاجر *</label>
-                    <div class="search-wrapper">
-                        <select id="transferMerchantSelect" class="form-select" required onchange="TransfersPage.onMerchantSelect(this.value)">
-                            <option value="">-- اختر التاجر --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">قيمة التحويل *</label>
-                    <input type="number" id="transferAmount" class="form-input" placeholder="0.00" required min="0" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">نوع العملية</label>
-                    <select id="transferType" class="form-select">
-                        <option value="رصيد خدمات">رصيد خدمات</option>
-                        <option value="كاش على المكنة">كاش على المكنة</option>
-                    </select>
-                </div>
-                <div class="form-group full-width">
-                    <label class="form-label">ملاحظات</label>
-                    <textarea id="transferNotes" class="form-input" rows="3" placeholder="ملاحظات إضافية..."></textarea>
-                </div>
-                <input type="hidden" id="transferId">
-                <input type="hidden" id="transferRefNumber">
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button type="button" onclick="TransfersPage.saveTransfer()" class="btn-primary">
-                <i class="fas fa-save"></i> حفظ
-            </button>
-            <button type="button" onclick="UI.closeModal('transferModal')" class="btn-secondary">إلغاء</button>
-        </div>
-    </div>
-</div>
-
-<!-- Collection Modal -->
-<div id="collectionModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title" id="collectionModalTitle">تحصيل جديد</h3>
-            <button onclick="UI.closeModal('collectionModal')" class="modal-close"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <form id="collectionForm" class="form-grid">
-                <div class="form-group full-width">
-                    <label class="form-label">اختر التاجر *</label>
-                    <div class="search-wrapper">
-                        <select id="collectionMerchantSelect" class="form-select" required onchange="CollectionsPage.onMerchantSelect(this.value)">
-                            <option value="">-- اختر التاجر --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">قيمة التحصيل *</label>
-                    <input type="number" id="collectionAmount" class="form-input" placeholder="0.00" required min="0" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">نوع التحصيل</label>
-                    <select id="collectionType" class="form-select">
-                        <option value="نقدي">نقدي</option>
-                        <option value="بنكي">بنكي</option>
-                        <option value="إلكتروني">إلكتروني</option>
-                    </select>
-                </div>
-                <div class="form-group full-width">
-                    <label class="form-label">ملاحظات</label>
-                    <textarea id="collectionNotes" class="form-input" rows="3" placeholder="ملاحظات إضافية..."></textarea>
-                </div>
-                <input type="hidden" id="collectionId">
-                <input type="hidden" id="collectionRefNumber">
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button type="button" onclick="CollectionsPage.saveCollection()" class="btn-primary">
-                <i class="fas fa-save"></i> حفظ
-            </button>
-            <button type="button" onclick="UI.closeModal('collectionModal')" class="btn-secondary">إلغاء</button>
-        </div>
-    </div>
-</div>
-
-<!-- Scanner Modal -->
-<div id="scannerModal" class="modal-overlay scanner-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title">
-                <i class="fas fa-camera" style="color:var(--info-color)"></i>
-                المسح الضوئي
-            </h3>
-            <button onclick="UI.closeModal('scannerModal');Scanner.stop();" class="modal-close"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="scanner-preview">
-                <video id="scannerVideo" autoplay playsinline></video>
-                <div class="scanner-overlay">
-                    <div class="scanner-line"></div>
-                </div>
-            </div>
-            <div class="scanner-controls">
-                <button id="flashToggleBtn" onclick="Scanner.toggleFlash()" class="scanner-control-btn">
-                    <i class="fas fa-bolt"></i> فلاش
-                </button>
-                <button onclick="Scanner.stop();UI.closeModal('scannerModal');" class="scanner-control-btn">
-                    <i class="fas fa-stop"></i> إيقاف
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Confirm Modal -->
-<div id="confirmModal" class="modal-overlay">
-    <div class="modal-content" style="max-width:400px;">
-        <div class="modal-header">
-            <h3 class="modal-title">تأكيد الإجراء</h3>
-            <button onclick="UI.closeConfirm()" class="modal-close"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body" style="text-align:center;padding:30px;">
-            <i class="fas fa-exclamation-triangle" style="font-size:48px;color:var(--warning-color);margin-bottom:20px;"></i>
-            <p id="confirmMessage" style="font-size:16px;margin-bottom:25px;">هل أنت متأكد من هذا الإجراء؟</p>
-        </div>
-        <div class="modal-footer" style="justify-content:center;">
-            <button id="confirmOkBtn" onclick="UI.handleConfirmClick()" class="btn-primary">نعم، تأكيد</button>
-            <button onclick="UI.closeConfirm()" class="btn-secondary">إلغاء</button>
-        </div>
-    </div>
-</div>
-
-<!-- AI Assistant Panel -->
-<button class="ai-assistant-toggle" onclick="AI.togglePanel()">
-    <i class="fas fa-robot"></i>
-</button>
-
-<div id="aiPanel" class="ai-panel">
-    <div class="ai-panel-header">
-        <div class="ai-panel-title">
-            <i class="fas fa-brain" style="color:var(--primary-color)"></i>
-            المساعد الذكي
-        </div>
-        <button onclick="AI.togglePanel()" class="modal-close"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="ai-messages" id="aiMessages">
-        <div class="message ai">
-            <div class="message-bubble">
-                مرحباً! أنا المساعد الذكي لنظام Axentro. يمكنني مساعدتك في:
-                <br><br>
-                • الاستعلام عن أكبر تاجر<br>
-                • تحليل الأهداف والإنجازات<br>
-                • عرض الإحصائيات<br>
-                • الإجابة على أسئلة عامة عن النظام
-            </div>
-        </div>
-    </div>
-    <div class="ai-input-area">
-        <input type="text" id="aiInput" class="ai-input" placeholder="اكتب سؤالك هنا..." onkeypress="if(event.key==='Enter')AI.sendMessage()">
-        <button onclick="AI.sendMessage()" class="ai-send-btn">
-            <i class="fas fa-paper-plane"></i>
-        </button>
     </div>
 </div>
 
 <!-- Toast Container -->
-<div id="toastContainer" class="toast-container"></div>
+<div id="toastContainer"></div>
 
-<!-- Footer -->
-<footer style="background:var(--bg-secondary);padding:20px;text-align:center;border-top:1px solid var(--border-color);margin-top:auto;">
-    <p style="color:var(--text-muted);font-size:13px;">© 2024 Axentro – All Rights Reserved | By Axentro Team v5.0</p>
-</footer>
+<!-- Mobile Menu Toggle (Hidden on Desktop) -->
+<button class="sidebar-toggle" onclick="toggleSidebar()" style="display:none;" aria-label="القائمة">
+    <i class="fas fa-bars"></i>
+</button>
 
-<!-- ============================================================
-     JAVASCRIPT MODULES
-     ============================================================ -->
+<!-- Main Application -->
+<div id="mainApp">
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebarNav">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <div class="sidebar-logo"><i class="fas fa-shield-alt"></i></div>
+                    <span class="sidebar-title">Axentro</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-item active" onclick="showSection('dashboard'); playClick()">
+                    <i class="fas fa-home"></i>
+                    <span>لوحة التحكم</span>
+                </div>
+                
+                <div class="nav-section-title">إدارة البيانات</div>
+                <div class="nav-item" onclick="showSection('merchants'); playClick()">
+                    <i class="fas fa-users"></i>
+                    <span>التجار</span>
+                </div>
+                <div class="nav-item" onclick="showSection('machines'); playClick()">
+                    <i class="fas fa-desktop"></i>
+                    <span>المكن</span>
+                </div>
+                
+                <div class="nav-section-title">العمليات مالية</div>
+                <div class="nav-item" onclick="showSection('transfers'); playClick()">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>التحويلات</span>
+                </div>
+                <div class="nav-item" onclick="showSection('collections'); playClick()">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>التحصيلات</span>
+                </div>
+                <div class="nav-item" onclick="showSection('requests'); playClick()">
+                    <i class="fas fa-file-alt"></i>
+                    <span>الطلبات</span>
+                </div>
+                <div class="nav-item" onclick="showSection('archive'); playClick()">
+                    <i class="fas fa-archive"></i>
+                    <span>الأرشيف</span>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info-mini">
+                    <div class="status-dot"></div>
+                    <span style="font-size:13px;font-weight:700;">متصل ✓</span>
+                </div>
+            </div>
+        </aside>
 
-<script type="module">
-// Import all modules
-import { CONFIG, initSupabase, getSupabase } from './src/config/supabase.js';
-import { App } from './src/core/app.js';
-import { UI } from './src/ui/uiManager.js';
-import { Sound } from './src/ui/soundManager.js';
-import { Scanner } from './src/ui/scanner.js';
-import { SearchComponent } from './src/ui/searchComponent.js';
-import { AI } from './src/ui/aiAssistant.js';
-import { MerchantsPage } from './src/pages/merchants.js';
-import { MachinesPage } from './src/pages/machines.js';
-import { TransfersPage } from './src/pages/transfers.js';
-import { CollectionsPage } from './src/pages/collections.js';
-import { ArchivePage } from './src/pages/archive.js';
-import { RequestsPage } from './src/pages/requests.js';
-import { Dashboard } from './src/pages/dashboard.js';
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <div class="header-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div class="header-title">
+                        <h1>لوحة التحكم</h1>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="refreshAll()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
+                    <button class="icon-btn" onclick="toggleSidebar(); playClick()" title="القائمة"><i class="fas fa-bars"></i></button>
+                </div>
+            </header>
 
-// Initialize application
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Initializing Axentro System v5.0...');
-    
-    // Initialize Supabase
-    const supabaseReady = initSupabase();
-    if (!supabaseReady) {
-        UI.showError('فشل الاتصال بقاعدة البيانات');
-        return;
-    }
-    
-    // Initialize Sound Manager
-    await Sound.init();
-    
-    // Initialize App
-    App.init();
-    
-    // Hide loading screen after initialization
-    setTimeout(() => {
-        document.getElementById('globalLoading').classList.add('hidden');
-    }, 2500);
-    
-    console.log('✅ Axentro System initialized successfully!');
-});
+            <!-- LOGIN SECTION -->
+            <section id="section-login">
+                <div class="login-container">
+                    <div class="login-header">
+                        <div class="login-avatar"><i class="fas fa-user-shield"></i></div>
+                        <h2 class="login-title">مرحباً بك في نظام Axentro</h2>
+                        <p class="login-desc">سجلب مسح الضوئي أو أدخل بياناتك للدخول</p>
+                    </div>
 
-// Make modules globally available for inline handlers
-window.App = App;
-window.UI = UI;
-window.Sound = Sound;
-window.Scanner = Scanner;
-window.AI = AI;
-window.MerchantsPage = MerchantsPage;
-window.MachinesPage = MachinesPage;
-window.TransfersPage = TransfersPage;
-window.CollectionsPage = CollectionsPage;
-window.ArchivePage = ArchivePage;
-window.RequestsPage = RequestsPage;
-window.Dashboard = Dashboard;
-</script>
+                    <!-- QR Scanner -->
+                    <div class="qr-scanner-area" onclick="startScanner()">
+                        <div class="qr-code-img">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://axentro-official.github.io/merchant-tracker/" alt="QR Code" style="width:100%;height:100%;object-fit:contain;">
+                        </div>
+                        <div class="qr-hint">امسحح للدخول السريع</div>
+                    </div>
 
-</body>
-</html>
+                    <!-- Login Form -->
+                    <div class="form-group">
+                        <input type="text" id="adminIdInput" class="form-input" placeholder="أدخل رقم التعريف *" autocomplete="off" onkeypress="if(event.key==='Enter') adminLogin()">
+                        <i class="fas fa-key form-input-icon"></i>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="adminLogin()">
+                            <i class="fas fa-sign-in-alt"></i>
+                            تسجيل الدخول
+                        </button>
+                        <button class="btn btn-outline" onclick="playClick()">
+                            <i class="fas fa-qrcode"></i>
+                            مسح ضوئي
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DASHBOARD SECTION -->
+            <section id="section-dashboard" style="display:none;">
+                <!-- Stats Row -->
+                <div class="dashboard-grid">
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <div class="dash-card-title">
+                                <div class="dash-card-icon blue"><i class="fas fa-users"></i></div>
+                                <span>إجمالي التجار</span>
+                            </div>
+                            <div class="stat-value" id="totalMerchants">0</div>
+                            <div class="stat-label">تاجر نشط</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <div class="dash-card-title">
+                                <div class="dash-card-icon green"><
