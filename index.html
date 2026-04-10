@@ -356,7 +356,7 @@
             .navbar-actions { justify-content: center; }
         }
 
-        /* ===== DASHBOARD CARDS (2 بجانب بعض في كل الشاشات) ===== */
+        /* ===== DASHBOARD CARDS (2 بجانب بعض) ===== */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -412,7 +412,6 @@
             font-size: 12px;
             color: var(--text-muted);
         }
-        /* على الشاشات الصغيرة جداً (أقل من 480px) يمكن أن يظهر شريط تمرير أفقي بدلاً من تكسير التصميم */
         @media (max-width: 480px) {
             .dashboard-grid {
                 grid-template-columns: repeat(2, minmax(160px, 1fr));
@@ -576,7 +575,126 @@
             margin-bottom: 12px;
         }
 
-        /* ===== TOAST (مدة أقصر) ===== */
+        /* ===== MERCHANTS TABLE & ACTION BUTTONS ===== */
+        .merchants-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .table-actions {
+            padding: 16px 24px;
+            display: flex;
+            justify-content: flex-end;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+        }
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* ===== MODAL (نافذة منبثقة) ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modal-in 0.3s ease;
+        }
+        @keyframes modal-in {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+        }
+        textarea.form-input {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* ===== TOAST ===== */
         #toastContainer {
             position: fixed;
             top: 20px;
@@ -622,7 +740,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 10000;
+            z-index: 10001;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -762,6 +880,98 @@
     </div>
 </div>
 
+<!-- Modals (للإضافة والتعديل) -->
+<!-- Modal للتجار -->
+<div id="merchantModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="merchantModalTitle"><i class="fas fa-user-plus"></i> إضافة تاجر جديد</h3>
+            <button class="modal-close" onclick="closeMerchantModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editMerchantId">
+            <div class="form-group"><label>اسم التاجر *</label><input type="text" id="mName" class="form-input" placeholder="الاسم الكامل"></div>
+            <div class="form-group"><label>اسم النشاط</label><input type="text" id="mActivity" class="form-input" placeholder="نشاط المتجر"></div>
+            <div class="form-group"><label>رقم الحساب *</label><input type="text" id="mAccount" class="form-input" dir="ltr" placeholder="رقم الحساب"></div>
+            <div class="form-group"><label>رقم الهاتف</label><input type="text" id="mPhone" class="form-input" dir="ltr" placeholder="رقم الهاتف"></div>
+            <div class="form-group"><label>المنطقة</label><input type="text" id="mArea" class="form-input" placeholder="المنطقة"></div>
+            <div class="form-group"><label>العنوان</label><input type="text" id="mAddress" class="form-input" placeholder="العنوان بالتفصيل"></div>
+            <div class="form-group"><label>الحالة</label><select id="mStatus" class="form-select"><option value="نشط">نشط</option><option value="غير نشط">غير نشط</option><option value="موقوف">موقوف</option></select></div>
+            <div class="form-group"><label>ملاحظات</label><textarea id="mNotes" class="form-input" rows="3" placeholder="ملاحظات إضافية"></textarea></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="saveMerchant()">حفظ</button>
+            <button class="btn btn-outline" onclick="closeMerchantModal()">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal للمكن -->
+<div id="machineModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="machineModalTitle"><i class="fas fa-plus-circle"></i> إضافة مكنة جديدة</h3>
+            <button class="modal-close" onclick="closeMachineModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editMachineId">
+            <div class="form-group"><label>التاجر *</label><select id="machMerchantId" class="form-select"></select></div>
+            <div class="form-group"><label>الرقم التسلسلي *</label><input type="text" id="machSerial" class="form-input" dir="ltr" placeholder="الرقم التسلسلي"></div>
+            <div class="form-group"><label>التارجت الشهري</label><input type="number" id="machTarget" class="form-input" step="any" min="0" placeholder="0.00"></div>
+            <div class="form-group"><label>الحالة</label><select id="machStatus" class="form-select"><option value="نشطة">نشطة</option><option value="غير نشطة">غير نشطة</option><option value="صيانة">صيانة</option></select></div>
+            <div class="form-group"><label>ملاحظات</label><textarea id="machNotes" class="form-input" rows="3"></textarea></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="saveMachine()">حفظ</button>
+            <button class="btn btn-outline" onclick="closeMachineModal()">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal للتحويلات -->
+<div id="transferModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="transferModalTitle"><i class="fas fa-exchange-alt"></i> تحويل جديد</h3>
+            <button class="modal-close" onclick="closeTransferModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editTransferId">
+            <div class="form-group"><label>التاجر *</label><select id="transMerchantId" class="form-select"></select></div>
+            <div class="form-group"><label>المكنة (اختياري)</label><select id="transMachineId" class="form-select"></select></div>
+            <div class="form-group"><label>المبلغ *</label><input type="number" id="transAmount" class="form-input" step="any" min="0.01" placeholder="0.00"></div>
+            <div class="form-group"><label>نوع التحويل</label><select id="transType" class="form-select"><option value="نقدي">نقدي</option><option value="شيك">شيك</option><option value="تحويل بنكي">تحويل بنكي</option><option value="إيداع خزينة">إيداع خزينة</option><option value="أخرى">أخرى</option></select></div>
+            <div class="form-group"><label>ملاحظات</label><textarea id="transNotes" class="form-input" rows="3"></textarea></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="saveTransfer()">حفظ</button>
+            <button class="btn btn-outline" onclick="closeTransferModal()">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal للتحصيلات -->
+<div id="collectionModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="collectionModalTitle"><i class="fas fa-hand-holding-usd"></i> تحصيل جديد</h3>
+            <button class="modal-close" onclick="closeCollectionModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editCollectionId">
+            <div class="form-group"><label>التاجر *</label><select id="collMerchantId" class="form-select"></select></div>
+            <div class="form-group"><label>المكنة (اختياري)</label><select id="collMachineId" class="form-select"></select></div>
+            <div class="form-group"><label>المبلغ *</label><input type="number" id="collAmount" class="form-input" step="any" min="0.01" placeholder="0.00"></div>
+            <div class="form-group"><label>نوع التحصيل</label><select id="collType" class="form-select"><option value="نقدي">نقدي</option><option value="شيك">شيك</option><option value="تحويل بنكي">تحويل بنكي</option><option value="خصم من الرصيد">خصم من الرصيد</option><option value="أخرى">أخرى</option></select></div>
+            <div class="form-group"><label>ملاحظات</label><textarea id="collNotes" class="form-input" rows="3"></textarea></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="saveCollection()">حفظ</button>
+            <button class="btn btn-outline" onclick="closeCollectionModal()">إلغاء</button>
+        </div>
+    </div>
+</div>
+
 <!-- Main Application -->
 <div id="mainApp">
     <main class="main-content">
@@ -783,7 +993,6 @@
                     <button class="btn btn-primary" onclick="adminLogin()"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
                 </div>
             </div>
-            <!-- Footer خاص بصفحة الدخول -->
             <footer class="app-footer" style="margin-top: 20px; width: 100%;">
                 <div class="footer-content">
                     <p class="footer-copyright">© 2024 Axentro – All Rights Reserved</p>
@@ -805,7 +1014,7 @@
                 <div class="navbar-title">Axentro Admin</div>
             </div>
             <div class="navbar-links">
-                <button class="nav-link active" data-page="dashboard"><i class="fas fa-home"></i> لوحة التحكم</button>
+                <button class="nav-link" data-page="dashboard"><i class="fas fa-home"></i> لوحة التحكم</button>
                 <button class="nav-link" data-page="merchants"><i class="fas fa-users"></i> التجار</button>
                 <button class="nav-link" data-page="machines"><i class="fas fa-desktop"></i> المكن</button>
                 <button class="nav-link" data-page="transfers"><i class="fas fa-arrow-up"></i> التحويلات</button>
@@ -814,16 +1023,15 @@
                 <button class="nav-link" data-page="archive"><i class="fas fa-archive"></i> الأرشيف</button>
             </div>
             <div class="navbar-actions">
-                <button class="icon-btn" onclick="refreshAll()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
+                <button class="icon-btn" onclick="refreshCurrentPage()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
                 <button class="icon-btn" onclick="logout()" title="تسجيل خروج"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </nav>
 
-        <!-- الأقسام (تظهر بعد تسجيل الدخول) -->
+        <!-- Dashboard Sections (تظهر بعد الدخول) -->
         <div id="dashboardSections" style="display:none;">
             <!-- DASHBOARD SECTION -->
             <section id="section-dashboard">
-                <!-- Stats Cards (2 في الصف) -->
                 <div class="dashboard-grid">
                     <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي التجار</div><div class="stat-card-icon blue"><i class="fas fa-users"></i></div></div><div class="stat-card-value" id="totalMerchants">0</div><div class="stat-card-label">تاجر نشط</div></div>
                     <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي المكن</div><div class="stat-card-icon green"><i class="fas fa-desktop"></i></div></div><div class="stat-card-value" id="totalMachines">0</div><div class="stat-card-label">مكنة مسجلة</div></div>
@@ -832,37 +1040,102 @@
                     <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي التحويلات</div><div class="stat-card-icon orange"><i class="fas fa-exchange-alt"></i></div></div><div class="stat-card-value" id="totalTransfers">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
                     <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي التحصيلات</div><div class="stat-card-icon green"><i class="fas fa-hand-holding-usd"></i></div></div><div class="stat-card-value" id="totalCollections">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
                 </div>
-
-                <!-- أعلى المكن تحقيقاً للتارجت -->
                 <div class="top-machines-section">
                     <div class="section-header"><i class="fas fa-trophy"></i><h3>🏆 أعلى المكن تحقيقاً للتارجت</h3></div>
-                    <div class="machines-table-container">
-                        <table class="machines-table" id="topMachinesTable">
-                            <thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th></tr></thead>
-                            <tbody id="topMachinesBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> جاري تحميل البيانات...<\/td></tr></tbody>
-                        </table>
-                    </div>
+                    <div class="machines-table-container"><table class="machines-table" id="topMachinesTable"><thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th></tr></thead><tbody id="topMachinesBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> جاري تحميل البيانات...<\/td></tr></tbody></table></div>
                 </div>
-
-                <!-- آخر العمليات -->
                 <div class="recent-section">
                     <div class="section-header"><i class="fas fa-clock"></i><h3>📋 آخر العمليات</h3></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th><th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th></tr></thead><tbody id="recentActivityBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة<\/td></tr></tbody></table></div>
+                </div>
+            </section>
+
+            <!-- MERCHANTS SECTION -->
+            <section id="section-merchants" style="display:none;">
+                <div class="merchants-section">
+                    <div class="table-actions">
+                        <button class="btn-add" onclick="openMerchantModal()"><i class="fas fa-plus"></i> إضافة تاجر جديد</button>
+                    </div>
                     <div class="table-container">
                         <table class="data-table">
-                            <thead><tr><th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th><th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th></tr></thead>
-                            <tbody id="recentActivityBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة<\/td></tr></tbody>
+                            <thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم الحساب</th><th>رقم الهاتف</th><th>المنطقة</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="merchantsTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- باقي الأقسام (قيد التطوير) -->
-            <section id="section-merchants" style="display:none;"><div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">قائمة التجار</div></div><p style="text-align:center;padding:40px;color:var(--text-muted);">قيد التطوير...</p></div></section>
-            <section id="section-machines" style="display:none;"><div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">قائمة المكن</div></div><p style="text-align:center;padding:40px;color:var(--text-muted);">قيد التطوير...</p></div></section>
-            <section id="section-transfers" style="display:none;"><div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">سجل التحويلات</div></div><p style="text-align:center;padding:40px;color:var(--text-muted);">قيد التطوير...</p></div></section>
-            <section id="section-collections" style="display:none;"><div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">سجل التحصيلات</div></div><p style="text-align:center;padding:40px;color:var(--text-muted);">قيد التطوير...</p></div></section>
-            <section id="section-requests" style="display:none;"><div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">طلبات التجار</div></div><p style="text-align:center;padding:40px;color:var(--text-muted);">قيد التطوير...</p></div></section>
-            <section id="section-archive" style="display:none;"><div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">الأرشيف</div></div><p style="text-align:center;padding:40px;color:var(--text-muted);">قيد التطوير...</p></div></section>
+            <!-- MACHINES SECTION -->
+            <section id="section-machines" style="display:none;">
+                <div class="merchants-section">
+                    <div class="table-actions">
+                        <button class="btn-add" onclick="openMachineModal()"><i class="fas fa-plus"></i> إضافة مكنة جديدة</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead><tr><th>#</th><th>رقم المكنة</th><th>اسم التاجر</th><th>النشاط</th><th>السيريال</th><th>التارجت</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="machinesTableBody"><tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TRANSFERS SECTION -->
+            <section id="section-transfers" style="display:none;">
+                <div class="merchants-section">
+                    <div class="table-actions">
+                        <button class="btn-add" onclick="openTransferModal()"><i class="fas fa-plus"></i> إضافة تحويل جديد</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>القيمة</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="transfersTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COLLECTIONS SECTION -->
+            <section id="section-collections" style="display:none;">
+                <div class="merchants-section">
+                    <div class="table-actions">
+                        <button class="btn-add" onclick="openCollectionModal()"><i class="fas fa-plus"></i> إضافة تحصيل جديد</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>القيمة</th><th>المتبقي</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="collectionsTableBody"><tr><td colspan="10" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REQUESTS SECTION -->
+            <section id="section-requests" style="display:none;">
+                <div class="merchants-section">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead><tr><th>#</th><th>رقم الطلب</th><th>التاريخ</th><th>التاجر</th><th>النوع</th><th>المبلغ</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="requestsTableBody"><tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ARCHIVE SECTION -->
+            <section id="section-archive" style="display:none;">
+                <div class="merchants-section">
+                    <div class="table-actions">
+                        <button class="btn-add" onclick="closeMonth()"><i class="fas fa-archive"></i> إغلاق الشهر الحالي</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead><tr><th>#</th><th>الشهر</th><th>السنة</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="archiveTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
         </div>
 
         <!-- الفوتر العام (يظهر بعد تسجيل الدخول) -->
@@ -881,30 +1154,101 @@
     </main>
 </div>
 
+<script type="module">
+    // استيراد دوال الصفحات
+    import { initMerchantsPage, loadMerchants, openMerchantModal, saveMerchant, editMerchant, deleteMerchant, closeMerchantModal } from './pages/merchants.js';
+    import { initMachinesPage, loadMachines, openMachineModal, saveMachine, editMachine, deleteMachine, closeMachineModal } from './pages/machines.js';
+    import { initTransfersPage, loadTransfers, openTransferModal, saveTransfer, editTransfer, deleteTransfer, closeTransferModal } from './pages/transfers.js';
+    import { initCollectionsPage, loadCollections, openCollectionModal, saveCollection, editCollection, deleteCollection, closeCollectionModal } from './pages/collections.js';
+    import { initArchivePage, loadArchives, closeMonth, deleteArchive } from './pages/archive.js';
+    import { initDashboardPage, loadDashboardStats, loadRecentActivities, loadTopMachines } from './pages/dashboard.js';
+
+    // ربط الدوال بالنافذة العامة (للاستخدام من أزرار onclick)
+    window.openMerchantModal = openMerchantModal;
+    window.saveMerchant = saveMerchant;
+    window.editMerchant = editMerchant;
+    window.deleteMerchant = deleteMerchant;
+    window.closeMerchantModal = closeMerchantModal;
+    
+    window.openMachineModal = openMachineModal;
+    window.saveMachine = saveMachine;
+    window.editMachine = editMachine;
+    window.deleteMachine = deleteMachine;
+    window.closeMachineModal = closeMachineModal;
+    
+    window.openTransferModal = openTransferModal;
+    window.saveTransfer = saveTransfer;
+    window.editTransfer = editTransfer;
+    window.deleteTransfer = deleteTransfer;
+    window.closeTransferModal = closeTransferModal;
+    
+    window.openCollectionModal = openCollectionModal;
+    window.saveCollection = saveCollection;
+    window.editCollection = editCollection;
+    window.deleteCollection = deleteCollection;
+    window.closeCollectionModal = closeCollectionModal;
+    
+    window.closeMonth = closeMonth;
+    window.deleteArchive = deleteArchive;
+
+    // إضافة الدوال المساعدة للـ refresh وغيرها (الموجودة أصلاً في النطاق العام)
+    window.refreshCurrentPage = async () => {
+        const activeSection = document.querySelector('#dashboardSections section[style*="display: block"]');
+        if (!activeSection) return;
+        const id = activeSection.id;
+        if (id === 'section-dashboard') {
+            await loadDashboardStats();
+            await loadRecentActivities();
+            await loadTopMachines();
+        } else if (id === 'section-merchants') {
+            await loadMerchants();
+        } else if (id === 'section-machines') {
+            await loadMachines();
+        } else if (id === 'section-transfers') {
+            await loadTransfers();
+        } else if (id === 'section-collections') {
+            await loadCollections();
+        } else if (id === 'section-archive') {
+            await loadArchives();
+        }
+    };
+
+    // تهيئة الصفحات بعد تسجيل الدخول
+    window.initAllPages = () => {
+        initMerchantsPage();
+        initMachinesPage();
+        initTransfersPage();
+        initCollectionsPage();
+        initArchivePage();
+        initDashboardPage();
+    };
+
+    // تعديل دالة showMainApp الأصلية (ستُستخدم من الكود القديم)
+    const originalShowMainApp = window.showMainApp;
+    window.showMainApp = () => {
+        if (originalShowMainApp) originalShowMainApp();
+        window.initAllPages();
+        window.refreshCurrentPage();
+    };
+</script>
+
 <script>
 // ============================================================
-// CONFIGURATION
+// CONFIGURATION (الكود القديم المدمج)
 // ============================================================
 const CONFIG = {
     SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
-    SESSION_DURATION: 60 * 60 * 1000  // ساعة واحدة
+    SESSION_DURATION: 60 * 60 * 1000
 };
 
 let supabaseClient = null;
 let pendingConfirmCallback = null;
 let sessionCheckInterval = null;
 
-// ============================================================
-// SOUND SYSTEM (نقر احترافي)
-// ============================================================
 const Sound = {
     audioCtx: null,
-    init() {
-        try {
-            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        } catch(e) {}
-    },
+    init() { try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} },
     playClick() {
         try {
             if (!this.audioCtx) this.init();
@@ -935,9 +1279,6 @@ const Sound = {
 };
 function playClick() { Sound.play('click'); }
 
-// ============================================================
-// TOAST & CONFIRM (مدة ظهور أقصر)
-// ============================================================
 const UI = {
     showToast(message, type = 'info') {
         const container = document.getElementById('toastContainer');
@@ -946,7 +1287,6 @@ const UI = {
         const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
         toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${message}</span>`;
         container.appendChild(toast);
-        // مدة ظهور أقصر: 2500 مللي ثانية (2.5 ثانية)
         setTimeout(() => {
             toast.style.animation = 'toast-in 0.3s ease reverse';
             setTimeout(() => toast.remove(), 300);
@@ -960,17 +1300,12 @@ const UI = {
         modal.classList.add('show');
     },
     closeConfirm() {
-        const modal = document.getElementById('confirmModal');
-        modal.classList.remove('show');
+        document.getElementById('confirmModal').classList.remove('show');
         pendingConfirmCallback = null;
     }
 };
 
-// ============================================================
-// INIT & BOOT
-// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Starting Axentro Admin...');
     const progressBar = document.getElementById('bootProgress');
     const statusText = document.getElementById('bootStatus');
     const phaseText = document.getElementById('bootPhase');
@@ -1013,6 +1348,7 @@ function initSupabase() {
         supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
         console.log('✅ Supabase initialized');
     }
+    window.supabaseClient = supabaseClient; // لجعله متاحاً للوحدات المستوردة
 }
 
 function setupNavbarEvents() {
@@ -1035,9 +1371,6 @@ function setupConfirmModalEvents() {
     });
 }
 
-// ============================================================
-// SESSION & AUTH (تسجيل خروج تلقائي)
-// ============================================================
 function startAutoLogoutTimer() {
     if (sessionCheckInterval) clearInterval(sessionCheckInterval);
     sessionCheckInterval = setInterval(() => {
@@ -1045,10 +1378,7 @@ function startAutoLogoutTimer() {
         if (session) {
             try {
                 const data = JSON.parse(session);
-                if (Date.now() > data.expiry) {
-                    console.log('⏰ Session expired, logging out...');
-                    logout();
-                }
+                if (Date.now() > data.expiry) logout();
             } catch(e) {}
         }
     }, 30000);
@@ -1061,7 +1391,7 @@ function checkSessionAndShow() {
             const data = JSON.parse(session);
             if (data.isLoggedIn && Date.now() < data.expiry) {
                 showMainApp();
-                refreshAll();
+                if (window.refreshCurrentPage) window.refreshCurrentPage();
                 return;
             }
         } catch(e) {}
@@ -1098,7 +1428,8 @@ async function adminLogin() {
             Sound.play('success');
             createSession();
             showMainApp();
-            await refreshAll();
+            if (window.initAllPages) window.initAllPages();
+            if (window.refreshCurrentPage) await window.refreshCurrentPage();
             UI.showToast('🎉 مرحباً بك في لوحة التحكم', 'success');
         } else {
             UI.showToast('كلمة المرور غير صحيحة', 'error');
@@ -1128,16 +1459,12 @@ function shakeElement(el) {
     setTimeout(() => el.style.animation = '', 500);
 }
 
-// ============================================================
-// NAVIGATION & UI
-// ============================================================
 function showLogin() {
     document.getElementById('section-login').style.display = 'flex';
     document.getElementById('mainNavbar').style.display = 'none';
     document.getElementById('dashboardSections').style.display = 'none';
     document.getElementById('globalFooter').style.display = 'none';
     document.getElementById('mainApp').classList.add('visible');
-    updateActiveNavLink(null);
 }
 
 function showMainApp() {
@@ -1147,7 +1474,6 @@ function showMainApp() {
     document.getElementById('globalFooter').style.display = 'block';
     document.getElementById('mainApp').classList.add('visible');
     showSection('dashboard');
-    updateActiveNavLink('dashboard');
 }
 
 function showSection(sectionName) {
@@ -1158,224 +1484,13 @@ function showSection(sectionName) {
     });
     const target = document.getElementById(`section-${sectionName}`);
     if (target) target.style.display = 'block';
-    updateActiveNavLink(sectionName);
-}
-
-function updateActiveNavLink(activePage) {
     document.querySelectorAll('.nav-link').forEach(link => {
         const page = link.getAttribute('data-page');
-        if (page === activePage) link.classList.add('active');
+        if (page === sectionName) link.classList.add('active');
         else link.classList.remove('active');
     });
+    if (window.refreshCurrentPage) window.refreshCurrentPage();
 }
-
-// ============================================================
-// جلب البيانات من قاعدة البيانات
-// ============================================================
-async function refreshAll() {
-    console.log('🔄 Refreshing dashboard data...');
-    try {
-        await loadRealDashboardStats();
-        await loadTopMachines();
-        await loadRecentActivities();
-        UI.showToast('✅ تم تحديث البيانات', 'success');
-    } catch(e) {
-        console.error(e);
-        UI.showToast('حدث خطأ أثناء التحديث', 'error');
-    }
-}
-
-async function loadRealDashboardStats() {
-    if (!supabaseClient) return;
-    const today = new Date().toISOString().split('T')[0];
-
-    const { count: merchantsCount } = await supabaseClient.from('merchants').select('*', { count: 'exact', head: true });
-    animateValue('totalMerchants', 0, merchantsCount || 0, 1000);
-
-    const { count: machinesCount } = await supabaseClient.from('machines').select('*', { count: 'exact', head: true });
-    animateValue('totalMachines', 0, machinesCount || 0, 1000);
-
-    const { data: transfersAll } = await supabaseClient.from('transfers').select('"قيمة التحويل","التاريخ"');
-    let totalTransfersAll = 0, todayTransfersSum = 0;
-    if (transfersAll) {
-        totalTransfersAll = transfersAll.reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0);
-        todayTransfersSum = transfersAll.filter(t => t['التاريخ'] === today).reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0);
-    }
-    animateValue('totalTransfers', 0, totalTransfersAll, 1500);
-    animateValue('todayTransfers', 0, todayTransfersSum, 1000);
-
-    const { data: collectionsAll } = await supabaseClient.from('collections').select('"قيمة التحصيل"');
-    let totalCollectionsAll = 0;
-    if (collectionsAll) totalCollectionsAll = collectionsAll.reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0);
-    animateValue('totalCollections', 0, totalCollectionsAll, 1500);
-
-    const remaining = totalTransfersAll - totalCollectionsAll;
-    animateValue('totalRemaining', 0, Math.max(0, remaining), 1500);
-}
-
-async function loadTopMachines() {
-    if (!supabaseClient) return;
-    try {
-        const { data: machines, error: mErr } = await supabaseClient.from('machines').select('*');
-        if (mErr) throw mErr;
-        if (!machines || machines.length === 0) {
-            document.getElementById('topMachinesBody').innerHTML = '<tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> لا توجد مكن مسجلة</td></tr>';
-            return;
-        }
-        const { data: transfersAll, error: tErr } = await supabaseClient.from('transfers').select('"رقم المكنة","قيمة التحويل"');
-        if (tErr) throw tErr;
-        const machineAchieved = {};
-        if (transfersAll) {
-            transfersAll.forEach(t => {
-                const machineId = t['رقم المكنة'];
-                if (machineId) {
-                    const amount = parseFloat(t['قيمة التحويل']) || 0;
-                    machineAchieved[machineId] = (machineAchieved[machineId] || 0) + amount;
-                }
-            });
-        }
-        const machinesWithStats = machines.map(m => {
-            const target = parseFloat(m['التارجت الشهري']) || 0;
-            const achieved = machineAchieved[m['رقم المكنة']] || 0;
-            const percentage = target > 0 ? Math.min(100, (achieved / target) * 100) : 0;
-            return { ...m, achieved, percentage, target };
-        });
-        machinesWithStats.sort((a, b) => b.percentage - a.percentage);
-        const top10 = machinesWithStats.slice(0, 10);
-        const tbody = document.getElementById('topMachinesBody');
-        if (top10.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="empty-state">لا توجد بيانات</td></tr>';
-            return;
-        }
-        tbody.innerHTML = top10.map((m, idx) => {
-            const percentage = m.percentage.toFixed(1);
-            let percentClass = '';
-            if (m.percentage >= 80) percentClass = 'achieved-highlight';
-            return `
-                <tr>
-                    <td>${idx+1}</td>
-                    <td>${m['رقم التاجر'] || '-'}</td>
-                    <td>${m['اسم التاجر'] || '-'}</td>
-                    <td>${m['اسم النشاط'] || '-'}</td>
-                    <td><code class="ref-code">${m['رقم المكنة'] || '-'}</code></td>
-                    <td><code>${m['الرقم التسلسلي'] || '-'}</code></td>
-                    <td>${m.target.toLocaleString()} ج.م</td>
-                    <td class="${percentClass}">${m.achieved.toLocaleString()} ج.م</td>
-                    <td>
-                        <div class="progress-wrapper">
-                            <div class="progress-bar-bg"><div class="progress-fill" style="width: ${percentage}%;"></div></div>
-                            <span class="percentage-text">${percentage}%</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    } catch (err) {
-        console.error('Error loading top machines:', err);
-        document.getElementById('topMachinesBody').innerHTML = '<tr><td colspan="9" class="empty-state">خطأ في تحميل البيانات</td></tr>';
-    }
-}
-
-async function loadRecentActivities() {
-    if (!supabaseClient) return;
-    try {
-        const { data: transfers, error: tErr } = await supabaseClient
-            .from('transfers')
-            .select('"الرقم المرجعي","التاريخ","الوقت","اسم التاجر","اسم النشاط","قيمة التحويل","created_at"')
-            .order('created_at', { ascending: true });
-        if (tErr) throw tErr;
-        const { data: collections, error: cErr } = await supabaseClient
-            .from('collections')
-            .select('"الرقم المرجعي","التاريخ","الوقت","اسم التاجر","اسم النشاط","قيمة التحصيل","created_at"')
-            .order('created_at', { ascending: true });
-        if (cErr) throw cErr;
-        let activities = [];
-        if (transfers) {
-            transfers.forEach(t => {
-                activities.push({
-                    ref: t['الرقم المرجعي'],
-                    date: t['التاريخ'],
-                    time: t['الوقت'],
-                    merchantName: t['اسم التاجر'],
-                    activityName: t['اسم النشاط'],
-                    amount: t['قيمة التحويل'],
-                    type: 'تحويل',
-                    createdAt: t['created_at']
-                });
-            });
-        }
-        if (collections) {
-            collections.forEach(c => {
-                activities.push({
-                    ref: c['الرقم المرجعي'],
-                    date: c['التاريخ'],
-                    time: c['الوقت'],
-                    merchantName: c['اسم التاجر'],
-                    activityName: c['اسم النشاط'],
-                    amount: c['قيمة التحصيل'],
-                    type: 'تحصيل',
-                    createdAt: c['created_at']
-                });
-            });
-        }
-        activities.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        const tbody = document.getElementById('recentActivityBody');
-        if (activities.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة</td></tr>';
-            return;
-        }
-        function formatTime12(timeStr, dateStr) {
-            try {
-                if (timeStr && (timeStr.includes('AM') || timeStr.includes('PM'))) return timeStr;
-                if (dateStr && timeStr) {
-                    const d = new Date(`${dateStr}T${timeStr}`);
-                    if (!isNaN(d.getTime())) {
-                        return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-                    }
-                }
-                return timeStr || '-';
-            } catch(e) { return timeStr || '-'; }
-        }
-        tbody.innerHTML = activities.map((act, idx) => {
-            const amount = (parseFloat(act.amount) || 0).toLocaleString();
-            const badgeClass = act.type === 'تحويل' ? 'badge-danger' : 'badge-success';
-            const statusBadge = '<span class="badge badge-info">مكتمل</span>';
-            const formattedTime = formatTime12(act.time, act.date);
-            return `
-                <tr>
-                    <td>${idx+1}</td>
-                    <td><code class="ref-code">${act.ref || '-'}</code></td>
-                    <td><span class="badge ${badgeClass}">${act.type}</span></td>
-                    <td>${act.merchantName || '-'}</td>
-                    <td>${act.activityName || '-'}</td>
-                    <td>${amount} ج.م</td>
-                    <td>${act.date || '-'}</td>
-                    <td>${formattedTime}</td>
-                    <td>${statusBadge}</td>
-                </tr>
-            `;
-        }).join('');
-    } catch (err) {
-        console.error('Error loading recent activities:', err);
-        document.getElementById('recentActivityBody').innerHTML = '<tr><td colspan="9" class="empty-state">خطأ في تحميل البيانات</td></tr>';
-    }
-}
-
-function animateValue(elementId, start, end, duration) {
-    const element = document.getElementById(elementId);
-    if (!element) return;
-    const range = end - start;
-    const startTime = performance.now();
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const value = Math.floor(start + range * easeOutQuart(progress));
-        element.textContent = value.toLocaleString('ar-EG');
-        if (progress < 1) requestAnimationFrame(update);
-    }
-    requestAnimationFrame(update);
-}
-function easeOutQuart(x) { return 1 - Math.pow(1 - x, 4); }
 
 function togglePasswordVisibility() {
     const input = document.getElementById('adminPasswordInput');
@@ -1391,8 +1506,33 @@ function togglePasswordVisibility() {
     }
 }
 
+// دوال لوحة التحكم القديمة (لضمان عمل refreshAll)
+window.animateValue = function(elementId, start, end, duration) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    const range = end - start;
+    const startTime = performance.now();
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const value = Math.floor(start + range * (1 - Math.pow(1 - progress, 4)));
+        element.textContent = value.toLocaleString('ar-EG');
+        if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+};
+
+window.refreshAll = async function() {
+    if (window.refreshCurrentPage) await window.refreshCurrentPage();
+};
+
+// ربط الدوال العامة
+window.showSection = showSection;
+window.logout = logout;
+window.togglePasswordVisibility = togglePasswordVisibility;
+
 window.onerror = function(msg, url, line, col, error) {
-    console.error('❌ Global error:', msg, line, col);
+    console.error('Global error:', msg, line, col);
     return false;
 };
 console.log('✅ Axentro Admin Loaded Successfully!');
