@@ -21,13 +21,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Sound Effects (مطابقة مع index) -->
+    <!-- Sound Effects -->
     <audio id="successSound" src="src/assets/login-success.mp3" preload="auto"></audio>
     <audio id="errorSound" src="src/assets/login-error.mp3" preload="auto"></audio>
     <audio id="clickSound" src="src/assets/scan.mp3" preload="auto"></audio>
 
     <style>
-        /* ===== RESET & BASE ===== */
+        /* ===== RESET & BASE (متطابق مع index.html) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
         body {
@@ -169,6 +169,14 @@
             transition: opacity 0.5s ease;
         }
         #mainApp.visible { display: block; opacity: 1; }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
 
         /* ===== TOP BAR (مشابه لـ index) ===== */
         .top-bar {
@@ -337,16 +345,6 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(59,130,246,0.4);
-        }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-        }
-        .btn-outline:hover {
-            border-color: var(--primary);
-            color: var(--primary-light);
-            background: rgba(59,130,246,0.05);
         }
 
         /* ===== DASHBOARD ===== */
@@ -564,6 +562,8 @@
             display: block;
             margin-bottom: 12px;
         }
+        .amount-negative { color: var(--danger); font-weight: 700; }
+        .amount-positive { color: var(--success); font-weight: 700; }
 
         /* ===== ACTION BUTTONS ===== */
         .action-row {
@@ -736,6 +736,7 @@
         @media (max-width: 640px) {
             .main-content { padding: 16px; }
             .login-card { padding: 24px 20px; margin: 0; }
+            .stats-grid { grid-template-columns: 1fr; }
         }
         @keyframes shake { 0%,100%{transform:translateX(0)} 25%,75%{transform:translateX(-8px)} 50%{transform:translateX(8px)} }
         .shake { animation: shake 0.5s ease; }
@@ -762,7 +763,7 @@
 
 <!-- Main Application -->
 <div id="mainApp">
-    <div class="main-content" style="padding: 24px; max-width: 1400px; margin: 0 auto;">
+    <div class="main-content">
         <!-- Top Bar -->
         <div class="top-bar">
             <div class="brand-section">
@@ -1225,15 +1226,13 @@ async function submitRequest() {
     try {
         const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // لأن Google Script لا يدعم CORS بسهولة
+            mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestData)
         });
-        // بما أن mode: 'no-cors' لا يمكن قراءة الرد، نفترض النجاح
         Sound.play('success');
         UI.showToast('تم إرسال طلبك بنجاح! سيتم مراجعته قريباً', 'success');
         closeRequestModal();
-        // إعادة تحميل الطلبات
         if (currentMerchant) await loadMerchantData(currentMerchant.id);
     } catch (err) {
         console.error(err);
