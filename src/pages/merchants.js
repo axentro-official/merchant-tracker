@@ -1,91 +1,73 @@
 /**
  * Merchants Page
- * CRUD operations for merchants
+ * CRUD operations for merchants - مطابق لستايل index.html
  */
 
-import { 
-    getMerchants, setMerchants, getSearchTerm, setSearchTerm 
-} from '../ui/stateManager.js';
-import { showModal, showConfirm } from '../ui/modals.js';
-import { showToast } from '../ui/toast.js';
-import { escapeHtml, normalizeText, formatMoney } from '../utils/formatters.js';
-import { 
-    getAllMerchants, createMerchant, updateMerchant as updateMerchantDB, removeMerchant,
-    generateMerchantId, findMerchantById, searchMerchants 
-} from '../services/merchantService.js';
-import { showLoading } from '../core/app.js';
+import { getSupabase } from '../config/supabase.js';
+import { showToast, showConfirm } from '../ui/toast.js';
+import { escapeHtml, formatMoney } from '../utils/formatters.js';
 
-/**
- * Render merchants table
- */
-export function renderMerchants() {
-    let list = [...getMerchants()];
-    const term = getSearchTerm('merchant');
+let supabase = null;
+let currentMerchants = [];
 
-    // Apply search filter
-    if (term) {
-        list = searchMerchants(term, list, normalizeText);
+// تهيئة Supabase (سيتم استدعاؤها من app.js)
+export function initMerchantsPage() {
+    supabase = getSupabase();
+}
+
+// تحميل وعرض التجار
+export async function loadMerchants() {
+    if (!supabase) return;
+    try {
+        const { data, error } = await supabase
+            .from('merchants')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        currentMerchants = data || [];
+        renderMerchantsTable();
+    } catch (err) {
+        console.error(err);
+        showToast('خطأ في تحميل التجار', 'error');
     }
+}
 
-    // Apply status filter
-    const statusFilter = document.getElementById('merchantStatusFilter')?.value;
-    if (statusFilter) {
-        list = list.filter(m => m['الحالة'] === statusFilter);
-    }
+function renderMerchantsTable() {
+    const tbody = document.getElementById('merchantsTableBody');
+    if (!tbody) return;
 
-    const tbody = document.getElementById('merchantsTable');
-    
-    // Empty state
-    if (!list.length) {
+    if (!currentMerchants.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="10" class="empty-state">
-                    <i class="fas fa-users"></i>
-                    <p>لا يوجد تجار</p>
+                <td colspan="9" class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>لا يوجد تجار مسجلين</p>
                 </td>
             </tr>
         `;
         return;
     }
 
-    // Render rows
-    tbody.innerHTML = list.map((merchant, index) => `
+    tbody.innerHTML = currentMerchants.map((m, idx) => `
         <tr>
-            <td>${index + 1}</td>
+            <td>${idx + 1}</td>
+            <td><code class="ref-code">${escapeHtml(m['رقم التاجر'] || '-')}</code></td>
+            <td><strong>${escapeHtml(m['اسم التاجر'] || '-')}</strong></td>
+            <td>${escapeHtml(m['اسم النشاط'] || '-')}</td>
+            <td>${escapeHtml(m['رقم الحساب'] || '-')}</td>
+            <td dir="ltr">${escapeHtml(m['رقم الهاتف'] || '-')}</td>
+            <td>${escapeHtml(m['المنطقة'] || '-')}</td>
             <td>
-                <code style="color:var(--secondary);font-weight:700;">
-                    ${merchant['رقم التاجر']}
-                </code>
-            </td>
-            <td><strong>${merchant['اسم التاجر']}</strong></td>
-            <td>${merchant['اسم النشاط'] || '-'}</td>
-            <td dir="ltr">${merchant['رقم الحساب'] || '-'}</td>
-            <td dir="ltr">
-                ${merchant['رقم الهاتف'] 
-                    ? `<a href="tel:${merchant['رقم الهاتف']}" style="color:var(--primary);">
-                        ${merchant['رقم الهاتف']}
-                       </a>` 
-                    : '-'}
-            </td>
-            <td>${merchant['العنوان'] || '-'}</td>
-            <td>${merchant['المنطقة'] || '-'}</td>
-            <td>
-                <span class="badge ${
-                    merchant['الحالة'] === 'نشط' ? 'badge-success' : 'badge-danger'
-                }">
-                    ${merchant['الحالة'] || '-'}
+                <span class="badge ${m['الحالة'] === 'نشط' ? 'badge-success' : 'badge-danger'}">
+                    ${escapeHtml(m['الحالة'] || '-')}
                 </span>
             </td>
             <td>
                 <div class="action-btns">
-                    <button class="btn btn-primary btn-sm" 
-                            onclick="window.App.editMerchant('${merchant['رقم التاجر']}')" 
-                            title="تعديل">
+                    <button class="btn btn-primary btn-sm" onclick="window.editMerchant('${m.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-danger btn-sm" 
-                            onclick="window.App.deleteMerchant('${merchant['رقم التاجر']}')" 
-                            title="حذف">
+                    <button class="btn btn-danger btn-sm" onclick="window.deleteMerchant('${m.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -94,176 +76,133 @@ export function renderMerchants() {
     `).join('');
 }
 
-/**
- * Open merchant add/edit modal
- * @param {Object|null} data - Existing merchant data (for edit mode)
- */
-export function openMerchantModal(data = null) {
-    const isEdit = !!data;
+// فتح نافذة إضافة/تعديل تاجر (بنفس تصميم index)
+export function openMerchantModal(merchant = null) {
+    const isEdit = !!merchant;
+    const modal = document.getElementById('merchantModal');
+    const title = document.getElementById('merchantModalTitle');
     
-    const content = `
-        <div class="modal-header">
-            <h3>
-                <i class="fas ${isEdit ? 'fa-edit' : 'fa-user-plus'}"></i> 
-                ${isEdit ? 'تعديل تاجر' : 'إضافة تاجر جديد'}
-            </h3>
-        </div>
-        <div class="form-group">
-            <label class="form-label">اسم التاجر <span class="required">*</span></label>
-            <input type="text" id="m_name" class="form-control" 
-                   placeholder="الاسم الكامل" 
-                   value="${isEdit ? escapeHtml(data?.['اسم التاجر']) || '' : ''}">
-        </div>
-        <div class="form-group">
-            <label class="form-label">اسم النشاط التجاري</label>
-            <input type="text" id="m_activity" class="form-control" 
-                   placeholder="نشاط المتجر" 
-                   value="${isEdit ? escapeHtml(data?.['اسم النشاط']) || '' : ''}">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-            <div class="form-group">
-                <label class="form-label">رقم الحساب <span class="required">*</span></label>
-                <input type="text" id="m_account" class="form-control" dir="ltr" 
-                       value="${isEdit ? escapeHtml(data?.['رقم الحساب']) || '' : ''}">
-            </div>
-            <div class="form-group">
-                <label class="form-label">رقم الهاتف</label>
-                <input type="text" id="m_phone" class="form-control" dir="ltr" 
-                       value="${isEdit ? escapeHtml(data?.['رقم الهاتف']) || '' : ''}">
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="form-label">العنوان</label>
-            <input type="text" id="m_address" class="form-control" 
-                   placeholder="العنوان بالتفصيل" 
-                   value="${isEdit ? escapeHtml(data?.['العنوان']) || '' : ''}">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-            <div class="form-group">
-                <label class="form-label">المنطقة</label>
-                <input type="text" id="m_area" class="form-control" 
-                       value="${isEdit ? escapeHtml(data?.['المنطقة']) || '' : ''}">
-            </div>
-            <div class="form-group">
-                <label class="form-label">الحالة</label>
-                <select id="m_status" class="form-control">
-                    <option value="نشط" ${!isEdit || data?.['الحالة']==='نشط'?'selected':''}>✅ نشط</option>
-                    <option value="غير نشط" ${isEdit && data?.['الحالة']==='غير نشط'?'selected':''}>⛔ غير نشط</option>
-                    <option value="موقوف" ${isEdit && data?.['الحالة']==='موقوف'?'selected':''}>🚫 موقوف</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="form-label">ملاحظات</label>
-            <textarea id="m_notes" class="form-control" rows="3">${
-                isEdit ? escapeHtml(data?.['ملاحظات']) || '' : ''
-            }</textarea>
-        </div>
-        <button class="btn btn-primary btn-block" 
-                onclick="window.App.saveMerchant(${isEdit ? `'${escapeHtml(data?.['رقم التاجر'])}'` : 'null'})">
-            <i class="fas fa-save"></i> ${isEdit ? 'تحديث البيانات' : 'إضافة تاجر'}
-        </button>
-    `;
-    
-    showModal(content);
+    if (isEdit) {
+        title.innerHTML = '<i class="fas fa-edit"></i> تعديل تاجر';
+        document.getElementById('editMerchantId').value = merchant.id;
+        document.getElementById('mName').value = merchant['اسم التاجر'] || '';
+        document.getElementById('mActivity').value = merchant['اسم النشاط'] || '';
+        document.getElementById('mAccount').value = merchant['رقم الحساب'] || '';
+        document.getElementById('mPhone').value = merchant['رقم الهاتف'] || '';
+        document.getElementById('mArea').value = merchant['المنطقة'] || '';
+        document.getElementById('mAddress').value = merchant['العنوان'] || '';
+        document.getElementById('mStatus').value = merchant['الحالة'] || 'نشط';
+        document.getElementById('mNotes').value = merchant['ملاحظات'] || '';
+    } else {
+        title.innerHTML = '<i class="fas fa-user-plus"></i> إضافة تاجر جديد';
+        document.getElementById('editMerchantId').value = '';
+        document.getElementById('mName').value = '';
+        document.getElementById('mActivity').value = '';
+        document.getElementById('mAccount').value = '';
+        document.getElementById('mPhone').value = '';
+        document.getElementById('mArea').value = '';
+        document.getElementById('mAddress').value = '';
+        document.getElementById('mStatus').value = 'نشط';
+        document.getElementById('mNotes').value = '';
+    }
+    modal.classList.add('show');
+    if (window.Sound) window.Sound.play('click');
 }
 
-/**
- * Save merchant (create or update)
- * @param {string|null} editId - Merchant ID for updates
- */
-export async function saveMerchant(editId) {
-    const name = document.getElementById('m_name')?.value?.trim();
-    
-    if (!name) {
-        showToast('⚠️ اسم التاجر مطلوب', 'warning');
+// إغلاق النافذة
+export function closeMerchantModal() {
+    document.getElementById('merchantModal').classList.remove('show');
+}
+
+// حفظ التاجر (إضافة أو تعديل)
+export async function saveMerchant() {
+    const id = document.getElementById('editMerchantId').value;
+    const merchantData = {
+        "اسم التاجر": document.getElementById('mName').value.trim(),
+        "اسم النشاط": document.getElementById('mActivity').value.trim(),
+        "رقم الحساب": document.getElementById('mAccount').value.trim(),
+        "رقم الهاتف": document.getElementById('mPhone').value.trim(),
+        "المنطقة": document.getElementById('mArea').value.trim(),
+        "العنوان": document.getElementById('mAddress').value.trim(),
+        "الحالة": document.getElementById('mStatus').value,
+        "ملاحظات": document.getElementById('mNotes').value.trim()
+    };
+
+    if (!merchantData["اسم التاجر"]) {
+        showToast('اسم التاجر مطلوب', 'warning');
+        return;
+    }
+    if (!merchantData["رقم الحساب"]) {
+        showToast('رقم الحساب مطلوب', 'warning');
         return;
     }
 
-    showLoading(true);
-
     try {
-        let merchantId = editId;
-        
-        // Generate new ID if creating
-        if (!editId) {
-            merchantId = generateMerchantId(getMerchants());
-        }
-
-        const merchantData = {
-            "رقم التاجر": merchantId,
-            "اسم التاجر": name,
-            "اسم النشاط": document.getElementById('m_activity')?.value?.trim(),
-            "رقم الحساب": document.getElementById('m_account')?.value?.trim(),
-            "رقم الهاتف": document.getElementById('m_phone')?.value?.trim(),
-            "العنوان": document.getElementById('m_address')?.value?.trim(),
-            "المنطقة": document.getElementById('m_area')?.value?.trim(),
-            "الحالة": document.getElementById('m_status')?.value || 'نشط',
-            "ملاحظات": document.getElementById('m_notes')?.value?.trim()
-        };
-
-        if (editId) {
-            await updateMerchantDB(editId, merchantData);
-            showToast('✅ تم تحديث التاجر', 'success');
+        if (id) {
+            // تحديث
+            const { error } = await supabase
+                .from('merchants')
+                .update(merchantData)
+                .eq('id', id);
+            if (error) throw error;
+            showToast('تم تحديث التاجر', 'success');
         } else {
-            await createMerchant(merchantData);
-            showToast('✅ تم إضافة التاجر', 'success');
+            // إضافة جديد (رقم التاجر يتولد تلقائياً من قاعدة البيانات)
+            const { error } = await supabase
+                .from('merchants')
+                .insert([merchantData]);
+            if (error) throw error;
+            showToast('تم إضافة التاجر', 'success');
         }
-
-        // Close modal and refresh
-        const { closeModal } = await import('../ui/modals.js');
-        closeModal();
-        
-        const { refreshAllData } = await import('../core/app.js');
-        await refreshAllData();
-        
-    } catch (error) {
-        showToast('❌ ' + error.message, 'error');
-    } finally {
-        showLoading(false);
+        if (window.Sound) window.Sound.play('success');
+        closeMerchantModal();
+        await loadMerchants();
+        // تحديث إحصائيات لوحة التحكم إذا كانت موجودة
+        if (window.loadDashboardStats) window.loadDashboardStats();
+    } catch (err) {
+        console.error(err);
+        showToast('حدث خطأ: ' + err.message, 'error');
+        if (window.Sound) window.Sound.play('error');
     }
 }
 
-/**
- * Edit existing merchant
- * @param {string} id - Merchant ID
- */
+// جلب تاجر للتعديل
 export async function editMerchant(id) {
-    const merchant = findMerchantById(id, getMerchants());
-    
-    if (merchant) {
-        openMerchantModal(merchant);
-    } else {
-        showToast('❌ لم يتم العثور على التاجر', 'error');
+    const { data, error } = await supabase
+        .from('merchants')
+        .select('*')
+        .eq('id', id)
+        .single();
+    if (error) {
+        showToast('خطأ في جلب البيانات', 'error');
+        return;
     }
+    openMerchantModal(data);
 }
 
-/**
- * Delete merchant
- * @param {string} id - Merchant ID
- */
-export async function deleteMerchant(id) {
-    const merchant = findMerchantById(id, getMerchants());
-    
-    if (!merchant) return;
-
-    showConfirm(
-        `هل تريد حذف التاجر "${escapeHtml(merchant['اسم التاجر'])}"؟`,
-        async () => {
-            showLoading(true);
-            
-            try {
-                await removeMerchant(id);
-                showToast('✅ تم حذف التاجر', 'success');
-                
-                const { refreshAllData } = await import('../core/app.js');
-                await refreshAllData();
-            } catch (error) {
-                showToast('❌ ' + error.message, 'error');
-            } finally {
-                showLoading(false);
-            }
-        },
-        'نعم، احذف'
-    );
+// حذف تاجر
+export function deleteMerchant(id) {
+    showConfirm('هل تريد حذف هذا التاجر؟ لا يمكن التراجع!', async () => {
+        try {
+            const { error } = await supabase
+                .from('merchants')
+                .delete()
+                .eq('id', id);
+            if (error) throw error;
+            showToast('تم حذف التاجر', 'success');
+            if (window.Sound) window.Sound.play('success');
+            await loadMerchants();
+            if (window.loadDashboardStats) window.loadDashboardStats();
+        } catch (err) {
+            showToast('خطأ في الحذف: ' + err.message, 'error');
+            if (window.Sound) window.Sound.play('error');
+        }
+    });
 }
+
+// ربط الدوال بالنافذة العامة (لتكون accessible من الأزرار في HTML)
+window.openMerchantModal = openMerchantModal;
+window.closeMerchantModal = closeMerchantModal;
+window.saveMerchant = saveMerchant;
+window.editMerchant = editMerchant;
+window.deleteMerchant = deleteMerchant;
