@@ -170,7 +170,7 @@
 
         /* ===== MAIN CONTENT ===== */
         .main-content {
-            padding: 24px;
+            padding: 20px;
             max-width: 1400px;
             margin: 0 auto;
             width: 100%;
@@ -269,13 +269,13 @@
             box-shadow: 0 8px 20px rgba(59,130,246,0.4);
         }
 
-        /* ===== TOP NAVBAR (يظهر فقط داخل dashboard) ===== */
+        /* ===== TOP NAVBAR (ثابت في كل الصفحات بعد الدخول) ===== */
         .top-navbar {
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
             padding: 12px 24px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -354,19 +354,25 @@
             .navbar-actions { justify-content: center; }
         }
 
-        /* ===== DASHBOARD CARDS ===== */
+        /* ===== DASHBOARD CARDS (صف يحتوي على كارتين) ===== */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-            margin-bottom: 28px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        /* على الشاشات الصغيرة يصبح كل كارت في سطر منفرد */
+        @media (max-width: 640px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
         }
         .stat-card {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
-            padding: 20px;
+            padding: 16px;
             transition: var(--transition);
         }
         .stat-card:hover {
@@ -378,21 +384,21 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         .stat-card-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: var(--text-muted);
         }
         .stat-card-icon {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
         }
         .stat-card-icon.blue { background: rgba(59,130,246,0.15); color: var(--primary); }
         .stat-card-icon.green { background: var(--success-light); color: var(--success); }
@@ -400,12 +406,12 @@
         .stat-card-icon.orange { background: var(--warning-light); color: var(--warning); }
         .stat-card-icon.red { background: var(--danger-light); color: var(--danger); }
         .stat-card-value {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 900;
             margin-bottom: 4px;
         }
         .stat-card-label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
         }
 
@@ -415,22 +421,22 @@
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             overflow: hidden;
         }
         .section-header {
-            padding: 20px 24px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             gap: 12px;
         }
         .section-header i {
-            font-size: 20px;
+            font-size: 18px;
             color: var(--primary);
         }
         .section-header h3 {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 800;
         }
         .machines-table-container {
@@ -440,23 +446,23 @@
         .machines-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 12px;
             min-width: 800px;
         }
         .machines-table th {
             background: rgba(255,255,255,0.02);
-            padding: 12px 16px;
+            padding: 10px 12px;
             text-align: right;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
-            font-size: 11px;
+            font-size: 10px;
             letter-spacing: 1px;
             border-bottom: 2px solid var(--border-color);
             white-space: nowrap;
         }
         .machines-table td {
-            padding: 14px 16px;
+            padding: 12px;
             border-bottom: 1px solid var(--border-light);
             color: var(--text-secondary);
         }
@@ -466,12 +472,12 @@
         .progress-wrapper {
             display: flex;
             align-items: center;
-            gap: 10px;
-            min-width: 150px;
+            gap: 8px;
+            min-width: 130px;
         }
         .progress-bar-bg {
             flex: 1;
-            height: 8px;
+            height: 6px;
             background: rgba(255,255,255,0.1);
             border-radius: 10px;
             overflow: hidden;
@@ -485,9 +491,10 @@
         }
         .percentage-text {
             font-weight: 700;
-            min-width: 45px;
+            min-width: 40px;
             text-align: left;
             direction: ltr;
+            font-size: 11px;
         }
         .achieved-highlight {
             color: var(--success);
@@ -503,29 +510,29 @@
             overflow: hidden;
         }
         .table-container {
-            overflow-x: auto;   /* ✅ إضافة التمرير الأفقي */
+            overflow-x: auto;
             width: 100%;
         }
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
-            min-width: 900px;   /* يضمن ظهور شريط التمرير عند الحاجة */
+            font-size: 12px;
+            min-width: 900px;
         }
         .data-table th {
             background: rgba(255,255,255,0.02);
-            padding: 12px 16px;
+            padding: 10px 12px;
             text-align: right;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
-            font-size: 11px;
+            font-size: 10px;
             letter-spacing: 1px;
             border-bottom: 2px solid var(--border-color);
             white-space: nowrap;
         }
         .data-table td {
-            padding: 14px 16px;
+            padding: 12px;
             border-bottom: 1px solid var(--border-light);
             color: var(--text-secondary);
         }
@@ -533,9 +540,9 @@
             background: rgba(59,130,246,0.05);
         }
         .badge {
-            padding: 4px 12px;
+            padding: 3px 10px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
         }
         .badge-success { background: var(--success-light); color: var(--success); }
@@ -544,22 +551,22 @@
         .badge-info { background: var(--purple-light); color: var(--purple); }
         .ref-code {
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
             background: rgba(59,130,246,0.1);
-            padding: 4px 6px;
+            padding: 3px 5px;
             border-radius: 6px;
             white-space: nowrap;
         }
         .empty-state {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             color: var(--text-muted);
         }
         .empty-state i {
-            font-size: 48px;
+            font-size: 40px;
             opacity: 0.3;
             display: block;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         /* ===== TOAST ===== */
@@ -571,20 +578,21 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            max-width: 380px;
+            max-width: 350px;
         }
         .toast {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            padding: 12px 18px;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             box-shadow: var(--shadow-lg);
             animation: toast-in 0.3s ease;
             border-right: 4px solid var(--success);
+            font-size: 13px;
         }
         .toast.error { border-right-color: var(--danger); }
         .toast.warning { border-right-color: var(--warning); }
@@ -618,9 +626,9 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-xl);
-            max-width: 400px;
+            max-width: 380px;
             width: 90%;
-            padding: 28px 24px;
+            padding: 24px;
             text-align: center;
             box-shadow: var(--shadow-lg);
             animation: modal-pop 0.3s ease;
@@ -630,21 +638,21 @@
             to { transform: scale(1); opacity: 1; }
         }
         .confirm-icon {
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             background: var(--warning-light);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 32px;
+            margin: 0 auto 16px;
+            font-size: 28px;
             color: var(--warning);
         }
         .confirm-message {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             color: var(--text-primary);
         }
         .confirm-buttons {
@@ -653,13 +661,14 @@
             justify-content: center;
         }
         .confirm-btn {
-            padding: 10px 24px;
+            padding: 8px 20px;
             border-radius: var(--radius-md);
             font-weight: 700;
             cursor: pointer;
             transition: var(--transition);
             border: none;
             font-family: inherit;
+            font-size: 13px;
         }
         .confirm-btn.confirm {
             background: var(--danger);
@@ -679,36 +688,73 @@
             color: var(--primary-light);
         }
 
-        /* ===== FOOTER ===== */
+        /* ===== FOOTER (داخل صفحة الدخول فقط) ===== */
+        .login-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .login-footer .footer-copyright {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .login-footer .footer-team {
+            font-size: 10px;
+            color: var(--primary-light);
+            margin-bottom: 12px;
+        }
+        .login-footer .qr-link {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+        .login-footer .qr-link:hover { transform: scale(1.05); }
+        .login-footer .qr-img {
+            width: 70px;
+            height: 70px;
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 6px;
+            margin-bottom: 6px;
+        }
+        .login-footer .qr-hint {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary-light);
+        }
+
+        /* ===== FOOTER العادي (بعد الدخول) ===== */
         .app-footer {
-            margin-top: 40px;
-            padding: 32px 24px 24px;
+            margin-top: 30px;
+            padding: 20px 20px 16px;
             background: var(--bg-secondary);
             border-top: 1px solid var(--border-color);
             text-align: center;
         }
         .footer-content { max-width: 600px; margin: 0 auto; }
-        .footer-copyright { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
-        .footer-team { font-size: 12px; color: var(--primary-light); font-weight: 700; margin-bottom: 20px; }
+        .footer-copyright { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+        .footer-team { font-size: 11px; color: var(--primary-light); font-weight: 700; margin-bottom: 16px; }
         .qr-footer {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin-top: 20px;
-            padding-top: 20px;
+            margin-top: 16px;
+            padding-top: 16px;
             border-top: 1px dashed var(--border-color);
         }
         .qr-link { display: inline-block; transition: transform 0.3s ease; }
         .qr-link:hover { transform: scale(1.05); }
-        .qr-img { width: 100px; height: 100px; background: white; border-radius: var(--radius-md); padding: 8px; margin-bottom: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
-        .qr-hint { font-size: 13px; font-weight: 700; color: var(--primary-light); animation: pulse-text 2s infinite; }
+        .qr-img { width: 80px; height: 80px; background: white; border-radius: var(--radius-md); padding: 6px; margin-bottom: 6px; }
+        .qr-hint { font-size: 11px; font-weight: 700; color: var(--primary-light); animation: pulse-text 2s infinite; }
         @keyframes pulse-text { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.02)} }
 
         @media (max-width: 640px) {
-            .main-content { padding: 16px; }
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .login-container { padding: 24px 20px; margin: 20px 12px; }
+            .main-content { padding: 12px; }
+            .dashboard-grid { gap: 12px; margin-bottom: 16px; }
+            .stat-card { padding: 12px; }
+            .stat-card-value { font-size: 20px; }
         }
         @keyframes shake { 0%,100%{transform:translateX(0)} 25%,75%{transform:translateX(-8px)} 50%{transform:translateX(8px)} }
         .shake { animation: shake 0.5s ease; }
@@ -747,8 +793,31 @@
 
 <!-- Main Application -->
 <div id="mainApp">
+    <!-- Top Navbar (يظهر بعد تسجيل الدخول فقط) -->
+    <div id="navbarContainer" style="display: none;">
+        <nav class="top-navbar">
+            <div class="navbar-brand">
+                <div class="navbar-logo"><i class="fas fa-shield-alt"></i></div>
+                <div class="navbar-title">Axentro Admin</div>
+            </div>
+            <div class="navbar-links" id="navbarLinks">
+                <button class="nav-link active" data-page="dashboard"><i class="fas fa-home"></i> لوحة التحكم</button>
+                <button class="nav-link" data-page="merchants"><i class="fas fa-users"></i> التجار</button>
+                <button class="nav-link" data-page="machines"><i class="fas fa-desktop"></i> المكن</button>
+                <button class="nav-link" data-page="transfers"><i class="fas fa-arrow-up"></i> التحويلات</button>
+                <button class="nav-link" data-page="collections"><i class="fas fa-arrow-down"></i> التحصيلات</button>
+                <button class="nav-link" data-page="requests"><i class="fas fa-file-alt"></i> الطلبات</button>
+                <button class="nav-link" data-page="archive"><i class="fas fa-archive"></i> الأرشيف</button>
+            </div>
+            <div class="navbar-actions">
+                <button class="icon-btn" onclick="refreshAll()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
+                <button class="icon-btn" onclick="logout()" title="تسجيل خروج"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </nav>
+    </div>
+
     <main class="main-content">
-        <!-- LOGIN SECTION -->
+        <!-- LOGIN SECTION (مع فوتر داخلي) -->
         <section id="section-login" style="display:flex; min-height:calc(100vh - 80px); align-items:center; justify-content:center;">
             <div class="login-container">
                 <div class="login-header">
@@ -765,40 +834,30 @@
                 <div class="btn-group">
                     <button class="btn btn-primary" onclick="adminLogin()"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
                 </div>
+                <!-- فوتر صفحة الدخول (QR code + حقوق الملكية) -->
+                <div class="login-footer">
+                    <p class="footer-copyright">© 2024 Axentro – All Rights Reserved</p>
+                    <p class="footer-team">By Axentro Team ❤️</p>
+                    <div class="qr-footer" style="border-top: none; margin-top: 8px; padding-top: 0;">
+                        <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" class="qr-link">
+                            <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://axentro-official.github.io/axentro-website/links.html&color=0a0f1e&bgcolor=ffffff" alt="QR Code">
+                        </a>
+                        <div class="qr-hint">📱 Scan me &lt; Click On Me</div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- DASHBOARD SECTION (يحتوي على navbar وأزرار التحكم) -->
+        <!-- DASHBOARD SECTION (باقي المحتوى) -->
         <section id="section-dashboard" style="display:none;">
-            <!-- Navbar الآن داخل dashboard -->
-            <nav class="top-navbar">
-                <div class="navbar-brand">
-                    <div class="navbar-logo"><i class="fas fa-shield-alt"></i></div>
-                    <div class="navbar-title">Axentro Admin</div>
-                </div>
-                <div class="navbar-links" id="navbarLinks">
-                    <button class="nav-link active" data-page="dashboard"><i class="fas fa-home"></i> لوحة التحكم</button>
-                    <button class="nav-link" data-page="merchants"><i class="fas fa-users"></i> التجار</button>
-                    <button class="nav-link" data-page="machines"><i class="fas fa-desktop"></i> المكن</button>
-                    <button class="nav-link" data-page="transfers"><i class="fas fa-arrow-up"></i> التحويلات</button>
-                    <button class="nav-link" data-page="collections"><i class="fas fa-arrow-down"></i> التحصيلات</button>
-                    <button class="nav-link" data-page="requests"><i class="fas fa-file-alt"></i> الطلبات</button>
-                    <button class="nav-link" data-page="archive"><i class="fas fa-archive"></i> الأرشيف</button>
-                </div>
-                <div class="navbar-actions">
-                    <button class="icon-btn" onclick="refreshAll()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
-                    <button class="icon-btn" onclick="logout()" title="تسجيل خروج"><i class="fas fa-sign-out-alt"></i></button>
-                </div>
-            </nav>
-
-            <!-- Stats Cards -->
+            <!-- Stats Cards (صفين، كل صف كارتين) -->
             <div class="dashboard-grid">
                 <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي التجار</div><div class="stat-card-icon blue"><i class="fas fa-users"></i></div></div><div class="stat-card-value" id="totalMerchants">0</div><div class="stat-card-label">تاجر نشط</div></div>
                 <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي المكن</div><div class="stat-card-icon green"><i class="fas fa-desktop"></i></div></div><div class="stat-card-value" id="totalMachines">0</div><div class="stat-card-label">مكنة مسجلة</div></div>
                 <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">تحويلات اليوم</div><div class="stat-card-icon purple"><i class="fas fa-calendar-day"></i></div></div><div class="stat-card-value" id="todayTransfers">0</div><div class="stat-card-label">جنيه (اليوم)</div></div>
-                <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي المتبقي</div><div class="stat-card-icon red"><i class="fas fa-balance-scale"></i></div></div><div class="stat-card-value" id="totalRemaining">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
                 <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي التحويلات</div><div class="stat-card-icon orange"><i class="fas fa-exchange-alt"></i></div></div><div class="stat-card-value" id="totalTransfers">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
                 <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي التحصيلات</div><div class="stat-card-icon green"><i class="fas fa-hand-holding-usd"></i></div></div><div class="stat-card-value" id="totalCollections">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
+                <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي المتبقي</div><div class="stat-card-icon red"><i class="fas fa-balance-scale"></i></div></div><div class="stat-card-value" id="totalRemaining">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
             </div>
 
             <!-- أعلى المكن تحقيقاً للتارجت -->
@@ -810,13 +869,9 @@
                 <div class="machines-table-container">
                     <table class="machines-table" id="topMachinesTable">
                         <thead>
-                            <tr>
-                                <th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th>
-                            </tr>
+                            <tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th></tr>
                         </thead>
-                        <tbody id="topMachinesBody">
-                            <tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> جاري تحميل البيانات...</td></tr>
-                        </tbody>
+                        <tbody id="topMachinesBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> جاري تحميل البيانات...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -829,14 +884,8 @@
                 </div>
                 <div class="table-container">
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th><th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recentActivityBody">
-                            <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة</td></tr>
-                        </tbody>
+                        <thead><tr><th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th><th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th></tr></thead>
+                        <tbody id="recentActivityBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -850,14 +899,14 @@
         <section id="section-requests" style="display:none;"><div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">طلبات التجار</div></div><p style="text-align:center;padding:40px;color:var(--text-muted);">قيد التطوير...</p></div></section>
         <section id="section-archive" style="display:none;"><div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">الأرشيف</div></div><p style="text-align:center;padding:40px;color:var(--text-muted);">قيد التطوير...</p></div></section>
 
-        <!-- FOOTER -->
-        <footer class="app-footer">
+        <!-- FOOTER العادي (يظهر بعد الدخول) -->
+        <footer id="mainFooter" class="app-footer" style="display: none;">
             <div class="footer-content">
                 <p class="footer-copyright">© 2024 Axentro – All Rights Reserved</p>
                 <p class="footer-team">By Axentro Team ❤️</p>
                 <div class="qr-footer">
                     <a href="https://axentro-official.github.io/axentro-website/links.html" target="_blank" class="qr-link">
-                        <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://axentro-official.github.io/axentro-website/links.html&color=0a0f1e&bgcolor=ffffff" alt="QR Code">
+                        <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://axentro-official.github.io/axentro-website/links.html&color=0a0f1e&bgcolor=ffffff" alt="QR Code">
                     </a>
                     <div class="qr-hint">📱 Scan me &lt; Click On Me</div>
                 </div>
@@ -873,11 +922,12 @@
 const CONFIG = {
     SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
-    SESSION_DURATION: 24 * 60 * 60 * 1000
+    SESSION_DURATION: 60 * 60 * 1000  // ساعة واحدة بالمللي ثانية
 };
 
 let supabaseClient = null;
 let pendingConfirmCallback = null;
+let autoLogoutTimer = null;
 
 // ============================================================
 // SOUND SYSTEM (نقر احترافي)
@@ -1018,7 +1068,7 @@ function setupConfirmModalEvents() {
 }
 
 // ============================================================
-// SESSION & AUTH
+// SESSION & AUTH (مع تسجيل خروج تلقائي)
 // ============================================================
 function checkSessionAndShow() {
     const session = localStorage.getItem('axentro_admin_session');
@@ -1026,6 +1076,7 @@ function checkSessionAndShow() {
         try {
             const data = JSON.parse(session);
             if (data.isLoggedIn && Date.now() < data.expiry) {
+                startAutoLogoutTimer(data.expiry);
                 showMainApp();
                 refreshAll();
                 return;
@@ -1036,12 +1087,29 @@ function checkSessionAndShow() {
 }
 
 function createSession() {
-    const session = { isLoggedIn: true, loginTime: Date.now(), expiry: Date.now() + CONFIG.SESSION_DURATION };
+    const expiry = Date.now() + CONFIG.SESSION_DURATION;
+    const session = { isLoggedIn: true, loginTime: Date.now(), expiry: expiry };
     localStorage.setItem('axentro_admin_session', JSON.stringify(session));
+    startAutoLogoutTimer(expiry);
+}
+
+function startAutoLogoutTimer(expiryTime) {
+    if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+    const remaining = expiryTime - Date.now();
+    if (remaining > 0) {
+        autoLogoutTimer = setTimeout(() => {
+            UI.showToast('انتهت مدة الجلسة، سيتم تسجيل الخروج تلقائياً', 'warning');
+            setTimeout(() => logout(), 2000);
+        }, remaining);
+    }
 }
 
 function clearSession() {
     localStorage.removeItem('axentro_admin_session');
+    if (autoLogoutTimer) {
+        clearTimeout(autoLogoutTimer);
+        autoLogoutTimer = null;
+    }
 }
 
 async function adminLogin() {
@@ -1099,6 +1167,8 @@ function shakeElement(el) {
 function showLogin() {
     document.getElementById('section-login').style.display = 'flex';
     document.getElementById('section-dashboard').style.display = 'none';
+    document.getElementById('navbarContainer').style.display = 'none';
+    document.getElementById('mainFooter').style.display = 'none';
     document.getElementById('mainApp').classList.add('visible');
     const sections = ['merchants','machines','transfers','collections','requests','archive'];
     sections.forEach(s => { const el = document.getElementById(`section-${s}`); if(el) el.style.display = 'none'; });
@@ -1108,6 +1178,8 @@ function showLogin() {
 function showMainApp() {
     document.getElementById('section-login').style.display = 'none';
     document.getElementById('section-dashboard').style.display = 'block';
+    document.getElementById('navbarContainer').style.display = 'block';
+    document.getElementById('mainFooter').style.display = 'block';
     document.getElementById('mainApp').classList.add('visible');
     updateActiveNavLink('dashboard');
 }
@@ -1175,164 +1247,98 @@ async function loadRealDashboardStats() {
     animateValue('totalRemaining', 0, Math.max(0, remaining), 1500);
 }
 
-// أعلى المكن تحقيقاً للتارجت
 async function loadTopMachines() {
     if (!supabaseClient) return;
     try {
-        const { data: machines, error: mErr } = await supabaseClient.from('machines').select('*');
-        if (mErr) throw mErr;
+        const { data: machines } = await supabaseClient.from('machines').select('*');
         if (!machines || machines.length === 0) {
             document.getElementById('topMachinesBody').innerHTML = '<tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> لا توجد مكن مسجلة</td></tr>';
             return;
         }
-
-        const { data: transfersAll, error: tErr } = await supabaseClient.from('transfers').select('"رقم المكنة","قيمة التحويل"');
-        if (tErr) throw tErr;
-
+        const { data: transfersAll } = await supabaseClient.from('transfers').select('"رقم المكنة","قيمة التحويل"');
         const machineAchieved = {};
         if (transfersAll) {
             transfersAll.forEach(t => {
                 const machineId = t['رقم المكنة'];
-                if (machineId) {
-                    const amount = parseFloat(t['قيمة التحويل']) || 0;
-                    machineAchieved[machineId] = (machineAchieved[machineId] || 0) + amount;
-                }
+                if (machineId) machineAchieved[machineId] = (machineAchieved[machineId] || 0) + (parseFloat(t['قيمة التحويل']) || 0);
             });
         }
-
         const machinesWithStats = machines.map(m => {
             const target = parseFloat(m['التارجت الشهري']) || 0;
             const achieved = machineAchieved[m['رقم المكنة']] || 0;
             const percentage = target > 0 ? Math.min(100, (achieved / target) * 100) : 0;
             return { ...m, achieved, percentage, target };
         });
-
         machinesWithStats.sort((a, b) => b.percentage - a.percentage);
         const top10 = machinesWithStats.slice(0, 10);
-
         const tbody = document.getElementById('topMachinesBody');
         if (top10.length === 0) {
             tbody.innerHTML = '<tr><td colspan="9" class="empty-state">لا توجد بيانات</td></tr>';
             return;
         }
-
         tbody.innerHTML = top10.map((m, idx) => {
             const percentage = m.percentage.toFixed(1);
-            let percentClass = '';
-            if (m.percentage >= 80) percentClass = 'achieved-highlight';
-            return `
-                <tr>
-                    <td>${idx+1}</td>
-                    <td>${m['رقم التاجر'] || '-'}</td>
-                    <td>${m['اسم التاجر'] || '-'}</td>
-                    <td>${m['اسم النشاط'] || '-'}</td>
-                    <td><code class="ref-code">${m['رقم المكنة'] || '-'}</code></td>
-                    <td><code>${m['الرقم التسلسلي'] || '-'}</code></td>
-                    <td>${m.target.toLocaleString()} ج.م</td>
-                    <td class="${percentClass}">${m.achieved.toLocaleString()} ج.م</td>
-                    <td>
-                        <div class="progress-wrapper">
-                            <div class="progress-bar-bg"><div class="progress-fill" style="width: ${percentage}%;"></div></div>
-                            <span class="percentage-text">${percentage}%</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
+            let percentClass = m.percentage >= 80 ? 'achieved-highlight' : '';
+            return `<tr>
+                <td>${idx+1}</td>
+                <td>${m['رقم التاجر'] || '-'}</td>
+                <td>${m['اسم التاجر'] || '-'}</td>
+                <td>${m['اسم النشاط'] || '-'}</td>
+                <td><code class="ref-code">${m['رقم المكنة'] || '-'}</code></td>
+                <td><code>${m['الرقم التسلسلي'] || '-'}</code></td>
+                <td>${m.target.toLocaleString()} ج.م</td>
+                <td class="${percentClass}">${m.achieved.toLocaleString()} ج.م</td>
+                <td><div class="progress-wrapper"><div class="progress-bar-bg"><div class="progress-fill" style="width: ${percentage}%;"></div></div><span class="percentage-text">${percentage}%</span></div></td>
+            </tr>`;
         }).join('');
     } catch (err) {
-        console.error('Error loading top machines:', err);
+        console.error(err);
         document.getElementById('topMachinesBody').innerHTML = '<tr><td colspan="9" class="empty-state">خطأ في تحميل البيانات</td></tr>';
     }
 }
 
-// آخر العمليات (تحويلات وتحصيلات معاً) مرتبة تصاعدياً (الأقدم أولاً)
 async function loadRecentActivities() {
     if (!supabaseClient) return;
     try {
-        const { data: transfers, error: tErr } = await supabaseClient
-            .from('transfers')
-            .select('"الرقم المرجعي","التاريخ","الوقت","اسم التاجر","اسم النشاط","قيمة التحويل","created_at"')
-            .order('created_at', { ascending: true });
-        if (tErr) throw tErr;
-
-        const { data: collections, error: cErr } = await supabaseClient
-            .from('collections')
-            .select('"الرقم المرجعي","التاريخ","الوقت","اسم التاجر","اسم النشاط","قيمة التحصيل","created_at"')
-            .order('created_at', { ascending: true });
-        if (cErr) throw cErr;
-
+        const { data: transfers } = await supabaseClient.from('transfers').select('"الرقم المرجعي","التاريخ","الوقت","اسم التاجر","اسم النشاط","قيمة التحويل","created_at"').order('created_at', { ascending: true });
+        const { data: collections } = await supabaseClient.from('collections').select('"الرقم المرجعي","التاريخ","الوقت","اسم التاجر","اسم النشاط","قيمة التحصيل","created_at"').order('created_at', { ascending: true });
         let activities = [];
-        if (transfers) {
-            transfers.forEach(t => {
-                activities.push({
-                    ref: t['الرقم المرجعي'],
-                    date: t['التاريخ'],
-                    time: t['الوقت'],
-                    merchantName: t['اسم التاجر'],
-                    activityName: t['اسم النشاط'],
-                    amount: t['قيمة التحويل'],
-                    type: 'تحويل',
-                    createdAt: t['created_at']
-                });
-            });
-        }
-        if (collections) {
-            collections.forEach(c => {
-                activities.push({
-                    ref: c['الرقم المرجعي'],
-                    date: c['التاريخ'],
-                    time: c['الوقت'],
-                    merchantName: c['اسم التاجر'],
-                    activityName: c['اسم النشاط'],
-                    amount: c['قيمة التحصيل'],
-                    type: 'تحصيل',
-                    createdAt: c['created_at']
-                });
-            });
-        }
-
-        activities.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-
+        if (transfers) transfers.forEach(t => activities.push({ ref: t['الرقم المرجعي'], date: t['التاريخ'], time: t['الوقت'], merchantName: t['اسم التاجر'], activityName: t['اسم النشاط'], amount: t['قيمة التحويل'], type: 'تحويل', createdAt: t['created_at'] }));
+        if (collections) collections.forEach(c => activities.push({ ref: c['الرقم المرجعي'], date: c['التاريخ'], time: c['الوقت'], merchantName: c['اسم التاجر'], activityName: c['اسم النشاط'], amount: c['قيمة التحصيل'], type: 'تحصيل', createdAt: c['created_at'] }));
+        activities.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
         const tbody = document.getElementById('recentActivityBody');
         if (activities.length === 0) {
             tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة</td></tr>';
             return;
         }
-
         function formatTime12(timeStr, dateStr) {
             try {
                 if (timeStr && (timeStr.includes('AM') || timeStr.includes('PM'))) return timeStr;
                 if (dateStr && timeStr) {
                     const d = new Date(`${dateStr}T${timeStr}`);
-                    if (!isNaN(d.getTime())) {
-                        return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-                    }
+                    if (!isNaN(d.getTime())) return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
                 }
                 return timeStr || '-';
             } catch(e) { return timeStr || '-'; }
         }
-
         tbody.innerHTML = activities.map((act, idx) => {
             const amount = (parseFloat(act.amount) || 0).toLocaleString();
             const badgeClass = act.type === 'تحويل' ? 'badge-danger' : 'badge-success';
-            const statusBadge = '<span class="badge badge-info">مكتمل</span>';
             const formattedTime = formatTime12(act.time, act.date);
-            return `
-                <tr>
-                    <td>${idx+1}</td>
-                    <td><code class="ref-code">${act.ref || '-'}</code></td>
-                    <td><span class="badge ${badgeClass}">${act.type}</span></td>
-                    <td>${act.merchantName || '-'}</td>
-                    <td>${act.activityName || '-'}</td>
-                    <td>${amount} ج.م</td>
-                    <td>${act.date || '-'}</td>
-                    <td>${formattedTime}</td>
-                    <td>${statusBadge}</td>
-                </tr>
-            `;
+            return `<tr>
+                <td>${idx+1}</td>
+                <td><code class="ref-code">${act.ref || '-'}</code></td>
+                <td><span class="badge ${badgeClass}">${act.type}</span></td>
+                <td>${act.merchantName || '-'}</td>
+                <td>${act.activityName || '-'}</td>
+                <td>${amount} ج.م</td>
+                <td>${act.date || '-'}</td>
+                <td>${formattedTime}</td>
+                <td><span class="badge badge-info">مكتمل</span></td>
+            </tr>`;
         }).join('');
     } catch (err) {
-        console.error('Error loading recent activities:', err);
+        console.error(err);
         document.getElementById('recentActivityBody').innerHTML = '<tr><td colspan="9" class="empty-state">خطأ في تحميل البيانات</td></tr>';
     }
 }
