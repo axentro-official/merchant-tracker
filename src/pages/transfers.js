@@ -1,248 +1,257 @@
 /**
  * Transfers Page
- * CRUD operations for money transfers
+ * CRUD operations for transfers - مطابق لستايل index.html
  */
 
-import { 
-    getTransfers, setTransfers, 
-    getMerchants 
-} from '../ui/stateManager.js';
-import { showModal, showConfirm } from '../ui/modals.js';
-import { showToast } from '../ui/toast.js';
-import { escapeHtml, formatDate, formatTime, formatMoney } from '../utils/formatters.js';
-import { getTodayDate } from '../utils/helpers.js';
-import { 
-    getAllTransfers, createTransfer, updateTransfer as updateTransferDB, removeTransfer,
-    findTransferByRef, filterTransfersByDate 
-} from '../services/transferService.js';
-import { findMerchantById } from '../services/merchantService.js';
-import { logAction } from '../services/logService.js';
-import { showLoading } from '../core/app.js';
+import { getSupabase } from '../config/supabase.js';
+import { showToast, showConfirm } from '../ui/toast.js';
+import { escapeHtml, formatMoney, formatDate, formatTime } from '../utils/formatters.js';
+import { getTodayDate, getCurrentTime } from '../utils/helpers.js';
 
-/**
- * Render transfers table with filters
- */
-export function renderTransfers() {
-    let list = [...getTransfers()];
-    
-    // Apply date filters
-    const dateFrom = document.getElementById('transferDateFrom')?.value;
-    const dateTo = document.getElementById('transferDateTo')?.value;
-    
-    list = filterTransfersByDate(list, dateFrom, dateTo);
+let supabase = null;
+let currentTransfers = [];
+let merchantsList = [];
+let machinesList = [];
 
-    const tbody = document.getElementById('transfersTable');
-    
-    // Empty state
-    if (!list.length) {
+// تهيئة Supabase
+export function initTransfersPage() {
+    supabase = getSupabase();
+}
+
+// تحميل التحويلات وعرضها
+export async function loadTransfers() {
+    if (!supabase) return;
+    try {
+        // جلب التحويلات مع بيانات التاجر (يمكن استخدام join لكن سنكتفي بالحقل الموجود)
+        const { data: transfers, error } = await supabase
+            .from('transfers')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        currentTransfers = transfers || [];
+        
+        // جلب التجار والمكن للاستخدام في الحقول المساعدة (اختياري)
+        const { data: merchants } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+        merchantsList = merchants || [];
+        const { data: machines } = await supabase.from('machines').select('id, "رقم المكنة"');
+        machinesList = machines || [];
+        
+        renderTransfersTable();
+    } catch (err) {
+        console.error(err);
+        showToast('خطأ في تحميل التحويلات', 'error');
+    }
+}
+
+function renderTransfersTable() {
+    const tbody = document.getElementById('transfersTableBody');
+    if (!tbody) return;
+
+    if (!currentTransfers.length) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="9" class="empty-state">
-                    <i class="fas fa-exchange-alt"></i>
+                    <i class="fas fa-inbox"></i>
                     <p>لا توجد تحويلات</p>
-                </td>
-            </tr>
+                 </td>
+             </tr>
         `;
         return;
     }
 
-    // Render rows
-    tbody.innerHTML = list.map((transfer, index) => `
+    tbody.innerHTML = currentTransfers.map((t, idx) => `
         <tr>
-            <td>${index + 1}</td>
-            <td>
-                <code style="color:var(--secondary);font-size:0.82rem;">
-                    ${transfer['الرقم المرجعي']}
-                </code>
-            </td>
-            <td>${formatDate(transfer['التاريخ'])}</td>
-            <td>${formatTime(transfer['وقت'])}</td>
-            <td><strong>${transfer['اسم التاجر'] || '-'}</strong></td>
-            <td>
-                <span class="badge badge-primary">${transfer['نوع التحويل']||'-'}</span>
-            </td>
-            <td>
-                <strong style="color:var(--danger);">
-                    ${formatMoney(transfer['قيمة التحويل'])}
-                </strong>
-            </td>
-            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" 
-                title="${escapeHtml(transfer['ملاحظات'])||'-'}">
-                ${transfer['ملاحظات']||'-'}
-            </td>
+            <td>${idx + 1}</td>
+            <td><code class="ref-code">${escapeHtml(t['الرقم المرجعي'] || '-')}</code></td>
+            <td>${formatDate(t['التاريخ'])}</td>
+            <td>${formatTime(t['الوقت'])}</td>
+            <td>${escapeHtml(t['اسم التاجر'] || '-')}</td>
+            <td>${escapeHtml(t['اسم النشاط'] || '-')}</td>
+            <td><strong style="color:var(--danger);">${formatMoney(t['قيمة التحويل'])}</strong></td>
+            <td title="${escapeHtml(t['ملاحظات'] || '')}">${escapeHtml(t['ملاحظات'] || '-')}</td>
             <td>
                 <div class="action-btns">
-                    <button class="btn btn-primary btn-sm" 
-                            onclick="window.App.editTransfer('${transfer['الرقم المرجعي']}')" 
-                            title="تعديل">
+                    <button class="btn btn-primary btn-sm" onclick="window.editTransfer('${t.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-danger btn-sm" 
-                            onclick="window.App.deleteTransfer('${transfer['الرقم المرجعي']}')" 
-                            title="حذف">
+                    <button class="btn btn-danger btn-sm" onclick="window.deleteTransfer('${t.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-            </td>
-        </tr>
+             </td>
+         </tr>
     `).join('');
 }
 
-/**
- * Open transfer add/edit modal
- * @param {Object|null} data - Existing transfer data (for edit)
- */
-export function openTransferModal(data = null) {
-    const isEdit = !!data;
-    
-    const content = `
-        <div class="modal-header">
-            <h3>
-                <i class="fas fa-exchange-alt"></i> 
-                ${isEdit ? 'تعديل تحويل' : 'تحويل جديد'}
-            </h3>
-        </div>
-        <div class="form-group">
-            <label class="form-label">التاجر <span class="required">*</span></label>
-            <div class="search-wrapper">
-                <input type="text" id="tr_merchant_search" class="form-control" 
-                       placeholder="🔍 ابحث عن تاجر..." autocomplete="off"
-                       oninput="window.App.handleMerchantLookup(this.value, 'tr_merchant_list', 'tr_merchant_id')"
-                       value="${isEdit ? escapeHtml(data?.['اسم التاجر']) || '' : ''}">
-                <input type="hidden" id="tr_merchant_id" value="${isEdit ? data?.['رقم التاجر'] || '' : ''}">
-                <div id="tr_merchant_list" class="search-results"></div>
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="form-label">نوع التحويل</label>
-            <select id="tr_type" class="form-control">
-                <option value="رصيد خدمات" ${!isEdit || data?.['نوع التحويل']==='رصيد خدمات'?'selected':''}>💳 رصيد خدمات</option>
-                <option value="رصيد كاش" ${isEdit && data?.['نوع التحويل']==='رصيد كاش'?'selected':''}>💵 رصيد كاش</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label class="form-label">المبلغ <span class="required">*</span></label>
-            <input type="number" id="tr_amount" class="form-control" step="any" min="0.01" dir="ltr"
-                   placeholder="0.00" value="${isEdit ? data?.['قيمة التحويل'] || '' : ''}">
-        </div>
-        <div class="form-group">
-            <label class="form-label">ملاحظات</label>
-            <textarea id="tr_notes" class="form-control" rows="3">${
-                isEdit ? escapeHtml(data?.['ملاحظات']) || '' : ''
-            }</textarea>
-        </div>
-        <button class="btn btn-success btn-block" 
-                onclick="window.App.saveTransfer(${isEdit ? `'${escapeHtml(data?.['الرقم المرجعي'])}'` : 'null'})">
-            <i class="fas fa-check"></i> تأكيد التحويل
-        </button>
-    `;
-    
-    showModal(content);
-}
-
-/**
- * Save transfer (create or update)
- * @param {string|null} editId - Reference code for updates
- */
-export async function saveTransfer(editId) {
-    const merchId = document.getElementById('tr_merchant_id')?.value;
-    const amount = parseFloat(document.getElementById('tr_amount')?.value);
-
-    // Validation
-    if (!merchId) {
-        showToast('⚠️ يجب اختيار التاجر', 'warning');
-        return;
+// فتح نافذة إضافة/تعديل تحويل
+export async function openTransferModal(transfer = null) {
+    // تأكد من تحميل قائمة التجار والمكن
+    if (!merchantsList.length) {
+        const { data } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+        merchantsList = data || [];
+    }
+    if (!machinesList.length) {
+        const { data } = await supabase.from('machines').select('id, "رقم المكنة"');
+        machinesList = data || [];
     }
     
-    if (!amount || amount <= 0) {
-        showToast('⚠️ المبلغ غير صحيح', 'error');
-        return;
-    }
-
-    showLoading(true);
-
-    try {
-        const merchant = findMerchantById(merchId, getMerchants());
-        
-        const transferData = {
-            "رقم التاجر": merchId,
-            "اسم التاجر": merchant?.['اسم التاجر'] || '',
-            "رقم الحساب": merchant?.['رقم الحساب'] || '',
-            "نوع التحويل": document.getElementById('tr_type')?.value || 'رصيد خدمات',
-            "قيمة التحويل": Math.round(amount * 100) / 100,
-            "ملاحظات": document.getElementById('tr_notes')?.value?.trim()
-        };
-
-        if (editId) {
-            // Update existing transfer
-            transferData["الرقم المرجعي"] = editId;
-            await updateTransferDB(editId, transferData);
-            showToast('✅ تم تحديث التحويل', 'success');
-        } else {
-            // Create new transfer
-            const created = await createTransfer(transferData);
-            
-            // Log the action
-            await logAction(
-                'تحويل جديد', 
-                created['الرقم المرجعي'], 
-                `تحويل: ${amount} جنيه - ${merchant?.['اسم التاجر']}`
-            );
-            
-            showToast('✅ تم إضافة التحويل بنجاح', 'success');
-        }
-
-        // Close modal and refresh
-        const { closeModal } = await import('../ui/modals.js');
-        closeModal();
-        
-        const { refreshAllData } = await import('../core/app.js');
-        await refreshAllData();
-        
-    } catch (error) {
-        console.error('Transfer save error:', error);
-        showToast('❌ فشل الحفظ: ' + error.message, 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-/**
- * Edit existing transfer
- * @param {string} ref - Reference code
- */
-export async function editTransfer(ref) {
-    const transfer = findTransferByRef(ref, getTransfers());
+    const isEdit = !!transfer;
+    const modal = document.getElementById('transferModal');
+    const title = document.getElementById('transferModalTitle');
     
-    if (transfer) {
-        openTransferModal(transfer);
+    // تعبئة قائمة التجار
+    const merchantSelect = document.getElementById('transMerchantId');
+    if (merchantSelect) {
+        merchantSelect.innerHTML = '<option value="">-- اختر تاجر --</option>' +
+            merchantsList.map(m => `<option value="${m.id}" ${isEdit && transfer['رقم التاجر'] === m.id ? 'selected' : ''}>${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`).join('');
+    }
+    
+    // تعبئة قائمة المكن (اختياري)
+    const machineSelect = document.getElementById('transMachineId');
+    if (machineSelect) {
+        machineSelect.innerHTML = '<option value="">-- بدون مكنة --</option>' +
+            machinesList.map(mc => `<option value="${mc.id}" ${isEdit && transfer['رقم المكنة'] === mc.id ? 'selected' : ''}>${mc['رقم المكنة']}</option>`).join('');
+    }
+    
+    if (isEdit) {
+        title.innerHTML = '<i class="fas fa-edit"></i> تعديل تحويل';
+        document.getElementById('editTransferId').value = transfer.id;
+        document.getElementById('transAmount').value = transfer['قيمة التحويل'] || '';
+        document.getElementById('transType').value = transfer['نوع التحويل'] || 'نقدي';
+        document.getElementById('transNotes').value = transfer['ملاحظات'] || '';
     } else {
-        showToast('❌ لم يتم العثور على التحويل', 'error');
+        title.innerHTML = '<i class="fas fa-exchange-alt"></i> تحويل جديد';
+        document.getElementById('editTransferId').value = '';
+        document.getElementById('transAmount').value = '';
+        document.getElementById('transType').value = 'نقدي';
+        document.getElementById('transNotes').value = '';
+        if (merchantSelect) merchantSelect.value = '';
+        if (machineSelect) machineSelect.value = '';
+    }
+    modal.classList.add('show');
+    if (window.Sound) window.Sound.play('click');
+}
+
+export function closeTransferModal() {
+    document.getElementById('transferModal').classList.remove('show');
+}
+
+// حفظ التحويل (إضافة أو تعديل)
+export async function saveTransfer() {
+    const id = document.getElementById('editTransferId').value;
+    const merchantId = document.getElementById('transMerchantId').value;
+    const machineId = document.getElementById('transMachineId').value;
+    const amount = parseFloat(document.getElementById('transAmount').value);
+    const type = document.getElementById('transType').value;
+    const notes = document.getElementById('transNotes').value.trim();
+    
+    if (!merchantId) {
+        showToast('يرجى اختيار التاجر', 'warning');
+        return;
+    }
+    if (!amount || amount <= 0) {
+        showToast('المبلغ غير صحيح', 'warning');
+        return;
+    }
+    
+    // جلب بيانات التاجر
+    const merchant = merchantsList.find(m => m.id === merchantId);
+    if (!merchant) {
+        showToast('التاجر غير موجود', 'error');
+        return;
+    }
+    
+    // جلب رقم المكنة إذا وجد
+    let machineNumber = null;
+    if (machineId) {
+        const machine = machinesList.find(mc => mc.id === machineId);
+        machineNumber = machine ? machine['رقم المكنة'] : null;
+    }
+    
+    const transferData = {
+        "رقم التاجر": merchantId,
+        "اسم التاجر": merchant['اسم التاجر'],
+        "رقم الحساب": merchant['رقم الحساب'],
+        "اسم النشاط": merchant['اسم النشاط'],
+        "رقم المكنة": machineNumber,
+        "قيمة التحويل": amount,
+        "نوع التحويل": type,
+        "ملاحظات": notes,
+        "التاريخ": getTodayDate(),
+        "الوقت": getCurrentTime(),
+        "الشهر": new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' }) // سيتم تعبئتها تلقائياً في DB أيضاً
+    };
+    
+    try {
+        if (id) {
+            // تحديث (نحتفظ بالتاريخ والوقت الأصليين)
+            const { error } = await supabase
+                .from('transfers')
+                .update(transferData)
+                .eq('id', id);
+            if (error) throw error;
+            showToast('تم تحديث التحويل', 'success');
+        } else {
+            // إضافة جديدة (الرقم المرجعي يتولد تلقائياً من قاعدة البيانات)
+            const { error } = await supabase
+                .from('transfers')
+                .insert([transferData]);
+            if (error) throw error;
+            showToast('تم إضافة التحويل', 'success');
+        }
+        if (window.Sound) window.Sound.play('success');
+        closeTransferModal();
+        await loadTransfers();
+        // تحديث إحصائيات لوحة التحكم
+        if (window.loadDashboardStats) window.loadDashboardStats();
+        if (window.loadRecentActivities) window.loadRecentActivities();
+        if (window.loadTopMachines) window.loadTopMachines();
+    } catch (err) {
+        console.error(err);
+        showToast('حدث خطأ: ' + err.message, 'error');
+        if (window.Sound) window.Sound.play('error');
     }
 }
 
-/**
- * Delete transfer
- * @param {string} ref - Reference code
- */
-export async function deleteTransfer(ref) {
-    showConfirm(
-        `هل تريد حذف التحويل "${ref}"؟`,
-        async () => {
-            showLoading(true);
-            
-            try {
-                await removeTransfer(ref);
-                showToast('✅ تم حذف التحويل', 'success');
-                
-                const { refreshAllData } = await import('../core/app.js');
-                await refreshAllData();
-            } catch (error) {
-                showToast('❌ ' + error.message, 'error');
-            } finally {
-                showLoading(false);
-            }
-        },
-        'نعم، احذف'
-    );
+// جلب تحويل للتعديل
+export async function editTransfer(id) {
+    const { data, error } = await supabase
+        .from('transfers')
+        .select('*')
+        .eq('id', id)
+        .single();
+    if (error) {
+        showToast('خطأ في جلب البيانات', 'error');
+        return;
+    }
+    openTransferModal(data);
 }
+
+// حذف تحويل
+export function deleteTransfer(id) {
+    showConfirm('هل تريد حذف هذا التحويل؟ لا يمكن التراجع!', async () => {
+        try {
+            const { error } = await supabase
+                .from('transfers')
+                .delete()
+                .eq('id', id);
+            if (error) throw error;
+            showToast('تم حذف التحويل', 'success');
+            if (window.Sound) window.Sound.play('success');
+            await loadTransfers();
+            if (window.loadDashboardStats) window.loadDashboardStats();
+            if (window.loadRecentActivities) window.loadRecentActivities();
+            if (window.loadTopMachines) window.loadTopMachines();
+        } catch (err) {
+            showToast('خطأ في الحذف: ' + err.message, 'error');
+            if (window.Sound) window.Sound.play('error');
+        }
+    });
+}
+
+// ربط الدوال بالنافذة العامة
+window.openTransferModal = openTransferModal;
+window.closeTransferModal = closeTransferModal;
+window.saveTransfer = saveTransfer;
+window.editTransfer = editTransfer;
+window.deleteTransfer = deleteTransfer;
