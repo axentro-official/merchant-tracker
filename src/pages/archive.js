@@ -1,115 +1,188 @@
 /**
  * Archive Page
- * Monthly closing and archive management
+ * Monthly closing and archive management - مطابق لستايل index.html
  */
 
-import { getArchives, getTransfers, getCollections } from '../ui/stateManager.js';
-import { showConfirm } from '../ui/modals.js';
-import { showToast } from '../ui/toast.js';
-import { formatMoney } from '../utils/formatters.js';
-import { 
-    getAllArchives, closeMonth as closeMonthService, removeArchive 
-} from '../services/archiveService.js';
-import { showLoading } from '../core/app.js';
+import { getSupabase } from '../config/supabase.js';
+import { showToast, showConfirm } from '../ui/toast.js';
+import { escapeHtml, formatMoney, formatDate } from '../utils/formatters.js';
+import { getCurrentArabicMonth } from '../utils/helpers.js';
 
-/**
- * Render archive table
- */
-export function renderArchive() {
-    const list = [...getArchives()];
-    const tbody = document.getElementById('archiveTable');
+let supabase = null;
+let currentArchives = [];
 
-    // Empty state
-    if (!list.length) {
+// تهيئة Supabase
+export function initArchivePage() {
+    supabase = getSupabase();
+}
+
+// تحميل الأرشيف وعرضه
+export async function loadArchives() {
+    if (!supabase) return;
+    try {
+        const { data: archives, error } = await supabase
+            .from('archives')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        currentArchives = archives || [];
+        renderArchiveTable();
+    } catch (err) {
+        console.error(err);
+        showToast('خطأ في تحميل الأرشيف', 'error');
+    }
+}
+
+function renderArchiveTable() {
+    const tbody = document.getElementById('archiveTableBody');
+    if (!tbody) return;
+
+    if (!currentArchives.length) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="8" class="empty-state">
                     <i class="fas fa-archive"></i>
                     <p>لا يوجد أرشيف</p>
-                </td>
-            </tr>
+                 </td>
+             </tr>
         `;
         return;
     }
 
-    // Render rows
-    tbody.innerHTML = list.map((archive, index) => `
+    tbody.innerHTML = currentArchives.map((arch, idx) => `
         <tr>
-            <td>${index + 1}</td>
-            <td><strong>${archive["الشهر"]}</strong></td>
-            <td>${archive["عدد التحويلات"] || 0}</td>
-            <td>${formatMoney(archive["إجمالي التحويلات"])}</td>
-            <td>${archive["عدد التحصيلات"] || 0}</td>
-            <td>${formatMoney(archive["إجمالي التحصيلات"])}</td>
+            <td>${idx + 1}</td>
+            <td><strong>${escapeHtml(arch['الشهر'] || '-')}</strong></td>
+            <td>${arch['سنة التشغيل'] || '-'}</td>
+            <td>${arch['عدد التحويلات'] || 0}</td>
+            <td>${formatMoney(arch['إجمالي التحويلات'])}</td>
+            <td>${arch['عدد التحصيلات'] || 0}</td>
+            <td>${formatMoney(arch['إجمالي التحصيلات'])}</td>
+            <td><strong style="color:var(--danger);">${formatMoney(arch['إجمالي المتبقي'])}</strong></td>
             <td>
-                <strong style="color:var(--danger);">
-                    ${formatMoney(archive["إجمالي المتبقي"])}
-                </strong>
-            </td>
-            <td>
-                <button class="btn btn-danger btn-sm" 
-                        onclick="window.App.deleteArchive('${archive["رقم الأرشيف"]}')" 
-                        title="حذف">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
+                <div class="action-btns">
+                    <button class="btn btn-danger btn-sm" onclick="window.deleteArchive('${arch.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+             </td>
+         </tr>
     `).join('');
 }
 
-/**
- * Confirm and execute month closing
- */
-export function confirmCloseMonth() {
-    const monthName = new Date().toLocaleString('ar-EG', { 
-        month: 'long', 
-        year: 'numeric' 
+// دالة إغلاق الشهر الحالي وإنشاء أرشيف
+export async function closeMonth() {
+    const monthName = getCurrentArabicMonth();
+    const currentYear = new Date().getFullYear();
+    
+    showConfirm(
+        `إغلاق شهر "${monthName}"؟\n\nسيتم:\n• أرشفة جميع التحويلات والتحصيلات الخاصة بهذا الشهر\n• حذفها من الجداول النشطة\n• إنشاء سجل أرشيفي`,
+        async () => {
+            if (!supabase) {
+                showToast('قاعدة البيانات غير جاهزة', 'error');
+                return;
+            }
+            
+            try {
+                // 1. جلب جميع التحويلات والتحصيلات الخاصة بالشهر الحالي
+                const { data: transfers, error: tErr } = await supabase
+                    .from('transfers')
+                    .select('*')
+                    .eq('الشهر', monthName);
+                if (tErr) throw tErr;
+                
+                const { data: collections, error: cErr } = await supabase
+                    .from('collections')
+                    .select('*')
+                    .eq('الشهر', monthName);
+                if (cErr) throw cErr;
+                
+                if ((!transfers || transfers.length === 0) && (!collections || collections.length === 0)) {
+                    showToast(`لا توجد بيانات لإغلاق شهر ${monthName}`, 'warning');
+                    return;
+                }
+                
+                // 2. حساب الإحصائيات
+                const totalTransfers = (transfers || []).reduce((sum, t) => sum + (parseFloat(t['قيمة التحويل']) || 0), 0);
+                const totalCollections = (collections || []).reduce((sum, c) => sum + (parseFloat(c['قيمة التحصيل']) || 0), 0);
+                const remaining = totalTransfers - totalCollections;
+                
+                // 3. إنشاء سجل الأرشيف
+                const archiveData = {
+                    "الشهر": monthName,
+                    "سنة التشغيل": currentYear,
+                    "عدد التحويلات": transfers?.length || 0,
+                    "إجمالي التحويلات": totalTransfers,
+                    "عدد التحصيلات": collections?.length || 0,
+                    "إجمالي التحصيلات": totalCollections,
+                    "إجمالي المتبقي": remaining,
+                    "تاريخ الإغلاق": new Date().toISOString().split('T')[0]
+                };
+                
+                const { error: insertErr } = await supabase
+                    .from('archives')
+                    .insert([archiveData]);
+                if (insertErr) throw insertErr;
+                
+                // 4. حذف البيانات المؤرشفة من الجداول النشطة (اختياري - حسب متطلبات العمل)
+                // يمكن إما الحذف أو وضع علامة "مؤرشف". هنا سنقوم بالحذف.
+                if (transfers && transfers.length) {
+                    const transferIds = transfers.map(t => t.id);
+                    const { error: delTErr } = await supabase
+                        .from('transfers')
+                        .delete()
+                        .in('id', transferIds);
+                    if (delTErr) console.warn('فشل حذف التحويلات:', delTErr);
+                }
+                if (collections && collections.length) {
+                    const collectionIds = collections.map(c => c.id);
+                    const { error: delCErr } = await supabase
+                        .from('collections')
+                        .delete()
+                        .in('id', collectionIds);
+                    if (delCErr) console.warn('فشل حذف التحصيلات:', delCErr);
+                }
+                
+                showToast(`✅ تم إغلاق شهر ${monthName} بنجاح`, 'success');
+                if (window.Sound) window.Sound.play('success');
+                
+                // تحديث الصفحات
+                await loadArchives();
+                if (window.loadDashboardStats) window.loadDashboardStats();
+                if (window.loadRecentActivities) window.loadRecentActivities();
+                if (window.loadTopMachines) window.loadTopMachines();
+                if (window.loadTransfers) window.loadTransfers();
+                if (window.loadCollections) window.loadCollections();
+                
+            } catch (err) {
+                console.error(err);
+                showToast('حدث خطأ أثناء إغلاق الشهر: ' + err.message, 'error');
+                if (window.Sound) window.Sound.play('error');
+            }
+        },
+        'نعم، أغلق الشهر'
+    );
+}
+
+// حذف أرشيف
+export function deleteArchive(archiveId) {
+    showConfirm('هل تريد حذف هذا الأرشيف؟ لا يمكن التراجع!', async () => {
+        try {
+            const { error } = await supabase
+                .from('archives')
+                .delete()
+                .eq('id', archiveId);
+            if (error) throw error;
+            showToast('تم حذف الأرشيف', 'success');
+            if (window.Sound) window.Sound.play('success');
+            await loadArchives();
+        } catch (err) {
+            showToast('خطأ في الحذف: ' + err.message, 'error');
+            if (window.Sound) window.Sound.play('error');
+        }
     });
-
-    showConfirm(
-        `إغلاق شهر "${monthName}"؟\n\nسيتم:\n• أرشفة جميع التحويلات والتحصيلات\n• بدء شهر جديد نظيف`,
-        async () => {
-            showLoading(true);
-            
-            try {
-                await closeMonthService(getTransfers(), getCollections());
-                
-                showToast(`✅ تم إغلاق "${monthName}" بنجاح`, 'success');
-                
-                const { refreshAllData } = await import('../core/app.js');
-                await refreshAllData();
-            } catch (error) {
-                showToast('❌ ' + error.message, 'error');
-            } finally {
-                showLoading(false);
-            }
-        },
-        'نعم، أغلق'
-    );
 }
 
-/**
- * Delete archive record
- * @param {string} archiveId - Archive ID
- */
-export async function deleteArchive(archiveId) {
-    showConfirm(
-        'حذف هذا الأرشيف؟ لا يمكن التراجع!',
-        async () => {
-            showLoading(true);
-            
-            try {
-                await removeArchive(archiveId);
-                showToast('✅ تم حذف الأرشيف', 'success');
-                
-                const { refreshAllData } = await import('../core/app.js');
-                await refreshAllData();
-            } catch (error) {
-                showToast('❌ ' + error.message, 'error');
-            } finally {
-                showLoading(false);
-            }
-        },
-        'نعم، احذف'
-    );
-}
+// ربط الدوال بالنافذة العامة
+window.closeMonth = closeMonth;
+window.deleteArchive = deleteArchive;
