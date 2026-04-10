@@ -1,36 +1,39 @@
 /**
  * Database Explorer Page
- * Visual database inspection tool
+ * Visual database inspection tool - مطابق لستايل index.html
  */
 
 import { getSupabase } from '../config/supabase.js';
-import { fetchWithCount } from '../services/dbService.js';
-import { showToast, showSuccess, showError } from '../ui/toast.js';
-import { setLoading } from '../ui/stateManager.js';
-import { showLoading } from '../core/app.js';
+import { showToast } from '../ui/toast.js';
+import { escapeHtml } from '../utils/formatters.js';
 
-// Database explorer state
+let supabase = null;
 let discoveredTables = [];
 let selectedTableName = null;
 
-/**
- * Discover and display database tables
- */
+// تهيئة الصفحة
+export function initDatabasePage() {
+    supabase = getSupabase();
+}
+
+// اكتشاف وعرض جداول قاعدة البيانات
 export async function discoverDatabase() {
-    const loadingText = document.getElementById('loadingText');
-    if (loadingText) loadingText.textContent = 'جاري اكتشاف قاعدة البيانات...';
+    if (!supabase) {
+        showToast('قاعدة البيانات غير جاهزة', 'error');
+        return;
+    }
     
-    showLoading(true);
+    const container = document.getElementById('dbTablesList');
+    if (container) container.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري اكتشاف الجداول...</div>';
     
     try {
-        // Known tables to check
+        // قائمة الجداول المتوقعة (حسب هيكل المشروع)
         const tablesToCheck = [
             'merchants', 'machines', 'transfers',
-            'collections', 'requests', 'archives', 'logs'
+            'collections', 'requests', 'archives', 'logs', 'settings'
         ];
         
         discoveredTables = [];
-        const supabase = getSupabase();
         
         for (const tableName of tablesToCheck) {
             try {
@@ -40,14 +43,21 @@ export async function discoverDatabase() {
                     .limit(1);
                 
                 if (!error) {
+                    // جلب أسماء الأعمدة من أول صف (إذا وجد)
+                    let columns = [];
+                    const { data: sample } = await supabase.from(tableName).select('*').limit(1);
+                    if (sample && sample.length > 0) {
+                        columns = Object.keys(sample[0]);
+                    } else {
+                        columns = getDefaultColumns(tableName);
+                    }
+                    
                     discoveredTables.push({
                         name: tableName,
                         count: count || 0,
-                        columns: getDefaultColumns(tableName),
+                        columns: columns,
                         status: 'connected'
                     });
-                    
-                    console.log(`✅ Discovered table: ${tableName} (${count || 0} rows)`);
                 } else {
                     discoveredTables.push({
                         name: tableName,
@@ -69,49 +79,37 @@ export async function discoverDatabase() {
         }
         
         renderDatabaseExplorer();
-        showSuccess('✅ تم اكتشاف قاعدة البيانات بنجاح');
+        showToast('✅ تم اكتشاف قاعدة البيانات', 'success');
         
     } catch (error) {
-        console.error('❌ Database discovery error:', error);
-        showError('❌ فشل اكتشاف قاعدة البيانات: ' + error.message);
-    } finally {
-        showLoading(false);
-        if (loadingText) loadingText.textContent = 'جاري التحميل...';
+        console.error(error);
+        showToast('فشل اكتشاف قاعدة البيانات', 'error');
+        if (container) container.innerHTML = '<div class="empty-state"><i class="fas fa-database"></i> حدث خطأ أثناء الاكتشاف</div>';
     }
 }
 
-/**
- * Get default column names for known tables
- * @param {string} tableName - Table name
- * @returns {Array<string>}
- */
+// الحصول على أسماء الأعمدة الافتراضية للجداول المعروفة
 function getDefaultColumns(tableName) {
     const defaults = {
-        merchants: ['رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الحساب', 'رقم الهاتف', 'العنوان', 'المنطقة', 'الحالة', 'ملاحظات', 'created_at', 'updated_at'],
-        machines: ['رقم المكنة', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'الرقم التسلسلي', 'رقم الحساب', 'التارجت الشهري', 'الحالة', 'ملاحظات', 'created_at', 'updated_at'],
-        transfers: ['الرقم المرجعي', 'رقم التاجر', 'اسم التاجر', 'رقم الحساب', 'نوع التحويل', 'قيمة التحويل', 'التاريخ', 'الوقت', 'ملاحظات', 'الشهر', 'created_at', 'updated_at'],
-        collections: ['الرقم المرجعي', 'رقم التاجر', 'اسم التاجر', 'رقم الحساب', 'قيمة التحصيل', 'نوع التحصيل', 'المتبقي بعد التحصيل', 'التاريخ', 'الوقت', 'ملاحظات', 'شهر', 'created_at', 'updated_at'],
-        requests: ['رقم الطلب', 'رقم التاجر', 'اسم التاجر', 'رقم الحساب', 'نوع الطلب', 'المبلغ', 'المديونية الحالية', 'التاريخ', 'الوقت', 'الحالة', 'ملاحظات', 'created_at', 'updated_at'],
-        archives: ['رقم الأرشيف', 'الشهر', 'عدد التحويلات', 'إجمالي التحويلات', 'عدد التحصيلات', 'إجمالي التحصيلات', 'إجمالي المتبقي', 'created_at'],
-        logs: ['id', 'التاريخ', 'الوقت', 'النوع', 'الرقم المرجعي', 'التفاصيل', 'المستخدم', 'created_at']
+        merchants: ['id', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الحساب', 'رقم الهاتف', 'المنطقة', 'العنوان', 'الحالة', 'created_at'],
+        machines: ['id', 'رقم المكنة', 'الرقم التسلسلي', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الحساب', 'التارجت الشهري', 'الحالة', 'created_at'],
+        transfers: ['id', 'الرقم المرجعي', 'التاريخ', 'الوقت', 'الشهر', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'قيمة التحويل', 'نوع التحويل', 'created_at'],
+        collections: ['id', 'الرقم المرجعي', 'التاريخ', 'الوقت', 'الشهر', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'قيمة التحصيل', 'نوع التحصيل', 'المتبقي بعد التحصيل', 'created_at'],
+        requests: ['id', 'رقم الطلب', 'التاريخ', 'الوقت', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'نوع الطلب', 'المبلغ', 'الحالة', 'created_at'],
+        archives: ['id', 'رقم الأرشيف', 'الشهر', 'سنة التشغيل', 'عدد التحويلات', 'إجمالي التحويلات', 'عدد التحصيلات', 'إجمالي التحصيلات', 'إجمالي المتبقي', 'تاريخ الإغلاق', 'created_at'],
+        logs: ['id', 'التاريخ', 'الوقت', 'النوع', 'التفاصيل', 'المستخدم', 'created_at'],
+        settings: ['id', 'الخاصية', 'القيمة', 'created_at']
     };
-    
     return defaults[tableName] || ['id', 'created_at'];
 }
 
-/**
- * Render database explorer UI
- */
+// عرض واجهة مستكشف قاعدة البيانات
 function renderDatabaseExplorer() {
     const container = document.getElementById('dbTablesList');
+    if (!container) return;
     
     if (!discoveredTables.length) {
-        container.innerHTML = `
-            <div class="empty-state" style="grid-column: 1/-1;">
-                <i class="fas fa-database"></i>
-                <p>لم يتم العثور على جداول</p>
-            </div>
-        `;
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-database"></i> لم يتم العثور على جداول</div>';
         return;
     }
     
@@ -119,67 +117,53 @@ function renderDatabaseExplorer() {
         const statusIcon = table.status === 'connected' 
             ? '<i class="fas fa-check-circle" style="color: var(--success);"></i>' 
             : '<i class="fas fa-exclamation-circle" style="color: var(--danger);"></i>';
-            
+        
         const statusClass = selectedTableName === table.name ? 'active' : '';
         
         return `
-            <div class="db-table-card ${statusClass}" onclick="window.App.selectTable('${table.name}', event)">
+            <div class="db-table-card ${statusClass}" onclick="window.selectTable('${table.name}', event)">
                 <div class="db-table-name">
                     ${statusIcon}
                     <i class="fas fa-table"></i>
-                    ${table.name}
+                    <strong>${escapeHtml(table.name)}</strong>
                 </div>
                 <div class="db-table-info">
-                    <div>عدد الصفوف: <strong>${table.count}</strong></div>
-                    <div>عدد الأعمدة: <strong>${table.columns.length}</strong></div>
+                    <span>عدد الصفوف: <strong>${table.count}</strong></span>
+                    <span>عدد الأعمدة: <strong>${table.columns.length}</strong></span>
                 </div>
-                <div class="db-columns-list" id="columns-${table.name}">
-                    <h4 style="margin-bottom: 0.5rem; font-size: 0.9rem;">الأعمدة:</h4>
-                    ${table.columns.map(col => `
-                        <div class="db-column-item">
-                            <span class="db-column-name">${col}</span>
-                            <span class="db-column-type">text</span>
-                        </div>
-                    `).join('')}
+                <div class="db-columns-list" id="columns-${table.name}" style="display: none;">
+                    <h4>الأعمدة:</h4>
+                    <div class="db-columns-grid">
+                        ${table.columns.map(col => `<span class="db-column-item">${escapeHtml(col)}</span>`).join('')}
+                    </div>
                 </div>
             </div>
         `;
     }).join('');
 }
 
-/**
- * Select and display table data
- * @param {string} tableName - Selected table name
- * @param {Event} event - Click event
- */
+// تحديد جدول وعرض بياناته
 export async function selectTable(tableName, event) {
     selectedTableName = tableName;
     
-    // Update UI selection
+    // تحديث حالة البطاقات
     document.querySelectorAll('.db-table-card').forEach(card => {
         card.classList.remove('active');
+        const columnsDiv = card.querySelector('.db-columns-list');
+        if (columnsDiv) columnsDiv.style.display = 'none';
     });
     
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('active');
+        const columnsDiv = event.currentTarget.querySelector('.db-columns-list');
+        if (columnsDiv) columnsDiv.style.display = 'block';
     }
     
-    // Toggle columns visibility
-    document.querySelectorAll('.db-columns-list').forEach(list => {
-        list.classList.remove('show');
-    });
-    
-    const columnsList = document.getElementById(`columns-${tableName}`);
-    if (columnsList) columnsList.classList.add('show');
-    
-    // Load and display table data
+    // تحميل وعرض بيانات الجدول
     await loadTableData(tableName);
 }
 
-/**
- * Load and display table data in explorer
- * @param {string} tableName - Table to load
- */
+// تحميل بيانات الجدول المحدد
 async function loadTableData(tableName) {
     const detailsContainer = document.getElementById('dbTableDetails');
     const tableNameEl = document.getElementById('dbSelectedTableName');
@@ -187,69 +171,60 @@ async function loadTableData(tableName) {
     const thead = document.getElementById('dbDataHead');
     const tbody = document.getElementById('dbDataBody');
     
+    if (!detailsContainer) return;
     detailsContainer.style.display = 'block';
-    tableNameEl.innerHTML = `<i class="fas fa-table"></i> جدول: ${tableName}`;
-    
-    showLoading(true);
+    if (tableNameEl) tableNameEl.innerHTML = `<i class="fas fa-table"></i> جدول: ${escapeHtml(tableName)}`;
     
     try {
-        const { data, count } = await fetchWithCount(tableName, 50);
+        const { data, count, error } = await supabase
+            .from(tableName)
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .limit(50);
         
-        rowCountEl.textContent = `${count || 0} صف`;
+        if (error) throw error;
+        
+        if (rowCountEl) rowCountEl.textContent = `${count || 0} صف`;
         
         if (!data || data.length === 0) {
-            thead.innerHTML = '';
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="100%" class="empty-state">
-                        <p>لا توجد بيانات</p>
-                    </td>
-                </tr>
-            `;
+            if (thead) thead.innerHTML = '';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="100" class="empty-state">لا توجد بيانات</td></tr>';
             return;
         }
         
-        // Get columns from first row
         const columns = Object.keys(data[0]);
+        if (thead) {
+            thead.innerHTML = `<tr>${columns.map(col => `<th>${escapeHtml(col)}</th>`).join('')}</tr>`;
+        }
         
-        // Render header
-        thead.innerHTML = `<tr>${columns.map(col => `<th>${col}</th>`).join('')}</tr>`;
+        if (tbody) {
+            tbody.innerHTML = data.map(row => `
+                <tr>
+                    ${columns.map(col => {
+                        let value = row[col];
+                        if (value === null || value === undefined) value = '-';
+                        else if (typeof value === 'object') value = JSON.stringify(value);
+                        else value = String(value);
+                        return `<td title="${escapeHtml(value)}">${escapeHtml(value.substring(0, 100))}${value.length > 100 ? '...' : ''}</td>`;
+                    }).join('')}
+                </tr>
+            `).join('');
+        }
         
-        // Render body
-        tbody.innerHTML = data.map(row => `
-            <tr>${columns.map(col => {
-                const value = row[col];
-                const displayValue = value === null || value === undefined 
-                    ? '-' 
-                    : (typeof value === 'object' ? JSON.stringify(value) : String(value).substring(0, 50));
-                    
-                return `<td title="${displayValue}">${displayValue}</td>`;
-            }).join('')}</tr>
-        `).join('');
-        
-    } catch (error) {
-        console.error('Error loading table data:', error);
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="100%" class="empty-state">
-                    <p style="color: var(--danger);">خطأ: ${error.message}</p>
-                </td>
-            </tr>
-        `;
-    } finally {
-        showLoading(false);
+    } catch (err) {
+        console.error(err);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="100" class="empty-state" style="color: var(--danger);">خطأ: ${escapeHtml(err.message)}</td></tr>`;
     }
 }
 
-/**
- * Refresh currently selected table data
- */
+// تحديث الجدول المحدد
 export async function refreshSelectedTable() {
     if (selectedTableName) {
         await loadTableData(selectedTableName);
+        showToast('تم تحديث البيانات', 'success');
     }
 }
 
-// Export for global access via window.App
-window.App.selectTable = selectTable;
-window.App.refreshSelectedTable = refreshSelectedTable;
+// ربط الدوال بالنافذة العامة
+window.selectTable = selectTable;
+window.refreshSelectedTable = refreshSelectedTable;
