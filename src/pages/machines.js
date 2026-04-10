@@ -1,303 +1,245 @@
 /**
  * Machines Page
- * CRUD operations for machines
+ * CRUD operations for machines - مطابق لستايل index.html
  */
 
-import { 
-    getMachines, getMerchants, getSearchTerm, setSearchTerm 
-} from '../ui/stateManager.js';
-import { showModal, showConfirm } from '../ui/modals.js';
-import { showToast } from '../ui/toast.js';
-import { escapeHtml, normalizeText, formatMoney } from '../utils/formatters.js';
-import { 
-    getAllMachines, createMachine, updateMachine as updateMachineDB, removeMachine,
-    generateMachineId, findMachineById 
-} from '../services/machineService.js';
-import { findMerchantById as findMerchant } from '../services/merchantService.js';
-import { showLoading } from '../core/app.js';
+import { getSupabase } from '../config/supabase.js';
+import { showToast, showConfirm } from '../ui/toast.js';
+import { escapeHtml, formatMoney } from '../utils/formatters.js';
 
-/**
- * Render machines table
- */
-export function renderMachines() {
-    let list = [...getMachines()];
-    const term = getSearchTerm('machine');
+let supabase = null;
+let currentMachines = [];
+let merchantsList = []; // للتخزين المؤقت لبيانات التجار
 
-    // Apply search filter
-    if (term) {
-        list = list.filter(m =>
-            m['رقم المكنة']?.includes(term) ||
-            normalizeText(m['اسم التاجر']).includes(term) ||
-            m['الرقم التسلسلي']?.includes(term)
-        );
+// تهيئة Supabase
+export function initMachinesPage() {
+    supabase = getSupabase();
+}
+
+// تحميل المكن وعرضه
+export async function loadMachines() {
+    if (!supabase) return;
+    try {
+        // جلب المكن مع بيانات التاجر (يمكن ربطها عبر join ولكن سنستخدم جدولين)
+        const { data: machines, error } = await supabase
+            .from('machines')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        currentMachines = machines || [];
+        
+        // جلب التجار للاستخدام في عرض اسم التاجر
+        const { data: merchants } = await supabase
+            .from('merchants')
+            .select('id, "رقم التاجر", "اسم التاجر", "اسم النشاط", "رقم الحساب"');
+        merchantsList = merchants || [];
+        
+        renderMachinesTable();
+    } catch (err) {
+        console.error(err);
+        showToast('خطأ في تحميل المكن', 'error');
     }
+}
 
-    // Apply status filter
-    const statusFilter = document.getElementById('machineStatusFilter')?.value;
-    if (statusFilter) {
-        list = list.filter(m => m['الحالة'] === statusFilter);
-    }
+function renderMachinesTable() {
+    const tbody = document.getElementById('machinesTableBody');
+    if (!tbody) return;
 
-    const tbody = document.getElementById('machinesTable');
-    
-    // Empty state
-    if (!list.length) {
+    if (!currentMachines.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="empty-state">
-                    <i class="fas fa-cash-register"></i>
-                    <p>لا توجد مكن</p>
-                </td>
-            </tr>
+                <td colspan="9" class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>لا توجد مكن مسجلة</p>
+                 </td>
+             </tr>
         `;
         return;
     }
 
-    // Render rows
-    tbody.innerHTML = list.map((machine, index) => `
-        <tr>
-            <td>${index + 1}</td>
-            <td>
-                <code style="color:var(--secondary);font-weight:700;">
-                    ${machine['رقم المكنة']}
-                </code>
-            </td>
-            <td>${machine['اسم التاجر'] || '-'}</td>
-            <td>
-                <span class="badge badge-purple">${machine['اسم النشاط'] || '-'}</span>
-            </td>
-            <td>
-                <code style="color:#dc2626;font-size:0.82rem;">
-                    ${machine['الرقم التسلسلي']||'-'}
-                </code>
-            </td>
-            <td>${formatMoney(machine['التارجت الشهري'])}</td>
-            <td>
-                <span class="badge ${
-                    machine['الحالة']==='نشطة' ? 'badge-success' : 'badge-danger'
-                }">
-                    ${machine['الحالة']||'-'}
-                </span>
-            </td>
-            <td>
-                <div class="action-btns">
-                    <button class="btn btn-primary btn-sm" 
-                            onclick="window.App.editMachine('${machine['رقم المكنة']}')" 
-                            title="تعديل">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-danger btn-sm" 
-                            onclick="window.App.deleteMachine('${machine['رقم المكنة']}')" 
-                            title="حذف">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
-}
-
-/**
- * Open machine add/edit modal
- * @param {Object|null} data - Existing machine data (for edit mode)
- */
-export function openMachineModal(data = null) {
-    const isEdit = !!data;
-    
-    const content = `
-        <div class="modal-header">
-            <h3>
-                <i class="fas ${isEdit ? 'fa-edit' : 'fa-plus-circle'}"></i> 
-                ${isEdit ? 'تعديل مكنة' : 'إضافة مكنة جديدة'}
-            </h3>
-        </div>
-        <div class="form-group">
-            <label class="form-label">التاجر <span class="required">*</span></label>
-            <div class="search-wrapper">
-                <input type="text" id="mc_merchant_search" class="form-control" 
-                       placeholder="🔍 ابحث عن تاجر..." autocomplete="off"
-                       oninput="window.App.handleMerchantLookup(this.value, 'mc_merchant_list', 'mc_merchant_id')"
-                       value="${isEdit ? escapeHtml(data?.['اسم التاجر']) || '' : ''}">
-                <input type="hidden" id="mc_merchant_id" value="${isEdit ? data?.['رقم التاجر'] || '' : ''}">
-                <div id="mc_merchant_list" class="search-results"></div>
-            </div>
-        </div>
+    tbody.innerHTML = currentMachines.map((m, idx) => {
+        // البحث عن اسم التاجر من القائمة
+        const merchant = merchantsList.find(mer => mer.id === m['رقم التاجر']);
+        const merchantName = merchant ? merchant['اسم التاجر'] : '—';
+        const merchantActivity = merchant ? merchant['اسم النشاط'] : '—';
         
-        <div id="autoFillFields" style="display:none;background:var(--bg);padding:1rem;border-radius:var(--radius-sm);margin-bottom:1rem;border:1px solid var(--border);">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;font-size:0.88rem;color:var(--text-light);">
-                <div><strong>اسم التاجر:</strong> <span id="auto_name" style="color:var(--text);">-</span></div>
-                <div><strong>رقم الحساب:</strong> <span id="auto_account" dir="ltr" style="color:var(--text);">-</span></div>
-                <div><strong>اسم النشاط:</strong> <span id="auto_activity" style="color:var(--text);">-</span></div>
-                <div><strong>الهاتف:</strong> <span id="auto_phone" dir="ltr" style="color:var(--text);">-</span></div>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">الرقم التسلسلي <span class="required">*</span></label>
-            <div class="input-with-camera">
-                <input type="text" id="mc_serial" class="form-control" dir="ltr" 
-                       placeholder="SN-XXXXX أو امسح بالكاميرا" 
-                       value="${isEdit ? escapeHtml(data?.['الرقم التسلسلي']) || '' : ''}"
-                       onclick="window.currentScannerInput='mc_serial'">
-                <button type="button" class="camera-btn" 
-                        onclick="window.App.openScannerForInput('mc_serial')" 
-                        title="مسح بالكاميرا">
-                    <i class="fas fa-camera"></i>
-                </button>
-            </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-            <div class="form-group">
-                <label class="form-label">التارجت الشهري</label>
-                <input type="number" id="mc_target" class="form-control" min="0" 
-                       value="${isEdit ? data?.['التارجت الشهري'] || '' : ''}">
-            </div>
-            <div class="form-group">
-                <label class="form-label">الحالة</label>
-                <select id="mc_status" class="form-control">
-                    <option value="نشطة" ${!isEdit || data?.['الحالة']==='نشطة'?'selected':''}>✅ نشطة</option>
-                    <option value="متوقفة" ${isEdit && data?.['الحالة']=='متوقفة'?'selected':''}>⏸ متوقفة</option>
-                    <option value="صيانة" ${isEdit && data?.['الحالة']=='صيانة'?'selected':''}>🔧 صيانة</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="form-label">ملاحظات</label>
-            <textarea id="mc_notes" class="form-control" rows="3">${
-                isEdit ? escapeHtml(data?.['ملاحظات']) || '' : ''
-            }</textarea>
-        </div>
-        <button class="btn btn-primary btn-block" 
-                onclick="window.App.saveMachine(${isEdit ? `'${escapeHtml(data?.['رقم المكنة'])}'` : 'null'})">
-            <i class="fas fa-save"></i> ${isEdit ? 'تحديث المكنة' : 'إضافة مكنة'}
-        </button>
-    `;
-    
-    showModal(content);
-    
-    // Auto-fill merchant data if editing
-    if (isEdit && data?.['رقم التاجر']) {
-        autoFillMerchantData(data['رقم التاجر']);
-    }
+        const target = parseFloat(m['التارجت الشهري']) || 0;
+        const achieved = parseFloat(m['المحقق']) || 0; // ملاحظة: المحقق لا يُخزن في جدول machines، بل يحسب من التحويلات. سنتركه صفراً حالياً.
+        const percentage = target > 0 ? Math.min(100, (achieved / target) * 100) : 0;
+        
+        return `
+            <tr>
+                <td>${idx + 1}</td>
+                <td><code class="ref-code">${escapeHtml(m['رقم المكنة'] || '-')}</code></td>
+                <td>${escapeHtml(merchantName)}</td>
+                <td>${escapeHtml(merchantActivity)}</td>
+                <td><code>${escapeHtml(m['الرقم التسلسلي'] || '-')}</code></td>
+                <td>${formatMoney(target)}</td>
+                <td>
+                    <span class="badge ${m['الحالة'] === 'نشطة' ? 'badge-success' : 'badge-danger'}">
+                        ${escapeHtml(m['الحالة'] || '-')}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn btn-primary btn-sm" onclick="window.editMachine('${m.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="window.deleteMachine('${m.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
-/**
- * Auto-fill merchant details when selected
- * @param {string} merchantId - Selected merchant ID
- */
-export function autoFillMerchantData(merchantId) {
-    const merchant = findMerchant(merchantId, getMerchants());
+// فتح نافذة إضافة/تعديل مكنة
+export async function openMachineModal(machine = null) {
+    // تأكد من تحميل قائمة التجار أولاً
+    if (!merchantsList.length) {
+        const { data } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+        merchantsList = data || [];
+    }
     
-    if (merchant) {
-        document.getElementById('autoFillFields').style.display = 'block';
-        document.getElementById('auto_name').textContent = merchant['اسم التاجر'] || '-';
-        document.getElementById('auto_account').textContent = merchant['رقم الحساب'] || '-';
-        document.getElementById('auto_activity').textContent = merchant['اسم النشاط'] || '-';
-        document.getElementById('auto_phone').textContent = merchant['رقم الهاتف'] || '-';
+    const isEdit = !!machine;
+    const modal = document.getElementById('machineModal');
+    const title = document.getElementById('machineModalTitle');
+    
+    // تعبئة قائمة التجار في حقل select
+    const merchantSelect = document.getElementById('machMerchantId');
+    if (merchantSelect) {
+        merchantSelect.innerHTML = '<option value="">-- اختر تاجر --</option>' +
+            merchantsList.map(m => `<option value="${m.id}" ${isEdit && machine['رقم التاجر'] === m.id ? 'selected' : ''}>${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`).join('');
+    }
+    
+    if (isEdit) {
+        title.innerHTML = '<i class="fas fa-edit"></i> تعديل مكنة';
+        document.getElementById('editMachineId').value = machine.id;
+        document.getElementById('machSerial').value = machine['الرقم التسلسلي'] || '';
+        document.getElementById('machTarget').value = machine['التارجت الشهري'] || '';
+        document.getElementById('machStatus').value = machine['الحالة'] || 'نشطة';
+        document.getElementById('machNotes').value = machine['ملاحظات'] || '';
     } else {
-        document.getElementById('autoFillFields').style.display = 'none';
+        title.innerHTML = '<i class="fas fa-plus-circle"></i> إضافة مكنة جديدة';
+        document.getElementById('editMachineId').value = '';
+        document.getElementById('machSerial').value = '';
+        document.getElementById('machTarget').value = '';
+        document.getElementById('machStatus').value = 'نشطة';
+        document.getElementById('machNotes').value = '';
+        if (merchantSelect) merchantSelect.value = '';
     }
+    modal.classList.add('show');
+    if (window.Sound) window.Sound.play('click');
 }
 
-/**
- * Save machine (create or update)
- * @param {string|null} editId - Machine ID for updates
- */
-export async function saveMachine(editId) {
-    const merchId = document.getElementById('mc_merchant_id')?.value;
-    const serial = document.getElementById('mc_serial')?.value?.trim();
+export function closeMachineModal() {
+    document.getElementById('machineModal').classList.remove('show');
+}
 
-    if (!merchId) {
-        showToast('⚠️ يجب اختيار التاجر', 'warning');
+// حفظ المكنة (إضافة أو تعديل)
+export async function saveMachine() {
+    const id = document.getElementById('editMachineId').value;
+    const merchantId = document.getElementById('machMerchantId').value;
+    const serial = document.getElementById('machSerial').value.trim();
+    const target = parseFloat(document.getElementById('machTarget').value) || 0;
+    const status = document.getElementById('machStatus').value;
+    const notes = document.getElementById('machNotes').value.trim();
+    
+    if (!merchantId) {
+        showToast('يرجى اختيار التاجر', 'warning');
         return;
     }
-    
     if (!serial) {
-        showToast('⚠️ الرقم التسلسلي مطلوب', 'warning');
+        showToast('الرقم التسلسلي مطلوب', 'warning');
         return;
     }
-
-    showLoading(true);
-
-    try {
-        const merchant = findMerchant(merchId, getMerchants());
-        let machineId = editId;
-        
-        // Generate new ID if creating
-        if (!editId) {
-            machineId = generateMachineId(getMachines());
-        }
-
-        const machineData = {
-            "رقم المكنة": machineId,
-            "رقم التاجر": merchId,
-            "اسم التاجر": merchant?.['اسم التاجر'] || '',
-            "اسم النشاط": merchant?.['اسم النشاط'] || '',
-            "الرقم التسلسلي": serial,
-            "رقم الحساب": merchant?.['رقم الحساب'] || '',
-            "التارجت الشهري": Number(document.getElementById('mc_target')?.value) || 0,
-            "الحالة": document.getElementById('mc_status')?.value || 'نشطة',
-            "ملاحظات": document.getElementById('mc_notes')?.value?.trim()
-        };
-
-        if (editId) {
-            await updateMachineDB(editId, machineData);
-            showToast('✅ تم تحديث المكنة', 'success');
-        } else {
-            await createMachine(machineData);
-            showToast('✅ تم إضافة المكنة', 'success');
-        }
-
-        // Close modal and refresh
-        const { closeModal } = await import('../ui/modals.js');
-        closeModal();
-        
-        const { refreshAllData } = await import('../core/app.js');
-        await refreshAllData();
-        
-    } catch (error) {
-        showToast('❌ ' + error.message, 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-/**
- * Edit existing machine
- * @param {string} id - Machine ID
- */
-export async function editMachine(id) {
-    const machine = findMachineById(id, getMachines());
     
-    if (machine) {
-        openMachineModal(machine);
-    } else {
-        showToast('❌ لم يتم العثور على المكنة', 'error');
+    // جلب بيانات التاجر لتعبئة الحقول الإضافية (اسم التاجر، رقم الحساب، اسم النشاط)
+    const merchant = merchantsList.find(m => m.id === merchantId);
+    if (!merchant) {
+        showToast('التاجر غير موجود', 'error');
+        return;
+    }
+    
+    const machineData = {
+        "رقم التاجر": merchantId,
+        "اسم التاجر": merchant['اسم التاجر'],
+        "رقم الحساب": merchant['رقم الحساب'],
+        "اسم النشاط": merchant['اسم النشاط'],
+        "الرقم التسلسلي": serial,
+        "التارجت الشهري": target,
+        "الحالة": status,
+        "ملاحظات": notes
+    };
+    
+    try {
+        if (id) {
+            // تحديث
+            const { error } = await supabase
+                .from('machines')
+                .update(machineData)
+                .eq('id', id);
+            if (error) throw error;
+            showToast('تم تحديث المكنة', 'success');
+        } else {
+            // إضافة جديدة (رقم المكنة يتولد تلقائياً)
+            const { error } = await supabase
+                .from('machines')
+                .insert([machineData]);
+            if (error) throw error;
+            showToast('تم إضافة المكنة', 'success');
+        }
+        if (window.Sound) window.Sound.play('success');
+        closeMachineModal();
+        await loadMachines();
+        // تحديث إحصائيات لوحة التحكم إذا كانت موجودة
+        if (window.loadDashboardStats) window.loadDashboardStats();
+    } catch (err) {
+        console.error(err);
+        showToast('حدث خطأ: ' + err.message, 'error');
+        if (window.Sound) window.Sound.play('error');
     }
 }
 
-/**
- * Delete machine
- * @param {string} id - Machine ID
- */
-export async function deleteMachine(id) {
-    showConfirm(
-        `هل تريد حذف المكنة "${id}"؟`,
-        async () => {
-            showLoading(true);
-            
-            try {
-                await removeMachine(id);
-                showToast('✅ تم حذف المكنة', 'success');
-                
-                const { refreshAllData } = await import('../core/app.js');
-                await refreshAllData();
-            } catch (error) {
-                showToast('❌ ' + error.message, 'error');
-            } finally {
-                showLoading(false);
-            }
-        },
-        'نعم، احذف'
-    );
+// جلب مكنة للتعديل
+export async function editMachine(id) {
+    const { data, error } = await supabase
+        .from('machines')
+        .select('*')
+        .eq('id', id)
+        .single();
+    if (error) {
+        showToast('خطأ في جلب البيانات', 'error');
+        return;
+    }
+    openMachineModal(data);
 }
+
+// حذف مكنة
+export function deleteMachine(id) {
+    showConfirm('هل تريد حذف هذه المكنة؟ لا يمكن التراجع!', async () => {
+        try {
+            const { error } = await supabase
+                .from('machines')
+                .delete()
+                .eq('id', id);
+            if (error) throw error;
+            showToast('تم حذف المكنة', 'success');
+            if (window.Sound) window.Sound.play('success');
+            await loadMachines();
+            if (window.loadDashboardStats) window.loadDashboardStats();
+        } catch (err) {
+            showToast('خطأ في الحذف: ' + err.message, 'error');
+            if (window.Sound) window.Sound.play('error');
+        }
+    });
+}
+
+// ربط الدوال بالنافذة العامة
+window.openMachineModal = openMachineModal;
+window.closeMachineModal = closeMachineModal;
+window.saveMachine = saveMachine;
+window.editMachine = editMachine;
+window.deleteMachine = deleteMachine;
