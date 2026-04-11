@@ -11,7 +11,10 @@ export function initAIService() {
 
 // الدالة الرئيسية لمعالجة أي سؤال
 export async function processQuery(question, context = {}) {
-    if (!supabase) await initAIService();
+    // تهيئة Supabase إذا لم تكن جاهزة
+    if (!supabase) {
+        await initAIService();
+    }
     const q = question.toLowerCase().trim();
     
     // 1. أسئلة الترحيب والتعريف
@@ -59,10 +62,8 @@ export async function processQuery(question, context = {}) {
         const now = new Date();
         const month = now.toLocaleString('ar-EG', { month: 'long' });
         const year = now.getFullYear();
-        // نحتاج لفلترة حسب الشهر (يمكن إضافة عمود الشهر في الجداول)
         const transfers = await getSum('transfers', 'قيمة التحويل');
         const collections = await getSum('collections', 'قيمة التحصيل');
-        // تبسيط: نعرض إجمالي الكل مع الإشارة
         return `📆 ملخص حتى الآن في شهر ${month} ${year}:\n• إجمالي التحويلات: ${transfers.toLocaleString()} ج.م\n• إجمالي التحصيلات: ${collections.toLocaleString()} ج.م\n• المتبقي: ${(transfers - collections).toLocaleString()} ج.م`;
     }
     
@@ -267,3 +268,6 @@ function getTip() {
     const randomIndex = Math.floor(Math.random() * tips.length);
     return tips[randomIndex];
 }
+
+// ✅ إضافة تصدير باسم processAiQuery للتوافق مع index.html
+export const processAiQuery = processQuery;
