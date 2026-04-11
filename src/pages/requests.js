@@ -11,6 +11,9 @@ let supabase = null;
 let currentRequests = [];
 let merchantsList = [];
 
+// رابط Google Script الثابت (بدون الحاجة إلى CONFIG)
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
+
 // تهيئة Supabase
 export function initRequestsPage() {
     supabase = getSupabase();
@@ -49,8 +52,8 @@ function renderRequestsTable() {
                 <td colspan="10" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>لا توجد طلبات</p>
-                  </td>
-              </tr>
+                    
+                
         `;
         return;
     }
@@ -72,18 +75,19 @@ function renderRequestsTable() {
         
         return `
             <tr>
-                <td>${idx + 1}</td>
-                <td><code class="ref-code">${escapeHtml(r['رقم الطلب'] || '-')}</code></td>
-                <td>${formatDate(r['التاريخ'])}</td>
-                <td>${formatTime(r['الوقت'])}</td>
-                <td>${escapeHtml(r['اسم التاجر'] || '-')}</td>
-                <td>${escapeHtml(r['اسم النشاط'] || '-')}</td>
-                <td>${escapeHtml(r['نوع الطلب'] || '-')}</td>
-                <td><strong style="color:var(--danger);">${formatMoney(r['المبلغ'])}</strong></td>
-                <td>${formatMoney(r['المديونية الحالية'])}</td>
+                <td>${idx + 1}  
+                <td><code class="ref-code">${escapeHtml(r['رقم الطلب'] || '-')}</code>  
+                <td>${formatDate(r['التاريخ'])}  
+                <td>${formatTime(r['الوقت'])}  
+                <td>${escapeHtml(r['اسم التاجر'] || '-')}  
+                <td>${escapeHtml(r['اسم النشاط'] || '-')}  
+                <td>${escapeHtml(r['نوع الطلب'] || '-')}  
+                <td><strong style="color:var(--danger);">${formatMoney(r['المبلغ'])}</strong>  
+                <td>${formatMoney(r['المديونية الحالية'])}  
                 <td>
                     <span class="badge ${statusClass}">${statusText}</span>
-                 </td>
+                    
+                  
                 <td>
                     <div class="action-btns">
                         ${convertBtn}
@@ -91,8 +95,8 @@ function renderRequestsTable() {
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
-                 </td>
-            </tr>
+                    
+              
         `;
     }).join('');
 }
@@ -191,8 +195,8 @@ export async function saveRequest() {
     };
     
     try {
-        // إرسال إلى Google Script (كما في merchantPortal)
-        await fetch(CONFIG?.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec', {
+        // إرسال إلى Google Script
+        await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
