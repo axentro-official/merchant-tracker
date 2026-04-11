@@ -1,19 +1,17 @@
 // src/services/aiService.js
 // نسخة محسنة وموسعة مع دعم أسئلة أكثر واحترافية
 
-import { getSupabase } from '../config/supabase.js';
-
 let supabase = null;
 
 export function initAIService() {
-    supabase = getSupabase();
+    supabase = window.supabaseClient;
 }
 
 // الدالة الرئيسية لمعالجة أي سؤال
 export async function processQuery(question, context = {}) {
     // تهيئة Supabase إذا لم تكن جاهزة
     if (!supabase) {
-        await initAIService();
+        initAIService();
     }
     const q = question.toLowerCase().trim();
     
@@ -58,7 +56,7 @@ export async function processQuery(question, context = {}) {
         return `📅 إحصائيات اليوم (${today}):\n• تحويلات: ${transfers.toLocaleString()} ج.م\n• تحصيلات: ${collections.toLocaleString()} ج.م\n• صافي اليوم: ${(transfers - collections).toLocaleString()} ج.م`;
     }
     
-    if (q.includes('هذا الشهر') || q.includes('شهر') && (q.includes('إحصائيات') || q.includes('ملخص'))) {
+    if (q.includes('هذا الشهر') || (q.includes('شهر') && (q.includes('إحصائيات') || q.includes('ملخص')))) {
         const now = new Date();
         const month = now.toLocaleString('ar-EG', { month: 'long' });
         const year = now.getFullYear();
@@ -269,5 +267,5 @@ function getTip() {
     return tips[randomIndex];
 }
 
-// ✅ إضافة تصدير باسم processAiQuery للتوافق مع index.html
+// ✅ تصدير باسم processAiQuery للتوافق مع index.html
 export const processAiQuery = processQuery;
