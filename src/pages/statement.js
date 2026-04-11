@@ -3,16 +3,15 @@
  * Account statement for individual merchants - مطابق لستايل index.html
  */
 
-import { getSupabase } from '../config/supabase.js';
 import { showToast } from '../ui/toast.js';
 import { formatDate, formatTime, formatMoney, escapeHtml } from '../utils/formatters.js';
 
 let supabase = null;
 let merchantsList = [];
 
-// تهيئة Supabase
+// تهيئة Supabase (باستخدام window.supabaseClient)
 export function initStatementPage() {
-    supabase = getSupabase();
+    supabase = window.supabaseClient;
 }
 
 // تحميل قائمة التجار لعرضها في خانة الاختيار
@@ -179,7 +178,7 @@ function renderStatementTable(movements) {
                 <td colspan="7" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>لا توجد حركات لهذا التاجر</p>
-                  側
+                  侧
               </tr>
         `;
         return;
