@@ -779,7 +779,6 @@
         .toast {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             padding: 12px 18px;
@@ -1473,7 +1472,7 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم الحساب</th><th>رقم الهاتف</th><th>المنطقة</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="merchantsTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></td></tbody>
+                            <tbody id="merchantsTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1535,8 +1534,8 @@
                     </div>
                     <div class="table-container">
                         <table class="data-table">
-                            <thead><tr><th>#</th><th>رقم الطلب</th><th>التاريخ</th><th>التاجر</th><th>النوع</th><th>المبلغ</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="requestsTableBody"><tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
+                            <thead><tr><th>#</th><th>رقم الطلب</th><th>التاريخ</th><th>التاجر</th><th>النوع</th><th>المبلغ</th><th>المديونية الحالية</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="requestsTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1575,7 +1574,7 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>الملاحظات</th></tr></thead>
-                            <tbody id="statementTableBody"><tr><td colspan="7" class="empty-state">اختر تاجراً لعرض كشف الحساب<\/td></tr></tbody>
+                            <tbody id="statementTableBody"><td><td colspan="7" class="empty-state">اختر تاجراً لعرض كشف الحساب<\/td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1668,7 +1667,7 @@
     window.loadStatement = loadStatement;
     window.discoverDatabase = discoverDatabase;
     window.refreshSelectedTable = refreshSelectedTable;
-
+    
     window.refreshCurrentPage = async () => {
         const scrollY = window.scrollY;
         const activeSection = document.querySelector('#dashboardSections section[style*="display: block"]');
@@ -1693,14 +1692,12 @@
                 await loadArchives();
             } else if (id === 'section-statement') {
                 await loadMerchantsForStatement();
-            } else if (id === 'section-database') {
-                // لا تفعل شيئاً تلقائياً
             }
         } finally {
             setTimeout(() => window.scrollTo(0, scrollY), 50);
         }
     };
-
+    
     window.initAllPages = () => {
         initMerchantsPage();
         initMachinesPage();
@@ -1711,6 +1708,72 @@
         initRequestsPage();
         initStatementPage();
         initDatabasePage();
+    };
+    
+    // AI function using imported processAiQuery
+    window.sendAiMessage = async () => {
+        const input = document.getElementById('aiInput');
+        const message = input.value.trim();
+        if (!message || window.isAiLoading) return;
+        input.value = '';
+        window.addAiMessage(message, 'user');
+        window.showAiTyping(true);
+        window.isAiLoading = true;
+        try {
+            const context = await window.getAiContext();
+            const response = await processAiQuery(message, context);
+            window.addAiMessage(response, 'assistant');
+        } catch (error) {
+            console.error('AI Error:', error);
+            window.addAiMessage('عذراً، حدث خطأ. حاول مرة أخرى.', 'assistant');
+        } finally {
+            window.showAiTyping(false);
+            window.isAiLoading = false;
+        }
+    };
+    
+    window.addAiMessage = (content, role) => {
+        const container = document.getElementById('aiMessages');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `ai-message ${role}`;
+        msgDiv.innerHTML = content.replace(/\n/g, '<br>');
+        container.appendChild(msgDiv);
+        container.scrollTop = container.scrollHeight;
+    };
+    
+    window.showAiTyping = (show) => {
+        const container = document.getElementById('aiMessages');
+        const existing = container.querySelector('.ai-typing-wrapper');
+        if (existing) existing.remove();
+        if (show) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'ai-message assistant ai-typing-wrapper';
+            wrapper.innerHTML = '<div class="ai-typing"><span></span><span></span><span></span></div>';
+            container.appendChild(wrapper);
+            container.scrollTop = container.scrollHeight;
+        }
+    };
+    
+    window.getAiContext = async () => {
+        if (!window.supabaseClient) return {};
+        try {
+            const [merchants, machines, transfers, collections, requests] = await Promise.all([
+                window.supabaseClient.from('merchants').select('*'),
+                window.supabaseClient.from('machines').select('*'),
+                window.supabaseClient.from('transfers').select('*'),
+                window.supabaseClient.from('collections').select('*'),
+                window.supabaseClient.from('requests').select('*')
+            ]);
+            return {
+                merchants: merchants.data || [],
+                machines: machines.data || [],
+                transfers: transfers.data || [],
+                collections: collections.data || [],
+                requests: requests.data || []
+            };
+        } catch(e) {
+            return {};
+        }
     };
 </script>
 
@@ -1728,10 +1791,11 @@ let supabaseClient = null;
 let pendingConfirmCallback = null;
 let sessionCheckInterval = null;
 let html5QrCode = null;
-let currentCameraTarget = null; // 'machine' or null
+let currentCameraTarget = null;
 let cameraStream = null;
 let flashEnabled = false;
 let currentTrack = null;
+window.isAiLoading = false;
 
 const Sound = {
     audioCtx: null,
@@ -1766,7 +1830,6 @@ const Sound = {
 };
 function playClick() { Sound.play('click'); }
 
-// دوال showToast و showConfirm تستخدم مباشرة من الوحدات
 window.showToast = (msg, type) => {
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -1810,6 +1873,7 @@ async function openCameraForMachine() {
     modal.classList.add('show');
     await startCamera();
 }
+window.openCameraForMachine = openCameraForMachine;
 
 async function startCamera() {
     const previewElem = document.getElementById('cameraPreview');
@@ -1833,7 +1897,6 @@ async function startCamera() {
             onScanSuccess,
             onScanError
         );
-        // Get video track for flash control
         const videoElem = document.querySelector('#cameraPreview video');
         if (videoElem && videoElem.srcObject) {
             cameraStream = videoElem.srcObject;
@@ -1878,9 +1941,7 @@ function onScanSuccess(decodedText, decodedResult) {
     closeCameraModal();
 }
 
-function onScanError(errorMessage) {
-    // Silent ignore
-}
+function onScanError(errorMessage) {}
 
 async function closeCameraModal() {
     if (html5QrCode) {
@@ -1902,14 +1963,14 @@ async function closeCameraModal() {
 window.closeCameraModal = closeCameraModal;
 
 // ============================================================
-// POPULATE SEARCHABLE DROPDOWNS (Merchant Lists)
+// POPULATE SEARCHABLE DROPDOWNS
 // ============================================================
 async function populateMerchantDatalists() {
     if (!supabaseClient) return;
     try {
         const { data, error } = await supabaseClient
             .from('merchants')
-            .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "المنطقة", "العنوان"')
+            .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "المنطقة", "العنوان')
             .order('created_at', { ascending: false });
         if (error) throw error;
         const merchants = data || [];
@@ -1919,55 +1980,41 @@ async function populateMerchantDatalists() {
             const dl = document.getElementById(id);
             if (dl) dl.innerHTML = options;
         });
-        // Store full merchant data for auto-fill
         window.merchantsData = merchants;
     } catch(e) { console.error(e); }
 }
 
 function setupMerchantSearchListeners() {
-    // For machine modal
     const machSearch = document.getElementById('machMerchantSearch');
     if (machSearch) {
         machSearch.addEventListener('change', (e) => {
             const val = e.target.value;
             const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
-            if (merchant) {
-                document.getElementById('machMerchantId').value = merchant.id;
-            }
+            if (merchant) document.getElementById('machMerchantId').value = merchant.id;
         });
     }
-    // For transfer modal
     const transSearch = document.getElementById('transMerchantSearch');
     if (transSearch) {
         transSearch.addEventListener('change', (e) => {
             const val = e.target.value;
             const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
-            if (merchant) {
-                document.getElementById('transMerchantId').value = merchant.id;
-                // Auto-fill merchant details (optional)
-            }
+            if (merchant) document.getElementById('transMerchantId').value = merchant.id;
         });
     }
-    // For collection modal
     const collSearch = document.getElementById('collMerchantSearch');
     if (collSearch) {
         collSearch.addEventListener('change', (e) => {
             const val = e.target.value;
             const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
-            if (merchant) {
-                document.getElementById('collMerchantId').value = merchant.id;
-            }
+            if (merchant) document.getElementById('collMerchantId').value = merchant.id;
         });
     }
-    // For statement
     const stmtSearch = document.getElementById('stmtMerchantSearch');
     if (stmtSearch) {
         stmtSearch.addEventListener('change', (e) => {
             const val = e.target.value;
             const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
-            if (merchant) {
-                document.getElementById('stmtMerchantId').value = merchant.id;
-            }
+            if (merchant) document.getElementById('stmtMerchantId').value = merchant.id;
         });
     }
 }
@@ -1976,40 +2023,62 @@ function setupMerchantSearchListeners() {
 // BOOT SEQUENCE
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-    const progressBar = document.getElementById('bootProgress');
-    const statusText = document.getElementById('bootStatus');
-    const phaseText = document.getElementById('bootPhase');
-    const percentText = document.getElementById('bootPercent');
-    let progress = 0;
-    const phases = [
-        { p:20, s:'تحميل النواة...', ph:'System Core' },
-        { p:40, s:'تهيئة الواجهة...', ph:'UI Engine' },
-        { p:60, s:'الاتصال بقاعدة البيانات...', ph:'Database' },
-        { p:80, s:'التحقق من الأمان...', ph:'Security' },
-        { p:100, s:'جاهز!', ph:'Ready' }
-    ];
-    let idx = 0;
-    const interval = setInterval(() => {
-        if (idx < phases.length) {
-            const ph = phases[idx];
-            progress = ph.p;
-            progressBar.style.width = progress + '%';
-            statusText.textContent = ph.s;
-            phaseText.textContent = ph.ph;
-            percentText.textContent = progress + '%';
-            idx++;
-        } else {
-            clearInterval(interval);
-            setTimeout(() => {
-                document.getElementById('bootScreen').classList.add('hidden');
-                Sound.play('boot');
-                initSupabase();
-                checkSessionAndShow();
-                setupNavbarEvents();
-                startAutoLogoutTimer();
-            }, 500);
-        }
-    }, 400);
+    // التحقق من وجود جلسة قبل عرض boot screen
+    const session = localStorage.getItem('axentro_admin_session');
+    let hasValidSession = false;
+    if (session) {
+        try {
+            const data = JSON.parse(session);
+            if (data.isLoggedIn && Date.now() < data.expiry) {
+                hasValidSession = true;
+            }
+        } catch(e) {}
+    }
+    
+    if (hasValidSession) {
+        // إخفاء boot screen فوراً وتحميل التطبيق
+        document.getElementById('bootScreen').style.display = 'none';
+        initSupabase();
+        checkSessionAndShow(); // ستقوم بإظهار التطبيق مباشرة
+        setupNavbarEvents();
+        startAutoLogoutTimer();
+    } else {
+        // عرض boot screen بشكل طبيعي
+        const progressBar = document.getElementById('bootProgress');
+        const statusText = document.getElementById('bootStatus');
+        const phaseText = document.getElementById('bootPhase');
+        const percentText = document.getElementById('bootPercent');
+        let progress = 0;
+        const phases = [
+            { p:20, s:'تحميل النواة...', ph:'System Core' },
+            { p:40, s:'تهيئة الواجهة...', ph:'UI Engine' },
+            { p:60, s:'الاتصال بقاعدة البيانات...', ph:'Database' },
+            { p:80, s:'التحقق من الأمان...', ph:'Security' },
+            { p:100, s:'جاهز!', ph:'Ready' }
+        ];
+        let idx = 0;
+        const interval = setInterval(() => {
+            if (idx < phases.length) {
+                const ph = phases[idx];
+                progress = ph.p;
+                progressBar.style.width = progress + '%';
+                statusText.textContent = ph.s;
+                phaseText.textContent = ph.ph;
+                percentText.textContent = progress + '%';
+                idx++;
+            } else {
+                clearInterval(interval);
+                setTimeout(() => {
+                    document.getElementById('bootScreen').classList.add('hidden');
+                    Sound.play('boot');
+                    initSupabase();
+                    checkSessionAndShow();
+                    setupNavbarEvents();
+                    startAutoLogoutTimer();
+                }, 500);
+            }
+        }, 400);
+    }
 });
 
 function initSupabase() {
@@ -2052,6 +2121,7 @@ function checkSessionAndShow() {
             const data = JSON.parse(session);
             if (data.isLoggedIn && Date.now() < data.expiry) {
                 showMainApp();
+                if (window.initAllPages) window.initAllPages();
                 if (window.refreshCurrentPage) window.refreshCurrentPage();
                 return;
             }
@@ -2103,6 +2173,7 @@ async function adminLogin() {
         Sound.play('error');
     }
 }
+window.adminLogin = adminLogin;
 
 function logout() {
     window.showConfirm('هل تريد تسجيل الخروج؟', () => {
@@ -2114,6 +2185,7 @@ function logout() {
         if (sessionCheckInterval) clearInterval(sessionCheckInterval);
     });
 }
+window.logout = logout;
 
 function shakeElement(el) {
     el.style.animation = 'shake 0.5s ease';
@@ -2152,6 +2224,7 @@ function showSection(sectionName) {
     });
     if (window.refreshCurrentPage) window.refreshCurrentPage();
 }
+window.showSection = showSection;
 
 function togglePasswordVisibility() {
     const input = document.getElementById('adminPasswordInput');
@@ -2166,6 +2239,7 @@ function togglePasswordVisibility() {
         icon.classList.add('fa-eye-slash');
     }
 }
+window.togglePasswordVisibility = togglePasswordVisibility;
 
 window.animateValue = function(elementId, start, end, duration) {
     const element = document.getElementById(elementId);
@@ -2185,81 +2259,6 @@ window.animateValue = function(elementId, start, end, duration) {
 window.refreshAll = async function() {
     if (window.refreshCurrentPage) await window.refreshCurrentPage();
 };
-
-window.showSection = showSection;
-window.logout = logout;
-window.togglePasswordVisibility = togglePasswordVisibility;
-window.adminLogin = adminLogin;
-
-// ============================================================
-// AI Assistant Functions
-// ============================================================
-let isAiLoading = false;
-
-window.sendAiMessage = async () => {
-    const input = document.getElementById('aiInput');
-    const message = input.value.trim();
-    if (!message || isAiLoading) return;
-    input.value = '';
-    addAiMessage(message, 'user');
-    showAiTyping(true);
-    isAiLoading = true;
-    try {
-        const context = await getAiContext();
-        const response = await processAiQuery(message, context);
-        addAiMessage(response, 'assistant');
-    } catch (error) {
-        console.error('AI Error:', error);
-        addAiMessage('عذراً، حدث خطأ. حاول مرة أخرى.', 'assistant');
-    } finally {
-        showAiTyping(false);
-        isAiLoading = false;
-    }
-};
-
-function addAiMessage(content, role) {
-    const container = document.getElementById('aiMessages');
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `ai-message ${role}`;
-    msgDiv.innerHTML = content.replace(/\n/g, '<br>');
-    container.appendChild(msgDiv);
-    container.scrollTop = container.scrollHeight;
-}
-
-function showAiTyping(show) {
-    const container = document.getElementById('aiMessages');
-    const existing = container.querySelector('.ai-typing-wrapper');
-    if (existing) existing.remove();
-    if (show) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'ai-message assistant ai-typing-wrapper';
-        wrapper.innerHTML = '<div class="ai-typing"><span></span><span></span><span></span></div>';
-        container.appendChild(wrapper);
-        container.scrollTop = container.scrollHeight;
-    }
-}
-
-async function getAiContext() {
-    if (!window.supabaseClient) return {};
-    try {
-        const [merchants, machines, transfers, collections, requests] = await Promise.all([
-            window.supabaseClient.from('merchants').select('*'),
-            window.supabaseClient.from('machines').select('*'),
-            window.supabaseClient.from('transfers').select('*'),
-            window.supabaseClient.from('collections').select('*'),
-            window.supabaseClient.from('requests').select('*')
-        ]);
-        return {
-            merchants: merchants.data || [],
-            machines: machines.data || [],
-            transfers: transfers.data || [],
-            collections: collections.data || [],
-            requests: requests.data || []
-        };
-    } catch(e) {
-        return {};
-    }
-}
 
 document.getElementById('aiFabBtn')?.addEventListener('click', () => {
     document.getElementById('aiPanel')?.classList.toggle('show');
