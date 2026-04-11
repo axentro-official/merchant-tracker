@@ -26,7 +26,8 @@
     <audio id="logoutSound" src="src/assets/logout-success.mp3" preload="auto"></audio>
 
     <style>
-        /* ===== RESET & BASE ===== */
+        /* ===== RESET & BASE (نفس الكود السابق، محذوف للاختصار) ===== */
+        /* سأضعه كاملاً في الملف النهائي، لكن هنا سأكتبه مختصراً */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
         body {
@@ -67,7 +68,7 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== BOOT SCREEN (نفس السابق) ===== */
+        /* ===== BOOT SCREEN ===== */
         #bootScreen {
             position: fixed;
             inset: 0;
@@ -177,7 +178,7 @@
             width: 100%;
         }
 
-        /* ===== LOGIN SECTION (نفس السابق) ===== */
+        /* ===== LOGIN SECTION ===== */
         .login-container {
             max-width: 480px;
             margin: 20px auto;
@@ -356,7 +357,7 @@
             .navbar-actions { justify-content: center; }
         }
 
-        /* ===== DASHBOARD CARDS (2 بجانب بعض) ===== */
+        /* ===== DASHBOARD CARDS ===== */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -618,7 +619,7 @@
             font-size: 12px;
         }
 
-        /* ===== MODAL (نافذة منبثقة) ===== */
+        /* ===== MODAL ===== */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -1201,6 +1202,8 @@
                 <button class="nav-link" data-page="collections"><i class="fas fa-arrow-down"></i> التحصيلات</button>
                 <button class="nav-link" data-page="requests"><i class="fas fa-file-alt"></i> الطلبات</button>
                 <button class="nav-link" data-page="archive"><i class="fas fa-archive"></i> الأرشيف</button>
+                <button class="nav-link" data-page="statement"><i class="fas fa-receipt"></i> كشف الحساب</button>
+                <button class="nav-link" data-page="database"><i class="fas fa-database"></i> قاعدة البيانات</button>
             </div>
             <div class="navbar-actions">
                 <button class="icon-btn" onclick="refreshCurrentPage()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
@@ -1222,11 +1225,11 @@
                 </div>
                 <div class="top-machines-section">
                     <div class="section-header"><i class="fas fa-trophy"></i><h3>🏆 أعلى المكن تحقيقاً للتارجت</h3></div>
-                    <div class="machines-table-container"><table class="machines-table" id="topMachinesTable"><thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th></tr></thead><tbody id="topMachinesBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> جاري تحميل البيانات...<\/td></tr></tbody></table></div>
+                    <div class="machines-table-container"><table class="machines-table" id="topMachinesTable"><thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th></td></thead><tbody id="topMachinesBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> جاري تحميل البيانات...<\/td></tr></tbody></table></div>
                 </div>
                 <div class="recent-section">
                     <div class="section-header"><i class="fas fa-clock"></i><h3>📋 آخر العمليات</h3></div>
-                    <div class="table-container"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th><th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th></tr></thead><tbody id="recentActivityBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة<\/td><tr></tbody></table></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th><th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th></tr></thead><tbody id="recentActivityBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة<\/td></tr></tbody></table></div>
                 </div>
             </section>
 
@@ -1255,8 +1258,8 @@
                     </div>
                     <div class="table-container">
                         <table class="data-table">
-                            <thead><tr><th>#</th><th>رقم المكنة</th><th>اسم التاجر</th><th>النشاط</th><th>السيريال</th><th>التارجت</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="machinesTableBody"><tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
+                            <thead><tr><th>#</th><th>رقم المكنة</th><th>اسم التاجر</th><th>النشاط</th><th>السيريال</th><th>التارجت</th><th>الحالة</th><th>الإجراءات</th><tr></thead>
+                            <tbody id="machinesTableBody"><td><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1287,8 +1290,8 @@
                     </div>
                     <div class="table-container">
                         <table class="data-table">
-                            <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>القيمة</th><th>المتبقي</th><th>الملاحظات</th><th>الإجراءات</th><tr></thead>
-                            <tbody id="collectionsTableBody"><td><td colspan="10" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
+                            <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>القيمة</th><th>المتبقي</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="collectionsTableBody"><tr><td colspan="10" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1324,6 +1327,48 @@
                     </div>
                 </div>
             </section>
+
+            <!-- STATEMENT SECTION -->
+            <section id="section-statement" style="display:none;">
+                <div class="merchants-section">
+                    <div class="table-actions">
+                        <select id="stmtMerchantId" class="form-select" style="width: 300px;"></select>
+                        <button class="btn-add" onclick="loadStatement()"><i class="fas fa-search"></i> عرض كشف الحساب</button>
+                        <button class="icon-btn" onclick="refreshCurrentPage()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                    <div id="statementMerchantInfo"></div>
+                    <div id="statementStats"></div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>الملاحظات</th></tr></thead>
+                            <tbody id="statementTableBody"><td><td colspan="7" class="empty-state">اختر تاجراً لعرض كشف الحساب<\/td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DATABASE SECTION -->
+            <section id="section-database" style="display:none;">
+                <div class="merchants-section">
+                    <div class="table-actions">
+                        <button class="btn-add" onclick="discoverDatabase()"><i class="fas fa-database"></i> اكتشاف الجداول</button>
+                        <button class="icon-btn" onclick="refreshSelectedTable()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                    <div id="dbTablesList" class="db-tables-grid"></div>
+                    <div id="dbTableDetails" class="db-data-section" style="display:none;">
+                        <div class="db-data-header">
+                            <h3 id="dbSelectedTableName"><i class="fas fa-table"></i> جدول</h3>
+                            <span id="dbRowCount">0 صف</span>
+                        </div>
+                        <div class="db-data-table-container">
+                            <table class="db-data-table">
+                                <thead id="dbDataHead"></thead>
+                                <tbody id="dbDataBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
 
         <!-- الفوتر العام (يظهر بعد تسجيل الدخول) -->
@@ -1343,17 +1388,24 @@
 </div>
 
 <script type="module">
-    // استيراد دوال الصفحات
+    // ============================================================
+    // استيراد جميع الوحدات
+    // ============================================================
+    import { showToast, showConfirm } from './ui/toast.js';
     import { initMerchantsPage, loadMerchants, openMerchantModal, saveMerchant, editMerchant, deleteMerchant, closeMerchantModal } from './pages/merchants.js';
     import { initMachinesPage, loadMachines, openMachineModal, saveMachine, editMachine, deleteMachine, closeMachineModal } from './pages/machines.js';
     import { initTransfersPage, loadTransfers, openTransferModal, saveTransfer, editTransfer, deleteTransfer, closeTransferModal } from './pages/transfers.js';
     import { initCollectionsPage, loadCollections, openCollectionModal, saveCollection, editCollection, deleteCollection, closeCollectionModal } from './pages/collections.js';
     import { initArchivePage, loadArchives, closeMonth, deleteArchive } from './pages/archive.js';
     import { initDashboardPage, loadDashboardStats, loadRecentActivities, loadTopMachines } from './pages/dashboard.js';
-    import { initRequestsPage, loadRequests, updateRequestStatus } from './pages/requests.js';
+    import { initRequestsPage, loadRequests, updateRequestStatus, convertRequest, deleteRequest } from './pages/requests.js';
+    import { initStatementPage, loadMerchantsForStatement, loadStatement } from './pages/statement.js';
+    import { initDatabasePage, discoverDatabase, refreshSelectedTable } from './pages/database.js';
     import { processAiQuery } from './services/aiService.js';
 
-    // ربط الدوال بالنافذة العامة
+    // ============================================================
+    // ربط الدوال بالنافذة العامة (للاستخدام في onclick)
+    // ============================================================
     window.openMerchantModal = openMerchantModal;
     window.saveMerchant = saveMerchant;
     window.editMerchant = editMerchant;
@@ -1381,8 +1433,16 @@
     window.closeMonth = closeMonth;
     window.deleteArchive = deleteArchive;
     window.updateRequestStatus = updateRequestStatus;
-
-    // دالة تحديث الصفحة الحالية مع الحفاظ على موضع التمرير
+    window.convertRequest = convertRequest;
+    window.deleteRequest = deleteRequest;
+    
+    window.loadStatement = loadStatement;
+    window.discoverDatabase = discoverDatabase;
+    window.refreshSelectedTable = refreshSelectedTable;
+    
+    // ============================================================
+    // دالة تحديث الصفحة الحالية
+    // ============================================================
     window.refreshCurrentPage = async () => {
         const scrollY = window.scrollY;
         const activeSection = document.querySelector('#dashboardSections section[style*="display: block"]');
@@ -1405,6 +1465,10 @@
                 await loadRequests();
             } else if (id === 'section-archive') {
                 await loadArchives();
+            } else if (id === 'section-statement') {
+                await loadMerchantsForStatement();
+            } else if (id === 'section-database') {
+                // لا تفعل شيئاً تلقائياً
             }
         } finally {
             setTimeout(() => window.scrollTo(0, scrollY), 50);
@@ -1420,107 +1484,14 @@
         initArchivePage();
         initDashboardPage();
         initRequestsPage();
+        initStatementPage();
+        initDatabasePage();
     };
-
-    // تعديل دالة showMainApp الأصلية
-    const originalShowMainApp = window.showMainApp;
-    window.showMainApp = () => {
-        if (originalShowMainApp) originalShowMainApp();
-        window.initAllPages();
-        window.refreshCurrentPage();
-    };
-
-    // ============================================
-    // AI Assistant Functions
-    // ============================================
-    let isAiLoading = false;
-    
-    window.sendAiMessage = async () => {
-        const input = document.getElementById('aiInput');
-        const message = input.value.trim();
-        if (!message || isAiLoading) return;
-        
-        input.value = '';
-        addAiMessage(message, 'user');
-        showAiTyping(true);
-        isAiLoading = true;
-        
-        try {
-            const context = await getAiContext();
-            const response = await processAiQuery(message, context);
-            addAiMessage(response, 'assistant');
-        } catch (error) {
-            console.error('AI Error:', error);
-            addAiMessage('عذراً، حدث خطأ. حاول مرة أخرى.', 'assistant');
-        } finally {
-            showAiTyping(false);
-            isAiLoading = false;
-        }
-    };
-    
-    function addAiMessage(content, role) {
-        const container = document.getElementById('aiMessages');
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `ai-message ${role}`;
-        msgDiv.innerHTML = content.replace(/\n/g, '<br>');
-        container.appendChild(msgDiv);
-        container.scrollTop = container.scrollHeight;
-    }
-    
-    function showAiTyping(show) {
-        const container = document.getElementById('aiMessages');
-        const existing = container.querySelector('.ai-typing-wrapper');
-        if (existing) existing.remove();
-        if (show) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'ai-message assistant ai-typing-wrapper';
-            wrapper.innerHTML = '<div class="ai-typing"><span></span><span></span><span></span></div>';
-            container.appendChild(wrapper);
-            container.scrollTop = container.scrollHeight;
-        }
-    }
-    
-    async function getAiContext() {
-        if (!window.supabaseClient) return {};
-        try {
-            const [merchants, machines, transfers, collections, requests] = await Promise.all([
-                window.supabaseClient.from('merchants').select('*'),
-                window.supabaseClient.from('machines').select('*'),
-                window.supabaseClient.from('transfers').select('*'),
-                window.supabaseClient.from('collections').select('*'),
-                window.supabaseClient.from('requests').select('*')
-            ]);
-            return {
-                merchants: merchants.data || [],
-                machines: machines.data || [],
-                transfers: transfers.data || [],
-                collections: collections.data || [],
-                requests: requests.data || []
-            };
-        } catch(e) {
-            return {};
-        }
-    }
-    
-    // ربط أحداث AI
-    document.getElementById('aiFabBtn')?.addEventListener('click', () => {
-        document.getElementById('aiPanel')?.classList.toggle('show');
-    });
-    document.getElementById('aiCloseBtn')?.addEventListener('click', () => {
-        document.getElementById('aiPanel')?.classList.remove('show');
-    });
-    window.addEventListener('click', (e) => {
-        const panel = document.getElementById('aiPanel');
-        const fab = document.getElementById('aiFabBtn');
-        if (panel?.classList.contains('show') && !panel.contains(e.target) && e.target !== fab && !fab?.contains(e.target)) {
-            panel.classList.remove('show');
-        }
-    });
 </script>
 
 <script>
 // ============================================================
-// CONFIGURATION (الكود القديم المدمج)
+// الكود القديم للجلسة والتنقل (تم الاحتفاظ به)
 // ============================================================
 const CONFIG = {
     SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
@@ -1565,31 +1536,39 @@ const Sound = {
 };
 function playClick() { Sound.play('click'); }
 
-const UI = {
-    showToast(message, type = 'info') {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
-        toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${message}</span>`;
-        container.appendChild(toast);
-        setTimeout(() => {
-            toast.style.animation = 'toast-in 0.3s ease reverse';
-            setTimeout(() => toast.remove(), 300);
-        }, 2500);
-    },
-    showConfirm(message, onConfirm) {
-        const modal = document.getElementById('confirmModal');
-        const msgEl = document.getElementById('confirmMessage');
-        msgEl.textContent = message;
-        pendingConfirmCallback = onConfirm;
-        modal.classList.add('show');
-    },
-    closeConfirm() {
-        document.getElementById('confirmModal').classList.remove('show');
-        pendingConfirmCallback = null;
-    }
+// تعريف showConfirm و showToast في النافذة العامة (للاستخدام من الوحدات)
+window.showToast = function(message, type) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type || 'info'}`;
+    const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
+    toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'toast-in 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
 };
+
+window.showConfirm = function(message, onConfirm) {
+    const modal = document.getElementById('confirmModal');
+    const msgEl = document.getElementById('confirmMessage');
+    msgEl.textContent = message;
+    pendingConfirmCallback = onConfirm;
+    modal.classList.add('show');
+};
+
+function closeConfirm() {
+    document.getElementById('confirmModal').classList.remove('show');
+    pendingConfirmCallback = null;
+}
+
+document.getElementById('confirmOkBtn').addEventListener('click', () => {
+    if (pendingConfirmCallback) pendingConfirmCallback();
+    closeConfirm();
+});
+document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirm);
 
 document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('bootProgress');
@@ -1622,7 +1601,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 initSupabase();
                 checkSessionAndShow();
                 setupNavbarEvents();
-                setupConfirmModalEvents();
                 startAutoLogoutTimer();
             }, 500);
         }
@@ -1644,16 +1622,6 @@ function setupNavbarEvents() {
             if (page) showSection(page);
             playClick();
         });
-    });
-}
-
-function setupConfirmModalEvents() {
-    document.getElementById('confirmOkBtn').addEventListener('click', () => {
-        if (pendingConfirmCallback) pendingConfirmCallback();
-        UI.closeConfirm();
-    });
-    document.getElementById('confirmCancelBtn').addEventListener('click', () => {
-        UI.closeConfirm();
     });
 }
 
@@ -1698,13 +1666,13 @@ async function adminLogin() {
     const input = document.getElementById('adminPasswordInput');
     const password = input.value.trim();
     if (!password) {
-        UI.showToast('يرجى إدخال كلمة المرور', 'warning');
+        window.showToast('يرجى إدخال كلمة المرور', 'warning');
         Sound.play('error');
         shakeElement(input);
         return;
     }
     if (!supabaseClient) {
-        UI.showToast('قاعدة البيانات غير جاهزة', 'error');
+        window.showToast('قاعدة البيانات غير جاهزة', 'error');
         return;
     }
     try {
@@ -1716,26 +1684,26 @@ async function adminLogin() {
             showMainApp();
             if (window.initAllPages) window.initAllPages();
             if (window.refreshCurrentPage) await window.refreshCurrentPage();
-            UI.showToast('🎉 مرحباً بك في لوحة التحكم', 'success');
+            window.showToast('🎉 مرحباً بك في لوحة التحكم', 'success');
         } else {
-            UI.showToast('كلمة المرور غير صحيحة', 'error');
+            window.showToast('كلمة المرور غير صحيحة', 'error');
             Sound.play('error');
             shakeElement(input);
         }
     } catch (err) {
         console.error(err);
-        UI.showToast('حدث خطأ أثناء التحقق', 'error');
+        window.showToast('حدث خطأ أثناء التحقق', 'error');
         Sound.play('error');
     }
 }
 
 function logout() {
-    UI.showConfirm('هل تريد تسجيل الخروج؟', () => {
+    window.showConfirm('هل تريد تسجيل الخروج؟', () => {
         clearSession();
         Sound.play('logout');
         showLogin();
         document.getElementById('adminPasswordInput').value = '';
-        UI.showToast('تم تسجيل الخروج بنجاح', 'success');
+        window.showToast('تم تسجيل الخروج بنجاح', 'success');
         if (sessionCheckInterval) clearInterval(sessionCheckInterval);
     });
 }
@@ -1763,7 +1731,7 @@ function showMainApp() {
 }
 
 function showSection(sectionName) {
-    const sections = ['dashboard','merchants','machines','transfers','collections','requests','archive'];
+    const sections = ['dashboard','merchants','machines','transfers','collections','requests','archive','statement','database'];
     sections.forEach(s => {
         const el = document.getElementById(`section-${s}`);
         if (el) el.style.display = 'none';
@@ -1814,6 +1782,90 @@ window.refreshAll = async function() {
 window.showSection = showSection;
 window.logout = logout;
 window.togglePasswordVisibility = togglePasswordVisibility;
+
+// ============================================================
+// AI Assistant Functions (من الكود القديم)
+// ============================================================
+let isAiLoading = false;
+
+window.sendAiMessage = async () => {
+    const input = document.getElementById('aiInput');
+    const message = input.value.trim();
+    if (!message || isAiLoading) return;
+    input.value = '';
+    addAiMessage(message, 'user');
+    showAiTyping(true);
+    isAiLoading = true;
+    try {
+        const context = await getAiContext();
+        const response = await processAiQuery(message, context);
+        addAiMessage(response, 'assistant');
+    } catch (error) {
+        console.error('AI Error:', error);
+        addAiMessage('عذراً، حدث خطأ. حاول مرة أخرى.', 'assistant');
+    } finally {
+        showAiTyping(false);
+        isAiLoading = false;
+    }
+};
+
+function addAiMessage(content, role) {
+    const container = document.getElementById('aiMessages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `ai-message ${role}`;
+    msgDiv.innerHTML = content.replace(/\n/g, '<br>');
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+}
+
+function showAiTyping(show) {
+    const container = document.getElementById('aiMessages');
+    const existing = container.querySelector('.ai-typing-wrapper');
+    if (existing) existing.remove();
+    if (show) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'ai-message assistant ai-typing-wrapper';
+        wrapper.innerHTML = '<div class="ai-typing"><span></span><span></span><span></span></div>';
+        container.appendChild(wrapper);
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+async function getAiContext() {
+    if (!window.supabaseClient) return {};
+    try {
+        const [merchants, machines, transfers, collections, requests] = await Promise.all([
+            window.supabaseClient.from('merchants').select('*'),
+            window.supabaseClient.from('machines').select('*'),
+            window.supabaseClient.from('transfers').select('*'),
+            window.supabaseClient.from('collections').select('*'),
+            window.supabaseClient.from('requests').select('*')
+        ]);
+        return {
+            merchants: merchants.data || [],
+            machines: machines.data || [],
+            transfers: transfers.data || [],
+            collections: collections.data || [],
+            requests: requests.data || []
+        };
+    } catch(e) {
+        return {};
+    }
+}
+
+document.getElementById('aiFabBtn')?.addEventListener('click', () => {
+    document.getElementById('aiPanel')?.classList.toggle('show');
+});
+document.getElementById('aiCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('aiPanel')?.classList.remove('show');
+});
+window.addEventListener('click', (e) => {
+    const panel = document.getElementById('aiPanel');
+    const fab = document.getElementById('aiFabBtn');
+    if (panel?.classList.contains('show') && !panel.contains(e.target) && e.target !== fab && !fab?.contains(e.target)) {
+        panel.classList.remove('show');
+    }
+});
 
 window.onerror = function(msg, url, line, col, error) {
     console.error('Global error:', msg, line, col);
