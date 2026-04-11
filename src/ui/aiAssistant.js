@@ -1,221 +1,289 @@
-/**
- * AI Assistant UI Component
- * Manages the chat-like interface for AI interactions
- * @version 1.0.0
- */
+// src/ui/aiAssistant.js
+// نسخة متطورة مع تصميم متوافق مع index.html
 
 import { processQuery } from '../services/aiService.js';
-import { playSound } from './soundManager.js';
-
-// ============================================================
-// STATE
-// ============================================================
+import { showToast } from './toast.js';
 
 let isOpen = false;
 let isLoading = false;
+let chatHistory = [];
 
-// Message history for context
-const messageHistory = [];
-
-// ============================================================
-// INITIALIZATION
-// ============================================================
-
-/**
- * Initialize AI Assistant component
- */
 export function initializeAiAssistant() {
-    console.log('🤖 AI Assistant initialized');
-    
-    // Setup initial welcome message
-    addWelcomeMessage();
+    // إضافة زر المساعد إلى الواجهة إذا لم يكن موجوداً
+    if (!document.getElementById('aiAssistantBtn')) {
+        const btn = document.createElement('button');
+        btn.id = 'aiAssistantBtn';
+        btn.className = 'ai-assistant-btn';
+        btn.innerHTML = '<i class="fas fa-robot"></i>';
+        btn.title = 'المساعد الذكي';
+        btn.onclick = toggleAiPanel;
+        document.body.appendChild(btn);
+        
+        // إضافة اللوحة
+        const panel = document.createElement('div');
+        panel.id = 'aiPanel';
+        panel.className = 'ai-panel';
+        panel.innerHTML = `
+            <div class="ai-header">
+                <div class="ai-title"><i class="fas fa-robot"></i> المساعد الذكي Axentro</div>
+                <button class="ai-close" onclick="closeAiPanel()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="ai-messages" id="aiMessages">
+                <div class="ai-message assistant">👋 مرحباً! أنا مساعدك الذكي. اسألني عن أي شيء متعلق بالنظام.</div>
+            </div>
+            <div class="ai-input-container">
+                <textarea id="aiInput" placeholder="اكتب سؤالك هنا..." rows="2" onkeypress="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendAiMessage();}"></textarea>
+                <button class="ai-send-btn" onclick="sendAiMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+            <div class="ai-footer">
+                <button class="ai-clear-btn" onclick="clearChatHistory()"><i class="fas fa-trash-alt"></i> مسح المحادثة</button>
+            </div>
+        `;
+        document.body.appendChild(panel);
+        
+        // إضافة الأنماط المفقودة للـ AI
+        addAiStyles();
+    }
 }
 
-/**
- * Add welcome message to chat
- */
-function addWelcomeMessage() {
-    const messagesContainer = document.getElementById('aiMessages');
-    if (!messagesContainer) return;
-    
-    // Keep existing welcome message if present
-    if (messagesContainer.querySelector('.assistant')) return;
-    
-    const welcomeMsg = createMessageElement('assistant', 
-        `<strong>مرحباً! 👋</strong><br>` +
-        `أنا مساعدك الذكي. يمكنني مساعدتك في:<br>` +
-        `• معرفة أعلى تاجر<br>` +
-        `• إجمالي التحصيلات<br>` +
-        `• عدد التجار والمكن<br>` +
-        `• تحليل البيانات البسيط<br><br>` +
-        `كيف يمكنني مساعدتك؟`
-    );
-    
-    messagesContainer.appendChild(welcomeMsg);
+function addAiStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .ai-assistant-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(59,130,246,0.4);
+            z-index: 999;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .ai-assistant-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(59,130,246,0.6);
+        }
+        .ai-panel {
+            position: fixed;
+            bottom: 90px;
+            left: 24px;
+            width: 380px;
+            max-width: calc(100vw - 48px);
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transform: translateX(-120%);
+            transition: transform 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+        }
+        .ai-panel.show {
+            transform: translateX(0);
+            opacity: 1;
+            visibility: visible;
+        }
+        .ai-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ai-title {
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ai-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .ai-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .ai-message {
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+        .ai-message.user {
+            background: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-left-radius: 4px;
+        }
+        .ai-message.assistant {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
+            border-bottom-right-radius: 4px;
+        }
+        .ai-message.assistant strong {
+            color: var(--primary-light);
+        }
+        .ai-typing {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .ai-typing span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        .ai-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .ai-typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+        .ai-input-container {
+            padding: 12px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        .ai-input-container textarea {
+            flex: 1;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+        }
+        .ai-input-container textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .ai-send-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-md);
+            background: var(--primary);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ai-footer {
+            padding: 8px 12px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .ai-clear-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        @media (max-width: 480px) {
+            .ai-panel { width: calc(100vw - 32px); left: 16px; bottom: 80px; }
+            .ai-assistant-btn { width: 48px; height: 48px; font-size: 20px; bottom: 16px; left: 16px; }
+        }
+    `;
+    document.head.appendChild(style);
 }
 
-// ============================================================
-// UI CONTROL FUNCTIONS
-// ============================================================
-
-/**
- * Toggle AI panel visibility
- */
 export function toggleAiPanel() {
     const panel = document.getElementById('aiPanel');
-    const toggleBtn = document.getElementById('aiToggleBtn');
-    
+    const btn = document.getElementById('aiAssistantBtn');
     if (!panel) return;
-    
     isOpen = !isOpen;
-    
     if (isOpen) {
         panel.classList.add('show');
-        toggleBtn?.classList.add('active');
-        playSound('done');
-        
-        // Focus input
+        if (btn) btn.style.transform = 'scale(0.9)';
         setTimeout(() => {
             document.getElementById('aiInput')?.focus();
         }, 300);
     } else {
         panel.classList.remove('show');
-        toggleBtn?.classList.remove('active');
+        if (btn) btn.style.transform = '';
     }
 }
 
-/**
- * Close AI panel
- */
 export function closeAiPanel() {
     const panel = document.getElementById('aiPanel');
-    const toggleBtn = document.getElementById('aiToggleBtn');
-    
-    if (panel) {
-        panel.classList.remove('show');
-        toggleBtn?.classList.remove('active');
-        isOpen = false;
-    }
+    const btn = document.getElementById('aiAssistantBtn');
+    if (panel) panel.classList.remove('show');
+    if (btn) btn.style.transform = '';
+    isOpen = false;
 }
 
-// ============================================================
-// MESSAGE HANDLING
-// ============================================================
-
-/**
- * Send user message and get AI response
- */
 export async function sendAiMessage() {
     const input = document.getElementById('aiInput');
     const message = input?.value?.trim();
-    
     if (!message || isLoading) return;
     
-    // Clear input
     input.value = '';
-    
-    // Add user message
     addMessage('user', message);
-    
-    // Show typing indicator
     showTypingIndicator(true);
     isLoading = true;
     
     try {
-        // Process query (with small delay for natural feel)
-        const [response] = await Promise.all([
-            processQuery(message),
-            delay(500 + Math.random() * 1000) // Simulate thinking time
-        ]);
-        
-        // Hide typing indicator
-        showTypingIndicator(false);
-        
-        // Add AI response
+        const response = await processQuery(message);
         addMessage('assistant', formatResponse(response));
-        
-        // Play subtle sound
-        playSound('done');
-        
-        // Save to history
-        messageHistory.push({ role: 'user', content: message });
-        messageHistory.push({ role: 'assistant', content: response });
-        
-        // Limit history size
-        if (messageHistory.length > 20) {
-            messageHistory.splice(0, messageHistory.length - 20);
-        }
-        
+        // حفظ التاريخ
+        chatHistory.push({ role: 'user', content: message });
+        chatHistory.push({ role: 'assistant', content: response });
+        if (chatHistory.length > 30) chatHistory = chatHistory.slice(-30);
+        if (window.Sound) window.Sound.play('success');
     } catch (error) {
-        showTypingIndicator(false);
-        addMessage('assistant', '❌ عذراً، حدث خطأ. حاول مرة أخرى.');
-        console.error('AI Error:', error);
+        addMessage('assistant', '❌ عذراً، حدث خطأ أثناء معالجة سؤالك. حاول مرة أخرى.');
     } finally {
+        showTypingIndicator(false);
         isLoading = false;
     }
 }
 
-/**
- * Add message to chat
- * @param {string} role - 'user' or 'assistant'
- * @param {string} content - Message content (HTML allowed)
- */
 function addMessage(role, content) {
     const container = document.getElementById('aiMessages');
     if (!container) return;
-    
-    const msgElement = createMessageElement(role, content);
-    container.appendChild(msgElement);
-    
-    // Scroll to bottom
-    container.scrollTop = container.scrollHeight;
-}
-
-/**
- * Create message DOM element
- * @param {string} role - Message role
- * @param {string} content - Message content
- * @returns {HTMLElement} Message element
- */
-function createMessageElement(role, content) {
     const div = document.createElement('div');
     div.className = `ai-message ${role}`;
     div.innerHTML = content;
-    return div;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
 }
 
-/**
- * Format AI response (convert markdown-like syntax to HTML)
- * @param {string} response - Raw response text
- * @returns {string} Formatted HTML
- */
-function formatResponse(response) {
-    if (!response) return '';
-    
-    // Convert markdown bold to HTML
-    let formatted = response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
-    // Convert line breaks
-    formatted = formatted.replace(/\n/g, '<br>');
-    
-    // Convert bullet points
-    formatted = formatted.replace(/• /g, '• ');
-    
-    return formatted;
-}
-
-/**
- * Show/hide typing indicator
- * @param {boolean} show - Whether to show indicator
- */
 function showTypingIndicator(show) {
     const container = document.getElementById('aiMessages');
     if (!container) return;
-    
-    // Remove existing indicator
     const existing = container.querySelector('.ai-typing-wrapper');
     if (existing) existing.remove();
-    
     if (show) {
         const wrapper = document.createElement('div');
         wrapper.className = 'ai-message assistant ai-typing-wrapper';
@@ -225,28 +293,24 @@ function showTypingIndicator(show) {
     }
 }
 
-// ============================================================
-// UTILITY
-// ============================================================
-
-/**
- * Delay helper
- * @param {number} ms - Milliseconds
- * @returns {Promise}
- */
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function formatResponse(text) {
+    // تحويل النص إلى HTML مع دعم **للخط العريض**
+    let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/\n/g, '<br>');
+    formatted = formatted.replace(/• /g, '• ');
+    return formatted;
 }
 
-/**
- * Clear chat history
- */
 export function clearChatHistory() {
     const container = document.getElementById('aiMessages');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    messageHistory.length = 0;
-    
-    addWelcomeMessage();
+    if (container) {
+        container.innerHTML = '<div class="ai-message assistant">🧹 تم مسح المحادثة. كيف يمكنني مساعدتك الآن؟</div>';
+    }
+    chatHistory = [];
 }
+
+// ربط الدوال للنافذة العامة
+window.toggleAiPanel = toggleAiPanel;
+window.closeAiPanel = closeAiPanel;
+window.sendAiMessage = sendAiMessage;
+window.clearChatHistory = clearChatHistory;
