@@ -3,24 +3,22 @@
  * CRUD operations for machines - مطابق لستايل index.html
  */
 
-import { getSupabase } from '../config/supabase.js';
 import { showToast, showConfirm } from '../ui/toast.js';
 import { escapeHtml, formatMoney } from '../utils/formatters.js';
 
 let supabase = null;
 let currentMachines = [];
-let merchantsList = []; // للتخزين المؤقت لبيانات التجار
+let merchantsList = [];
 
-// تهيئة Supabase
+// تهيئة Supabase (باستخدام window.supabaseClient)
 export function initMachinesPage() {
-    supabase = getSupabase();
+    supabase = window.supabaseClient;
 }
 
 // تحميل المكن وعرضه
 export async function loadMachines() {
     if (!supabase) return;
     try {
-        // جلب المكن مع بيانات التاجر (يمكن ربطها عبر join ولكن سنستخدم جدولين)
         const { data: machines, error } = await supabase
             .from('machines')
             .select('*')
@@ -28,7 +26,6 @@ export async function loadMachines() {
         if (error) throw error;
         currentMachines = machines || [];
         
-        // جلب التجار للاستخدام في عرض اسم التاجر
         const { data: merchants } = await supabase
             .from('merchants')
             .select('id, "رقم التاجر", "اسم التاجر", "اسم النشاط", "رقم الحساب"');
@@ -51,35 +48,32 @@ function renderMachinesTable() {
                 <td colspan="9" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>لا توجد مكن مسجلة</p>
-                 </td>
-             </tr>
+                   
+               
         `;
         return;
     }
 
     tbody.innerHTML = currentMachines.map((m, idx) => {
-        // البحث عن اسم التاجر من القائمة
         const merchant = merchantsList.find(mer => mer.id === m['رقم التاجر']);
         const merchantName = merchant ? merchant['اسم التاجر'] : '—';
         const merchantActivity = merchant ? merchant['اسم النشاط'] : '—';
-        
         const target = parseFloat(m['التارجت الشهري']) || 0;
-        const achieved = parseFloat(m['المحقق']) || 0; // ملاحظة: المحقق لا يُخزن في جدول machines، بل يحسب من التحويلات. سنتركه صفراً حالياً.
-        const percentage = target > 0 ? Math.min(100, (achieved / target) * 100) : 0;
+        const achieved = parseFloat(m['المحقق']) || 0;
         
         return `
             <tr>
-                <td>${idx + 1}</td>
-                <td><code class="ref-code">${escapeHtml(m['رقم المكنة'] || '-')}</code></td>
-                <td>${escapeHtml(merchantName)}</td>
-                <td>${escapeHtml(merchantActivity)}</td>
-                <td><code>${escapeHtml(m['الرقم التسلسلي'] || '-')}</code></td>
-                <td>${formatMoney(target)}</td>
+                <td>${idx + 1}  
+                <td><code class="ref-code">${escapeHtml(m['رقم المكنة'] || '-')}</code>  
+                <td>${escapeHtml(merchantName)}  
+                <td>${escapeHtml(merchantActivity)}  
+                <td><code>${escapeHtml(m['الرقم التسلسلي'] || '-')}</code>  
+                <td>${formatMoney(target)}  
                 <td>
                     <span class="badge ${m['الحالة'] === 'نشطة' ? 'badge-success' : 'badge-danger'}">
                         ${escapeHtml(m['الحالة'] || '-')}
                     </span>
-                </td>
+                  
                 <td>
                     <div class="action-btns">
                         <button class="btn btn-primary btn-sm" onclick="window.editMachine('${m.id}')">
@@ -89,15 +83,14 @@ function renderMachinesTable() {
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
-                </td>
-            </tr>
+                  
+              
         `;
     }).join('');
 }
 
 // فتح نافذة إضافة/تعديل مكنة
 export async function openMachineModal(machine = null) {
-    // تأكد من تحميل قائمة التجار أولاً
     if (!merchantsList.length) {
         const { data } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
         merchantsList = data || [];
@@ -107,7 +100,6 @@ export async function openMachineModal(machine = null) {
     const modal = document.getElementById('machineModal');
     const title = document.getElementById('machineModalTitle');
     
-    // تعبئة قائمة التجار في حقل select
     const merchantSelect = document.getElementById('machMerchantId');
     if (merchantSelect) {
         merchantSelect.innerHTML = '<option value="">-- اختر تاجر --</option>' +
@@ -156,7 +148,6 @@ export async function saveMachine() {
         return;
     }
     
-    // جلب بيانات التاجر لتعبئة الحقول الإضافية (اسم التاجر، رقم الحساب، اسم النشاط)
     const merchant = merchantsList.find(m => m.id === merchantId);
     if (!merchant) {
         showToast('التاجر غير موجود', 'error');
@@ -176,7 +167,6 @@ export async function saveMachine() {
     
     try {
         if (id) {
-            // تحديث
             const { error } = await supabase
                 .from('machines')
                 .update(machineData)
@@ -184,7 +174,6 @@ export async function saveMachine() {
             if (error) throw error;
             showToast('تم تحديث المكنة', 'success');
         } else {
-            // إضافة جديدة (رقم المكنة يتولد تلقائياً)
             const { error } = await supabase
                 .from('machines')
                 .insert([machineData]);
@@ -194,7 +183,6 @@ export async function saveMachine() {
         if (window.Sound) window.Sound.play('success');
         closeMachineModal();
         await loadMachines();
-        // تحديث إحصائيات لوحة التحكم إذا كانت موجودة
         if (window.loadDashboardStats) window.loadDashboardStats();
     } catch (err) {
         console.error(err);
@@ -203,7 +191,6 @@ export async function saveMachine() {
     }
 }
 
-// جلب مكنة للتعديل
 export async function editMachine(id) {
     const { data, error } = await supabase
         .from('machines')
@@ -217,7 +204,6 @@ export async function editMachine(id) {
     openMachineModal(data);
 }
 
-// حذف مكنة
 export function deleteMachine(id) {
     showConfirm('هل تريد حذف هذه المكنة؟ لا يمكن التراجع!', async () => {
         try {
