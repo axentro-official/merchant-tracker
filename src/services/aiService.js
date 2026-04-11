@@ -1,394 +1,269 @@
-/**
- * AI Service - Hybrid System (Rules Engine + AI Endpoint)
- * Supports:
- * - Largest merchant queries
- * - Target analysis
- * - Goal tracking
- * - Smart Q&A
- * @version 5.0.0
- */
+// src/services/aiService.js
+// نسخة محسنة وموسعة مع دعم أسئلة أكثر واحترافية
 
-import { CONFIG } from '../config/supabase.js';
+import { getSupabase } from '../config/supabase.js';
 
-// ============================================================
-// RULES ENGINE (Fallback when AI unavailable)
-// ============================================================
+let supabase = null;
 
-const RulesEngine = {
-    /**
-     * Process query using rules engine
-     * @param {string} query - User query
-     * @param {Object} context - Application context (state data)
-     * @returns {Promise<string>} Response
-     */
-    async process(query, context = {}) {
-        const normalizedQuery = query.toLowerCase().trim();
-        
-        // Rule 1: Who is the largest/highest/best merchant?
-        if (this.matchesPattern(normalizedQuery, ['أكبر تاجر', 'أعلى تاجر', 'أفضل تاجر', 'largest merchant', 'top merchant'])) {
-            return this.getLargestMerchant(context);
-        }
-        
-        // Rule 2: How many merchants?
-        if (this.matchesPattern(normalizedQuery, ['عدد التجار', 'كم تاجر', 'how many merchants'])) {
-            return this.getMerchantCount(context);
-        }
-        
-        // Rule 3: Target analysis
-        if (this.matchesPattern(normalizedQuery, ['الأهداف', 'التارجت', 'targets', 'goals'])) {
-            return this.getTargetAnalysis(context);
-        }
-        
-        // Rule 4: Today's statistics
-        if (this.matchesPattern(normalizedQuery, ['إحصائيات اليوم', 'today stats', 'اليوم'])) {
-            return this.getTodayStats(context);
-        }
-        
-        // Rule 5: Monthly summary
-        if (this.matchesPattern(normalizedQuery, ['ملخص الشهر', 'monthly summary', 'شهري'])) {
-            return this.getMonthlySummary(context);
-        }
-        
-        // Rule 6: Machine performance
-        if (this.matchesPattern(normalizedQuery, ['أداء المكن', 'machine performance', 'المكن'])) {
-            return this.getMachinePerformance(context);
-        }
-        
-        // Rule 7: Pending requests
-        if (this.matchesPattern(normalizedQuery, ['طلبات معلقة', 'pending requests', 'الطلبات'])) {
-            return this.getPendingRequestsInfo(context);
-        }
-        
-        // Rule 8: Help/Guide
-        if (this.matchesPattern(normalizedQuery, ['مساعدة', 'help', 'مساعد', 'كيف'])) {
-            return this.getHelpMessage();
-        }
-        
-        // Default: Unknown query response
-        return this.getDefaultResponse(query);
-    },
+export function initAIService() {
+    supabase = getSupabase();
+}
+
+// الدالة الرئيسية لمعالجة أي سؤال
+export async function processQuery(question, context = {}) {
+    if (!supabase) await initAIService();
+    const q = question.toLowerCase().trim();
     
-    /**
-     * Check if query matches any pattern
-     * @param {string} query - Normalized query
-     * @param {Array<string>} patterns - Patterns to match
-     * @returns {boolean} Match result
-     */
-    matchesPattern(query, patterns) {
-        return patterns.some(pattern => query.includes(pattern.toLowerCase()));
-    },
+    // 1. أسئلة الترحيب والتعريف
+    if (q.includes('مرحبا') || q.includes('السلام') || q.includes('hi') || q.includes('hello')) {
+        return "مرحباً بك في المساعد الذكي لنظام Axentro! 🎯\nأنا هنا لمساعدتك في:\n• عرض الإحصائيات (عدد التجار، المكن، التحويلات، التحصيلات)\n• تحليل أداء المكن والأهداف\n• معرفة أعلى التاجر تحقيقاً\n• تتبع الطلبات المعلقة\n• تقديم نصائح وتوصيات\n• الإجابة عن أي استفسار حول النظام.\nكيف يمكنني مساعدتك اليوم؟";
+    }
     
-    /**
-     * Get largest merchant by transfer volume
-     */
-    getLargestMerchant(context) {
-        const { merchants = [], transfers = [] } = context;
-        
-        if (merchants.length === 0) {
-            return '📊 لا يوجد تجار مسجلين في النظام حالياً.';
+    if (q.includes('شكرا') || q.includes('thank')) {
+        return "عفواً، أنا في خدمتك دائماً. 😊 هل تحتاج مساعدة أخرى؟";
+    }
+    
+    if (q.includes('قدراتك') || q.includes('ماذا يمكنك') || q.includes('help') || q.includes('مساعدة')) {
+        return getHelpMessage();
+    }
+    
+    // 2. إحصائيات عامة (عدد التجار، المكن، التحويلات، التحصيلات)
+    if (q.includes('عدد التجار') || q.includes('كم تاجر')) {
+        const count = await getCount('merchants');
+        return `📊 عدد التجار المسجلين حالياً: **${count}** تاجر.`;
+    }
+    if (q.includes('عدد المكن') || q.includes('كم مكنة')) {
+        const count = await getCount('machines');
+        return `🖥️ عدد المكن المسجلة حالياً: **${count}** مكنة.`;
+    }
+    if (q.includes('عدد التحويلات') || q.includes('كم تحويل')) {
+        const count = await getCount('transfers');
+        const total = await getSum('transfers', 'قيمة التحويل');
+        return `💰 إجمالي التحويلات: **${count}** عملية بقيمة **${total.toLocaleString()}** ج.م.`;
+    }
+    if (q.includes('عدد التحصيلات') || q.includes('كم تحصيل')) {
+        const count = await getCount('collections');
+        const total = await getSum('collections', 'قيمة التحصيل');
+        return `💵 إجمالي التحصيلات: **${count}** عملية بقيمة **${total.toLocaleString()}** ج.م.`;
+    }
+    
+    // 3. إحصائيات اليوم والشهر
+    if (q.includes('تحويلات اليوم') || q.includes('تحصيلات اليوم')) {
+        const today = new Date().toISOString().split('T')[0];
+        const transfers = await getSumByDate('transfers', 'قيمة التحويل', today);
+        const collections = await getSumByDate('collections', 'قيمة التحصيل', today);
+        return `📅 إحصائيات اليوم (${today}):\n• تحويلات: ${transfers.toLocaleString()} ج.م\n• تحصيلات: ${collections.toLocaleString()} ج.م\n• صافي اليوم: ${(transfers - collections).toLocaleString()} ج.م`;
+    }
+    
+    if (q.includes('هذا الشهر') || q.includes('شهر') && (q.includes('إحصائيات') || q.includes('ملخص'))) {
+        const now = new Date();
+        const month = now.toLocaleString('ar-EG', { month: 'long' });
+        const year = now.getFullYear();
+        // نحتاج لفلترة حسب الشهر (يمكن إضافة عمود الشهر في الجداول)
+        const transfers = await getSum('transfers', 'قيمة التحويل');
+        const collections = await getSum('collections', 'قيمة التحصيل');
+        // تبسيط: نعرض إجمالي الكل مع الإشارة
+        return `📆 ملخص حتى الآن في شهر ${month} ${year}:\n• إجمالي التحويلات: ${transfers.toLocaleString()} ج.م\n• إجمالي التحصيلات: ${collections.toLocaleString()} ج.م\n• المتبقي: ${(transfers - collections).toLocaleString()} ج.م`;
+    }
+    
+    // 4. المتبقي (إجمالي التحويلات - إجمالي التحصيلات)
+    if (q.includes('المتبقي') || q.includes('إجمالي المتبقي') || q.includes('الرصيد الكلي')) {
+        const totalT = await getSum('transfers', 'قيمة التحويل');
+        const totalC = await getSum('collections', 'قيمة التحصيل');
+        const remaining = totalT - totalC;
+        return `💰 إجمالي المتبقي على التجار: **${remaining.toLocaleString()}** ج.م.`;
+    }
+    
+    // 5. أعلى تاجر (من حيث قيمة التحويلات)
+    if (q.includes('أعلى تاجر') || q.includes('أكبر تاجر') || q.includes('أفضل تاجر')) {
+        const top = await getTopMerchantByTransfers();
+        if (top) {
+            return `🏆 أعلى تاجر من حيث قيمة التحويلات:\n• الاسم: ${top.name}\n• رقم التاجر: ${top.number}\n• النشاط: ${top.activity}\n• إجمالي التحويلات: ${top.total.toLocaleString()} ج.م`;
+        } else {
+            return "لا توجد بيانات كافية لتحديد أعلى تاجر حالياً.";
         }
-        
-        // Calculate totals per merchant
-        const merchantTotals = {};
-        transfers.forEach(t => {
-            const merchantNum = t['رقم التاجر'];
-            const amount = parseFloat(t['قيمة التحويل']) || 0;
-            merchantTotals[merchantNum] = (merchantTotals[merchantNum] || 0) + amount;
+    }
+    
+    // 6. أداء المكن (أعلى مكنة تحقيقاً للتارجت)
+    if (q.includes('أداء المكن') || q.includes('أعلى مكنة') || q.includes('أفضل مكنة')) {
+        const topMachines = await getTopMachinesByAchievement(5);
+        if (topMachines.length === 0) return "لا توجد مكن مسجلة أو لا توجد بيانات أداء.";
+        let response = "🏆 **أفضل المكن تحقيقاً للتارجت:**\n\n";
+        topMachines.forEach((m, i) => {
+            response += `${i+1}. ${m.machineNumber} - ${m.merchantName} (${m.percentage}%)\n   المحقق: ${m.achieved.toLocaleString()} ج.م من ${m.target.toLocaleString()} ج.م\n\n`;
         });
-        
-        // Find highest
-        let maxMerchant = null;
-        let maxTotal = 0;
-        
-        Object.entries(merchantTotals).forEach(([num, total]) => {
-            if (total > maxTotal) {
-                maxTotal = total;
-                maxMerchant = merchants.find(m => m['رقم التاجر'] === num);
+        return response;
+    }
+    
+    // 7. المكن التي لم تحقق التارجت بعد
+    if (q.includes('لم تحقق الهدف') || q.includes('تحت التارجت') || q.includes('أقل من الهدف')) {
+        const low = await getLowPerformingMachines();
+        if (low.length === 0) return "🎉 جميع المكن حققت أهدافها أو لا توجد بيانات!";
+        let response = "⚠️ **المكن التي لم تحقق الهدف بعد:**\n\n";
+        low.forEach(m => {
+            response += `• ${m.machineNumber} - ${m.merchantName} (حقق ${m.percentage}% من الهدف)\n`;
+        });
+        return response;
+    }
+    
+    // 8. الطلبات المعلقة
+    if (q.includes('طلبات معلقة') || q.includes('الطلبات الجديدة') || q.includes('pending requests')) {
+        const pending = await getPendingRequests();
+        if (pending === 0) return "✅ لا توجد طلبات معلقة حالياً.";
+        return `📋 يوجد **${pending}** طلب(ات) معلقة بانتظار المعالجة. يمكنك مراجعتها من صفحة "الطلبات".`;
+    }
+    
+    // 9. نصائح وتحسينات
+    if (q.includes('نصيحة') || q.includes('اقتراح') || q.includes('تحسين')) {
+        return getTip();
+    }
+    
+    // 10. أسئلة عامة عن النظام
+    if (q.includes('ما هو النظام') || q.includes('عن Axentro')) {
+        return "Axentro هو نظام متكامل لإدارة التجار والمكن والعمليات المالية (تحويلات، تحصيلات، طلبات، أرشيف). يساعدك على تتبع الأداء وتحليل البيانات وإدارة الطلبات بكفاءة.";
+    }
+    
+    // إذا لم يتعرف على السؤال
+    return `❓ لم أفهم سؤالك تماماً. يمكنك أن تسألني عن:\n• إحصائيات عامة (عدد التجار، المكن، التحويلات، التحصيلات)\n• المتبقي الكلي\n• أعلى تاجر أو أفضل مكنة\n• الطلبات المعلقة\n• نصائح لتحسين الأداء\n• أو اكتب "مساعدة" لعرض جميع الإمكانيات.`;
+}
+
+// دوال مساعدة لجلب البيانات من Supabase
+async function getCount(table) {
+    if (!supabase) return 0;
+    const { count, error } = await supabase.from(table).select('*', { count: 'exact', head: true });
+    if (error) return 0;
+    return count;
+}
+
+async function getSum(table, column) {
+    if (!supabase) return 0;
+    const { data, error } = await supabase.from(table).select(column);
+    if (error || !data) return 0;
+    return data.reduce((sum, row) => sum + (parseFloat(row[column]) || 0), 0);
+}
+
+async function getSumByDate(table, column, date) {
+    if (!supabase) return 0;
+    const { data, error } = await supabase.from(table).select(column).eq('التاريخ', date);
+    if (error || !data) return 0;
+    return data.reduce((sum, row) => sum + (parseFloat(row[column]) || 0), 0);
+}
+
+async function getTopMerchantByTransfers() {
+    if (!supabase) return null;
+    const { data: transfers, error } = await supabase.from('transfers').select('رقم التاجر, قيمة التحويل');
+    if (error || !transfers) return null;
+    const merchantMap = new Map();
+    transfers.forEach(t => {
+        const id = t['رقم التاجر'];
+        const amount = parseFloat(t['قيمة التحويل']) || 0;
+        merchantMap.set(id, (merchantMap.get(id) || 0) + amount);
+    });
+    if (merchantMap.size === 0) return null;
+    let topId = null, topAmount = 0;
+    for (let [id, total] of merchantMap.entries()) {
+        if (total > topAmount) {
+            topAmount = total;
+            topId = id;
+        }
+    }
+    if (!topId) return null;
+    const { data: merchant } = await supabase.from('merchants').select('*').eq('id', topId).single();
+    if (!merchant) return null;
+    return {
+        name: merchant['اسم التاجر'],
+        number: merchant['رقم التاجر'],
+        activity: merchant['اسم النشاط'],
+        total: topAmount
+    };
+}
+
+async function getTopMachinesByAchievement(limit = 5) {
+    if (!supabase) return [];
+    const { data: machines } = await supabase.from('machines').select('*');
+    if (!machines || machines.length === 0) return [];
+    const { data: transfers } = await supabase.from('transfers').select('رقم المكنة, قيمة التحويل');
+    const achievedMap = new Map();
+    if (transfers) {
+        transfers.forEach(t => {
+            const machineId = t['رقم المكنة'];
+            if (machineId) {
+                const amount = parseFloat(t['قيمة التحويل']) || 0;
+                achievedMap.set(machineId, (achievedMap.get(machineId) || 0) + amount);
             }
         });
-        
-        if (!maxMerchant) {
-            maxMerchant = merchants[0]; // Fallback to first merchant
-            maxTotal = 0;
-        }
-        
-        return `🏆 **أكبر تاجر:**\n\n` +
-               `- **الاسم:** ${maxMerchant['اسم التاجر']}\n` +
-               `- **رقم التاجر:** ${maxMerchant['رقم التاجر']}\n` +
-               `- **النشاط:** ${maxMerchant['اسم النشاط'] || 'غير محدد'}\n` +
-               `- **إجمالي التحويلات:** ${maxTotal.toLocaleString()} ج.م\n` +
-               `- **الهاتف:** ${maxMerchant['رقم الهاتف'] || 'غير محدد'}\n` +
-               `- **المنطقة:** ${maxMerchant['المنطقة'] || 'غير محدد'}`;
-    },
-    
-    /**
-     * Get merchant count
-     */
-    getMerchantCount(context) {
-        const { merchants = [], machines = [] } = context;
-        
-        return `📈 **إحصائية التجار:**\n\n` +
-               `- **إجمالي التجار:** ${merchants.length} تاجر\n` +
-               `- **إجمالي المكن:** ${machines.length} مكنة\n` +
-               `- **متوسط المكن لكل تاجر:** ${(machines.length / Math.max(merchants.length, 1)).toFixed(1)} مكنة`;
-    },
-    
-    /**
-     * Get target analysis
-     */
-    getTargetAnalysis(context) {
-        const { machines = [] } = context;
-        
-        if (machines.length === 0) {
-            return '📊 لا توجد مكن مسجلة لتحليل الأهداف.';
-        }
-        
-        const achieved = machines.filter(m => {
-            const target = parseFloat(m['التارجت']) || 0;
-            const achieved_val = parseFloat(m['المحقق']) || 0;
-            return achieved_val >= target;
-        }).length;
-        
-        const partial = machines.filter(m => {
-            const target = parseFloat(m['التارجت']) || 0;
-            const achieved_val = parseFloat(m['المحقق']) || 0;
-            return achieved_val > 0 && achieved_val < target;
-        }).length;
-        
-        const notStarted = machines.length - achieved - partial;
-        
-        const overallAchievement = machines.reduce((sum, m) => {
-            const target = parseFloat(m['التارجت']) || 0;
-            const achieved_val = parseFloat(m['المحقق']) || 0;
-            return sum + (target > 0 ? (achieved_val / target) * 100 : 0);
-        }, 0) / Math.max(machines.length, 1);
-        
-        return `🎯 **تحليل الأهداف:**\n\n` +
-               `- **إجمالي المكن:** ${machines.length}\n` +
-               `- **حققت هدفها:** ✅ ${achieved} (${((achieved/machines.length)*100).toFixed(1)}%)\n` +
-               `- **في الطريق:** 🟡 ${partial} (${((partial/machines.length)*100).toFixed(1)}%)\n` +
-               `- **لم تبدأ بعد:** 🔴 ${notStarted} (${((notStarted/machines.length)*100).toFixed(1)}%)\n` +
-               `- **نسبة الإنجاز العامة:** ${overallAchievement.toFixed(1)}%`;
-    },
-    
-    /**
-     * Get today's statistics
-     */
-    getTodayStats(context) {
-        const { transfers = [], collections = [] } = context;
-        const today = new Date().toISOString().split('T')[0];
-        
-        const todayTransfers = transfers.filter(t => t['التاريخ'] === today);
-        const todayCollections = collections.filter(c => c['التاريخ'] === today);
-        
-        const transferTotal = todayTransfers.reduce((sum, t) => sum + (parseFloat(t['قيمة التحويل']) || 0), 0);
-        const collectionTotal = todayCollections.reduce((sum, c) => sum + (parseFloat(c['قيمة التحصيل']) || 0), 0);
-        
-        return `📅 **إحصائيات اليوم (${today}):**\n\n` +
-               `- **عدد التحويلات:** ${todayTransfers.length}\n` +
-               `- **إجمالي التحويلات:** ${transferTotal.toLocaleString()} ج.م\n` +
-               `- **عدد التحصيلات:** ${todayCollections.length}\n` +
-               `- **إجمالي التحصيلات:** ${collectionTotal.toLocaleString()} ج.م\n` +
-               `- **صافي اليوم:** ${(transferTotal - collectionTotal).toLocaleString()} ج.م`;
-    },
-    
-    /**
-     * Get monthly summary
-     */
-    getMonthlySummary(context) {
-        const { transfers = [], collections = [], archives = [] } = context;
-        const currentMonth = new Date().getMonth() + 1;
-        const currentYear = new Date().getFullYear();
-        
-        const monthTransfers = transfers.filter(t => {
-            const date = new Date(t['التاريخ']);
-            return date.getMonth() + 1 === currentMonth && date.getFullYear() === currentYear;
-        });
-        
-        const monthCollections = collections.filter(c => {
-            const date = new Date(c['التاريخ']);
-            return date.getMonth() + 1 === currentMonth && date.getFullYear() === currentYear;
-        });
-        
-        const transferTotal = monthTransfers.reduce((sum, t) => sum + (parseFloat(t['قيمة التحويل']) || 0), 0);
-        const collectionTotal = monthCollections.reduce((sum, c) => sum + (parseFloat(c['قيمة التحصيل']) || 0), 0);
-        
-        return `📊 **ملخص الشهر الحالي:**\n\n` +
-               `- **عدد التحويلات:** ${monthTransfers.length}\n` +
-               `- **إجمالي التحويلات:** ${transferTotal.toLocaleString()} ج.م\n` +
-               `- **عدد التحصيلات:** ${monthCollections.length}\n` +
-               `- **إجمالي التحصيلات:** ${collectionTotal.toLocaleString()} ج.م\n` +
-               `- **المتبقي:** ${(transferTotal - collectionTotal).toLocaleString()} ج.م`;
-    },
-    
-    /**
-     * Get machine performance ranking
-     */
-    getMachinePerformance(context) {
-        const { machines = [] } = context;
-        
-        if (machines.length === 0) {
-            return '🖥️ لا توجد مكن مسجلة.';
-        }
-        
-        // Sort by achievement percentage
-        const sorted = [...machines].sort((a, b) => {
-            const targetA = parseFloat(a['التارجت']) || 0;
-            const achievedA = parseFloat(a['المحقق']) || 0;
-            const targetB = parseFloat(b['التارجت']) || 0;
-            const achievedB = parseFloat(b['المحقق']) || 0;
-            
-            const pctA = targetA > 0 ? (achievedA / targetA) * 100 : 0;
-            const pctB = targetB > 0 ? (achievedB / targetB) * 100 : 0;
-            
-            return pctB - pctA;
-        }).slice(0, 5); // Top 5
-        
-        let response = `🖥️ **أعلى 5 مكن أداءً:**\n\n`;
-        sorted.forEach((m, idx) => {
-            const target = parseFloat(m['التارجت']) || 0;
-            const achieved = parseFloat(m['المحقق']) || 0;
-            const pct = target > 0 ? ((achieved / target) * 100).toFixed(1) : 0;
-            const emoji = pct >= 100 ? '🟢' : pct >= 50 ? '🟡' : '🔴';
-            
-            response += `${idx + 1}. ${emoji} **${m['الرقم التسلسلي'] || m['رقم المكنة']}** - ${pct}%\n`;
-        });
-        
-        return response;
-    },
-    
-    /**
-     * Get pending requests info
-     */
-    getPendingRequestsInfo(context) {
-        const { requests = [] } = context;
-        const pending = requests.filter(r => r['الحالة'] === 'pending' || r['الحالة'] === 'معلق');
-        
-        if (pending.length === 0) {
-            return '✅ لا توجد طلبات معلقة حالياً.';
-        }
-        
-        let response = `⚠️ **الطلبات المعلقة (${pending.length}):**\n\n`;
-        pending.slice(0, 5).forEach((r, idx) => {
-            response += `${idx + 1}. **طلب #${r['رقم الطلب']}** - ${r['اسم التاجر']}\n` +
-                       `   المبلغ: ${r['المبلغ المطلوب']} | النوع: ${r['نوع الطلب']}\n\n`;
-        });
-        
-        if (pending.length > 5) {
-            response += `... و ${pending.length - 5} طلب(ات) أخرى`;
-        }
-        
-        return response;
-    },
-    
-    /**
-     * Get help message
-     */
-    getHelpMessage() {
-        return `🤖 **يمكنني مساعدتك في:**\n\n` +
-               `• **أكبر تاجر** - معرفة أعلى تاجر من حيث التحويلات\n` +
-               `• **عدد التجار** - إحصائيات عن التجار والمكن\n` +
-               `• **الأهداف/التارجت** - تحليل أداء المكن والأهداف\n` +
-               `• **إحصائيات اليوم** - ملخص عمليات اليوم\n` +
-               `• **ملخص الشهر** - إحصائيات شهرية شاملة\n` +
-               `• **أداء المكن** - ترتيب المكن حسب الأداء\n` +
-               `• **الطلبات** - معرفة الطلبات المعلقة\n\n` +
-               `💡 فقط اكتب سؤالك وسأجيب عليه!`;
-    },
-    
-    /**
-     * Default response for unknown queries
-     */
-    getDefaultResponse(query) {
-        return `❓ لم أفهم سؤالك: "${query}"\n\n` +
-               `💡 **جرب أحد هذه الأسئلة:**\n` +
-               `- من هو أكبر تاجر؟\n` +
-               `- كم عدد التجار؟\n` +
-               `- ما هي إحصائيات اليوم؟\n` +
-               `- كيف حالة الأهداف؟\n` +
-               `- ما هي الطلبات المعلقة؟\n\n` +
-               `أو اكتب "مساعدة" للمزيد من المعلومات.`;
     }
-};
-
-// ============================================================
-// AI SERVICE (Main Export)
-// ============================================================
-
-/**
- * Process AI query using hybrid system
- * Tries AI endpoint first, falls back to rules engine
- * @param {string} query - User query
- * @param {Object} context - Application state context
- * @returns {Promise<string>} AI response
- */
-export async function processAiQuery(query, context = {}) {
-    const aiConfig = CONFIG.AI_CONFIG;
-    
-    // If AI is disabled, use rules only
-    if (!aiConfig.ENABLED) {
-        return RulesEngine.process(query, context);
-    }
-    
-    // If no endpoint configured, use rules only
-    if (!aiConfig.ENDPOINT_URL || !aiConfig.API_KEY) {
-        console.log('ℹ️ No AI endpoint configured, using rules engine');
-        return RulesEngine.process(query, context);
-    }
-    
-    // Try AI endpoint
-    try {
-        const response = await callAiEndpoint(query, context, aiConfig);
-        return response;
-    } catch (error) {
-        console.warn('⚠️ AI endpoint failed, falling back to rules engine:', error.message);
-        return RulesEngine.process(query, context);
-    }
-}
-
-/**
- * Call external AI endpoint (OpenAI/Ollama compatible)
- * @param {string} query - User query
- * @param {Object} context - Context data
- * @param {Object} config - AI configuration
- * @returns {Promise<string>} AI response
- */
-async function callAiEndpoint(query, context, config) {
-    const systemPrompt = `أنت مساعد ذكي لنظام إدارة التجار والمكن (Axentro System).
-    يجب أن تجيب باللغة العربية دائماً.
-    استخدم البيانات التالية للإجابة على الأسئلة:
-    - التجار: ${JSON.stringify(context.merchants || []).slice(0, 500)}
-    - المكن: ${JSON.stringify(context.machines || []).slice(0, 500)}
-    - التحويلات: ${JSON.stringify(context.transfers || []).slice(0, 500)}
-    - التحصيلات: ${JSON.stringify(context.collections || []).slice(0, 500)}
-    - الطلبات: ${JSON.stringify(context.requests || []).slice(0, 500)}
-    
-    كن محدداً في إجاباتك واستخدم الأرقام عند توفرها.`;
-    
-    const response = await fetch(config.ENDPOINT_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${config.API_KEY}`
-        },
-        body: JSON.stringify({
-            model: config.MODEL || 'gpt-3.5-turbo',
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: query }
-            ],
-            max_tokens: config.MAX_TOKENS || 500,
-            temperature: 0.7
-        })
+    const results = machines.map(m => {
+        const target = parseFloat(m['التارجت الشهري']) || 0;
+        const achieved = achievedMap.get(m['رقم المكنة']) || 0;
+        const percentage = target > 0 ? Math.min(100, (achieved / target) * 100) : 0;
+        return {
+            machineNumber: m['رقم المكنة'],
+            merchantName: m['اسم التاجر'],
+            target,
+            achieved,
+            percentage: percentage.toFixed(1)
+        };
     });
-    
-    if (!response.ok) {
-        throw new Error(`AI API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data.choices[0]?.message?.content || RulesEngine.getDefaultResponse(query);
+    results.sort((a, b) => b.percentage - a.percentage);
+    return results.slice(0, limit);
 }
 
-// Export rules engine for direct access if needed
-export { RulesEngine };
+async function getLowPerformingMachines() {
+    if (!supabase) return [];
+    const { data: machines } = await supabase.from('machines').select('*');
+    if (!machines) return [];
+    const { data: transfers } = await supabase.from('transfers').select('رقم المكنة, قيمة التحويل');
+    const achievedMap = new Map();
+    if (transfers) {
+        transfers.forEach(t => {
+            const machineId = t['رقم المكنة'];
+            if (machineId) {
+                achievedMap.set(machineId, (achievedMap.get(machineId) || 0) + (parseFloat(t['قيمة التحويل']) || 0));
+            }
+        });
+    }
+    const results = machines.map(m => {
+        const target = parseFloat(m['التارجت الشهري']) || 0;
+        const achieved = achievedMap.get(m['رقم المكنة']) || 0;
+        const percentage = target > 0 ? (achieved / target) * 100 : 100;
+        return {
+            machineNumber: m['رقم المكنة'],
+            merchantName: m['اسم التاجر'],
+            percentage: percentage.toFixed(1)
+        };
+    }).filter(m => m.percentage < 100);
+    results.sort((a, b) => a.percentage - b.percentage);
+    return results;
+}
+
+async function getPendingRequests() {
+    if (!supabase) return 0;
+    const { count, error } = await supabase.from('requests').select('*', { count: 'exact', head: true }).eq('الحالة', 'معلق');
+    if (error) return 0;
+    return count;
+}
+
+function getHelpMessage() {
+    return `🤖 **المساعد الذكي يمكنه الإجابة عن:**\n\n` +
+           `📊 **الإحصائيات**\n• عدد التجار / المكن\n• إجمالي التحويلات والتحصيلات\n• المتبقي الكلي\n• إحصائيات اليوم\n\n` +
+           `🏆 **التحليلات**\n• أعلى تاجر من حيث التحويلات\n• أفضل مكنة تحقيقاً للتارجت\n• المكن التي لم تحقق الهدف\n\n` +
+           `📋 **الطلبات**\n• عدد الطلبات المعلقة\n\n` +
+           `💡 **نصائح**\n• نصائح لتحسين الأداء\n\n` +
+           `📌 **أمثلة على الأسئلة:**\n- كم عدد التجار؟\n- ما هو إجمالي المتبقي؟\n- من هو أعلى تاجر؟\n- ما هي أفضل مكنة؟\n- كم طلب معلق؟\n- أعطني نصيحة لزيادة التحصيلات\n- ما هي إحصائيات اليوم؟`;
+}
+
+function getTip() {
+    const tips = [
+        "💡 نصائح لتحسين التحصيلات: تواصل مع التجار المتأخرين بانتظام وقدم لهم خيارات سداد مرنة.",
+        "📈 لرفع أداء المكن: راجع الأجهزة التي لم تحقق التارجت وحلل أسباب ضعف الإقبال عليها.",
+        "🎯 حدد أهدافاً شهرية واقعية لكل مكنة بناءً على أدائها السابق لتحفيز المشغلين.",
+        "📊 استخدم لوحة التحكم لمتابعة التحويلات اليومية واكتشاف الأنماط الموسمية.",
+        "🔔 تفعيل إشعارات الطلبات المعلقة لتسريع معالجتها وتحسين خدمة التجار.",
+        "📅 قم بإغلاق الشهر بانتظام لتنظيم البيانات وتحسين أداء الاستعلامات.",
+        "👥 شجع التجار على استخدام بوابة التاجر لتقديم الطلبات إلكترونياً وتقليل الأخطاء.",
+        "💵 راقب المتبقي الكلي لتجنب تراكم الديون الكبيرة واتخاذ إجراءات مبكرة."
+    ];
+    const randomIndex = Math.floor(Math.random() * tips.length);
+    return tips[randomIndex];
+}
