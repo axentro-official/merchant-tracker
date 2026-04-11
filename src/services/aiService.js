@@ -129,118 +129,132 @@ export async function processQuery(question, context = {}) {
 // دوال مساعدة لجلب البيانات من Supabase
 async function getCount(table) {
     if (!supabase) return 0;
-    const { count, error } = await supabase.from(table).select('*', { count: 'exact', head: true });
-    if (error) return 0;
-    return count;
+    try {
+        const { count, error } = await supabase.from(table).select('*', { count: 'exact', head: true });
+        if (error) return 0;
+        return count;
+    } catch(e) { return 0; }
 }
 
 async function getSum(table, column) {
     if (!supabase) return 0;
-    const { data, error } = await supabase.from(table).select(column);
-    if (error || !data) return 0;
-    return data.reduce((sum, row) => sum + (parseFloat(row[column]) || 0), 0);
+    try {
+        const { data, error } = await supabase.from(table).select(column);
+        if (error || !data) return 0;
+        return data.reduce((sum, row) => sum + (parseFloat(row[column]) || 0), 0);
+    } catch(e) { return 0; }
 }
 
 async function getSumByDate(table, column, date) {
     if (!supabase) return 0;
-    const { data, error } = await supabase.from(table).select(column).eq('التاريخ', date);
-    if (error || !data) return 0;
-    return data.reduce((sum, row) => sum + (parseFloat(row[column]) || 0), 0);
+    try {
+        const { data, error } = await supabase.from(table).select(column).eq('التاريخ', date);
+        if (error || !data) return 0;
+        return data.reduce((sum, row) => sum + (parseFloat(row[column]) || 0), 0);
+    } catch(e) { return 0; }
 }
 
 async function getTopMerchantByTransfers() {
     if (!supabase) return null;
-    const { data: transfers, error } = await supabase.from('transfers').select('رقم التاجر, قيمة التحويل');
-    if (error || !transfers) return null;
-    const merchantMap = new Map();
-    transfers.forEach(t => {
-        const id = t['رقم التاجر'];
-        const amount = parseFloat(t['قيمة التحويل']) || 0;
-        merchantMap.set(id, (merchantMap.get(id) || 0) + amount);
-    });
-    if (merchantMap.size === 0) return null;
-    let topId = null, topAmount = 0;
-    for (let [id, total] of merchantMap.entries()) {
-        if (total > topAmount) {
-            topAmount = total;
-            topId = id;
+    try {
+        const { data: transfers, error } = await supabase.from('transfers').select('رقم التاجر, قيمة التحويل');
+        if (error || !transfers) return null;
+        const merchantMap = new Map();
+        transfers.forEach(t => {
+            const id = t['رقم التاجر'];
+            const amount = parseFloat(t['قيمة التحويل']) || 0;
+            merchantMap.set(id, (merchantMap.get(id) || 0) + amount);
+        });
+        if (merchantMap.size === 0) return null;
+        let topId = null, topAmount = 0;
+        for (let [id, total] of merchantMap.entries()) {
+            if (total > topAmount) {
+                topAmount = total;
+                topId = id;
+            }
         }
-    }
-    if (!topId) return null;
-    const { data: merchant } = await supabase.from('merchants').select('*').eq('id', topId).single();
-    if (!merchant) return null;
-    return {
-        name: merchant['اسم التاجر'],
-        number: merchant['رقم التاجر'],
-        activity: merchant['اسم النشاط'],
-        total: topAmount
-    };
+        if (!topId) return null;
+        const { data: merchant } = await supabase.from('merchants').select('*').eq('id', topId).single();
+        if (!merchant) return null;
+        return {
+            name: merchant['اسم التاجر'],
+            number: merchant['رقم التاجر'],
+            activity: merchant['اسم النشاط'],
+            total: topAmount
+        };
+    } catch(e) { return null; }
 }
 
 async function getTopMachinesByAchievement(limit = 5) {
     if (!supabase) return [];
-    const { data: machines } = await supabase.from('machines').select('*');
-    if (!machines || machines.length === 0) return [];
-    const { data: transfers } = await supabase.from('transfers').select('رقم المكنة, قيمة التحويل');
-    const achievedMap = new Map();
-    if (transfers) {
-        transfers.forEach(t => {
-            const machineId = t['رقم المكنة'];
-            if (machineId) {
-                const amount = parseFloat(t['قيمة التحويل']) || 0;
-                achievedMap.set(machineId, (achievedMap.get(machineId) || 0) + amount);
-            }
+    try {
+        const { data: machines } = await supabase.from('machines').select('*');
+        if (!machines || machines.length === 0) return [];
+        const { data: transfers } = await supabase.from('transfers').select('رقم المكنة, قيمة التحويل');
+        const achievedMap = new Map();
+        if (transfers) {
+            transfers.forEach(t => {
+                const machineId = t['رقم المكنة'];
+                if (machineId) {
+                    const amount = parseFloat(t['قيمة التحويل']) || 0;
+                    achievedMap.set(machineId, (achievedMap.get(machineId) || 0) + amount);
+                }
+            });
+        }
+        const results = machines.map(m => {
+            const target = parseFloat(m['التارجت الشهري']) || 0;
+            const achieved = achievedMap.get(m['رقم المكنة']) || 0;
+            const percentage = target > 0 ? Math.min(100, (achieved / target) * 100) : 0;
+            return {
+                machineNumber: m['رقم المكنة'],
+                merchantName: m['اسم التاجر'],
+                target,
+                achieved,
+                percentage: percentage.toFixed(1)
+            };
         });
-    }
-    const results = machines.map(m => {
-        const target = parseFloat(m['التارجت الشهري']) || 0;
-        const achieved = achievedMap.get(m['رقم المكنة']) || 0;
-        const percentage = target > 0 ? Math.min(100, (achieved / target) * 100) : 0;
-        return {
-            machineNumber: m['رقم المكنة'],
-            merchantName: m['اسم التاجر'],
-            target,
-            achieved,
-            percentage: percentage.toFixed(1)
-        };
-    });
-    results.sort((a, b) => b.percentage - a.percentage);
-    return results.slice(0, limit);
+        results.sort((a, b) => b.percentage - a.percentage);
+        return results.slice(0, limit);
+    } catch(e) { return []; }
 }
 
 async function getLowPerformingMachines() {
     if (!supabase) return [];
-    const { data: machines } = await supabase.from('machines').select('*');
-    if (!machines) return [];
-    const { data: transfers } = await supabase.from('transfers').select('رقم المكنة, قيمة التحويل');
-    const achievedMap = new Map();
-    if (transfers) {
-        transfers.forEach(t => {
-            const machineId = t['رقم المكنة'];
-            if (machineId) {
-                achievedMap.set(machineId, (achievedMap.get(machineId) || 0) + (parseFloat(t['قيمة التحويل']) || 0));
-            }
-        });
-    }
-    const results = machines.map(m => {
-        const target = parseFloat(m['التارجت الشهري']) || 0;
-        const achieved = achievedMap.get(m['رقم المكنة']) || 0;
-        const percentage = target > 0 ? (achieved / target) * 100 : 100;
-        return {
-            machineNumber: m['رقم المكنة'],
-            merchantName: m['اسم التاجر'],
-            percentage: percentage.toFixed(1)
-        };
-    }).filter(m => m.percentage < 100);
-    results.sort((a, b) => a.percentage - b.percentage);
-    return results;
+    try {
+        const { data: machines } = await supabase.from('machines').select('*');
+        if (!machines) return [];
+        const { data: transfers } = await supabase.from('transfers').select('رقم المكنة, قيمة التحويل');
+        const achievedMap = new Map();
+        if (transfers) {
+            transfers.forEach(t => {
+                const machineId = t['رقم المكنة'];
+                if (machineId) {
+                    achievedMap.set(machineId, (achievedMap.get(machineId) || 0) + (parseFloat(t['قيمة التحويل']) || 0));
+                }
+            });
+        }
+        const results = machines.map(m => {
+            const target = parseFloat(m['التارجت الشهري']) || 0;
+            const achieved = achievedMap.get(m['رقم المكنة']) || 0;
+            const percentage = target > 0 ? (achieved / target) * 100 : 100;
+            return {
+                machineNumber: m['رقم المكنة'],
+                merchantName: m['اسم التاجر'],
+                percentage: percentage.toFixed(1)
+            };
+        }).filter(m => m.percentage < 100);
+        results.sort((a, b) => a.percentage - b.percentage);
+        return results;
+    } catch(e) { return []; }
 }
 
 async function getPendingRequests() {
     if (!supabase) return 0;
-    const { count, error } = await supabase.from('requests').select('*', { count: 'exact', head: true }).eq('الحالة', 'معلق');
-    if (error) return 0;
-    return count;
+    try {
+        const { count, error } = await supabase.from('requests').select('*', { count: 'exact', head: true }).eq('الحالة', 'معلق');
+        if (error) return 0;
+        return count;
+    } catch(e) { return 0; }
 }
 
 function getHelpMessage() {
