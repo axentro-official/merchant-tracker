@@ -57,7 +57,6 @@ export function showConfirm(message, onConfirm, confirmText = 'تأكيد') {
     
     if (!modal || !messageEl || !confirmBtn || !cancelBtn) {
         console.error('Confirm modal elements not found');
-        // Fallback to native confirm
         if (confirm(message)) {
             onConfirm();
         }
@@ -67,13 +66,9 @@ export function showConfirm(message, onConfirm, confirmText = 'تأكيد') {
     messageEl.textContent = message;
     confirmBtn.textContent = confirmText;
     
-    // Store callback
     confirmCallback = onConfirm;
-    
-    // Show modal
     modal.classList.add('show');
     
-    // Remove existing listeners to avoid duplicates
     const newConfirmBtn = confirmBtn.cloneNode(true);
     const newCancelBtn = cancelBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
@@ -86,7 +81,6 @@ export function showConfirm(message, onConfirm, confirmText = 'تأكيد') {
     
     newCancelBtn.addEventListener('click', closeConfirm);
     
-    // Also close on overlay click? optional
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeConfirm();
     }, { once: true });
@@ -98,8 +92,11 @@ function closeConfirm() {
     confirmCallback = null;
 }
 
-// Export convenience methods
+// تصدير جميع الدوال
 export const showSuccess = (msg) => showToast(msg, 'success');
 export const showError = (msg) => showToast(msg, 'error');
 export const showWarning = (msg) => showToast(msg, 'warning');
 export const showInfo = (msg) => showToast(msg, 'info');
+
+// ✅ إضافة تصدير showConfirm بشكل صريح
+export { showConfirm };
