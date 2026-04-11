@@ -1,6 +1,7 @@
 /**
  * Machines Page
  * CRUD operations for machines - مطابق لستايل index.html
+ * مع دعم الكاميرا والبحث في التجار
  */
 
 import { showToast, showConfirm } from '../ui/toast.js';
@@ -48,8 +49,8 @@ function renderMachinesTable() {
                 <td colspan="9" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>لا توجد مكن مسجلة</p>
-                   
-               
+                  
+              
         `;
         return;
     }
@@ -100,13 +101,24 @@ export async function openMachineModal(machine = null) {
     const modal = document.getElementById('machineModal');
     const title = document.getElementById('machineModalTitle');
     
-    const merchantSelect = document.getElementById('machMerchantId');
-    if (merchantSelect) {
-        merchantSelect.innerHTML = '<option value="">-- اختر تاجر --</option>' +
-            merchantsList.map(m => `<option value="${m.id}" ${isEdit && machine['رقم التاجر'] === m.id ? 'selected' : ''}>${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`).join('');
+    // تعبئة قائمة التجار في datalist (تم بالفعل في index.html، ولكن نحدثها)
+    const datalist = document.getElementById('merchantDatalist');
+    if (datalist) {
+        datalist.innerHTML = merchantsList.map(m => 
+            `<option value="${m['رقم التاجר']}">${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`
+        ).join('');
     }
     
-    if (isEdit) {
+    // حقل البحث عن التاجر
+    const searchInput = document.getElementById('machMerchantSearch');
+    const hiddenId = document.getElementById('machMerchantId');
+    
+    if (isEdit && machine) {
+        const merchant = merchantsList.find(m => m.id === machine['رقم التاجر']);
+        if (merchant && searchInput) {
+            searchInput.value = merchant['رقم التاجر'];
+            if (hiddenId) hiddenId.value = merchant.id;
+        }
         title.innerHTML = '<i class="fas fa-edit"></i> تعديل مكنة';
         document.getElementById('editMachineId').value = machine.id;
         document.getElementById('machSerial').value = machine['الرقم التسلسلي'] || '';
@@ -116,12 +128,14 @@ export async function openMachineModal(machine = null) {
     } else {
         title.innerHTML = '<i class="fas fa-plus-circle"></i> إضافة مكنة جديدة';
         document.getElementById('editMachineId').value = '';
+        if (searchInput) searchInput.value = '';
+        if (hiddenId) hiddenId.value = '';
         document.getElementById('machSerial').value = '';
         document.getElementById('machTarget').value = '';
         document.getElementById('machStatus').value = 'نشطة';
         document.getElementById('machNotes').value = '';
-        if (merchantSelect) merchantSelect.value = '';
     }
+    
     modal.classList.add('show');
     if (window.Sound) window.Sound.play('click');
 }
