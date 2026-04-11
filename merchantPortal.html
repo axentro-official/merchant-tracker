@@ -1175,7 +1175,7 @@ function renderRequestsList(requests) {
 }
 
 // ============================================================
-// إدارة الطلبات وإرسالها إلى Google Script
+// إدارة الطلبات وإرسالها إلى Google Script + Supabase
 // ============================================================
 function openRequestModal() {
     if (!currentMerchant) {
@@ -1222,21 +1222,41 @@ async function submitRequest() {
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
     };
 
-    // إرسال إلى Google Apps Script
+    // إرسال إلى Google Apps Script (لا ننتظر الرد بسبب no-cors)
     try {
-        const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+        fetch(CONFIG.GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestData)
-        });
+        }).catch(e => console.warn('Google Script error:', e));
+    } catch(e) { console.warn(e); }
+
+    // إدراج الطلب في Supabase
+    try {
+        const supabaseRequest = {
+            "رقم التاجر": currentMerchant.id,
+            "اسم التاجر": currentMerchant['اسم التاجر'],
+            "رقم الحساب": currentMerchant['رقم الحساب'],
+            "اسم النشاط": currentMerchant['اسم النشاط'],
+            "نوع الطلب": type,
+            "المبلغ": amount,
+            "ملاحظات": notes,
+            "التاريخ": requestData.date,
+            "الوقت": requestData.time,
+            "الحالة": 'معلق',
+            "المديونية الحالية": 0 // سيتم حسابه تلقائياً في admin
+        };
+        const { error } = await supabaseClient.from('requests').insert([supabaseRequest]);
+        if (error) throw error;
+        
         Sound.play('success');
         UI.showToast('تم إرسال طلبك بنجاح! سيتم مراجعته قريباً', 'success');
         closeRequestModal();
         if (currentMerchant) await loadMerchantData(currentMerchant.id);
     } catch (err) {
         console.error(err);
-        UI.showToast('حدث خطأ أثناء إرسال الطلب', 'error');
+        UI.showToast('حدث خطأ أثناء إرسال الطلب إلى قاعدة البيانات', 'error');
         Sound.play('error');
     }
 }
