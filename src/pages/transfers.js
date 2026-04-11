@@ -1,6 +1,7 @@
 /**
  * Transfers Page
  * CRUD operations for transfers - مطابق لستايل index.html
+ * مع دعم البحث عن التاجر وجلب بياناته تلقائياً
  */
 
 import { showToast, showConfirm } from '../ui/toast.js';
@@ -28,7 +29,7 @@ export async function loadTransfers() {
         if (error) throw error;
         currentTransfers = transfers || [];
         
-        const { data: merchants } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+        const { data: merchants } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "المنطقة", "العنوان"');
         merchantsList = merchants || [];
         const { data: machines } = await supabase.from('machines').select('id, "رقم المكنة"');
         machinesList = machines || [];
@@ -83,7 +84,7 @@ function renderTransfersTable() {
 // فتح نافذة إضافة/تعديل تحويل
 export async function openTransferModal(transfer = null) {
     if (!merchantsList.length) {
-        const { data } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+        const { data } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "المنطقة", "العنوان"');
         merchantsList = data || [];
     }
     if (!machinesList.length) {
@@ -95,19 +96,30 @@ export async function openTransferModal(transfer = null) {
     const modal = document.getElementById('transferModal');
     const title = document.getElementById('transferModalTitle');
     
-    const merchantSelect = document.getElementById('transMerchantId');
-    if (merchantSelect) {
-        merchantSelect.innerHTML = '<option value="">-- اختر تاجر --</option>' +
-            merchantsList.map(m => `<option value="${m.id}" ${isEdit && transfer['رقم التاجر'] === m.id ? 'selected' : ''}>${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`).join('');
+    // تعبئة datalist للتجار (للبحث)
+    const datalist = document.getElementById('merchantDatalistTrans');
+    if (datalist) {
+        datalist.innerHTML = merchantsList.map(m => 
+            `<option value="${m['رقم التاجر']}">${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`
+        ).join('');
     }
     
+    const searchInput = document.getElementById('transMerchantSearch');
+    const hiddenId = document.getElementById('transMerchantId');
+    
+    // تعبئة قائمة المكن
     const machineSelect = document.getElementById('transMachineId');
     if (machineSelect) {
         machineSelect.innerHTML = '<option value="">-- بدون مكنة --</option>' +
-            machinesList.map(mc => `<option value="${mc.id}" ${isEdit && transfer['رقم المكنة'] === mc.id ? 'selected' : ''}>${mc['رقم المكنة']}</option>`).join('');
+            machinesList.map(mc => `<option value="${mc.id}" ${isEdit && transfer && transfer['رقم المكنة'] === mc.id ? 'selected' : ''}>${mc['رقم المكنة']}</option>`).join('');
     }
     
-    if (isEdit) {
+    if (isEdit && transfer) {
+        const merchant = merchantsList.find(m => m.id === transfer['رقم التاجر']);
+        if (merchant && searchInput) {
+            searchInput.value = merchant['رقم التاجر'];
+            if (hiddenId) hiddenId.value = merchant.id;
+        }
         title.innerHTML = '<i class="fas fa-edit"></i> تعديل تحويل';
         document.getElementById('editTransferId').value = transfer.id;
         document.getElementById('transAmount').value = transfer['قيمة التحويل'] || '';
@@ -116,12 +128,14 @@ export async function openTransferModal(transfer = null) {
     } else {
         title.innerHTML = '<i class="fas fa-exchange-alt"></i> تحويل جديد';
         document.getElementById('editTransferId').value = '';
+        if (searchInput) searchInput.value = '';
+        if (hiddenId) hiddenId.value = '';
         document.getElementById('transAmount').value = '';
         document.getElementById('transType').value = 'نقدي';
         document.getElementById('transNotes').value = '';
-        if (merchantSelect) merchantSelect.value = '';
         if (machineSelect) machineSelect.value = '';
     }
+    
     modal.classList.add('show');
     if (window.Sound) window.Sound.play('click');
 }
@@ -165,6 +179,8 @@ export async function saveTransfer() {
         "اسم التاجر": merchant['اسم التاجر'],
         "رقم الحساب": merchant['رقم الحساب'],
         "اسم النشاط": merchant['اسم النشاط'],
+        "المنطقة": merchant['المنطقة'] || '',
+        "العنوان": merchant['العنوان'] || '',
         "رقم المكنة": machineNumber,
         "قيمة التحويل": amount,
         "نوع التحويل": type,
