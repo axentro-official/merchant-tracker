@@ -3,7 +3,6 @@
  * Visual database inspection tool - مطابق لستايل index.html
  */
 
-import { getSupabase } from '../config/supabase.js';
 import { showToast } from '../ui/toast.js';
 import { escapeHtml } from '../utils/formatters.js';
 
@@ -11,9 +10,9 @@ let supabase = null;
 let discoveredTables = [];
 let selectedTableName = null;
 
-// تهيئة الصفحة
+// تهيئة Supabase (باستخدام window.supabaseClient)
 export function initDatabasePage() {
-    supabase = getSupabase();
+    supabase = window.supabaseClient;
 }
 
 // اكتشاف وعرض جداول قاعدة البيانات
@@ -27,7 +26,6 @@ export async function discoverDatabase() {
     if (container) container.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري اكتشاف الجداول...</div>';
     
     try {
-        // قائمة الجداول المتوقعة (حسب هيكل المشروع)
         const tablesToCheck = [
             'merchants', 'machines', 'transfers',
             'collections', 'requests', 'archives', 'logs', 'settings'
@@ -43,7 +41,6 @@ export async function discoverDatabase() {
                     .limit(1);
                 
                 if (!error) {
-                    // جلب أسماء الأعمدة من أول صف (إذا وجد)
                     let columns = [];
                     const { data: sample } = await supabase.from(tableName).select('*').limit(1);
                     if (sample && sample.length > 0) {
@@ -88,7 +85,6 @@ export async function discoverDatabase() {
     }
 }
 
-// الحصول على أسماء الأعمدة الافتراضية للجداول المعروفة
 function getDefaultColumns(tableName) {
     const defaults = {
         merchants: ['id', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الحساب', 'رقم الهاتف', 'المنطقة', 'العنوان', 'الحالة', 'created_at'],
@@ -103,7 +99,6 @@ function getDefaultColumns(tableName) {
     return defaults[tableName] || ['id', 'created_at'];
 }
 
-// عرض واجهة مستكشف قاعدة البيانات
 function renderDatabaseExplorer() {
     const container = document.getElementById('dbTablesList');
     if (!container) return;
@@ -142,11 +137,9 @@ function renderDatabaseExplorer() {
     }).join('');
 }
 
-// تحديد جدول وعرض بياناته
 export async function selectTable(tableName, event) {
     selectedTableName = tableName;
     
-    // تحديث حالة البطاقات
     document.querySelectorAll('.db-table-card').forEach(card => {
         card.classList.remove('active');
         const columnsDiv = card.querySelector('.db-columns-list');
@@ -159,11 +152,9 @@ export async function selectTable(tableName, event) {
         if (columnsDiv) columnsDiv.style.display = 'block';
     }
     
-    // تحميل وعرض بيانات الجدول
     await loadTableData(tableName);
 }
 
-// تحميل بيانات الجدول المحدد
 async function loadTableData(tableName) {
     const detailsContainer = document.getElementById('dbTableDetails');
     const tableNameEl = document.getElementById('dbSelectedTableName');
@@ -188,7 +179,7 @@ async function loadTableData(tableName) {
         
         if (!data || data.length === 0) {
             if (thead) thead.innerHTML = '';
-            if (tbody) tbody.innerHTML = '<tr><td colspan="100" class="empty-state">لا توجد بيانات</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="100" class="empty-state">لا توجد بيانات<\/td></tr>';
             return;
         }
         
@@ -205,7 +196,7 @@ async function loadTableData(tableName) {
                         if (value === null || value === undefined) value = '-';
                         else if (typeof value === 'object') value = JSON.stringify(value);
                         else value = String(value);
-                        return `<td title="${escapeHtml(value)}">${escapeHtml(value.substring(0, 100))}${value.length > 100 ? '...' : ''}</td>`;
+                        return `<td title="${escapeHtml(value)}">${escapeHtml(value.substring(0, 100))}${value.length > 100 ? '...' : ''}<\/td>`;
                     }).join('')}
                 </tr>
             `).join('');
@@ -213,11 +204,10 @@ async function loadTableData(tableName) {
         
     } catch (err) {
         console.error(err);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="100" class="empty-state" style="color: var(--danger);">خطأ: ${escapeHtml(err.message)}</td></tr>`;
+        if (tbody) tbody.innerHTML = `<td><td colspan="100" class="empty-state" style="color: var(--danger);">خطأ: ${escapeHtml(err.message)}<\/td></tr>`;
     }
 }
 
-// تحديث الجدول المحدد
 export async function refreshSelectedTable() {
     if (selectedTableName) {
         await loadTableData(selectedTableName);
