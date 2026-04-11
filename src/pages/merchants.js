@@ -3,16 +3,15 @@
  * CRUD operations for merchants - مطابق لستايل index.html
  */
 
-import { getSupabase } from '../config/supabase.js';
 import { showToast, showConfirm } from '../ui/toast.js';
 import { escapeHtml, formatMoney } from '../utils/formatters.js';
 
 let supabase = null;
 let currentMerchants = [];
 
-// تهيئة Supabase (سيتم استدعاؤها من app.js)
+// تهيئة Supabase (باستخدام window.supabaseClient)
 export function initMerchantsPage() {
-    supabase = getSupabase();
+    supabase = window.supabaseClient;
 }
 
 // تحميل وعرض التجار
@@ -42,26 +41,26 @@ function renderMerchantsTable() {
                 <td colspan="9" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>لا يوجد تجار مسجلين</p>
-                </td>
-            </tr>
+                  
+              
         `;
         return;
     }
 
     tbody.innerHTML = currentMerchants.map((m, idx) => `
         <tr>
-            <td>${idx + 1}</td>
-            <td><code class="ref-code">${escapeHtml(m['رقم التاجر'] || '-')}</code></td>
-            <td><strong>${escapeHtml(m['اسم التاجر'] || '-')}</strong></td>
-            <td>${escapeHtml(m['اسم النشاط'] || '-')}</td>
-            <td>${escapeHtml(m['رقم الحساب'] || '-')}</td>
-            <td dir="ltr">${escapeHtml(m['رقم الهاتف'] || '-')}</td>
-            <td>${escapeHtml(m['المنطقة'] || '-')}</td>
+            <td>${idx + 1}  
+            <td><code class="ref-code">${escapeHtml(m['رقم التاجر'] || '-')}</code>  
+            <td><strong>${escapeHtml(m['اسم التاجر'] || '-')}</strong>  
+            <td>${escapeHtml(m['اسم النشاط'] || '-')}  
+            <td>${escapeHtml(m['رقم الحساب'] || '-')}  
+            <td dir="ltr">${escapeHtml(m['رقم الهاتف'] || '-')}  
+            <td>${escapeHtml(m['المنطقة'] || '-')}  
             <td>
                 <span class="badge ${m['الحالة'] === 'نشط' ? 'badge-success' : 'badge-danger'}">
                     ${escapeHtml(m['الحالة'] || '-')}
                 </span>
-            </td>
+              
             <td>
                 <div class="action-btns">
                     <button class="btn btn-primary btn-sm" onclick="window.editMerchant('${m.id}')">
@@ -71,12 +70,12 @@ function renderMerchantsTable() {
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-            </td>
-        </tr>
+              
+          
     `).join('');
 }
 
-// فتح نافذة إضافة/تعديل تاجر (بنفس تصميم index)
+// فتح نافذة إضافة/تعديل تاجر
 export function openMerchantModal(merchant = null) {
     const isEdit = !!merchant;
     const modal = document.getElementById('merchantModal');
@@ -109,7 +108,6 @@ export function openMerchantModal(merchant = null) {
     if (window.Sound) window.Sound.play('click');
 }
 
-// إغلاق النافذة
 export function closeMerchantModal() {
     document.getElementById('merchantModal').classList.remove('show');
 }
@@ -139,7 +137,6 @@ export async function saveMerchant() {
 
     try {
         if (id) {
-            // تحديث
             const { error } = await supabase
                 .from('merchants')
                 .update(merchantData)
@@ -147,7 +144,6 @@ export async function saveMerchant() {
             if (error) throw error;
             showToast('تم تحديث التاجر', 'success');
         } else {
-            // إضافة جديد (رقم التاجر يتولد تلقائياً من قاعدة البيانات)
             const { error } = await supabase
                 .from('merchants')
                 .insert([merchantData]);
@@ -157,7 +153,6 @@ export async function saveMerchant() {
         if (window.Sound) window.Sound.play('success');
         closeMerchantModal();
         await loadMerchants();
-        // تحديث إحصائيات لوحة التحكم إذا كانت موجودة
         if (window.loadDashboardStats) window.loadDashboardStats();
     } catch (err) {
         console.error(err);
@@ -166,7 +161,6 @@ export async function saveMerchant() {
     }
 }
 
-// جلب تاجر للتعديل
 export async function editMerchant(id) {
     const { data, error } = await supabase
         .from('merchants')
@@ -180,7 +174,6 @@ export async function editMerchant(id) {
     openMerchantModal(data);
 }
 
-// حذف تاجر
 export function deleteMerchant(id) {
     showConfirm('هل تريد حذف هذا التاجر؟ لا يمكن التراجع!', async () => {
         try {
@@ -200,7 +193,7 @@ export function deleteMerchant(id) {
     });
 }
 
-// ربط الدوال بالنافذة العامة (لتكون accessible من الأزرار في HTML)
+// ربط الدوال بالنافذة العامة
 window.openMerchantModal = openMerchantModal;
 window.closeMerchantModal = closeMerchantModal;
 window.saveMerchant = saveMerchant;
