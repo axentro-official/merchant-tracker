@@ -15,6 +15,8 @@
 
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- HTML5 QR Code Scanner -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -24,6 +26,7 @@
     <audio id="successSound" src="src/assets/login-success.mp3" preload="auto"></audio>
     <audio id="errorSound" src="src/assets/login-error.mp3" preload="auto"></audio>
     <audio id="logoutSound" src="src/assets/logout-success.mp3" preload="auto"></audio>
+    <audio id="scanSound" src="src/assets/scan.mp3" preload="auto"></audio>
 
     <style>
         /* ===== RESET & BASE ===== */
@@ -229,6 +232,28 @@
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
         }
+        .searchable-select {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .searchable-select input {
+            flex: 1;
+        }
+        .camera-btn {
+            width: 48px;
+            background: var(--bg-glass);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--primary-light);
+            cursor: pointer;
+            font-size: 20px;
+            transition: var(--transition);
+        }
+        .camera-btn:hover {
+            border-color: var(--primary);
+            background: rgba(59,130,246,0.1);
+        }
         .password-toggle {
             position: absolute;
             left: 16px;
@@ -269,6 +294,11 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(59,130,246,0.4);
+        }
+        .btn-outline {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
         }
 
         /* ===== TOP NAVBAR ===== */
@@ -554,7 +584,7 @@
         .badge-success { background: var(--success-light); color: var(--success); }
         .badge-danger { background: var(--danger-light); color: var(--danger); }
         .badge-warning { background: var(--warning-light); color: var(--warning); }
-        .badge-info { background: var(--purple-light); color: var(--purple); }
+        .badge-info { background: rgba(139,92,246,0.15); color: var(--purple); }
         .ref-code {
             font-family: monospace;
             font-size: 12px;
@@ -575,7 +605,7 @@
             margin-bottom: 12px;
         }
 
-        /* ===== MERCHANTS TABLE & ACTION BUTTONS ===== */
+        /* ===== MERCHANTS SECTION ===== */
         .merchants-section {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
@@ -616,6 +646,21 @@
         .btn-sm {
             padding: 6px 12px;
             font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary.btn-sm {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-danger.btn-sm {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-success.btn-sm {
+            background: var(--success);
+            color: white;
         }
 
         /* ===== MODAL ===== */
@@ -695,6 +740,29 @@
         textarea.form-input {
             resize: vertical;
             min-height: 80px;
+        }
+
+        /* ===== CAMERA MODAL ===== */
+        .camera-modal .modal-content {
+            max-width: 500px;
+            background: var(--bg-primary);
+        }
+        #cameraPreview {
+            width: 100%;
+            border-radius: var(--radius-lg);
+            background: #000;
+            margin-bottom: 16px;
+        }
+        .flash-btn {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         /* ===== TOAST ===== */
@@ -816,7 +884,7 @@
             color: var(--primary-light);
         }
 
-        /* ===== DATABASE EXPLORER STYLES (مضافة) ===== */
+        /* ===== DATABASE EXPLORER STYLES ===== */
         .db-tables-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -1128,7 +1196,7 @@
             <div class="boot-logo-icon"><i class="fas fa-microchip"></i></div>
             <div class="boot-logo-text">AXENTRO ADMIN</div>
         </div>
-        <div class="boot-subtitle">نظام إدارة التجار والمحطات v8.0</div>
+        <div class="boot-subtitle">نظام إدارة التجار والمحطات v9.0</div>
         <div class="boot-status" id="bootStatus">جاري تهيئة النظام...</div>
         <div class="progress-container"><div class="progress-bar" id="bootProgress"></div></div>
         <div class="boot-meta"><span id="bootPhase">System Core</span><span class="boot-percent" id="bootPercent">0%</span></div>
@@ -1146,6 +1214,23 @@
         <div class="confirm-buttons">
             <button class="confirm-btn cancel" id="confirmCancelBtn">إلغاء</button>
             <button class="confirm-btn confirm" id="confirmOkBtn">تأكيد</button>
+        </div>
+    </div>
+</div>
+
+<!-- Camera Modal for Scanning -->
+<div id="cameraModal" class="modal-overlay camera-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-camera"></i> مسح السيريال</h3>
+            <button class="modal-close" onclick="closeCameraModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="text-align: center;">
+            <div id="cameraPreview" style="width:100%; max-width:400px; margin:0 auto;"></div>
+            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
+                <button id="flashToggleBtn" class="flash-btn"><i class="fas fa-bolt"></i> فلاش</button>
+                <button class="btn btn-primary" onclick="closeCameraModal()">إلغاء</button>
+            </div>
         </div>
     </div>
 </div>
@@ -1185,8 +1270,21 @@
         </div>
         <div class="modal-body">
             <input type="hidden" id="editMachineId">
-            <div class="form-group"><label>التاجر *</label><select id="machMerchantId" class="form-select"></select></div>
-            <div class="form-group"><label>الرقم التسلسلي *</label><input type="text" id="machSerial" class="form-input" dir="ltr" placeholder="الرقم التسلسلي"></div>
+            <div class="form-group">
+                <label>التاجر *</label>
+                <div class="searchable-select">
+                    <input type="text" id="machMerchantSearch" class="form-input" placeholder="ابحث عن تاجر..." list="merchantDatalist" autocomplete="off">
+                    <datalist id="merchantDatalist"></datalist>
+                    <input type="hidden" id="machMerchantId">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>الرقم التسلسلي *</label>
+                <div class="searchable-select">
+                    <input type="text" id="machSerial" class="form-input" dir="ltr" placeholder="الرقم التسلسلي">
+                    <button type="button" class="camera-btn" onclick="openCameraForMachine()"><i class="fas fa-camera"></i></button>
+                </div>
+            </div>
             <div class="form-group"><label>التارجت الشهري</label><input type="number" id="machTarget" class="form-input" step="any" min="0" placeholder="0.00"></div>
             <div class="form-group"><label>الحالة</label><select id="machStatus" class="form-select"><option value="نشطة">نشطة</option><option value="غير نشطة">غير نشطة</option><option value="صيانة">صيانة</option></select></div>
             <div class="form-group"><label>ملاحظات</label><textarea id="machNotes" class="form-input" rows="3"></textarea></div>
@@ -1207,7 +1305,14 @@
         </div>
         <div class="modal-body">
             <input type="hidden" id="editTransferId">
-            <div class="form-group"><label>التاجر *</label><select id="transMerchantId" class="form-select"></select></div>
+            <div class="form-group">
+                <label>التاجر *</label>
+                <div class="searchable-select">
+                    <input type="text" id="transMerchantSearch" class="form-input" placeholder="ابحث عن تاجر..." list="merchantDatalistTrans" autocomplete="off">
+                    <datalist id="merchantDatalistTrans"></datalist>
+                    <input type="hidden" id="transMerchantId">
+                </div>
+            </div>
             <div class="form-group"><label>المكنة (اختياري)</label><select id="transMachineId" class="form-select"></select></div>
             <div class="form-group"><label>المبلغ *</label><input type="number" id="transAmount" class="form-input" step="any" min="0.01" placeholder="0.00"></div>
             <div class="form-group"><label>نوع التحويل</label><select id="transType" class="form-select"><option value="نقدي">نقدي</option><option value="شيك">شيك</option><option value="تحويل بنكي">تحويل بنكي</option><option value="إيداع خزينة">إيداع خزينة</option><option value="أخرى">أخرى</option></select></div>
@@ -1229,7 +1334,14 @@
         </div>
         <div class="modal-body">
             <input type="hidden" id="editCollectionId">
-            <div class="form-group"><label>التاجر *</label><select id="collMerchantId" class="form-select"></select></div>
+            <div class="form-group">
+                <label>التاجر *</label>
+                <div class="searchable-select">
+                    <input type="text" id="collMerchantSearch" class="form-input" placeholder="ابحث عن تاجر..." list="merchantDatalistColl" autocomplete="off">
+                    <datalist id="merchantDatalistColl"></datalist>
+                    <input type="hidden" id="collMerchantId">
+                </div>
+            </div>
             <div class="form-group"><label>المكنة (اختياري)</label><select id="collMachineId" class="form-select"></select></div>
             <div class="form-group"><label>المبلغ *</label><input type="number" id="collAmount" class="form-input" step="any" min="0.01" placeholder="0.00"></div>
             <div class="form-group"><label>نوع التحصيل</label><select id="collType" class="form-select"><option value="نقدي">نقدي</option><option value="شيك">شيك</option><option value="تحويل بنكي">تحويل بنكي</option><option value="خصم من الرصيد">خصم من الرصيد</option><option value="أخرى">أخرى</option></select></div>
@@ -1343,11 +1455,11 @@
                 </div>
                 <div class="top-machines-section">
                     <div class="section-header"><i class="fas fa-trophy"></i><h3>🏆 أعلى المكن تحقيقاً للتارجت</h3></div>
-                    <div class="machines-table-container"><table class="machines-table" id="topMachinesTable"><thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th></td></thead><tbody id="topMachinesBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> جاري تحميل البيانات...<\/td></td></tbody></table></div>
+                    <div class="machines-table-container"><table class="machines-table" id="topMachinesTable"><thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th></tr></thead><tbody id="topMachinesBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> جاري تحميل البيانات...<\/td></tr></tbody></table></div>
                 </div>
                 <div class="recent-section">
                     <div class="section-header"><i class="fas fa-clock"></i><h3>📋 آخر العمليات</h3></div>
-                    <div class="table-container"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th><th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th></tr></thead><tbody id="recentActivityBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة<\/td></td></tbody></td></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th><th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th></tr></thead><tbody id="recentActivityBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة<\/td></tr></tbody></table></div>
                 </div>
             </section>
 
@@ -1376,7 +1488,7 @@
                     </div>
                     <div class="table-container">
                         <table class="data-table">
-                            <thead><tr><th>#</th><th>رقم المكنة</th><th>اسم التاجر</th><th>النشاط</th><th>السيريال</th><th>التارجت</th><th>الحالة</th><th>الإجراءات</th><tr></thead>
+                            <thead><tr><th>#</th><th>رقم المكنة</th><th>اسم التاجر</th><th>النشاط</th><th>السيريال</th><th>التارجت</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
                             <tbody id="machinesTableBody"><tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
                         </table>
                     </div>
@@ -1410,7 +1522,7 @@
                         <table class="data-table">
                             <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>القيمة</th><th>المتبقي</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
                             <tbody id="collectionsTableBody"><tr><td colspan="10" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
-                        </tr>
+                        </table>
                     </div>
                 </div>
             </section>
@@ -1440,7 +1552,7 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>الشهر</th><th>السنة</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="archiveTableBody"><td><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
+                            <tbody id="archiveTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1450,7 +1562,11 @@
             <section id="section-statement" style="display:none;">
                 <div class="merchants-section">
                     <div class="table-actions">
-                        <select id="stmtMerchantId" class="form-select" style="width: 300px;"></select>
+                        <div class="searchable-select" style="width: 300px;">
+                            <input type="text" id="stmtMerchantSearch" class="form-input" placeholder="ابحث عن تاجر..." list="merchantDatalistStmt" autocomplete="off">
+                            <datalist id="merchantDatalistStmt"></datalist>
+                            <input type="hidden" id="stmtMerchantId">
+                        </div>
                         <button class="btn-add" onclick="loadStatement()"><i class="fas fa-search"></i> عرض كشف الحساب</button>
                         <button class="icon-btn" onclick="refreshCurrentPage()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
                     </div>
@@ -1459,7 +1575,7 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>الملاحظات</th></tr></thead>
-                            <tbody id="statementTableBody"><tr><td colspan="7" class="empty-state">اختر تاجراً لعرض كشف الحساب<\/td></td></tbody>
+                            <tbody id="statementTableBody"><tr><td colspan="7" class="empty-state">اختر تاجراً لعرض كشف الحساب<\/td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1611,6 +1727,11 @@ const CONFIG = {
 let supabaseClient = null;
 let pendingConfirmCallback = null;
 let sessionCheckInterval = null;
+let html5QrCode = null;
+let currentCameraTarget = null; // 'machine' or null
+let cameraStream = null;
+let flashEnabled = false;
+let currentTrack = null;
 
 const Sound = {
     audioCtx: null,
@@ -1636,7 +1757,7 @@ const Sound = {
     },
     play(type) {
         try {
-            const map = { boot:'bootSound', success:'successSound', error:'errorSound', logout:'logoutSound' };
+            const map = { boot:'bootSound', success:'successSound', error:'errorSound', logout:'logoutSound', scan:'scanSound' };
             const audio = document.getElementById(map[type]);
             if (audio) { audio.currentTime = 0; audio.play().catch(()=>{}); }
             if (type === 'click') this.playClick();
@@ -1645,7 +1766,7 @@ const Sound = {
 };
 function playClick() { Sound.play('click'); }
 
-// دوال showToast و showConfirm تستخدم مباشرة من الوحدات، لكن نترك نسخاً احتياطية في window لضمان التوافق
+// دوال showToast و showConfirm تستخدم مباشرة من الوحدات
 window.showToast = (msg, type) => {
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -1680,6 +1801,180 @@ document.getElementById('confirmOkBtn').addEventListener('click', () => {
 });
 document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirm);
 
+// ============================================================
+// CAMERA SCANNER FUNCTIONS
+// ============================================================
+async function openCameraForMachine() {
+    currentCameraTarget = 'machine';
+    const modal = document.getElementById('cameraModal');
+    modal.classList.add('show');
+    await startCamera();
+}
+
+async function startCamera() {
+    const previewElem = document.getElementById('cameraPreview');
+    if (!previewElem) return;
+    try {
+        if (html5QrCode) {
+            await html5QrCode.stop();
+            html5QrCode.clear();
+        }
+        html5QrCode = new Html5Qrcode("cameraPreview");
+        const constraints = { facingMode: "environment" };
+        const devices = await Html5Qrcode.getCameras();
+        let cameraId = null;
+        if (devices && devices.length) {
+            const backCamera = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment'));
+            cameraId = backCamera ? backCamera.id : devices[0].id;
+        }
+        await html5QrCode.start(
+            cameraId ? { deviceId: { exact: cameraId } } : constraints,
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            onScanSuccess,
+            onScanError
+        );
+        // Get video track for flash control
+        const videoElem = document.querySelector('#cameraPreview video');
+        if (videoElem && videoElem.srcObject) {
+            cameraStream = videoElem.srcObject;
+            currentTrack = cameraStream.getVideoTracks()[0];
+        }
+        setupFlashButton();
+    } catch (err) {
+        console.error("Camera error:", err);
+        window.showToast("تعذر تشغيل الكاميرا", "error");
+        closeCameraModal();
+    }
+}
+
+function setupFlashButton() {
+    const flashBtn = document.getElementById('flashToggleBtn');
+    if (!flashBtn) return;
+    flashBtn.onclick = async () => {
+        if (!currentTrack) return;
+        try {
+            if (!flashEnabled) {
+                await currentTrack.applyConstraints({ advanced: [{ torch: true }] });
+                flashEnabled = true;
+                flashBtn.innerHTML = '<i class="fas fa-bolt"></i> إطفاء';
+            } else {
+                await currentTrack.applyConstraints({ advanced: [{ torch: false }] });
+                flashEnabled = false;
+                flashBtn.innerHTML = '<i class="fas fa-bolt"></i> فلاش';
+            }
+        } catch (e) {
+            console.warn("Flash not supported", e);
+        }
+    };
+}
+
+function onScanSuccess(decodedText, decodedResult) {
+    Sound.play('scan');
+    if (currentCameraTarget === 'machine') {
+        const serialInput = document.getElementById('machSerial');
+        if (serialInput) serialInput.value = decodedText;
+        window.showToast("تم مسح السيريال: " + decodedText, "success");
+    }
+    closeCameraModal();
+}
+
+function onScanError(errorMessage) {
+    // Silent ignore
+}
+
+async function closeCameraModal() {
+    if (html5QrCode) {
+        try {
+            await html5QrCode.stop();
+            html5QrCode.clear();
+        } catch(e) {}
+        html5QrCode = null;
+    }
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    currentTrack = null;
+    flashEnabled = false;
+    document.getElementById('cameraModal').classList.remove('show');
+    currentCameraTarget = null;
+}
+window.closeCameraModal = closeCameraModal;
+
+// ============================================================
+// POPULATE SEARCHABLE DROPDOWNS (Merchant Lists)
+// ============================================================
+async function populateMerchantDatalists() {
+    if (!supabaseClient) return;
+    try {
+        const { data, error } = await supabaseClient
+            .from('merchants')
+            .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "المنطقة", "العنوان"')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        const merchants = data || [];
+        const options = merchants.map(m => `<option value="${m['رقم التاجر']}">${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`).join('');
+        const datalists = ['merchantDatalist', 'merchantDatalistTrans', 'merchantDatalistColl', 'merchantDatalistStmt'];
+        datalists.forEach(id => {
+            const dl = document.getElementById(id);
+            if (dl) dl.innerHTML = options;
+        });
+        // Store full merchant data for auto-fill
+        window.merchantsData = merchants;
+    } catch(e) { console.error(e); }
+}
+
+function setupMerchantSearchListeners() {
+    // For machine modal
+    const machSearch = document.getElementById('machMerchantSearch');
+    if (machSearch) {
+        machSearch.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
+            if (merchant) {
+                document.getElementById('machMerchantId').value = merchant.id;
+            }
+        });
+    }
+    // For transfer modal
+    const transSearch = document.getElementById('transMerchantSearch');
+    if (transSearch) {
+        transSearch.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
+            if (merchant) {
+                document.getElementById('transMerchantId').value = merchant.id;
+                // Auto-fill merchant details (optional)
+            }
+        });
+    }
+    // For collection modal
+    const collSearch = document.getElementById('collMerchantSearch');
+    if (collSearch) {
+        collSearch.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
+            if (merchant) {
+                document.getElementById('collMerchantId').value = merchant.id;
+            }
+        });
+    }
+    // For statement
+    const stmtSearch = document.getElementById('stmtMerchantSearch');
+    if (stmtSearch) {
+        stmtSearch.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
+            if (merchant) {
+                document.getElementById('stmtMerchantId').value = merchant.id;
+            }
+        });
+    }
+}
+
+// ============================================================
+// BOOT SEQUENCE
+// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('bootProgress');
     const statusText = document.getElementById('bootStatus');
@@ -1721,8 +2016,10 @@ function initSupabase() {
     if (window.supabase && !supabaseClient) {
         supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
         console.log('✅ Supabase initialized');
+        window.supabaseClient = supabaseClient;
+        populateMerchantDatalists();
+        setupMerchantSearchListeners();
     }
-    window.supabaseClient = supabaseClient;
 }
 
 function setupNavbarEvents() {
@@ -1892,6 +2189,7 @@ window.refreshAll = async function() {
 window.showSection = showSection;
 window.logout = logout;
 window.togglePasswordVisibility = togglePasswordVisibility;
+window.adminLogin = adminLogin;
 
 // ============================================================
 // AI Assistant Functions
