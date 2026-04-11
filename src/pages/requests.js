@@ -3,7 +3,6 @@
  * CRUD operations for merchant requests - مطابق لستايل index.html
  */
 
-import { getSupabase } from '../config/supabase.js';
 import { showToast, showConfirm } from '../ui/toast.js';
 import { escapeHtml, formatMoney, formatDate, formatTime } from '../utils/formatters.js';
 
@@ -11,12 +10,12 @@ let supabase = null;
 let currentRequests = [];
 let merchantsList = [];
 
-// رابط Google Script الثابت (بدون الحاجة إلى CONFIG)
+// رابط Google Script الثابت
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
 
-// تهيئة Supabase
+// تهيئة Supabase (باستخدام window.supabaseClient)
 export function initRequestsPage() {
-    supabase = getSupabase();
+    supabase = window.supabaseClient;
 }
 
 // تحميل الطلبات وعرضها
@@ -30,7 +29,6 @@ export async function loadRequests() {
         if (error) throw error;
         currentRequests = requests || [];
         
-        // جلب التجار لعرض أسمائهم (اختياري لأن الاسم موجود بالفعل)
         const { data: merchants } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر"');
         merchantsList = merchants || [];
         
@@ -115,7 +113,7 @@ function updatePendingBadge() {
     }
 }
 
-// فتح نافذة إضافة طلب (اختياري، قد يكون مطلوباً من التاجر فقط)
+// فتح نافذة إضافة طلب (للأدمن)
 export async function openRequestModal() {
     if (!merchantsList.length) {
         const { data } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
@@ -126,7 +124,6 @@ export async function openRequestModal() {
     const title = document.getElementById('requestModalTitle');
     title.innerHTML = '<i class="fas fa-paper-plane"></i> تقديم طلب جديد';
     
-    // تعبئة قائمة التجار
     const merchantSelect = document.getElementById('reqMerchantId');
     if (merchantSelect) {
         merchantSelect.innerHTML = '<option value="">-- اختر تاجر --</option>' +
@@ -173,7 +170,7 @@ export async function saveRequest() {
         return;
     }
     
-    // حساب المديونية الحالية (اختياري، يمكن تركه لقاعدة البيانات)
+    // حساب المديونية الحالية
     const { data: transfers } = await supabase.from('transfers').select('قيمة التحويل').eq('رقم التاجر', merchantId);
     const { data: collections } = await supabase.from('collections').select('قيمة التحصيل').eq('رقم التاجر', merchantId);
     const totalTransfers = transfers?.reduce((s,t)=>s+(parseFloat(t['قيمة التحويل'])||0),0) || 0;
