@@ -1,6 +1,7 @@
 /**
  * Statement Page
  * Account statement for individual merchants - مطابق لستايل index.html
+ * مع دعم البحث عن التاجر عبر datalist وحساب دقيق للرصيد
  */
 
 import { showToast } from '../ui/toast.js';
@@ -14,21 +15,38 @@ export function initStatementPage() {
     supabase = window.supabaseClient;
 }
 
-// تحميل قائمة التجار لعرضها في خانة الاختيار
+// تحميل قائمة التجار لعرضها في خانة البحث
 export async function loadMerchantsForStatement() {
     if (!supabase) return;
     try {
         const { data, error } = await supabase
             .from('merchants')
-            .select('id, "رقم التاجر", "اسم التاجر"')
+            .select('id, "رقم التاجر", "اسم التاجر", "اسم النشاط", "رقم الحساب", "رقم الهاتف", "المنطقة", "العنوان"')
             .order('created_at', { ascending: false });
         if (error) throw error;
         merchantsList = data || [];
         
-        const select = document.getElementById('stmtMerchantId');
-        if (select) {
-            select.innerHTML = '<option value="">-- اختر تاجر --</option>' +
-                merchantsList.map(m => `<option value="${m.id}">${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`).join('');
+        // تعبئة datalist للبحث
+        const datalist = document.getElementById('merchantDatalistStmt');
+        if (datalist) {
+            datalist.innerHTML = merchantsList.map(m => 
+                `<option value="${m['رقم التاجر']}">${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`
+            ).join('');
+        }
+        
+        // ربط حدث تغيير البحث
+        const searchInput = document.getElementById('stmtMerchantSearch');
+        const hiddenId = document.getElementById('stmtMerchantId');
+        if (searchInput) {
+            searchInput.onchange = () => {
+                const val = searchInput.value;
+                const merchant = merchantsList.find(m => m['رقم التاجر'] === val);
+                if (merchant) {
+                    hiddenId.value = merchant.id;
+                } else {
+                    hiddenId.value = '';
+                }
+            };
         }
     } catch (err) {
         console.error(err);
@@ -58,15 +76,15 @@ export async function loadStatement() {
             .single();
         if (mErr) throw mErr;
         
-        // جلب التحويلات
+        // جلب التحويلات (مرتبة تصاعدياً حسب created_at)
         const { data: transfers, error: tErr } = await supabase
             .from('transfers')
             .select('*')
             .eq('رقم التاجر', merchantId)
-            .order('created_at', { ascending: true }); // تصاعدي للأقدم أولاً
+            .order('created_at', { ascending: true });
         if (tErr) throw tErr;
         
-        // جلب التحصيلات
+        // جلب التحصيلات (مرتبة تصاعدياً)
         const { data: collections, error: cErr } = await supabase
             .from('collections')
             .select('*')
@@ -143,6 +161,7 @@ function displayMerchantInfo(merchant) {
             <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; margin-top: 16px;">
                 <div class="info-item"><div class="info-label">رقم الحساب</div><div class="info-value">${escapeHtml(merchant['رقم الحساب'] || '-')}</div></div>
                 <div class="info-item"><div class="info-label">المنطقة</div><div class="info-value">${escapeHtml(merchant['المنطقة'] || '-')}</div></div>
+                <div class="info-item"><div class="info-label">العنوان</div><div class="info-value">${escapeHtml(merchant['العنوان'] || '-')}</div></div>
                 <div class="info-item highlight"><div class="info-label">الرصيد النهائي</div><div class="info-value" id="finalBalance">0 ج.م</div></div>
             </div>
         </div>
