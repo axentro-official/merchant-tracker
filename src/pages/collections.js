@@ -1,6 +1,7 @@
 /**
  * Collections Page
  * CRUD operations for collections - مطابق لستايل index.html
+ * مع دعم البحث عن التاجر وجلب بياناته تلقائياً
  */
 
 import { showToast, showConfirm } from '../ui/toast.js';
@@ -28,7 +29,7 @@ export async function loadCollections() {
         if (error) throw error;
         currentCollections = collections || [];
         
-        const { data: merchants } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+        const { data: merchants } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "المنطقة", "العنوان"');
         merchantsList = merchants || [];
         const { data: machines } = await supabase.from('machines').select('id, "رقم المكنة"');
         machinesList = machines || [];
@@ -47,7 +48,7 @@ function renderCollectionsTable() {
     if (!currentCollections.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" class="empty-state">
+                <td colspan="10" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>لا توجد تحصيلات</p>
                     
@@ -84,7 +85,7 @@ function renderCollectionsTable() {
 // فتح نافذة إضافة/تعديل تحصيل
 export async function openCollectionModal(collection = null) {
     if (!merchantsList.length) {
-        const { data } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+        const { data } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "المنطقة", "العنوان"');
         merchantsList = data || [];
     }
     if (!machinesList.length) {
@@ -96,19 +97,30 @@ export async function openCollectionModal(collection = null) {
     const modal = document.getElementById('collectionModal');
     const title = document.getElementById('collectionModalTitle');
     
-    const merchantSelect = document.getElementById('collMerchantId');
-    if (merchantSelect) {
-        merchantSelect.innerHTML = '<option value="">-- اختر تاجر --</option>' +
-            merchantsList.map(m => `<option value="${m.id}" ${isEdit && collection['رقم التاجر'] === m.id ? 'selected' : ''}>${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`).join('');
+    // تعبئة datalist للتجار (للبحث)
+    const datalist = document.getElementById('merchantDatalistColl');
+    if (datalist) {
+        datalist.innerHTML = merchantsList.map(m => 
+            `<option value="${m['رقم التاجر']}">${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`
+        ).join('');
     }
     
+    const searchInput = document.getElementById('collMerchantSearch');
+    const hiddenId = document.getElementById('collMerchantId');
+    
+    // تعبئة قائمة المكن
     const machineSelect = document.getElementById('collMachineId');
     if (machineSelect) {
         machineSelect.innerHTML = '<option value="">-- بدون مكنة --</option>' +
-            machinesList.map(mc => `<option value="${mc.id}" ${isEdit && collection['رقم المكنة'] === mc.id ? 'selected' : ''}>${mc['رقم المكنة']}</option>`).join('');
+            machinesList.map(mc => `<option value="${mc.id}" ${isEdit && collection && collection['رقم المكنة'] === mc.id ? 'selected' : ''}>${mc['رقم المكنة']}</option>`).join('');
     }
     
-    if (isEdit) {
+    if (isEdit && collection) {
+        const merchant = merchantsList.find(m => m.id === collection['رقم التاجر']);
+        if (merchant && searchInput) {
+            searchInput.value = merchant['رقم التاجر'];
+            if (hiddenId) hiddenId.value = merchant.id;
+        }
         title.innerHTML = '<i class="fas fa-edit"></i> تعديل تحصيل';
         document.getElementById('editCollectionId').value = collection.id;
         document.getElementById('collAmount').value = collection['قيمة التحصيل'] || '';
@@ -117,12 +129,14 @@ export async function openCollectionModal(collection = null) {
     } else {
         title.innerHTML = '<i class="fas fa-hand-holding-usd"></i> تحصيل جديد';
         document.getElementById('editCollectionId').value = '';
+        if (searchInput) searchInput.value = '';
+        if (hiddenId) hiddenId.value = '';
         document.getElementById('collAmount').value = '';
         document.getElementById('collType').value = 'نقدي';
         document.getElementById('collNotes').value = '';
-        if (merchantSelect) merchantSelect.value = '';
         if (machineSelect) machineSelect.value = '';
     }
+    
     modal.classList.add('show');
     if (window.Sound) window.Sound.play('click');
 }
@@ -161,15 +175,27 @@ export async function saveCollection() {
         machineNumber = machine ? machine['رقم المكنة'] : null;
     }
     
+    // حساب المتبقي بعد التحصيل (سيتم حسابه تلقائياً في التطبيق أو يمكن تركه فارغاً)
+    // سنقوم بحسابه بناءً على التحويلات السابقة والتحصيلات الحالية
+    const { data: transfers } = await supabase.from('transfers').select('قيمة التحويل').eq('رقم التاجر', merchantId);
+    const { data: existingCollections } = await supabase.from('collections').select('قيمة التحصيل').eq('رقم التاجر', merchantId);
+    const totalTransfers = (transfers || []).reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0);
+    const totalExistingCollections = (existingCollections || []).reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0);
+    const newTotalCollections = totalExistingCollections + amount;
+    const remaining = totalTransfers - newTotalCollections;
+    
     const collectionData = {
         "رقم التاجر": merchantId,
         "اسم التاجر": merchant['اسم التاجر'],
         "رقم الحساب": merchant['رقم الحساب'],
         "اسم النشاط": merchant['اسم النشاط'],
+        "المنطقة": merchant['المنطقة'] || '',
+        "العنوان": merchant['العنوان'] || '',
         "رقم المكنة": machineNumber,
         "قيمة التحصيل": amount,
         "نوع التحصيل": type,
         "ملاحظات": notes,
+        "المتبقي بعد التحصيل": Math.max(0, remaining),
         "التاريخ": getTodayDate(),
         "الوقت": getCurrentTime(),
         "الشهر": new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' })
