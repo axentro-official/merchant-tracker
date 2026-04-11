@@ -3,7 +3,6 @@
  * CRUD operations for collections - مطابق لستايل index.html
  */
 
-import { getSupabase } from '../config/supabase.js';
 import { showToast, showConfirm } from '../ui/toast.js';
 import { escapeHtml, formatMoney, formatDate, formatTime } from '../utils/formatters.js';
 import { getTodayDate, getCurrentTime } from '../utils/helpers.js';
@@ -13,9 +12,9 @@ let currentCollections = [];
 let merchantsList = [];
 let machinesList = [];
 
-// تهيئة Supabase
+// تهيئة Supabase (باستخدام window.supabaseClient)
 export function initCollectionsPage() {
-    supabase = getSupabase();
+    supabase = window.supabaseClient;
 }
 
 // تحميل التحصيلات وعرضها
@@ -29,7 +28,6 @@ export async function loadCollections() {
         if (error) throw error;
         currentCollections = collections || [];
         
-        // جلب التجار والمكن للاستخدام في الحقول المساعدة
         const { data: merchants } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
         merchantsList = merchants || [];
         const { data: machines } = await supabase.from('machines').select('id, "رقم المكنة"');
@@ -52,23 +50,23 @@ function renderCollectionsTable() {
                 <td colspan="9" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>لا توجد تحصيلات</p>
-                  </td>
-              </tr>
+                    
+                
         `;
         return;
     }
 
     tbody.innerHTML = currentCollections.map((c, idx) => `
         <tr>
-            <td>${idx + 1}</td>
-            <td><code class="ref-code">${escapeHtml(c['الرقم المرجعي'] || '-')}</code></td>
-            <td>${formatDate(c['التاريخ'])}</td>
-            <td>${formatTime(c['الوقت'])}</td>
-            <td>${escapeHtml(c['اسم التاجر'] || '-')}</td>
-            <td>${escapeHtml(c['اسم النشاط'] || '-')}</td>
-            <td><strong style="color:var(--success);">${formatMoney(c['قيمة التحصيل'])}</strong></td>
-            <td><strong>${formatMoney(c['المتبقي بعد التحصيل'])}</strong></td>
-            <td title="${escapeHtml(c['ملاحظات'] || '')}">${escapeHtml(c['ملاحظات'] || '-')}</td>
+            <td>${idx + 1}  
+            <td><code class="ref-code">${escapeHtml(c['الرقم المرجعي'] || '-')}</code>  
+            <td>${formatDate(c['التاريخ'])}  
+            <td>${formatTime(c['الوقت'])}  
+            <td>${escapeHtml(c['اسم التاجر'] || '-')}  
+            <td>${escapeHtml(c['اسم النشاط'] || '-')}  
+            <td><strong style="color:var(--success);">${formatMoney(c['قيمة التحصيل'])}</strong>  
+            <td><strong>${formatMoney(c['المتبقي بعد التحصيل'])}</strong>  
+            <td title="${escapeHtml(c['ملاحظات'] || '')}">${escapeHtml(c['ملاحظات'] || '-')}  
             <td>
                 <div class="action-btns">
                     <button class="btn btn-primary btn-sm" onclick="window.editCollection('${c.id}')">
@@ -78,8 +76,8 @@ function renderCollectionsTable() {
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-              </td>
-          </tr>
+                
+            
     `).join('');
 }
 
@@ -179,7 +177,6 @@ export async function saveCollection() {
     
     try {
         if (id) {
-            // تحديث
             const { error } = await supabase
                 .from('collections')
                 .update(collectionData)
@@ -187,7 +184,6 @@ export async function saveCollection() {
             if (error) throw error;
             showToast('تم تحديث التحصيل', 'success');
         } else {
-            // إضافة جديدة (الرقم المرجعي يتولد تلقائياً، وtrigger سيحسب المتبقي)
             const { error } = await supabase
                 .from('collections')
                 .insert([collectionData]);
@@ -207,7 +203,6 @@ export async function saveCollection() {
     }
 }
 
-// جلب تحصيل للتعديل
 export async function editCollection(id) {
     const { data, error } = await supabase
         .from('collections')
@@ -221,7 +216,6 @@ export async function editCollection(id) {
     openCollectionModal(data);
 }
 
-// حذف تحصيل
 export function deleteCollection(id) {
     showConfirm('هل تريد حذف هذا التحصيل؟ لا يمكن التراجع!', async () => {
         try {
