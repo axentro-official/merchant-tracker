@@ -1,6 +1,7 @@
 /**
  * Requests Page
  * CRUD operations for merchant requests - مطابق لستايل index.html
+ * مع دعم: المديونية الحالية، التنبيه كل 5 دقائق، الإدراج في Supabase
  */
 
 import { showToast, showConfirm } from '../ui/toast.js';
@@ -9,6 +10,8 @@ import { escapeHtml, formatMoney, formatDate, formatTime } from '../utils/format
 let supabase = null;
 let currentRequests = [];
 let merchantsList = [];
+let pendingCheckInterval = null;
+let lastPendingCount = 0;
 
 // رابط Google Script الثابت
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
@@ -16,6 +19,32 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8
 // تهيئة Supabase (باستخدام window.supabaseClient)
 export function initRequestsPage() {
     supabase = window.supabaseClient;
+    startPendingRequestsChecker();
+}
+
+// بدء التنبيه الدوري كل 5 دقائق
+function startPendingRequestsChecker() {
+    if (pendingCheckInterval) clearInterval(pendingCheckInterval);
+    pendingCheckInterval = setInterval(async () => {
+        if (!supabase) return;
+        try {
+            const { count, error } = await supabase
+                .from('requests')
+                .select('*', { count: 'exact', head: true })
+                .eq('الحالة', 'معلق');
+            if (!error && count !== null && count !== lastPendingCount && count > 0) {
+                lastPendingCount = count;
+                showToast(`📋 يوجد ${count} طلب(ات) معلقة جديدة!`, 'warning');
+                if (window.Sound) window.Sound.play('warning');
+                // تحديث الجدول إذا كان مفتوحاً
+                if (document.getElementById('section-requests')?.style.display === 'block') {
+                    await loadRequests();
+                }
+            } else if (count === 0) {
+                lastPendingCount = 0;
+            }
+        } catch(e) { console.warn(e); }
+    }, 300000); // 5 دقائق
 }
 
 // تحميل الطلبات وعرضها
@@ -32,12 +61,45 @@ export async function loadRequests() {
         const { data: merchants } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر"');
         merchantsList = merchants || [];
         
+        // حساب المديونية الحالية لكل طلب
+        await enrichRequestsWithCurrentDebt();
+        
         renderRequestsTable();
         updatePendingBadge();
     } catch (err) {
         console.error(err);
         showToast('خطأ في تحميل الطلبات', 'error');
     }
+}
+
+// حساب المديونية الحالية لكل تاجر بناءً على التحويلات والتحصيلات
+async function enrichRequestsWithCurrentDebt() {
+    // جلب جميع التحويلات والتحصيلات
+    const { data: transfers } = await supabase.from('transfers').select('"رقم التاجر", "قيمة التحويل"');
+    const { data: collections } = await supabase.from('collections').select('"رقم التاجر", "قيمة التحصيل"');
+    
+    const merchantBalance = new Map();
+    
+    if (transfers) {
+        transfers.forEach(t => {
+            const merchantId = t['رقم التاجر'];
+            const amount = parseFloat(t['قيمة التحويل']) || 0;
+            merchantBalance.set(merchantId, (merchantBalance.get(merchantId) || 0) + amount);
+        });
+    }
+    if (collections) {
+        collections.forEach(c => {
+            const merchantId = c['رقم التاجر'];
+            const amount = parseFloat(c['قيمة التحصيل']) || 0;
+            merchantBalance.set(merchantId, (merchantBalance.get(merchantId) || 0) - amount);
+        });
+    }
+    
+    // إضافة حقل المديونية الحالية لكل طلب
+    currentRequests = currentRequests.map(req => {
+        const debt = merchantBalance.get(req['رقم التاجر']) || 0;
+        return { ...req, currentDebt: Math.max(0, debt) };
+    });
 }
 
 function renderRequestsTable() {
@@ -47,7 +109,7 @@ function renderRequestsTable() {
     if (!currentRequests.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="10" class="empty-state">
+                <td colspan="11" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>لا توجد طلبات</p>
                     
@@ -81,7 +143,7 @@ function renderRequestsTable() {
                 <td>${escapeHtml(r['اسم النشاط'] || '-')}  
                 <td>${escapeHtml(r['نوع الطلب'] || '-')}  
                 <td><strong style="color:var(--danger);">${formatMoney(r['المبلغ'])}</strong>  
-                <td>${formatMoney(r['المديونية الحالية'])}  
+                <td><strong style="color:var(--warning);">${formatMoney(r.currentDebt || 0)}</strong>  
                 <td>
                     <span class="badge ${statusClass}">${statusText}</span>
                     
@@ -144,7 +206,7 @@ export function closeRequestModal() {
     document.getElementById('requestModal').classList.remove('show');
 }
 
-// حفظ طلب جديد (يُرسل إلى البريد عبر Google Script، ونسخ احتياطي في Supabase)
+// حفظ طلب جديد (يُرسل إلى Google Script و Supabase)
 export async function saveRequest() {
     const merchantId = document.getElementById('reqMerchantId').value;
     const type = document.getElementById('reqType').value;
@@ -192,13 +254,13 @@ export async function saveRequest() {
     };
     
     try {
-        // إرسال إلى Google Script
-        await fetch(GOOGLE_SCRIPT_URL, {
+        // إرسال إلى Google Script (لا ننتظر الرد بسبب mode: 'no-cors')
+        fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestData)
-        });
+        }).catch(e => console.warn('Google Script error:', e));
         
         // إدراج في Supabase (الرقم المرجعي يتولد تلقائياً)
         const { error } = await supabase.from('requests').insert([requestData]);
@@ -232,7 +294,8 @@ export async function convertRequest(requestId) {
                 "قيمة التحويل": request['المبلغ'],
                 "ملاحظات": `تحويل تلقائي من طلب: ${request['رقم الطلب']}`,
                 "التاريخ": new Date().toISOString().split('T')[0],
-                "الوقت": new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+                "الوقت": new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                "الشهر": new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' })
             };
             const { error: transferError } = await supabase.from('transfers').insert([transferData]);
             if (transferError) throw transferError;
