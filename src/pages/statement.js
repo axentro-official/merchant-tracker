@@ -1,203 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تحديث صفحة كشف الحساب - statement.js</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0f1e 0%, #1a2332 100%);
-            min-height: 100vh;
-            color: #fff;
-            padding: 20px;
-        }
-        
-        .container { max-width: 1200px; margin: 0 auto; }
-        
-        .header {
-            text-align: center;
-            padding: 40px 20px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .file-info {
-            background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,153,204,0.1));
-            border: 1px solid rgba(0,212,255,0.3);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .file-info h2 { color: #00d4ff; margin-bottom: 15px; }
-        
-        .file-path {
-            font-family: monospace;
-            background: rgba(0,0,0,0.3);
-            padding: 10px 15px;
-            border-radius: 8px;
-            color: #00ff88;
-            font-size: 0.95em;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .feature-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 25px;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(0,212,255,0.5);
-        }
-        
-        .feature-icon { font-size: 2.5em; margin-bottom: 15px; }
-        .feature-card h4 { color: #00d4ff; margin-bottom: 10px; }
-        
-        .changes-list {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .change-item {
-            background: rgba(0,0,0,0.2);
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            border-right: 4px solid #00ff88;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-        
-        .code-container {
-            background: #0d1117;
-            border-radius: 15px;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .code-header {
-            background: rgba(255,255,255,0.05);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .code-header h4 { color: #00d4ff; }
-        
-        .copy-btn {
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            color: #000;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        
-        .copy-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(0,212,255,0.4);
-        }
-        
-        pre { padding: 25px; overflow-x: auto; max-height: 700px; overflow-y: auto; }
-        code { font-family: 'Fira Code', monospace; font-size: 0.85em; line-height: 1.6; color: #e6edf3; }
-
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 5px; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.5); border-radius: 5px; }
-        .footer { text-align: center; padding: 30px; opacity: 0.6; font-size: 0.9em; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 تحديث صفحة كشف الحساب</h1>
-            <p>تم تحسين واجهة البحث مع عرض احترافي للحركات المالية والرصيد</p>
-        </div>
-
-        <div class="file-info">
-            <h2>📄 معلومات الملف</h2>
-            <div class="file-path">src/pages/statement.js</div>
-        </div>
-
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🔍</div>
-                <h4>بحث احترافي</h4>
-                <p>قائمة بحث ذكية عن التاجر مع إكمال تلقائي سريع</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📈</div>
-                <h4>عرض تفصيلي</h4>
-                <p>عرض جميع بيانات التاجر مع الرصيد الحالي والمديونية</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📋</div>
-                <h4>جدول الحركات</h4>
-                <p>عرض مرتب زمنياً (الأقدم أولاً) مع حساب الرصيد التراكمي</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🖨️</div>
-                <h4>إحصائيات شاملة</h4>
-                <p>ملخص مالي كامل مع إجماليات ونسب دقيقة</p>
-            </div>
-        </div>
-
-        <div class="changes-list">
-            <h3>✨ التحسينات المنفذة:</h3>
-            
-            <div class="change-item">
-                <span>🔍</span>
-                <div>
-                    <strong>نظام بحث محسّن:</strong>
-                    <p style="margin-top: 5px; opacity: 0.85;">• بحث فوري عند الكتابة<br>• عرض قائمة منسدلة بالنتائج<br>• اختيار بالنقر أو Enter<br>• عرض البيانات فور الاختيار</p>
-                </div>
-            </div>
-
-            <div class="change-item">
-                <span>📊</span>
-                <div>
-                    <strong>عرض احترافي للبيانات:</strong>
-                    <p style="margin-top: 5px; opacity: 0.85;">• بطاقة معلومات التاجر<br>• جدول حركات مفصل<br>• حسابات دقيقة للرصيد<br>• تنسيق الأرقام والعملة</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="code-container">
-            <div class="code-header">
-                <h4>📝 الكود الكامل بعد التعديل:</h4>
-                <button class="copy-btn" onclick="copyCode()">نسخ الكود</button>
-            </div>
-            <pre><code id="codeBlock">/**
+/**
  * Statement Page
  * Account statement for individual merchants - مطابق لستايل index.html
  * ✅ محدث: مع دعم البحث الاحترافي وحساب دقيق للرصيد
@@ -231,7 +32,7 @@ export async function loadMerchantsForStatement() {
         const datalist = document.getElementById('merchantDatalistStmt');
         if (datalist) {
             datalist.innerHTML = merchantsList.map(m => 
-                `<option value="${m['رقم التاجر']} - ${m['اسم التاجر']}" data-id="${m.id}">`
+                ``
             ).join('');
         }
         
@@ -306,25 +107,20 @@ function initMerchantSearch() {
         }
         
         results.innerHTML = filtered.slice(0, 12).map(m => `
-            <div class="search-result-item" data-id="${m.id}" style="
-                padding: 14px 18px;
-                cursor: pointer;
-                border-bottom: 1px solid rgba(255,255,255,0.05);
-                transition: all 0.2s;
-            ">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: bold; color: #00d4ff; font-size: 1.05em;">${escapeHtml(m['اسم التاجر'])}</div>
-                        <div style="font-size: 0.85em; opacity: 0.7; margin-top: 4px;">
-                            <i class="fas fa-hashtag"></i> ${escapeHtml(m['رقم التاجر'])} | 
-                            <i class="fas fa-store"></i> ${escapeHtml(m['اسم النشاط'] || '-')}
-                        </div>
-                        ${(m['المنطقة'] ? `<div style="font-size: 0.8em; opacity: 0.6;"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(m['المنطقة'])}</div>` : '')}
-                        ${(m['رقم الهاتف'] ? `<div style="font-size: 0.8em; opacity: 0.6;"><i class="fas fa-phone"></i> ${escapeHtml(m['رقم الهاتف'])}</div>` : '')}
-                    </div>
-                    <i class="fas fa-chevron-left" style="opacity: 0.5;"></i>
-                </div>
-            </div>
+            
+                
+                    
+                        ${escapeHtml(m['اسم التاجر'])}
+                        
+                             ${escapeHtml(m['رقم التاجر'])} | 
+                             ${escapeHtml(m['اسم النشاط'] || '-')}
+                        
+                        ${(m['المنطقة'] ? ` ${escapeHtml(m['المنطقة'])}` : '')}
+                        ${(m['رقم الهاتف'] ? ` ${escapeHtml(m['رقم الهاتف'])}` : '')}
+                    
+                    
+                
+            
         `).join('');
         
         results.style.display = 'block';
@@ -498,103 +294,58 @@ function displayMerchantInfo(merchant) {
     if (!infoDiv) return;
     
     infoDiv.innerHTML = `
-        <div style="
-            background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,153,204,0.1));
-            border: 1px solid rgba(0,212,255,0.3);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-        ">
-            <div style="
-                text-align: center;
-                margin-bottom: 20px;
-                padding-bottom: 16px;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-            ">
-                <div style="font-size: 1.8em; font-weight: bold; color: #00d4ff; margin-bottom: 6px;">
-                    ${escapeHtml(merchant['اسم التاجر'] || '-')}
-                </div>
-                <div style="color: #888; font-size: 0.95em;">
-                    <i class="fas fa-hashtag"></i> رقم التاجر: <strong>${escapeHtml(merchant['رقم التاجر'] || '-')}</strong>
-                </div>
-            </div>
+        
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                <div style="
-                    background: rgba(0,0,0,0.2);
-                    padding: 14px;
-                    border-radius: 10px;
-                    text-align: center;
-                ">
-                    <div style="color: #888; font-size: 0.85em; margin-bottom: 6px;">
-                        <i class="fas fa-store"></i> النشاط
-                    </div>
-                    <div style="font-weight: 600;">${escapeHtml(merchant['اسم النشاط'] || '-')}</div>
-                </div>
                 
-                <div style="
-                    background: rgba(0,0,0,0.2);
-                    padding: 14px;
-                    border-radius: 10px;
-                    text-align: center;
-                ">
-                    <div style="color: #888; font-size: 0.85em; margin-bottom: 6px;">
-                        <i class="fas fa-phone"></i> الهاتف
-                    </div>
-                    <div style="font-weight: 600;">${escapeHtml(merchant['رقم الهاتف'] || '-')}</div>
-                </div>
+                    ${escapeHtml(merchant['اسم التاجر'] || '-')}
                 
-                <div style="
-                    background: rgba(0,0,0,0.2);
-                    padding: 14px;
-                    border-radius: 10px;
-                    text-align: center;
-                ">
-                    <div style="color: #888; font-size: 0.85em; margin-bottom: 6px;">
-                        <i class="fas fa-map-marker-alt"></i> المنطقة
-                    </div>
-                    <div style="font-weight: 600;">${escapeHtml(merchant['المنطقة'] || '-')}</div>
-                </div>
                 
-                <div style="
-                    background: rgba(0,0,0,0.2);
-                    padding: 14px;
-                    border-radius: 10px;
-                    text-align: center;
-                ">
-                    <div style="color: #888; font-size: 0.85em; margin-bottom: 6px;">
-                        <i class="fas fa-home"></i> العنوان
-                    </div>
-                    <div style="font-weight: 600;">${escapeHtml(merchant['العنوان'] || '-')}</div>
-                </div>
+                     رقم التاجر: ${escapeHtml(merchant['رقم التاجر'] || '-')}
                 
-                <div style="
-                    background: rgba(0,0,0,0.2);
-                    padding: 14px;
-                    border-radius: 10px;
-                    text-align: center;
-                ">
-                    <div style="color: #888; font-size: 0.85em; margin-bottom: 6px;">
-                        <i class="fas fa-credit-card</i> رقم الحساب
-                    </div>
-                    <div style="font-weight: 600; direction: ltr; text-align: left;">${escapeHtml(merchant['رقم الحساب'] || '-')}</div>
-                </div>
+            
+            
+            
                 
-                <div id="finalBalanceContainer"
-                    style="
-                    background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,153,204,0.2));
-                    padding: 14px;
-                    border-radius: 10px;
-                    text-align: center;
-                    border: 1px solid rgba(0,212,255,0.4);
-                ">
-                    <div style="color: #888; font-size: 0.85em; margin-bottom: 6px;">
-                        <i class="fas fa-wallet"></i> الرصيد النهائي
-                    </div>
-                    <div id="finalBalance" style="font-weight: bold; font-size: 1.2em; color: #00d4ff;">0 ج.م</div>
-                </div>
-            </div>
-        </div>
+                    
+                         النشاط
+                    
+                    ${escapeHtml(merchant['اسم النشاط'] || '-')}
+                
+                
+                
+                    
+                         الهاتف
+                    
+                    ${escapeHtml(merchant['رقم الهاتف'] || '-')}
+                
+                
+                
+                    
+                         المنطقة
+                    
+                    ${escapeHtml(merchant['المنطقة'] || '-')}
+                
+                
+                
+                    
+                         العنوان
+                    
+                    ${escapeHtml(merchant['العنوان'] || '-')}
+                
+                
+                
+                    
+                        ${escapeHtml(merchant['رقم الحساب'] || '-')}
+                
+                
+                
+                    
+                         الرصيد النهائي
+                    
+                    0 ج.م
+                
+            
+        
     `;
 }
 
@@ -610,72 +361,43 @@ function displayStats(merchant, transfers, collections) {
     const statsDiv = document.getElementById('statementStats');
     if (statsDiv) {
         statsDiv.innerHTML = `
-            <div style="
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-                gap: 16px;
-                margin-bottom: 24px;
-            ">
-                <div style="
-                    background: linear-gradient(135deg, rgba(255,107,107,0.15), rgba(255,71,87,0.15));
-                    border: 1px solid rgba(255,107,107,0.3);
-                    border-radius: 12px;
-                    padding: 18px;
-                    text-align: center;
-                ">
-                    <div style="color: #ff6b6b; font-size: 0.9em; margin-bottom: 8px;">
-                        <i class="fas fa-arrow-down"></i> إجمالي التحويلات
-                    </div>
-                    <div style="font-size: 1.5em; font-weight: bold; color: #ff6b6b;">
+            
+                
+                    
+                         إجمالي التحويلات
+                    
+                    
                         ${formatMoney(totalTransfers)}
-                    </div>
-                </div>
+                    
                 
-                <div style="
-                    background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,100,0.15));
-                    border: 1px solid rgba(0,255,136,0.3);
-                    border-radius: 12px;
-                    padding: 18px;
-                    text-align: center;
-                ">
-                    <div style="color: #00ff88; font-size: 0.9em; margin-bottom: 8px;">
-                        <i class="fas fa-arrow-up"></i> إجمالي التحصيلات
-                    </div>
-                    <div style="font-size: 1.5em; font-weight: bold; color: #00ff88;">
+                
+                
+                    
+                         إجمالي التحصيلات
+                    
+                    
                         ${formatMoney(totalCollections)}
-                    </div>
-                </div>
+                    
                 
-                <div style="
-                    background: linear-gradient(135deg, ${balance >= 0 ? 'rgba(255,215,0,0.15)' : 'rgba(0,255,136,0.15)'});
-                    border: 1px solid ${balance >= 0 ? 'rgba(255,215,0,0.3)' : 'rgba(0,255,136,0.3)'};
-                    border-radius: 12px;
-                    padding: 18px;
-                    text-align: center;
-                ">
-                    <div style="color: ${balance >= 0 ? '#ffd700' : '#00ff88'}; font-size: 0.9em; margin-bottom: 8px;">
-                        <i class="fas fa-balance-scale"></i> ${balance >= 0 ? 'المستحق على التاجر' : 'رصيد دائن'}
-                    </div>
-                    <div style="font-size: 1.5em; font-weight: bold; color: ${balance >= 0 ? '#ffd700' : '#00ff88'};">
+                
+                
+                    
+                         ${balance >= 0 ? 'المستحق على التاجر' : 'رصيد دائن'}
+                    
+                    
                         ${formatMoney(Math.abs(balance))}
-                    </div>
-                </div>
+                    
                 
-                <div style="
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 12px;
-                    padding: 18px;
-                    text-align: center;
-                ">
-                    <div style="color: #888; font-size: 0.9em; margin-bottom: 8px;">
-                        <i class="fas fa-exchange-alt"></i> عدد العمليات
-                    </div>
-                    <div style="font-size: 1.5em; font-weight: bold; color: #00d4ff;">
+                
+                
+                    
+                         عدد العمليات
+                    
+                    
                         ${(transfers?.length || 0) + (collections?.length || 0)}
-                    </div>
-                </div>
-            </div>
+                    
+                
+            
         `;
     }
     
@@ -696,12 +418,12 @@ function renderStatementTable(movements) {
     
     if (!movements.length) {
         tbody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align:center; padding:40px; color:#888;">
-                    <i class="fas fa-inbox" style="font-size: 2em; margin-bottom: 12px; display: block;"></i>
+            
+                
+                    
                     لا توجد حركات لهذا التاجر
-                </td>
-            </tr>
+                
+            
         `;
         return;
     }
@@ -713,39 +435,25 @@ function renderStatementTable(movements) {
         const badgeIcon = m.type === 'تحويل' ? 'fa-arrow-down' : 'fa-arrow-up';
         
         return `
-            <tr style="animation: fadeInUp 0.3s ease-out ${idx * 0.03}s both;">
-                <td>${idx + 1}</td>
-                <td>${formatDate(m.date)}</td>
-                <td>${formatTime(m.time)}</td>
-                <td>
-                    <span class="${badgeClass}" style="
-                        padding: 4px 12px;
-                        border-radius: 20px;
-                        font-size: 0.85em;
-                        font-weight: 600;
-                    ">
-                        <i class="fas ${badgeIcon}"></i> ${m.type}
-                    </span>
-                </td>
-                <td style="
-                    font-weight: bold;
-                    color: ${isPositive ? '#ff6b6b' : '#00ff88'};
-                ">
+            
+                ${idx + 1}
+                ${formatDate(m.date)}
+                ${formatTime(m.time)}
+                
+                    
+                         ${m.type}
+                    
+                
+                
                     ${isPositive ? '+' : ''}${formatMoney(Math.abs(m.amount))}
-                </td>
-                <td style="
-                    font-weight: bold;
-                    color: ${m.balance >= 0 ? '#ffd700' : '#00ff88'};
-                    background: ${m.balance >= 0 ? 'rgba(255,215,0,0.08)' : 'rgba(0,255,136,0.08)'};
-                    border-radius: 6px;
-                    padding: 6px 10px;
-                ">
+                
+                
                     ${formatMoney(m.balance)}
-                </td>
-                <td title="${escapeHtml(m.notes || '')}">
+                
+                
                     ${m.notes ? escapeHtml(m.notes.length > 30 ? m.notes.substring(0, 30) + '...' : m.notes) : '-'}
-                </td>
-            </tr>
+                
+            
         `;
     }).join('');
     
@@ -785,7 +493,7 @@ function showLoadingState() {
     if (!loader) {
         loader = document.createElement('div');
         loader.id = 'statementLoader';
-        loader.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size: 2em;"></i><br><br>جاري تحميل كشف الحساب...';
+        loader.innerHTML = 'جاري تحميل كشف الحساب...';
         loader.style.cssText = `
             text-align: center;
             padding: 50px;
@@ -810,40 +518,4 @@ function hideLoadingState() {
 
 // ربط الدوال بالنافذة العامة
 window.loadMerchantsForStatement = loadMerchantsForStatement;
-window.loadStatement = loadStatement;</code></pre>
-        </div>
-
-        <div class="footer">
-            <p>✅ تم إنشاء هذا الملف بواسطة Axentro Development Team</p>
-            <p style="margin-top: 10px;">📁 المسار: src/pages/statement.js | 🔄 الحالة: مُحدَّث بالكامل</p>
-        </div>
-    </div>
-
-    <script>
-        function copyCode() {
-            const codeBlock = document.getElementById('codeBlock');
-            const textArea = document.createElement('textarea');
-            textArea.value = codeBlock.textContent;
-            document.body.appendChild(textArea);
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                const btn = event.target;
-                const originalText = btn.textContent;
-                btn.textContent = '✅ تم النسخ!';
-                btn.style.background = 'linear-gradient(135deg, #00ff88, #00cc6a)';
-                
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.style.background = '';
-                }, 2000);
-            } catch (err) {
-                alert('فشل النسخ، يرجى النسخ يدوياً');
-            }
-            
-            document.body.removeChild(textArea);
-        }
-    </script>
-</body>
-</html></string>
+window.loadStatement = loadStatement;
