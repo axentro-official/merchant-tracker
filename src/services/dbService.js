@@ -32,8 +32,9 @@ export async function fetchAll(tableName, options = {}) {
             const [column, direction] = options.orderBy.split('.');
             query = query.order(column, { ascending: direction !== 'desc' });
         } else {
-            // Default order by created_at desc
-            query = query.order('created_at', { ascending: false });
+            // Default order by schema-aware timestamp
+            const defaultOrderColumn = ['merchants', 'machines'].includes(tableName) ? 'updated_at' : 'created_at';
+            query = query.order(defaultOrderColumn, { ascending: false });
         }
         
         // Apply limit
@@ -170,7 +171,7 @@ export async function fetchWithCount(tableName, limit = 50) {
         const { data, error, count } = await supabase
             .from(tableName)
             .select('*', { count: 'exact' })
-            .order('created_at', { ascending: false })
+            .order(['merchants', 'machines'].includes(tableName) ? 'updated_at' : 'created_at', { ascending: false })
             .limit(limit);
         
         if (error) {
@@ -255,7 +256,7 @@ export async function fetchByColumn(tableName, column, value) {
             .from(tableName)
             .select('*')
             .eq(column, value)
-            .order('created_at', { ascending: false });
+            .order(['merchants', 'machines'].includes(tableName) ? 'updated_at' : 'created_at', { ascending: false });
         
         if (error) {
             console.error(`❌ Error fetching ${tableName} by ${column}:`, error);

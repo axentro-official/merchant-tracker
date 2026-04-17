@@ -379,3 +379,9 @@ export async function processQuery(question, context = {}) {
     // ========================================
     return `عذراً، لم أفهم سؤالك بشكل كامل. 😅\n\nيمكنني مساعدتك في:\n• عرض الإحصائيات (اكتب "إحصائيات" أو "عدد التجار")\n• معرفة المتبقي (اكتب "المتبقي")\n• عرض الطلبات (اكتب "طلبات معلقة")\n• معرفة أفضل التجار (اكتب "أفضل التجار")\n\n💡 أو اكتب "مساعدة" لعرض جميع القدرات`;
 }
+
+
+// توافق مع index.html
+export async function processAiQuery(question, context = {}) {
+    return processQuery(question, context);
+}

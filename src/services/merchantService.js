@@ -14,7 +14,7 @@ import { CONFIG, generateReferenceNumber } from '../config/supabase.js';
  */
 export async function getAllMerchants() {
     return await fetchAll('merchants', {
-        orderBy: 'created_at.desc'
+        orderBy: 'updated_at.desc'
     });
 }
 
@@ -44,11 +44,7 @@ export async function findByMerchantNumber(merchantNumber) {
  * @returns {Promise<Object>} Created merchant
  */
 export async function createMerchant(merchantData) {
-    // Generate professional merchant number
-    const merchantNumber = generateReferenceNumber(CONFIG.REFERENCE_PREFIX.MERCHANT);
-    
     const newMerchant = {
-        'رقم التاجر': merchantNumber,
         'اسم التاجر': merchantData['اسم التاجر'] || '',
         'اسم النشاط': merchantData['اسم النشاط'] || '',
         'رقم الهاتف': merchantData['رقم الهاتف'] || '',
@@ -58,7 +54,6 @@ export async function createMerchant(merchantData) {
         'ملاحظات': merchantData['ملاحظات'] || '',
         'تاريخ الإنشاء': new Date().toISOString().split('T')[0],
         'وقت الإنشاء': new Date().toTimeString().slice(0, 8),
-        'created_at': new Date().toISOString(),
         'updated_at': new Date().toISOString()
     };
     
