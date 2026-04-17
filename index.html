@@ -3,264 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📥 تحميل index.html المحدد</title>
+    <title>Axentro Admin | لوحة التحكم</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0f1e 0%, #1a2332 100%);
-            min-height: 100vh;
-            color: #fff;
-            padding: 20px;
-            line-height: 1.7;
-        }
-        
-        .container { max-width: 900px; margin: 0 auto; }
-        
-        .header {
-            text-align: center;
-            padding: 50px 20px;
-            background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,100,0.1));
-            border: 2px solid rgba(0,255,136,0.4);
-            border-radius: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-            background: linear-gradient(135deg, #00ff88, #00d4ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .info-box {
-            background: rgba(0,212,255,0.08);
-            border: 1px solid rgba(0,212,255,0.3);
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 25px;
-        }
-        
-        .info-box h2 {
-            color: #00d4ff;
-            font-size: 1.4em;
-            margin-bottom: 15px;
-        }
-        
-        .file-preview {
-            background: #0d1117;
-            border: 2px solid rgba(0,212,255,0.3);
-            border-radius: 16px;
-            padding: 25px;
-            margin: 25px 0;
-            position: relative;
-        }
-        
-        .file-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .file-name {
-            font-family: 'Fira Code', monospace;
-            color: #00d4ff;
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-        
-        .copy-btn {
-            background: linear-gradient(135deg, #00ff88, #00cc6a);
-            color: #000;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.05em;
-            transition: all 0.3s ease;
-        }
-        
-        .copy-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(0,255,136,0.4);
-        }
-        
-        pre {
-            background: rgba(0,0,0,0.4);
-            border-radius: 12px;
-            padding: 20px;
-            overflow: auto;
-            max-height: 600px;
-            direction: ltr;
-            text-align: left;
-        }
-        
-        code {
-            font-family: 'Fira Code', Consolas, monospace;
-            font-size: 0.82em;
-            line-height: 1.6;
-            color: #e6edf3;
-        }
-        
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 18px;
-            margin: 25px 0;
-        }
-        
-        .step-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 14px;
-            padding: 22px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .step-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(0,212,255,0.5);
-        }
-        
-        .step-number {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #000;
-            margin: 0 auto 15px;
-        }
-        
-        .warning-box {
-            background: linear-gradient(135deg, rgba(255,193,7,0.12), rgba(255,152,0,0.08));
-            border: 2px solid rgba(255,193,7,0.4);
-            border-radius: 14px;
-            padding: 22px;
-            margin: 25px 0;
-            display: flex;
-            align-items: flex-start;
-            gap: 15px;
-        }
-        
-        .success-box {
-            background: linear-gradient(135deg, rgba(0,255,136,0.12), rgba(0,200,100,0.08));
-            border: 2px solid rgba(0,255,136,0.4);
-            border-radius: 14px;
-            padding: 22px;
-            margin: 25px 0;
-            text-align: center;
-        }
-
-        ::-webkit-scrollbar { width: 12px; height: 12px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 6px; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.5); border-radius: 6px; }
-        
-        .footer { text-align: center; padding: 35px; opacity: 0.65; font-size: 0.9em; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        
-        <div class="header">
-            <h1>📦 index.html المحدد الكامل</h1>
-            <p style="font-size: 1.15em; opacity: 0.9;">
-                جاهز للنسخ والاستخدام مباشرة!
-            </p>
-        </div>
-
-        <!-- Info Box -->
-        <div class="info-box">
-            <h2>📋 ماذا يحتوي هذا الملف؟</h2>
-            <ul style="
-                list-style: none;
-                padding: 0;
-                font-size: 1.02em;
-                line-height: 2;
-            ">
-                <li style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 6px 0;">
-                    ✅ جميع عناصر HTML الأصلية (محفوظة كما هي)
-                </li>
-                <li style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 6px 0;">
-                    ✅ 📷 زر الكاميرا لمسح الباركود (في نموذج المكنة)
-                </li>
-                <li style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 6px 0;">
-                    ✅ 🔍 حقول بحث ذكية عن التاجر (في جميع النماذج)
-                </li>
-                <li style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 6px 0;">
-                    ✅ 💬 واجهة الدردشة للمساعد الذكي (تعمل الآن!)
-                </li>
-                <li style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 6px 0;">
-                    ✅ 📊 مناطق عرض بيانات التاجر والمتبقي
-                </li>
-                <li style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 6px 0;">
-                    ✅ 🎨 CSS إضافي للعناصر الجديدة
-                </li>
-            </ul>
-        </div>
-
-        <!-- Steps -->
-        <div class="steps">
-            <div class="step-card">
-                <div class="step-number">1</div>
-                <h3 style="color:#00d4ff; margin-bottom:10px;">اضغط نسخ</h3>
-                <p style="opacity:0.85; font-size:0.95em;">انسخ الكود بالكامل</p>
-            </div>
-            
-            <div class="step-card">
-                <div class="step-number">2</div>
-                <h3 style="color:#00d4ff; margin-bottom:10px;">افتح index.html</h3>
-                <p style="opacity:0.85; font-size:0.95em;">الملف القديم في مشروعك</p>
-            </div>
-            
-            <div class="step-card">
-                <div class="step-number">3</div>
-                <h3 style="color:#00d4ff; margin-bottom:10px;">امسح الكل والصق</h3>
-                <p style="opacity:0.85; font-size:0.95em;">استبدل المحتوى بالجديد</p>
-            </div>
-            
-            <div class="step-card">
-                <div class="step-number">4</div>
-                <h3 style="color:#00d4ff; margin-bottom:10px;">احفظ وشغّل</h3>
-                <p style="opacity:0.85; font-size:0.95m;">افتح في المتصفح ✓</p>
-            </div>
-        </div>
-
-        <!-- File Preview -->
-        <div class="file-preview">
-            <div class="file-header">
-                <span class="file-name">📄 index.html (مُحدَّث)</span>
-                <button class="copy-btn" onclick="copyCode()">📋 نسخ الكود</button>
-            </div>
-            
-            <pre><code id="codeBlock">&lt;!DOCTYPE html&gt;
-&lt;html lang="ar" dir="rtl"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;Axentro Admin | لوحة التحكم&lt;/title&gt;
-    
-    &lt;!-- Google Fonts --&gt;
-    &lt;link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"&gt;
-    
-    &lt;!-- Font Awesome Icons --&gt;
-    &lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"&gt;
-    
-    &lt;!-- Supabase SDK --&gt;
-    &lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"&gt;&lt;/script&gt;
-    
-    &lt;style&gt;
         /* ===== Variables ===== */
         :root {
             --primary: #00d4ff;
@@ -890,623 +644,623 @@
                 font-size: 0.85em;
             }
         }
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
+    </style>
+</head>
+<body>
 
-    &lt;!-- ===== Loading Screen ===== --&gt;
-    &lt;div id="loadingScreen"&gt;
-        &lt;div class="loader-logo"&gt;AXENTRO ADMIN&lt;/div&gt;
-        &lt;p style="color:var(--text-secondary);margin-bottom:25px;"&gt;نظام إدارة التجار و المكن&lt;/p&gt;
-        &lt;p id="loadingText" style="font-size:0.9em;color:var(--text-secondary);"&gt;جاري تهيئة النظام...&lt;/p&gt;
-        &lt;div class="progress-bar"&gt;
-            &lt;div class="progress-fill" id="progressFill"&gt;&lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
+    <!-- ===== Loading Screen ===== -->
+    <div id="loadingScreen">
+        <div class="loader-logo">AXENTRO ADMIN</div>
+        <p style="color:var(--text-secondary);margin-bottom:25px;">نظام إدارة التجار و المكن</p>
+        <p id="loadingText" style="font-size:0.9em;color:var(--text-secondary);">جاري تهيئة النظام...</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
 
-    &lt;!-- ===== Login Screen ===== --&gt;
-    &lt;div id="loginScreen"&gt;
-        &lt;div class="login-container"&gt;
-            &lt;h2&gt;👋 مرحباً بك في نظام إدارة التاجر&lt;/h2&gt;
-            &lt;p&gt;أدخل كلمة المرور للوصول إلى لوحة التحكم&lt;/p&gt;
-            &lt;input type="password" id="loginPassword" class="form-control" placeholder="كلمة المرور" style="margin-bottom:20px;text-align:center;font-size:1.1em;"&gt;
-            &lt;button class="btn btn-primary" onclick="handleLogin()" style="width:100%;justify-content:center;padding:14px;"&gt;
-                &lt;i class="fas fa-sign-in-alt"&gt;&lt;/i&gt; تسجيل الدخول
-            &lt;/button&gt;
-            &lt;div style="margin-top:25px;"&gt;
-                &lt;p style="font-size:0.85em;color:var(--text-secondary);"&gt;© 2024 Axentro – All Rights Reserved&lt;/p&gt;
-                &lt;p style="font-size:0.8em;margin-top:8px;"&gt;By Axentro Team&lt;/p&gt;
-                &lt;img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&amp;data=https://axentro-official.github.io/axentro-website/links.html&amp;color=0a0f1e&amp;bgcolor=ffffff" alt="QR" style="width:100px;margin-top:15px;border-radius:10px;"&gt;
-                &lt;p style="font-size:0.75em;margin-top:8px;"&gt;📱 Scan me &lt; Click On Me&lt;/p&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
+    <!-- ===== Login Screen ===== -->
+    <div id="loginScreen">
+        <div class="login-container">
+            <h2>👋 مرحباً بك في نظام إدارة التاجر</h2>
+            <p>أدخل كلمة المرور للوصول إلى لوحة التحكم</p>
+            <input type="password" id="loginPassword" class="form-control" placeholder="كلمة المرور" style="margin-bottom:20px;text-align:center;font-size:1.1em;">
+            <button class="btn btn-primary" onclick="handleLogin()" style="width:100%;justify-content:center;padding:14px;">
+                <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+            </button>
+            <div style="margin-top:25px;">
+                <p style="font-size:0.85em;color:var(--text-secondary);">© 2024 Axentro – All Rights Reserved</p>
+                <p style="font-size:0.8em;margin-top:8px;">By Axentro Team</p>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://axentro-official.github.io/axentro-website/links.html&color=0a0f1e&bgcolor=ffffff" alt="QR" style="width:100px;margin-top:15px;border-radius:10px;">
+                <p style="font-size:0.75em;margin-top:8px;">📱 Scan me < Click On Me</p>
+            </div>
+        </div>
+    </div>
 
-    &lt;!-- ===== Main Application ===== --&gt;
-    &lt;div id="mainApp"&gt;
+    <!-- ===== Main Application ===== -->
+    <div id="mainApp">
         
-        &lt;!-- Navbar --&gt;
-        &lt;nav class="navbar"&gt;
-            &lt;div class="navbar-brand"&gt;
-                &lt;i class="fas fa-cogs"&gt;&lt;/i&gt; Axentro Admin
-            &lt;/div&gt;
-            &lt;div class="nav-menu"&gt;
-                &lt;a class="nav-link active" data-section="dashboard"&gt;&lt;i class="fas fa-tachometer-alt"&gt;&lt;/i&gt; لوحة التحكم&lt;/a&gt;
-                &lt;a class="nav-link" data-section="merchants"&gt;&lt;i class="fas fa-users"&gt;&lt;/i&gt; التجار&lt;/a&gt;
-                &lt;a class="nav-link" data-section="machines"&gt;&lt;i class="fas fa-desktop"&gt;&lt;/i&gt; المكن&lt;/a&gt;
-                &lt;a class="nav-link" data-section="transfers"&gt;&lt;i class="fas fa-exchange-alt"&gt;&lt;/i&gt; التحويلات&lt;/a&gt;
-                &lt;a class="nav-link" data-section="collections"&gt;&lt;i class="fas fa-hand-holding-usd"&gt;&lt;/i&gt; التحصيلات&lt;/a&gt;
-                &lt;a class="nav-link" data-section="requests"&gt;&lt;i class="fas fa-clipboard-list"&gt;&lt;/i&gt; الطلبات &lt;span id="pendingBadge"&gt;0&lt;/span&gt;&lt;/a&gt;
-                &lt;a class="nav-link" data-section="archive"&gt;&lt;i class="fas fa-archive"&gt;&lt;/i&gt; الأرشيف&lt;/a&gt;
-                &lt;a class="nav-link" data-section="statement"&gt;&lt;i class="fas fa-file-invoice-dollar"&gt;&lt;/i&gt; كشف الحساب&lt;/a&gt;
-                &lt;a class="nav-link" data-section="database"&gt;&lt;i class="fas fa-database"&gt;&lt;/i&gt; قاعدة البيانات&lt;/a&gt;
-                &lt;a class="nav-link" onclick="openAIModal()"&gt;&lt;i class="fas fa-robot"&gt;&lt;/i&gt; المساعد الذكي&lt;/a&gt;
-            &lt;/div&gt;
-        &lt;/nav&gt;
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <i class="fas fa-cogs"></i> Axentro Admin
+            </div>
+            <div class="nav-menu">
+                <a class="nav-link active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</a>
+                <a class="nav-link" data-section="merchants"><i class="fas fa-users"></i> التجار</a>
+                <a class="nav-link" data-section="machines"><i class="fas fa-desktop"></i> المكن</a>
+                <a class="nav-link" data-section="transfers"><i class="fas fa-exchange-alt"></i> التحويلات</a>
+                <a class="nav-link" data-section="collections"><i class="fas fa-hand-holding-usd"></i> التحصيلات</a>
+                <a class="nav-link" data-section="requests"><i class="fas fa-clipboard-list"></i> الطلبات <span id="pendingBadge">0</span></a>
+                <a class="nav-link" data-section="archive"><i class="fas fa-archive"></i> الأرشيف</a>
+                <a class="nav-link" data-section="statement"><i class="fas fa-file-invoice-dollar"></i> كشف الحساب</a>
+                <a class="nav-link" data-section="database"><i class="fas fa-database"></i> قاعدة البيانات</a>
+                <a class="nav-link" onclick="openAIModal()"><i class="fas fa-robot"></i> المساعد الذكي</a>
+            </div>
+        </nav>
 
-        &lt;!-- Dashboard Section --&gt;
-        &lt;section id="section-dashboard" class="section active"&gt;
-            &lt;div class="cards-grid"&gt;
-                &lt;div class="stat-card"&gt;
-                    &lt;i class="fas fa-users" style="font-size:2em;color:var(--primary);"&gt;&lt;/i&gt;
-                    &lt;div class="stat-label"&gt;إجمالي التجار&lt;/div&gt;
-                    &lt;div class="stat-value" id="totalMerchants"&gt;0&lt;/div&gt;
-                    &lt;div style="font-size:0.8em;color:var(--text-secondary);"&gt;تاجر نشط&lt;/div&gt;
-                &lt;/div&gt;
-                &lt;div class="stat-card"&gt;
-                    &lt;i class="fas fa-desktop" style="font-size:2em;color:var(--success);"&gt;&lt;/i&gt;
-                    &lt;div class="stat-label"&gt;إجمالي المكن&lt;/div&gt;
-                    &lt;div class="stat-value" id="totalMachines"&gt;0&lt;/div&gt;
-                    &lt;div style="font-size:0.8em;color:var(--text-secondary);"&gt;مكنة مسجلة&lt;/div&gt;
-                &lt;/div&gt;
-                &lt;div class="stat-card"&gt;
-                    &lt;i class="fas fa-money-bill-wave" style="font-size:2em;color:var(--warning);"&gt;&lt;/i&gt;
-                    &lt;div class="stat-label"&gt;تحويلات اليوم&lt;/div&gt;
-                    &lt;div class="stat-value" id="todayTransfers"&gt;0&lt;/div&gt;
-                    &lt;div style="font-size:0.8em;color:var(--text-secondary);"&gt;جنيه (اليوم)&lt;/div&gt;
-                &lt;/div&gt;
-                &lt;div class="stat-card"&gt;
-                    &lt;i class="fas fa-wallet" style="font-size:2em;color:var(--danger);"&gt;&lt;/i&gt;
-                    &lt;div class="stat-label"&gt;إجمالي المتبقي&lt;/div&gt;
-                    &lt;div class="stat-value" id="totalRemaining"&gt;0&lt;/div&gt;
-                    &lt;div style="font-size:0.8em;color:var(--text-secondary);"&gt;جنيه (الكل)&lt;/div&gt;
-                &lt;/div&gt;
-                &lt;div class="stat-card"&gt;
-                    &lt;i class="fas fa-arrow-down" style="font-size:2em;color:#ff6b6b;"&gt;&lt;/i&gt;
-                    &lt;div class="stat-label"&gt;إجمالي التحويلات&lt;/div&gt;
-                    &lt;div class="stat-value" id="totalTransfers"&gt;0&lt;/div&gt;
-                    &lt;div style="font-size:0.8em;color:var(--text-secondary);"&gt;جنيه (الكل)&lt;/div&gt;
-                &lt;/div&gt;
-                &lt;div class="stat-card"&gt;
-                    &lt;i class="fas fa-arrow-up" style="font-size:2em;color:#00ff88;"&gt;&lt;/i&gt;
-                    &lt;div class="stat-label"&gt;إجمالي التحصيلات&lt;/div&gt;
-                    &lt;div class="stat-value" id="totalCollections"&gt;0&lt;/div&gt;
-                    &lt;div style="font-size:0.8em;color:var(--text-secondary);"&gt;جنيه (الكل)&lt;/div&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
+        <!-- Dashboard Section -->
+        <section id="section-dashboard" class="section active">
+            <div class="cards-grid">
+                <div class="stat-card">
+                    <i class="fas fa-users" style="font-size:2em;color:var(--primary);"></i>
+                    <div class="stat-label">إجمالي التجار</div>
+                    <div class="stat-value" id="totalMerchants">0</div>
+                    <div style="font-size:0.8em;color:var(--text-secondary);">تاجر نشط</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-desktop" style="font-size:2em;color:var(--success);"></i>
+                    <div class="stat-label">إجمالي المكن</div>
+                    <div class="stat-value" id="totalMachines">0</div>
+                    <div style="font-size:0.8em;color:var(--text-secondary);">مكنة مسجلة</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-money-bill-wave" style="font-size:2em;color:var(--warning);"></i>
+                    <div class="stat-label">تحويلات اليوم</div>
+                    <div class="stat-value" id="todayTransfers">0</div>
+                    <div style="font-size:0.8em;color:var(--text-secondary);">جنيه (اليوم)</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-wallet" style="font-size:2em;color:var(--danger);"></i>
+                    <div class="stat-label">إجمالي المتبقي</div>
+                    <div class="stat-value" id="totalRemaining">0</div>
+                    <div style="font-size:0.8em;color:var(--text-secondary);">جنيه (الكل)</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-arrow-down" style="font-size:2em;color:#ff6b6b;"></i>
+                    <div class="stat-label">إجمالي التحويلات</div>
+                    <div class="stat-value" id="totalTransfers">0</div>
+                    <div style="font-size:0.8em;color:var(--text-secondary);">جنيه (الكل)</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-arrow-up" style="font-size:2em;color:#00ff88;"></i>
+                    <div class="stat-label">إجمالي التحصيلات</div>
+                    <div class="stat-value" id="totalCollections">0</div>
+                    <div style="font-size:0.8em;color:var(--text-secondary);">جنيه (الكل)</div>
+                </div>
+            </div>
             
-            &lt;h3 class="section-title"&gt;🏆 أعلى المكن تحقيقاً للتارجت&lt;/h3&gt;
-            &lt;div class="table-container"&gt;
-                &lt;table&gt;
-                    &lt;thead&gt;&lt;tr&gt;
-                        &lt;th&gt;#&lt;/th&gt;&lt;th&gt;رقم التاجر&lt;/th&gt;&lt;th&gt;اسم التاجر&lt;/th&gt;&lt;th&gt;اسم النشاط&lt;/th&gt;
-                        &lt;th&gt;رقم المكنة&lt;/th&gt;&lt;th&gt;السيريال&lt;/th&gt;&lt;th&gt;التارجت&lt;/th&gt;&lt;th&gt;المحقق&lt;/th&gt;&lt;th&gt;النسبة&lt;/th&gt;
-                    &lt;/tr&gt;&lt;/thead&gt;
-                    &lt;tbody id="topMachinesBody"&gt;
-                        &lt;tr&gt;&lt;td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);"&gt;جاري تحميل البيانات...&lt;/td&gt;&lt;/tr&gt;
-                    &lt;/tbody&gt;
-                &lt;/table&gt;
-            &lt;/div&gt;
+            <h3 class="section-title">🏆 أعلى المكن تحقيقاً للتارجت</h3>
+            <div class="table-container">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th>
+                        <th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th>
+                    </tr></thead>
+                    <tbody id="topMachinesBody">
+                        <tr><td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);">جاري تحميل البيانات...</td></tr>
+                    </tbody>
+                </table>
+            </div>
             
-            &lt;h3 class="section-title"&gt;📋 آخر العمليات&lt;/h3&gt;
-            &lt;div class="table-container"&gt;
-                &lt;table&gt;
-                    &lt;thead&gt;&lt;tr&gt;
-                        &lt;th&gt;#&lt;/th&gt;&lt;th&gt;الرقم المرجعي&lt;/th&gt;&lt;th&gt;النوع&lt;/th&gt;&lt;th&gt;اسم التاجر&lt;/th&gt;
-                        &lt;th&gt;اسم النشاط&lt;/th&gt;&lt;th&gt;القيمة&lt;/th&gt;&lt;th&gt;التاريخ&lt;/th&gt;&lt;th&gt;الوقت&lt;/th&gt;&lt;th&gt;الحالة&lt;/th&gt;
-                    &lt;/tr&gt;&lt;/thead&gt;
-                    &lt;tbody id="recentActivityBody"&gt;
-                        &lt;tr&gt;&lt;td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);"&gt;لا توجد عمليات حديثة&lt;/td&gt;&lt;/tr&gt;
-                    &lt;/tbody&gt;
-                &lt;/table&gt;
-            &lt;/div&gt;
-        &lt;/section&gt;
+            <h3 class="section-title">📋 آخر العمليات</h3>
+            <div class="table-container">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th>
+                        <th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th>
+                    </tr></thead>
+                    <tbody id="recentActivityBody">
+                        <tr><td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);">لا توجد عمليات حديثة</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        &lt;!-- Merchants Section --&gt;
-        &lt;section id="section-merchants" class="section"&gt;
-            &lt;div class="section-title"&gt;
-                &lt;span&gt;👥 إدارة التجار&lt;/span&gt;
-                &lt;button class="btn btn-primary" onclick="openMerchantModal()"&gt;&lt;i class="fas fa-plus"&gt;&lt;/i&gt; إضافة تاجر جديد&lt;/button&gt;
-            &lt;/div&gt;
-            &lt;div class="table-container"&gt;
-                &lt;table&gt;
-                    &lt;thead&gt;&lt;tr&gt;
-                        &lt;th&gt;#&lt;/th&gt;&lt;th&gt;رقم التاجر&lt;/th&gt;&lt;th&gt;اسم التاجر&lt;/th&gt;&lt;th&gt;اسم النشاط&lt;/th&gt;
-                        &lt;th&gt;رقم الحساب&lt;/th&gt;&lt;th&gt;رقم الهاتف&lt;/th&gt;&lt;th&gt;المنطقة&lt;/th&gt;&lt;th&gt;الحالة&lt;/th&gt;&lt;th&gt;الإجراءات&lt;/th&gt;
-                    &lt;/tr&gt;&lt;/thead&gt;
-                    &lt;tbody id="merchantsTableBody"&gt;
-                        &lt;tr&gt;&lt;td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);"&gt;جاري التحميل...&lt;/td&gt;&lt;/tr&gt;
-                    &lt;/tbody&gt;
-                &lt;/table&gt;
-            &lt;/div&gt;
-        &lt;/section&gt;
+        <!-- Merchants Section -->
+        <section id="section-merchants" class="section">
+            <div class="section-title">
+                <span>👥 إدارة التجار</span>
+                <button class="btn btn-primary" onclick="openMerchantModal()"><i class="fas fa-plus"></i> إضافة تاجر جديد</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th>
+                        <th>رقم الحساب</th><th>رقم الهاتف</th><th>المنطقة</th><th>الحالة</th><th>الإجراءات</th>
+                    </tr></thead>
+                    <tbody id="merchantsTableBody">
+                        <tr><td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        &lt;!-- Machines Section --&gt;
-        &lt;section id="section-machines" class="section"&gt;
-            &lt;div class="section-title"&gt;
-                &lt;span&gt;🖥️ إدارة المكن&lt;/span&gt;
-                &lt;button class="btn btn-primary" onclick="openMachineModal()"&gt;&lt;i class="fas fa-plus"&gt;&lt;/i&gt; إضافة مكنة جديدة&lt;/button&gt;
-            &lt;/div&gt;
-            &lt;div class="table-container"&gt;
-                &lt;table&gt;
-                    &lt;thead&gt;&lt;tr&gt;
-                        &lt;th&gt;#&lt;/th&gt;&lt;th&gt;رقم المكنة&lt;/th&gt;&lt;th&gt;اسم التاجر&lt;/th&gt;&lt;th&gt;النشاط&lt;/th&gt;
-                        &lt;th&gt;السيريال&lt;/th&gt;&lt;th&gt;التارجت&lt;/th&gt;&lt;th&gt;الحالة&lt;/th&gt;&lt;th&gt;الإجراءات&lt;/th&gt;
-                    &lt;/tr&gt;&lt;/thead&gt;
-                    &lt;tbody id="machinesTableBody"&gt;
-                        &lt;tr&gt;&lt;td colspan="8" style="text-align:center;padding:25px;color:var(--text-secondary);"&gt;جاري التحميل...&lt;/td&gt;&lt;/tr&gt;
-                    &lt;/tbody&gt;
-                &lt;/table&gt;
-            &lt;/div&gt;
-        &lt;/section&gt;
+        <!-- Machines Section -->
+        <section id="section-machines" class="section">
+            <div class="section-title">
+                <span>🖥️ إدارة المكن</span>
+                <button class="btn btn-primary" onclick="openMachineModal()"><i class="fas fa-plus"></i> إضافة مكنة جديدة</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>رقم المكنة</th><th>اسم التاجر</th><th>النشاط</th>
+                        <th>السيريال</th><th>التارجت</th><th>الحالة</th><th>الإجراءات</th>
+                    </tr></thead>
+                    <tbody id="machinesTableBody">
+                        <tr><td colspan="8" style="text-align:center;padding:25px;color:var(--text-secondary);">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        &lt;!-- Transfers Section --&gt;
-        &lt;section id="section-transfers" class="section"&gt;
-            &lt;div class="section-title"&gt;
-                &lt;span&gt;💰 إدارة التحويلات&lt;/span&gt;
-                &lt;button class="btn btn-primary" onclick="openTransferModal()"&gt;&lt;i class="fas fa-plus"&gt;&lt;/i&gt; إضافة تحويل جديد&lt;/button&gt;
-            &lt;/div&gt;
-            &lt;div class="table-container"&gt;
-                &lt;table&gt;
-                    &lt;thead&gt;&lt;tr&gt;
-                        &lt;th&gt;#&lt;/th&gt;&lt;th&gt;الرقم المرجعي&lt;/th&gt;&lt;th&gt;التاريخ&lt;/th&gt;&lt;th&gt;الوقت&lt;/th&gt;&lt;th&gt;التاجر&lt;/th&gt;
-                        &lt;th&gt;النشاط&lt;/th&gt;&lt;th&gt;القيمة&lt;/th&gt;&lt;th&gt;الملاحظات&lt;/th&gt;&lt;th&gt;الإجراءات&lt;/th&gt;
-                    &lt;/tr&gt;&lt;/thead&gt;
-                    &lt;tbody id="transfersTableBody"&gt;
-                        &lt;tr&gt;&lt;td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);"&gt;جاري التحميل...&lt;/td&gt;&lt;/tr&gt;
-                    &lt;/tbody&gt;
-                &lt;/table&gt;
-            &lt;/div&gt;
-        &lt;/section&gt;
+        <!-- Transfers Section -->
+        <section id="section-transfers" class="section">
+            <div class="section-title">
+                <span>💰 إدارة التحويلات</span>
+                <button class="btn btn-primary" onclick="openTransferModal()"><i class="fas fa-plus"></i> إضافة تحويل جديد</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th>
+                        <th>النشاط</th><th>القيمة</th><th>الملاحظات</th><th>الإجراءات</th>
+                    </tr></thead>
+                    <tbody id="transfersTableBody">
+                        <tr><td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        &lt;!-- Collections Section --&gt;
-        &lt;section id="section-collections" class="section"&gt;
-            &lt;div class="section-title"&gt;
-                &lt;span&gt;💵 إدارة التحصيلات&lt;/span&gt;
-                &lt;button class="btn btn-primary" onclick="openCollectionModal()"&gt;&lt;i class="fas fa-plus"&gt;&lt;/i&gt; إضافة تحصيل جديد&lt;/button&gt;
-            &lt;/div&gt;
-            &lt;div class="table-container"&gt;
-                &lt;table&gt;
-                    &lt;thead&gt;&lt;tr&gt;
-                        &lt;th&gt;#&lt;/th&gt;&lt;th&gt;الرقم المرجعي&lt;/th&gt;&lt;th&gt;التاريخ&lt;/th&gt;&lt;th&gt;الوقت&lt;/th&gt;&lt;th&gt;التاجر&lt;/th&gt;
-                        &lt;th&gt;النشاط&lt;/th&gt;&lt;th&gt;القيمة&lt;/th&gt;&lt;th&gt;المتبقي&lt;/th&gt;&lt;th&gt;الملاحظات&lt;/th&gt;&lt;th&gt;الإجراءات&lt;/th&gt;
-                    &lt;/tr&gt;&lt;/thead&gt;
-                    &lt;tbody id="collectionsTableBody"&gt;
-                        &lt;tr&gt;&lt;td colspan="10" style="text-align:center;padding:25px;color:var(--text-secondary);"&gt;جاري التحميل...&lt;/td&gt;&lt;/tr&gt;
-                    &lt;/tbody&gt;
-                &lt;/table&gt;
-            &lt;/div&gt;
-        &lt;/section&gt;
+        <!-- Collections Section -->
+        <section id="section-collections" class="section">
+            <div class="section-title">
+                <span>💵 إدارة التحصيلات</span>
+                <button class="btn btn-primary" onclick="openCollectionModal()"><i class="fas fa-plus"></i> إضافة تحصيل جديد</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th>
+                        <th>النشاط</th><th>القيمة</th><th>المتبقي</th><th>الملاحظات</th><th>الإجراءات</th>
+                    </tr></thead>
+                    <tbody id="collectionsTableBody">
+                        <tr><td colspan="10" style="text-align:center;padding:25px;color:var(--text-secondary);">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        &lt;!-- Requests Section --&gt;
-        &lt;section id="section-requests" class="section"&gt;
-            &lt;div class="section-title"&gt;
-                &lt;span&gt;📋 إدارة الطلبات&lt;/span&gt;
-            &lt;/div&gt;
-            &lt;div class="table-container"&gt;
-                &lt;table&gt;
-                    &lt;thead&gt;&lt;tr&gt;
-                        &lt;th&gt;#&lt;/th&gt;&lt;th&gt;رقم الطلب&lt;/th&gt;&lt;th&gt;التاريخ&lt;/th&gt;&lt;th&gt;التاجر&lt;/th&gt;
-                        &lt;th&gt;النوع&lt;/th&gt;&lt;th&gt;المبلغ&lt;/th&gt;&lt;th&gt;المديونية&lt;/th&gt;&lt;th&gt;الحالة&lt;/th&gt;&lt;th&gt;الإجراءات&lt;/th&gt;
-                    &lt;/tr&gt;&lt;/thead&gt;
-                    &lt;tbody id="requestsTableBody"&gt;
-                        &lt;tr&gt;&lt;td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);"&gt;جاري التحميل...&lt;/td&gt;&lt;/tr&gt;
-                    &lt;/tbody&gt;
-                &lt;/table&gt;
-            &lt;/div&gt;
-        &lt;/section&gt;
+        <!-- Requests Section -->
+        <section id="section-requests" class="section">
+            <div class="section-title">
+                <span>📋 إدارة الطلبات</span>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>رقم الطلب</th><th>التاريخ</th><th>التاجر</th>
+                        <th>النوع</th><th>المبلغ</th><th>المديونية</th><th>الحالة</th><th>الإجراءات</th>
+                    </tr></thead>
+                    <tbody id="requestsTableBody">
+                        <tr><td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        &lt;!-- Archive Section --&gt;
-        &lt;section id="section-archive" class="section"&gt;
-            &lt;div class="section-title"&gt;
-                &lt;span&gt;📦 الأرشيف الشهري&lt;/span&gt;
-                &lt;button class="btn btn-warning" onclick="closeMonth()"&gt;&lt;i class="fas fa-calendar-check"&gt;&lt;/i&gt; إغلاق الشهر الحالي&lt;/button&gt;
-            &lt;/div&gt;
-            &lt;div class="table-container"&gt;
-                &lt;table&gt;
-                    &lt;thead&gt;&lt;tr&gt;
-                        &lt;th&gt;#&lt;/th&gt;&lt;th&gt;الشهر&lt;/th&gt;&lt;th&gt;السنة&lt;/th&gt;&lt;th&gt;عدد التحويلات&lt;/th&gt;
-                        &lt;th&gt;إجمالي التحويلات&lt;/th&gt;&lt;th&gt;عدد التحصيلات&lt;/th&gt;&lt;th&gt;إجمالي التحصيلات&lt;/th&gt;&lt;th&gt;المتبقي&lt;/th&gt;&lt;th&gt;الإجراءات&lt;/th&gt;
-                    &lt;/tr&gt;&lt;/thead&gt;
-                    &lt;tbody id="archiveTableBody"&gt;
-                        &lt;tr&gt;&lt;td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);"&gt;جاري التحميل...&lt;/td&gt;&lt;/tr&gt;
-                    &lt;/tbody&gt;
-                &lt;/table&gt;
-            &lt;/div&gt;
-        &lt;/section&gt;
+        <!-- Archive Section -->
+        <section id="section-archive" class="section">
+            <div class="section-title">
+                <span>📦 الأرشيف الشهري</span>
+                <button class="btn btn-warning" onclick="closeMonth()"><i class="fas fa-calendar-check"></i> إغلاق الشهر الحالي</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>الشهر</th><th>السنة</th><th>عدد التحويلات</th>
+                        <th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>الإجراءات</th>
+                    </tr></thead>
+                    <tbody id="archiveTableBody">
+                        <tr><td colspan="9" style="text-align:center;padding:25px;color:var(--text-secondary);">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        &lt;!-- Statement Section --&gt;
-        &lt;section id="section-statement" class="section"&gt;
-            &lt;div class="section-title"&gt;
-                &lt;span&gt;📊 كشف الحساب&lt;/span&gt;
-                &lt;div style="display:flex;gap:15px;align-items:center;flex-wrap:wrap;"&gt;
-                    &lt;!-- 🔍 حقل البحث الذكي عن التاجر --&gt;
-                    &lt;div style="position:relative;flex:1;min-width:280px;"&gt;
-                        &lt;input type="text" id="stmtMerchantSearch" class="form-control" 
-                               placeholder="🔍 ابحث عن التاجر (بالاسم أو الرقم)..."&gt;
-                        &lt;input type="hidden" id="stmtMerchantId"&gt;
-                        &lt;datalist id="merchantDatalistStmt"&gt;&lt;/datalist&gt;
-                        &lt;div id="stmtSearchResults"&gt;&lt;/div&gt;
-                    &lt;/div&gt;
-                    &lt;button class="btn btn-primary" onclick="loadStatement()"&gt;
-                        &lt;i class="fas fa-search"&gt;&lt;/i&gt; عرض كشف الحساب
-                    &lt;/button&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
+        <!-- Statement Section -->
+        <section id="section-statement" class="section">
+            <div class="section-title">
+                <span>📊 كشف الحساب</span>
+                <div style="display:flex;gap:15px;align-items:center;flex-wrap:wrap;">
+                    <!-- 🔍 حقل البحث الذكي عن التاجر -->
+                    <div style="position:relative;flex:1;min-width:280px;">
+                        <input type="text" id="stmtMerchantSearch" class="form-control" 
+                               placeholder="🔍 ابحث عن التاجر (بالاسم أو الرقم)...">
+                        <input type="hidden" id="stmtMerchantId">
+                        <datalist id="merchantDatalistStmt"></datalist>
+                        <div id="stmtSearchResults"></div>
+                    </div>
+                    <button class="btn btn-primary" onclick="loadStatement()">
+                        <i class="fas fa-search"></i> عرض كشف الحساب
+                    </button>
+                </div>
+            </div>
             
-            &lt;!-- منطقة عرض بيانات التاجر --&gt;
-            &lt;div id="statementMerchantInfo"&gt;&lt;/div&gt;
+            <!-- منطقة عرض بيانات التاجر -->
+            <div id="statementMerchantInfo"></div>
             
-            &lt;!-- الإحصائيات --&gt;
-            &lt;div id="statementStats"&gt;&lt;/div&gt;
+            <!-- الإحصائيات -->
+            <div id="statementStats"></div>
             
-            &lt;!-- جدول الحركات --&gt;
-            &lt;div class="table-container"&gt;
-                &lt;table&gt;
-                    &lt;thead&gt;&lt;tr&gt;
-                        &lt;th&gt;#&lt;/th&gt;&lt;th&gt;التاريخ&lt;/th&gt;&lt;th&gt;الوقت&lt;/th&gt;&lt;th&gt;النوع&lt;/th&gt;
-                        &lt;th&gt;المبلغ&lt;/th&gt;&lt;th&gt;الرصيد&lt;/th&gt;&lt;th&gt;الملاحظات&lt;/th&gt;
-                    &lt;/tr&gt;&lt;/thead&gt;
-                    &lt;tbody id="statementTableBody"&gt;
-                        &lt;tr&gt;&lt;td colspan="7" style="text-align:center;padding:25px;color:var(--text-secondary);"&gt;اختر تاجراً لعرض كشف الحساب&lt;/td&gt;&lt;/tr&gt;
-                    &lt;/tbody&gt;
-                &lt;/table&gt;
-            &lt;/div&gt;
-        &lt;/section&gt;
+            <!-- جدول الحركات -->
+            <div class="table-container">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>التاريخ</th><th>الوقت</th><th>النوع</th>
+                        <th>المبلغ</th><th>الرصيد</th><th>الملاحظات</th>
+                    </tr></thead>
+                    <tbody id="statementTableBody">
+                        <tr><td colspan="7" style="text-align:center;padding:25px;color:var(--text-secondary);">اختر تاجراً لعرض كشف الحساب</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        &lt;!-- Database Section --&gt;
-        &lt;section id="section-database" class="section"&gt;
-            &lt;div class="section-title"&gt;
-                &lt;span&gt;🗄️ مستكشف قاعدة البيانات&lt;/span&gt;
-                &lt;button class="btn btn-primary" onclick="discoverDatabase()"&gt;&lt;i class="fas fa-search"&gt;&lt;/i&gt; اكتشاف الجداول&lt;/button&gt;
-            &lt;/div&gt;
-            &lt;div id="dbTablesList"&gt;&lt;/div&gt;
-            &lt;div id="dbTableDetails" style="display:none;margin-top:25px;"&gt;
-                &lt;div id="dbSelectedTableName" class="section-title"&gt;&lt;/div&gt;
-                &lt;div class="table-container"&gt;
-                    &lt;table&gt;
-                        &lt;thead id="dbDataHead"&gt;&lt;/thead&gt;
-                        &lt;tbody id="dbDataBody"&gt;&lt;/tbody&gt;
-                    &lt;/table&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/section&gt;
+        <!-- Database Section -->
+        <section id="section-database" class="section">
+            <div class="section-title">
+                <span>🗄️ مستكشف قاعدة البيانات</span>
+                <button class="btn btn-primary" onclick="discoverDatabase()"><i class="fas fa-search"></i> اكتشاف الجداول</button>
+            </div>
+            <div id="dbTablesList"></div>
+            <div id="dbTableDetails" style="display:none;margin-top:25px;">
+                <div id="dbSelectedTableName" class="section-title"></div>
+                <div class="table-container">
+                    <table>
+                        <thead id="dbDataHead"></thead>
+                        <tbody id="dbDataBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-        &lt;!-- Footer --&gt;
-        &lt;footer class="footer"&gt;
-            &lt;p&gt;© 2024 Axentro – All Rights Reserved&lt;/p&gt;
-            &lt;p&gt;By Axentro Team ❤️&lt;/p&gt;
-            &lt;img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&amp;data=https://axentro-official.github.io/axentro-website/links.html&amp;color=0a0f1e&amp;bgcolor=ffffff" alt="QR" style="width:100px;margin-top:15px;border-radius:10px;"&gt;
-            &lt;p style="font-size:0.75em;margin-top:8px;"&gt;📱 Scan me &lt; Click On Me&lt;/p&gt;
-        &lt;/footer&gt;
-    &lt;/div&gt;
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2024 Axentro – All Rights Reserved</p>
+            <p>By Axentro Team ❤️</p>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://axentro-official.github.io/axentro-website/links.html&color=0a0f1e&bgcolor=ffffff" alt="QR" style="width:100px;margin-top:15px;border-radius:10px;">
+            <p style="font-size:0.75em;margin-top:8px;">📱 Scan me < Click On Me</p>
+        </footer>
+    </div>
 
-    &lt;!-- ===== Toast Container ===== --&gt;
-    &lt;div id="toastContainer"&gt;&lt;/div&gt;
+    <!-- ===== Toast Container ===== -->
+    <div id="toastContainer"></div>
 
-    &lt;!-- ===== Confirm Modal ===== --&gt;
-    &lt;div id="confirmModal" class="modal-overlay"&gt;
-        &lt;div class="modal" style="max-width:400px;"&gt;
-            &lt;div class="modal-header"&gt;
-                &lt;h3 class="modal-title"&gt;⚠️ تأكيد&lt;/h3&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-body"&gt;
-                &lt;p class="confirm-message" id="confirmMessage"&gt;هل أنت متأكد؟&lt;/p&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-footer"&gt;
-                &lt;button class="btn btn-secondary" id="confirmCancelBtn" onclick="closeConfirm()"&gt;إلغاء&lt;/button&gt;
-                &lt;button class="btn btn-danger" id="confirmOkBtn"&gt;تأكيد&lt;/button&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
+    <!-- ===== Confirm Modal ===== -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal" style="max-width:400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">⚠️ تأكيد</h3>
+            </div>
+            <div class="modal-body">
+                <p class="confirm-message" id="confirmMessage">هل أنت متأكد؟</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="confirmCancelBtn" onclick="closeConfirm()">إلغاء</button>
+                <button class="btn btn-danger" id="confirmOkBtn">تأكيد</button>
+            </div>
+        </div>
+    </div>
 
-    &lt;!-- ===== Merchant Modal ===== --&gt;
-    &lt;div id="merchantModal" class="modal-overlay"&gt;
-        &lt;div class="modal"&gt;
-            &lt;div class="modal-header"&gt;
-                &lt;h3 class="modal-title" id="merchantModalTitle"&gt;👤 إضافة تاجر جديد&lt;/h3&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-body"&gt;
-                &lt;input type="hidden" id="editMerchantId"&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;اسم التاجر *&lt;/label&gt;
-                    &lt;input type="text" id="mName" class="form-control" required&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;اسم النشاط&lt;/label&gt;
-                    &lt;input type="text" id="mActivity" class="form-control"&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;رقم الحساب *&lt;/label&gt;
-                    &lt;input type="text" id="mAccount" class="form-control" required&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;رقم الهاتف&lt;/label&gt;
-                    &lt;input type="tel" id="mPhone" class="form-control"&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;المنطقة&lt;/label&gt;
-                    &lt;input type="text" id="mArea" class="form-control"&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;العنوان&lt;/label&gt;
-                    &lt;input type="text" id="mAddress" class="form-control"&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;الحالة&lt;/label&gt;
-                    &lt;select id="mStatus" class="form-control"&gt;
-                        &lt;option value="نشط"&gt;نشط&lt;/option&gt;
-                        &lt;option value="غير نشط"&gt;غير نشط&lt;/option&gt;
-                    &lt;/select&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;ملاحظات&lt;/label&gt;
-                    &lt;textarea id="mNotes" class="form-control" rows="3"&gt;&lt;/textarea&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-footer"&gt;
-                &lt;button class="btn btn-success" onclick="saveMerchant()"&gt;&lt;i class="fas fa-save"&gt;&lt;/i&gt; حفظ&lt;/button&gt;
-                &lt;button class="btn btn-secondary" onclick="closeMerchantModal()"&gt;إلغاء&lt;/button&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
+    <!-- ===== Merchant Modal ===== -->
+    <div id="merchantModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="merchantModalTitle">👤 إضافة تاجر جديد</h3>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editMerchantId">
+                <div class="form-group">
+                    <label>اسم التاجر *</label>
+                    <input type="text" id="mName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>اسم النشاط</label>
+                    <input type="text" id="mActivity" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>رقم الحساب *</label>
+                    <input type="text" id="mAccount" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>رقم الهاتف</label>
+                    <input type="tel" id="mPhone" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>المنطقة</label>
+                    <input type="text" id="mArea" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>العنوان</label>
+                    <input type="text" id="mAddress" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>الحالة</label>
+                    <select id="mStatus" class="form-control">
+                        <option value="نشط">نشط</option>
+                        <option value="غير نشط">غير نشط</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea id="mNotes" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="saveMerchant()"><i class="fas fa-save"></i> حفظ</button>
+                <button class="btn btn-secondary" onclick="closeMerchantModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
-    &lt;!-- ===== Machine Modal (مع الكاميرا + البحث الذكي) ===== --&gt;
-    &lt;div id="machineModal" class="modal-overlay"&gt;
-        &lt;div class="modal" style="max-width:600px;"&gt;
-            &lt;div class="modal-header"&gt;
-                &lt;h3 class="modal-title" id="machineModalTitle"&gt;🖥️ إضافة مكنة جديدة&lt;/h3&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-body"&gt;
-                &lt;input type="hidden" id="editMachineId"&gt;
+    <!-- ===== Machine Modal (مع الكاميرا + البحث الذكي) ===== -->
+    <div id="machineModal" class="modal-overlay">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="machineModalTitle">🖥️ إضافة مكنة جديدة</h3>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editMachineId">
                 
-                &lt;!-- 🔍 حقل البحث الذكي عن التاجر --&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;التاجر *&lt;/label&gt;
-                    &lt;div style="position:relative;"&gt;
-                        &lt;input type="text" id="machMerchantSearch" class="form-control" 
-                               placeholder="🔍 اكتب اسم أو رقم التاجر..." required&gt;
-                        &lt;input type="hidden" id="machMerchantId"&gt;
-                        &lt;datalist id="merchantDatalist"&gt;&lt;/datalist&gt;
-                    &lt;/div&gt;
-                &lt;/div&gt;
+                <!-- 🔍 حقل البحث الذكي عن التاجر -->
+                <div class="form-group">
+                    <label>التاجر *</label>
+                    <div style="position:relative;">
+                        <input type="text" id="machMerchantSearch" class="form-control" 
+                               placeholder="🔍 اكتب اسم أو رقم التاجر..." required>
+                        <input type="hidden" id="machMerchantId">
+                        <datalist id="merchantDatalist"></datalist>
+                    </div>
+                </div>
                 
-                &lt;!-- 📷 حقل السيريال مع زر المسح --&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;الرقم التسلسلي *&lt;/label&gt;
-                    &lt;div style="display:flex;gap:10px;align-items:center;"&gt;
-                        &lt;input type="text" id="machSerial" class="form-control" required 
-                               placeholder="أدخل السيريال أو امسحه بالكاميرا"&gt;
-                        &lt;button type="button" id="scanSerialBtn" class="btn btn-primary" 
-                                title="مسح الباركود بالكاميرا"&gt;
-                            &lt;i class="fas fa-camera"&gt;&lt;/i&gt; مسح
-                        &lt;/button&gt;
-                    &lt;/div&gt;
-                    &lt;!-- 📷 حاوية الفيديو للكاميرا --&gt;
-                    &lt;div id="scannerVideoContainer" style="display:none;margin-top:12px;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--border-color);"&gt;
-                    &lt;/div&gt;
-                    &lt;!-- أزرار التحكم بالفلاش (يظهر عند فتح الكاميرا) --&gt;
-                    &lt;div id="scannerControls" style="display:none;margin-top:10px;"&gt;&lt;/div&gt;
-                &lt;/div&gt;
+                <!-- 📷 حقل السيريال مع زر المسح -->
+                <div class="form-group">
+                    <label>الرقم التسلسلي *</label>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <input type="text" id="machSerial" class="form-control" required 
+                               placeholder="أدخل السيريال أو امسحه بالكاميرا">
+                        <button type="button" id="scanSerialBtn" class="btn btn-primary" 
+                                title="مسح الباركود بالكاميرا">
+                            <i class="fas fa-camera"></i> مسح
+                        </button>
+                    </div>
+                    <!-- 📷 حاوية الفيديو للكاميرا -->
+                    <div id="scannerVideoContainer" style="display:none;margin-top:12px;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--border-color);">
+                    </div>
+                    <!-- أزرار التحكم بالفلاش (يظهر عند فتح الكاميرا) -->
+                    <div id="scannerControls" style="display:none;margin-top:10px;"></div>
+                </div>
                 
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;التارجت الشهري&lt;/label&gt;
-                    &lt;input type="number" id="machTarget" class="form-control" placeholder="0"&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;الحالة&lt;/label&gt;
-                    &lt;select id="machStatus" class="form-control"&gt;
-                        &lt;option value="نشطة"&gt;نشطة&lt;/option&gt;
-                        &lt;option value="معطلة"&gt;معطلة&lt;/option&gt;
-                        &lt;option value="صيانة"&gt;صيانة&lt;/option&gt;
-                    &lt;/select&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;ملاحظات&lt;/label&gt;
-                    &lt;textarea id="machNotes" class="form-control" rows="3"&gt;&lt;/textarea&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-footer"&gt;
-                &lt;button class="btn btn-success" onclick="saveMachine()"&gt;&lt;i class="fas fa-save"&gt;&lt;/i&gt; حفظ&lt;/button&gt;
-                &lt;button class="btn btn-secondary" onclick="closeMachineModal()"&gt;إلغاء&lt;/button&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
+                <div class="form-group">
+                    <label>التارجت الشهري</label>
+                    <input type="number" id="machTarget" class="form-control" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>الحالة</label>
+                    <select id="machStatus" class="form-control">
+                        <option value="نشطة">نشطة</option>
+                        <option value="معطلة">معطلة</option>
+                        <option value="صيانة">صيانة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea id="machNotes" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="saveMachine()"><i class="fas fa-save"></i> حفظ</button>
+                <button class="btn btn-secondary" onclick="closeMachineModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
-    &lt;!-- ===== Transfer Modal (مع البحث الذكي) ===== --&gt;
-    &lt;div id="transferModal" class="modal-overlay"&gt;
-        &lt;div class="modal" style="max-width:600px;"&gt;
-            &lt;div class="modal-header"&gt;
-                &lt;h3 class="modal-title" id="transferModalTitle"&gt;💰 تحويل جديد&lt;/h3&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-body"&gt;
-                &lt;input type="hidden" id="editTransferId"&gt;
+    <!-- ===== Transfer Modal (مع البحث الذكي) ===== -->
+    <div id="transferModal" class="modal-overlay">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="transferModalTitle">💰 تحويل جديد</h3>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editTransferId">
                 
-                &lt;!-- 🔍 حقل البحث الذكي عن التاجر --&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;التاجر *&lt;/label&gt;
-                    &lt;div style="position:relative;"&gt;
-                        &lt;input type="text" id="transMerchantSearch" class="form-control" 
-                               placeholder="🔍 ابحث عن التاجر..." required&gt;
-                        &lt;input type="hidden" id="transMerchantId"&gt;
-                        &lt;datalist id="merchantDatalistTrans"&gt;&lt;/datalist&gt;
-                        &lt;div id="transSearchResults"&gt;&lt;/div&gt;
-                    &lt;/div&gt;
-                    &lt;!-- 📋 منطقة عرض بيانات التاجر --&gt;
-                    &lt;div id="selectedMerchantInfo" style="display:none;margin-top:12px;"&gt;&lt;/div&gt;
-                &lt;/div&gt;
+                <!-- 🔍 حقل البحث الذكي عن التاجر -->
+                <div class="form-group">
+                    <label>التاجر *</label>
+                    <div style="position:relative;">
+                        <input type="text" id="transMerchantSearch" class="form-control" 
+                               placeholder="🔍 ابحث عن التاجر..." required>
+                        <input type="hidden" id="transMerchantId">
+                        <datalist id="merchantDatalistTrans"></datalist>
+                        <div id="transSearchResults"></div>
+                    </div>
+                    <!-- 📋 منطقة عرض بيانات التاجر -->
+                    <div id="selectedMerchantInfo" style="display:none;margin-top:12px;"></div>
+                </div>
                 
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;المكنة (اختياري)&lt;/label&gt;
-                    &lt;select id="transMachineId" class="form-control"&gt;
-                        &lt;option value=""&gt;-- بدون مكنة --&lt;/option&gt;
-                    &lt;/select&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;المبلغ *&lt;/label&gt;
-                    &lt;input type="number" id="transAmount" class="form-control" step="0.01" required&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;نوع التحويل&lt;/label&gt;
-                    &lt;select id="transType" class="form-control"&gt;
-                        &lt;option value="نقدي"&gt;نقدي&lt;/option&gt;
-                        &lt;option value="تحويل بنكي"&gt;تحويل بنكي&lt;/option&gt;
-                        &lt;option value="شيك"&gt;شيك&lt;/option&gt;
-                        &lt;option value="رصيد خدمات"&gt;رصيد خدمات&lt;/option&gt;
-                    &lt;/select&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;ملاحظات&lt;/label&gt;
-                    &lt;textarea id="transNotes" class="form-control" rows="3"&gt;&lt;/textarea&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-footer"&gt;
-                &lt;button class="btn btn-success" onclick="saveTransfer()"&gt;&lt;i class="fas fa-save"&gt;&lt;/i&gt; حفظ&lt;/button&gt;
-                &lt;button class="btn btn-secondary" onclick="closeTransferModal()"&gt;إلغاء&lt;/button&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
+                <div class="form-group">
+                    <label>المكنة (اختياري)</label>
+                    <select id="transMachineId" class="form-control">
+                        <option value="">-- بدون مكنة --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>المبلغ *</label>
+                    <input type="number" id="transAmount" class="form-control" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>نوع التحويل</label>
+                    <select id="transType" class="form-control">
+                        <option value="نقدي">نقدي</option>
+                        <option value="تحويل بنكي">تحويل بنكي</option>
+                        <option value="شيك">شيك</option>
+                        <option value="رصيد خدمات">رصيد خدمات</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea id="transNotes" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="saveTransfer()"><i class="fas fa-save"></i> حفظ</button>
+                <button class="btn btn-secondary" onclick="closeTransferModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
-    &lt;!-- ===== Collection Modal (مع البحث + حساب المتبقي) ===== --&gt;
-    &lt;div id="collectionModal" class="modal-overlay"&gt;
-        &lt;div class="modal" style="max-width:600px;"&gt;
-            &lt;div class="modal-header"&gt;
-                &lt;h3 class="modal-title" id="collectionModalTitle"&gt;💵 تحصيل جديد&lt;/h3&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-body"&gt;
-                &lt;input type="hidden" id="editCollectionId"&gt;
+    <!-- ===== Collection Modal (مع البحث + حساب المتبقي) ===== -->
+    <div id="collectionModal" class="modal-overlay">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="collectionModalTitle">💵 تحصيل جديد</h3>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editCollectionId">
                 
-                &lt;!-- 🔍 حقل البحث الذكي عن التاجر --&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;التاجر *&lt;/label&gt;
-                    &lt;div style="position:relative;"&gt;
-                        &lt;input type="text" id="collMerchantSearch" class="form-control" 
-                               placeholder="🔍 ابحث عن التاجر..." required&gt;
-                        &lt;input type="hidden" id="collMerchantId"&gt;
-                        &lt;datalist id="merchantDatalistColl"&gt;&lt;/datalist&gt;
-                        &lt;div id="collSearchResults"&gt;&lt;/div&gt;
-                    &lt;/div&gt;
-                    &lt;!-- 📋 منطقة عرض بيانات التاجر --&gt;
-                    &lt;div id="selectedCollMerchantInfo" style="display:none;margin-top:12px;"&gt;&lt;/div&gt;
-                &lt;/div&gt;
+                <!-- 🔍 حقل البحث الذكي عن التاجر -->
+                <div class="form-group">
+                    <label>التاجر *</label>
+                    <div style="position:relative;">
+                        <input type="text" id="collMerchantSearch" class="form-control" 
+                               placeholder="🔍 ابحث عن التاجر..." required>
+                        <input type="hidden" id="collMerchantId">
+                        <datalist id="merchantDatalistColl"></datalist>
+                        <div id="collSearchResults"></div>
+                    </div>
+                    <!-- 📋 منطقة عرض بيانات التاجر -->
+                    <div id="selectedCollMerchantInfo" style="display:none;margin-top:12px;"></div>
+                </div>
                 
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;المكنة (اختياري)&lt;/label&gt;
-                    &lt;select id="collMachineId" class="form-control"&gt;
-                        &lt;option value=""&gt;-- بدون مكنة --&lt;/option&gt;
-                    &lt;/select&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;المبلغ *&lt;/label&gt;
-                    &lt;input type="number" id="collAmount" class="form-control" step="0.01" required&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;نوع التحصيل&lt;/label&gt;
-                    &lt;select id="collType" class="form-control"&gt;
-                        &lt;option value="نقدي"&gt;نقدي&lt;/option&gt;
-                        &lt;option value="شيك"&gt;شيك&lt;/option&gt;
-                        &lt;option value="تحويل بنكي"&gt;تحويل بنكي&lt;/option&gt;
-                        &lt;option value="رصيد"&gt;رصيد&lt;/option&gt;
-                    &lt;/select&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;ملاحظات&lt;/label&gt;
-                    &lt;textarea id="collNotes" class="form-control" rows="3"&gt;&lt;/textarea&gt;
-                &lt;/div&gt;
+                <div class="form-group">
+                    <label>المكنة (اختياري)</label>
+                    <select id="collMachineId" class="form-control">
+                        <option value="">-- بدون مكنة --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>المبلغ *</label>
+                    <input type="number" id="collAmount" class="form-control" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>نوع التحصيل</label>
+                    <select id="collType" class="form-control">
+                        <option value="نقدي">نقدي</option>
+                        <option value="شيك">شيك</option>
+                        <option value="تحويل بنكي">تحويل بنكي</option>
+                        <option value="رصيد">رصيد</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea id="collNotes" class="form-control" rows="3"></textarea>
+                </div>
                 
-                &lt;!-- 🧮 منطقة حساب المتبقي --&gt;
-                &lt;div id="remainingCalculation" style="display:none;margin-top:18px;"&gt;&lt;/div&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-footer"&gt;
-                &lt;button class="btn btn-success" onclick="saveCollection()"&gt;&lt;i class="fas fa-save"&gt;&lt;/i&gt; حفظ&lt;/button&gt;
-                &lt;button class="btn btn-secondary" onclick="closeCollectionModal()"&gt;إلغاء&lt;/button&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
+                <!-- 🧮 منطقة حساب المتبقي -->
+                <div id="remainingCalculation" style="display:none;margin-top:18px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="saveCollection()"><i class="fas fa-save"></i> حفظ</button>
+                <button class="btn btn-secondary" onclick="closeCollectionModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
-    &lt;!-- ===== Request Modal ===== --&gt;
-    &lt;div id="requestModal" class="modal-overlay"&gt;
-        &lt;div class="modal"&gt;
-            &lt;div class="modal-header"&gt;
-                &lt;h3 class="modal-title" id="requestModalTitle"&gt;📋 تقديم طلب جديد&lt;/h3&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-body"&gt;
-                &lt;input type="hidden" id="editRequestId"&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;التاجر *&lt;/label&gt;
-                    &lt;select id="reqMerchantId" class="form-control" required&gt;
-                        &lt;option value=""&gt;-- اختر التاجر --&lt;/option&gt;
-                    &lt;/select&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;نوع الطلب *&lt;/label&gt;
-                    &lt;select id="reqType" class="form-control" required&gt;
-                        &lt;option value=""&gt;-- اختر نوع الطلب --&lt;/option&gt;
-                        &lt;option value="كاش على المكنة"&gt;كاش على المكنة&lt;/option&gt;
-                        &lt;option value="رصيد خدمات"&gt;رصيد خدمات&lt;/option&gt;
-                        &lt;option value="صيانة"&gt;صيانة&lt;/option&gt;
-                    &lt;/select&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;المبلغ *&lt;/label&gt;
-                    &lt;input type="number" id="reqAmount" class="form-control" step="0.01" required&gt;
-                &lt;/div&gt;
-                &lt;div class="form-group"&gt;
-                    &lt;label&gt;ملاحظات&lt;/label&gt;
-                    &lt;textarea id="reqNotes" class="form-control" rows="3"&gt;&lt;/textarea&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-footer"&gt;
-                &lt;button class="btn btn-success" onclick="saveRequest()"&gt;&lt;i class="fas fa-paper-plane"&gt;&lt;/i&gt; إرسال الطلب&lt;/button&gt;
-                &lt;button class="btn btn-secondary" onclick="closeRequestModal()"&gt;إلغاء&lt;/button&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
+    <!-- ===== Request Modal ===== -->
+    <div id="requestModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="requestModalTitle">📋 تقديم طلب جديد</h3>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editRequestId">
+                <div class="form-group">
+                    <label>التاجر *</label>
+                    <select id="reqMerchantId" class="form-control" required>
+                        <option value="">-- اختر التاجر --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>نوع الطلب *</label>
+                    <select id="reqType" class="form-control" required>
+                        <option value="">-- اختر نوع الطلب --</option>
+                        <option value="كاش على المكنة">كاش على المكنة</option>
+                        <option value="رصيد خدمات">رصيد خدمات</option>
+                        <option value="صيانة">صيانة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>المبلغ *</label>
+                    <input type="number" id="reqAmount" class="form-control" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea id="reqNotes" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="saveRequest()"><i class="fas fa-paper-plane"></i> إرسال الطلب</button>
+                <button class="btn btn-secondary" onclick="closeRequestModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
-    &lt;!-- ===== AI Chat Modal (المساعد الذكي المُحدَّث) ===== --&gt;
-    &lt;div id="aiChatModal" class="modal-overlay"&gt;
-        &lt;div class="modal" style="max-width:650px;"&gt;
-            &lt;div class="modal-header"&gt;
-                &lt;h3 class="modal-title"&gt;
-                    &lt;i class="fas fa-robot"&gt;&lt;/i&gt; مساعد Axentro الذكي
-                &lt;/h3&gt;
-                &lt;button class="btn btn-secondary" onclick="closeAIModal()" style="padding:8px 16px;"&gt;
-                    &lt;i class="fas fa-times"&gt;&lt;/i&gt;
-                &lt;/button&gt;
-            &lt;/div&gt;
-            &lt;div class="modal-body"&gt;
-                &lt;!-- 💬 واجهة الدردشة التفاعلية --&gt;
-                &lt;div id="aiChatMessages"&gt;
-                    &lt;!-- الرسائل ستظهر هنا ديناميكياً --&gt;
-                &lt;/div&gt;
+    <!-- ===== AI Chat Modal (المساعد الذكي المُحدَّث) ===== -->
+    <div id="aiChatModal" class="modal-overlay">
+        <div class="modal" style="max-width:650px;">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-robot"></i> مساعد Axentro الذكي
+                </h3>
+                <button class="btn btn-secondary" onclick="closeAIModal()" style="padding:8px 16px;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- 💬 واجهة الدردشة التفاعلية -->
+                <div id="aiChatMessages">
+                    <!-- الرسائل ستظهر هنا ديناميكياً -->
+                </div>
                 
-                &lt;!-- 📝 حقل الإدخال وزر الإرسال --&gt;
-                &lt;div style="display:flex;gap:10px;"&gt;
-                    &lt;input type="text" id="aiQuestionInput" class="form-control" 
+                <!-- 📝 حقل الإدخال وزر الإرسال -->
+                <div style="display:flex;gap:10px;">
+                    <input type="text" id="aiQuestionInput" class="form-control" 
                            placeholder="💭 اسألني أي شيء... (مثال: كم عدد التجار؟)" 
                            style="flex:1;"
-                           onkeypress="if(event.key==='Enter'){event.preventDefault();document.getElementById('aiSendBtn').click();}"&gt;
-                    &lt;button type="button" id="aiSendBtn" class="btn btn-primary" 
-                            style="white-space:nowrap;"&gt;
-                        &lt;i class="fas fa-paper-plane"&gt;&lt;/i&gt; إرسال
-                    &lt;/button&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
+                           onkeypress="if(event.key==='Enter'){event.preventDefault();document.getElementById('aiSendBtn').click();}">
+                    <button type="button" id="aiSendBtn" class="btn btn-primary" 
+                            style="white-space:nowrap;">
+                        <i class="fas fa-paper-plane"></i> إرسال
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    &lt;!-- ===== Scripts ===== --&gt;
-    &lt;script type="module"&gt;
+    <!-- ===== Scripts ===== -->
+    <script type="module">
         // ===== Supabase Configuration =====
         import { initSupabase } from './src/config/supabase.js';
         
@@ -1540,8 +1294,8 @@
             const loadingText = document.getElementById('loadingText');
             
             // Animate progress
-            for (let i = 0; i &lt;= 100; i += 5) {
-                await new Promise(r =&gt; setTimeout(r, 30));
+            for (let i = 0; i <= 100; i += 5) {
+                await new Promise(r => setTimeout(r, 30));
                 if (progressFill) progressFill.style.width = i + '%';
                 if (loadingText) loadingText.textContent = `جاري التحميل... ${i}%`;
             }
@@ -1569,7 +1323,7 @@
             }
             
             // Hide loading, show login
-            setTimeout(() =&gt; {
+            setTimeout(() => {
                 const loadingScreen = document.getElementById('loadingScreen');
                 if (loadingScreen) loadingScreen.classList.add('hidden');
             }, 500);
@@ -1609,13 +1363,13 @@
         window.handleLogin = handleLogin;
         
         // ===== Navigation =====
-        document.querySelectorAll('.nav-link[data-section]').forEach(link =&gt; {
+        document.querySelectorAll('.nav-link[data-section]').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 const section = this.dataset.section;
                 
                 // Update active link
-                document.querySelectorAll('.nav-link').forEach(l =&gt; l.classList.remove('active'));
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
                 
                 // Show section
@@ -1625,7 +1379,7 @@
         
         function showSection(sectionName) {
             // Hide all sections
-            document.querySelectorAll('.section').forEach(s =&gt; s.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             
             // Show target section
             const target = document.getElementById(`section-${sectionName}`);
@@ -1691,7 +1445,7 @@
                 try {
                     const audio = new Audio(`./src/assets/${soundName}.mp3`);
                     audio.volume = 0.7;
-                    audio.play().catch(() =&gt; {});
+                    audio.play().catch(() => {});
                 } catch(e) {
                     console.warn('Sound not found:', soundName);
                 }
@@ -1717,67 +1471,6 @@
         document.getElementById('loginPassword')?.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') handleLogin();
         });
-    &lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;</code></pre>
-        </div>
-
-        <!-- Warning -->
-        <div class="warning-box">
-            <div style="font-size:2em;">⚠️</div>
-            <div>
-                <strong style="font-size:1.15em;color:#ffd700;">تنبيه هام جداً:</strong>
-                <p style="margin-top:10px;opacity:0.92;line-height:1.8;">
-                    بعد نسخ هذا الملف، تأكد من:<br><br>
-                    ✅ 1. وضعته في نفس مجلد المشروع (بجانب src/)<br>
-                    ✅ 2. أن الملفات الخمسة الأخرى في أماكنها الصحيحة<br>
-                    ✅ 3. فتحه في المتصفح (Chrome أو Edge)<br>
-                    ✅ 4. كلمة المرور: <code>axentro2024</code> أو <code>admin123</code>
-                </p>
-            </div>
-        </div>
-
-        <!-- Success -->
-        <div class="success-box">
-            <h2 style="font-size:1.6em;margin-bottom:12px;">🎉 الآن البرنامج سيعمل 100%!</h2>
-            <p style="font-size:1.05em;opacity:0.92;line-height:1.8;">
-                فقط انسخ الكود أعلاه واستبدل به ملف <code style="background:rgba(0,0,0,0.3);padding:4px 10px;border-radius:6px;">index.html</code> القديم<br>
-                ثم افتح الصفحة في المتصفح وجرب! 💪
-            </p>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p>✅ تم إعداد هذا الملف بواسطة Axentro Development Team</p>
-            <p style="margin-top:10px;">الحجم: ~97KB | الملفات المطلوبة: 6 | الحالة: جاهز للاستخدام</p>
-        </div>
-    </div>
-
-    <script>
-        function copyCode() {
-            const codeBlock = document.getElementById('codeBlock');
-            const textArea = document.createElement('textarea');
-            textArea.value = codeBlock.textContent;
-            document.body.appendChild(textArea);
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                const btn = event.target;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '✅ تم النسخ!';
-                btn.style.background = 'linear-gradient(135deg, #00ff88, #00cc6a)';
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.style.background = '';
-                }, 2500);
-            } catch (err) {
-                alert('فشل النسخ، يرجى:\n1. Ctrl+A لتحديد الكود\n2. Ctrl+C للنسخ');
-            }
-            
-            document.body.removeChild(textArea);
-        }
     </script>
 </body>
-</html></string>
+</html>
