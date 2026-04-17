@@ -1,326 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إصلاح المساعد الذكي - aiService.js</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0f1e 0%, #1a2332 100%);
-            min-height: 100vh;
-            color: #fff;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            padding: 40px 20px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.8;
-        }
-        
-        .file-info {
-            background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,153,204,0.1));
-            border: 1px solid rgba(0,212,255,0.3);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .file-info h2 {
-            color: #00d4ff;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .file-path {
-            font-family: monospace;
-            background: rgba(0,0,0,0.3);
-            padding: 10px 15px;
-            border-radius: 8px;
-            color: #00ff88;
-            font-size: 0.95em;
-        }
-        
-        .changes-list {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .changes-list h3 {
-            color: #ffd700;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-        }
-        
-        .change-item {
-            background: rgba(0,0,0,0.2);
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            border-right: 4px solid #00d4ff;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-        
-        .change-item.fixed {
-            border-right-color: #00ff88;
-        }
-        
-        .change-item.bug {
-            border-right-color: #ff4444;
-        }
-        
-        .change-icon {
-            font-size: 1.3em;
-            flex-shrink: 0;
-        }
-        
-        .code-container {
-            background: #0d1117;
-            border-radius: 15px;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .code-header {
-            background: rgba(255,255,255,0.05);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .code-header h4 {
-            color: #00d4ff;
-        }
-        
-        .copy-btn {
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            color: #000;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        
-        .copy-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(0,212,255,0.4);
-        }
-        
-        pre {
-            padding: 25px;
-            overflow-x: auto;
-            max-height: 700px;
-            overflow-y: auto;
-        }
-        
-        code {
-            font-family: 'Fira Code', 'Consolas', monospace;
-            font-size: 0.9em;
-            line-height: 1.6;
-            color: #e6edf3;
-        }
-        
-        /* Syntax highlighting */
-        .keyword { color: #ff79c6; }
-        .string { color: #f1fa8c; }
-        .comment { color: #6272a4; }
-        .function { color: #50fa7b; }
-        .number { color: #bd93f9; }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .feature-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 25px;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(0,212,255,0.5);
-            box-shadow: 0 10px 30px rgba(0,212,255,0.2);
-        }
-        
-        .feature-icon {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-        }
-        
-        .feature-card h4 {
-            color: #00d4ff;
-            margin-bottom: 10px;
-        }
-        
-        .feature-card p {
-            opacity: 0.8;
-            font-size: 0.95em;
-            line-height: 1.6;
-        }
-        
-        .warning-box {
-            background: linear-gradient(135deg, rgba(255,193,7,0.1), rgba(255,152,0,0.1));
-            border: 1px solid rgba(255,193,7,0.3);
-            border-radius: 15px;
-            padding: 20px 25px;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .warning-box .icon {
-            font-size: 2em;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 30px;
-            opacity: 0.6;
-            font-size: 0.9em;
-        }
-
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.05);
-            border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(0,212,255,0.5);
-            border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0,212,255,0.7);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🔧 إصلاح المساعد الذكي</h1>
-            <p>تم إصلاح المشكلة بشكل كامل - الآن المساعد يستجيب لجميع الأسئلة</p>
-        </div>
-
-        <div class="file-info">
-            <h2>📄 معلومات الملف</h2>
-            <div class="file-path">src/services/aiService.js</div>
-        </div>
-
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">✅</div>
-                <h4>إصلاح الإرسال</h4>
-                <p>تم إصلاح مشكلة عدم استجابة زر الإرسال - الآن يعمل بشكل مثالي</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">💬</div>
-                <h4>استجابة ذكية</h4>
-                <p>المساعد يفهم ويستجيب لأي سؤال بالعربية والإنجليزية</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h4>دعم شامل</h4>
-                <p>يدعم الاستعلامات عن التجار والمكن والتحويلات والتحصيلات والإحصائيات</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h4>أداء سريع</h4>
-                <p>استجابة فورية مع معالجة ذكية للأسئلة المعقدة</p>
-            </div>
-        </div>
-
-        <div class="changes-list">
-            <h3>🔍 التعديلات المنفذة:</h3>
-            
-            <div class="change-item bug">
-                <span class="change-icon">🐛</span>
-                <div>
-                    <strong>المشكلة الأصلية:</strong>
-                    <p style="margin-top: 5px; opacity: 0.85;">زر الإرسال لا يعمل - عند الضغط عليه لا يتم إرسال السؤال أو معالجته</p>
-                </div>
-            </div>
-            
-            <div class="change-item fixed">
-                <span class="change-icon">✅</span>
-                <div>
-                    <strong>الحل المطبق:</strong>
-                    <p style="margin-top: 5px; opacity: 0.85;">إعادة كتابة نظام الربط مع إضافة initAIChat() لتهيئة الأحداث بشكل صحيح</p>
-                </div>
-            </div>
-
-            <div class="change-item fixed">
-                <span class="change-icon">🆕</span>
-                <div>
-                    <strong>ميزات جديدة:</strong>
-                    <p style="margin-top: 5px; opacity: 0.85;">• دعم Enter للإرسال<br>• مسح تلقائي للحقل بعد الإرسال<br>• رسائل خطأ واضحة<br>• تأثيرات بصرية أثناء المعالجة</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="warning-box">
-            <span class="icon">⚠️</span>
-            <div>
-                <strong>تنبيه هام:</strong>
-                <p style="margin-top: 5px; opacity: 0.85;">هذا الملف معدّل بالكامل. استبدل الملف القديم بهذا الملف الجديد.</p>
-            </div>
-        </div>
-
-        <div class="code-container">
-            <div class="code-header">
-                <h4>📝 الكود الكامل بعد التعديل:</h4>
-                <button class="copy-btn" onclick="copyCode()">نسخ الكود</button>
-            </div>
-            <pre><code id="codeBlock">// src/services/aiService.js
+// src/services/aiService.js
 // ✅ نسخة محسنة ومُصلحة بالكامل - المساعد الذكي يعمل الآن 100%
 
 let supabase = null;
@@ -393,7 +71,7 @@ async function handleSendQuestion() {
     // تعطيل الزر أثناء المعالجة
     if (sendBtn) {
         sendBtn.disabled = true;
-        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المعالجة...';
+        sendBtn.innerHTML = ' جاري المعالجة...';
     }
     
     // عرض سؤال المستخدم في الدردشة
@@ -431,7 +109,7 @@ async function handleSendQuestion() {
         // إعادة تفعيل الزر
         if (sendBtn) {
             sendBtn.disabled = false;
-            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال';
+            sendBtn.innerHTML = ' إرسال';
         }
     }
 }
@@ -460,27 +138,8 @@ function addMessageToChat(text, type) {
     `;
     
     messageDiv.innerHTML = `
-        <div style="
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: ${bgColor};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3em;
-            flex-shrink: 0;
-        ">${avatar}</div>
-        <div style="
-            max-width: 80%;
-            padding: 14px 18px;
-            border-radius: 18px;
-            background: ${type === 'user' ? '#667eea' : 'rgba(255,255,255,0.1)'};
-            ${type === 'user' ? 'color: white;' : 'color: #e6edf3;'}
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-break: break-word;
-        ">${formatAnswerText(text)}</div>
+        ${avatar}
+        ${formatAnswerText(text)}
     `;
     
     chatMessages.appendChild(messageDiv);
@@ -515,14 +174,14 @@ function formatAnswerText(text) {
     if (!text) return '';
     
     return text
-        // تحويل **bold** إلى <strong>
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // تحويل **bold** إلى 
+        .replace(/\*\*(.*?)\*\*/g, '$1')
         // تحويل الأسطر الجديدة
-        .replace(/\n/g, '<br>')
+        .replace(/\n/g, '')
         // تحويل • إلى نقاط
-        .replace(/• /g, '&bull; ')
+        .replace(/• /g, '• ')
         // تحويل الرموز التعبيرية
-        .replace(/📊|🖥️|💰|💵|📅|📆|🏆|⚠️|📋|✅|❓|🎉|😊|🎯/g, match => `<span style="font-size: 1.2em;">${match}</span>`);
+        .replace(/📊|🖥️|💰|💵|📅|📆|🏆|⚠️|📋|✅|❓|🎉|😊|🎯/g, match => `${match}`);
 }
 
 /**
@@ -885,40 +544,3 @@ function getTip() {
 
 // تصدير الدوال العامة
 export { handleSendQuestion, initAIChat, addMessageToChat };
-</code></pre>
-        </div>
-
-        <div class="footer">
-            <p>✅ تم إنشاء هذا الملف بواسطة Axentro Development Team</p>
-            <p style="margin-top: 10px;">📁 المسار: src/services/aiService.js | 🔄 الحالة: مُحدَّث بالكامل</p>
-        </div>
-    </div>
-
-    <script>
-        function copyCode() {
-            const codeBlock = document.getElementById('codeBlock');
-            const textArea = document.createElement('textarea');
-            textArea.value = codeBlock.textContent;
-            document.body.appendChild(textArea);
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                const btn = event.target;
-                const originalText = btn.textContent;
-                btn.textContent = '✅ تم النسخ!';
-                btn.style.background = 'linear-gradient(135deg, #00ff88, #00cc6a)';
-                
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.style.background = '';
-                }, 2000);
-            } catch (err) {
-                alert('فشل النسخ، يرجى النسخ يدوياً');
-            }
-            
-            document.body.removeChild(textArea);
-        }
-    </script>
-</body>
-</html></string>
