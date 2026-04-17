@@ -210,7 +210,7 @@ export function normalizeText(text) {
         .replace(/ؤ/g, 'و')
         .replace(/ئ/g, 'ي')
         .replace(/ة/g, 'ه')
-        .replace(//g/g, 'غ')
+        .replace(/ﻍ/g, 'غ')
         .toLowerCase();
 }
 
