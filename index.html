@@ -1631,7 +1631,7 @@
     import { initRequestsPage, loadRequests, updateRequestStatus, convertRequest, deleteRequest } from './src/pages/requests.js';
     import { initStatementPage, loadMerchantsForStatement, loadStatement } from './src/pages/statement.js';
     import { initDatabasePage, discoverDatabase, refreshSelectedTable } from './src/pages/database.js';
-    import { processAiQuery } from './src/services/aiService.js';
+    import { processQuery as processAiQuery } from './src/services/aiService.js';
 
     // ربط الدوال بالنافذة العامة
     window.openMerchantModal = openMerchantModal;
@@ -1658,11 +1658,6 @@
     window.deleteCollection = deleteCollection;
     window.closeCollectionModal = closeCollectionModal;
     
-    window.loadDashboardStats = loadDashboardStats;
-    window.loadRecentActivities = loadRecentActivities;
-    window.loadTopMachines = loadTopMachines;
-    window.loadMerchantsForStatement = loadMerchantsForStatement;
-
     window.closeMonth = closeMonth;
     window.deleteArchive = deleteArchive;
     window.updateRequestStatus = updateRequestStatus;
