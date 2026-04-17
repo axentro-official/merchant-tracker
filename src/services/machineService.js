@@ -11,7 +11,7 @@ import { fetchAll, insertRecord, updateRecord, deleteRecord } from './dbService.
  * @returns {Promise<Array>} Array of machines
  */
 export async function getAllMachines() {
-    return fetchAll('machines', { orderBy: 'created_at.asc' });
+    return fetchAll('machines', { orderBy: 'updated_at.asc' });
 }
 
 /**
@@ -23,7 +23,7 @@ export async function createMachine(machineData) {
     const now = new Date().toISOString();
     const newMachine = {
         ...machineData,
-        created_at: now,
+        updated_at: now,
         updated_at: now
     };
     return insertRecord('machines', newMachine);

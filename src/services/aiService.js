@@ -330,7 +330,7 @@ export async function processQuery(question, context = {}) {
                 .from('requests')
                 .select('*')
                 .eq('الحالة', 'معلق')
-                .order('created_at', { ascending: false })
+                .order('updated_at', { ascending: false })
                 .limit(10);
             
             if (error || !data || data.length === 0) {
@@ -356,7 +356,7 @@ export async function processQuery(question, context = {}) {
                 const { data, error } = await supabase
                     .from('merchants')
                     .select('*')
-                    .order('created_at', { ascending: false })
+                    .order('updated_at', { ascending: false })
                     .limit(5);
                 
                 if (error || !data || data.length === 0) {
@@ -381,7 +381,6 @@ export async function processQuery(question, context = {}) {
 }
 
 
-// توافق مع index.html
 export async function processAiQuery(question, context = {}) {
     return processQuery(question, context);
 }
