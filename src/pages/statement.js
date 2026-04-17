@@ -12,7 +12,7 @@ let merchantsList = [];
 
 // تهيئة Supabase
 export function initStatementPage() {
-    supabase = window.supabaseClient || window.supabase;
+    supabase = window.supabaseaseClient || window.supabaseClient;
 }
 
 // تحميل قائمة التجار لعرضها في خانة البحث
@@ -31,7 +31,9 @@ export async function loadMerchantsForStatement() {
         // 🔧 تحديث datalist
         const datalist = document.getElementById('merchantDatalistStmt');
         if (datalist) {
-            datalist.innerHTML = merchantsList.map(m => `<option value="${escapeHtml(m['رقم التاجر'])} - ${escapeHtml(m['اسم التاجر'])}"></option>`).join('');
+            datalist.innerHTML = merchantsList.map(m => 
+                ``
+            ).join('');
         }
         
         // 🔧 تهيئة نظام البحث الذكي
@@ -105,11 +107,20 @@ function initMerchantSearch() {
         }
         
         results.innerHTML = filtered.slice(0, 12).map(m => `
-            <div class="search-result-item" data-id="${m.id}" style="padding:12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.08);">
-                <div style="font-weight:700;">${escapeHtml(m['اسم التاجر'])}</div>
-                <div style="font-size:12px;opacity:.8;">${escapeHtml(m['رقم التاجر'])} | ${escapeHtml(m['اسم النشاط'] || '-')}</div>
-                <div style="font-size:11px;opacity:.7;">${m['المنطقة'] ? escapeHtml(m['المنطقة']) : ''} ${m['رقم الهاتف'] ? ' | ' + escapeHtml(m['رقم الهاتف']) : ''}</div>
-            </div>
+            
+                
+                    
+                        ${escapeHtml(m['اسم التاجر'])}
+                        
+                             ${escapeHtml(m['رقم التاجر'])} | 
+                             ${escapeHtml(m['اسم النشاط'] || '-')}
+                        
+                        ${(m['المنطقة'] ? ` ${escapeHtml(m['المنطقة'])}` : '')}
+                        ${(m['رقم الهاتف'] ? ` ${escapeHtml(m['رقم الهاتف'])}` : '')}
+                    
+                    
+                
+            
         `).join('');
         
         results.style.display = 'block';
@@ -188,7 +199,7 @@ export async function loadStatement() {
             .from('transfers')
             .select('*')
             .eq('رقم التاجر', merchantId)
-            .order('created_at', { ascending: true });
+            .order('updated_at', { ascending: true });
         if (tErr) throw tErr;
         
         // جلب التحصيلات (مرتبة تصاعدياً)
@@ -196,7 +207,7 @@ export async function loadStatement() {
             .from('collections')
             .select('*')
             .eq('رقم التاجر', merchantId)
-            .order('created_at', { ascending: true });
+            .order('updated_at', { ascending: true });
         if (cErr) throw cErr;
         
         // عرض معلومات التاجر
@@ -238,7 +249,7 @@ function mergeAndSortMovements(transfers, collections) {
                 amount: parseFloat(t['قيمة التحويل']) || 0,
                 ref: t['الرقم المرجعي'],
                 notes: t['ملاحظات'],
-                createdAt: t['created_at'],
+                createdAt: t['updated_at'],
                 machineNumber: t['رقم المكنة']
             });
         });
@@ -253,13 +264,13 @@ function mergeAndSortMovements(transfers, collections) {
                 amount: -(parseFloat(c['قيمة التحصيل']) || 0),
                 ref: c['الرقم المرجعي'],
                 notes: c['ملاحظات'],
-                createdAt: c['created_at'],
+                createdAt: c['updated_at'],
                 machineNumber: c['رقم المكنة']
             });
         });
     }
     
-    // ترتيب حسب created_at تصاعدي (الأقدم أولاً)
+    // ترتيب حسب updated_at تصاعدي (الأقدم أولاً)
     movements.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     
     return movements;
