@@ -87,8 +87,8 @@ export async function discoverDatabase() {
 
 function getDefaultColumns(tableName) {
     const defaults = {
-        merchants: ['id', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الحساب', 'رقم الهاتف', 'المنطقة', 'العنوان', 'الحالة', 'created_at'],
-        machines: ['id', 'رقم المكنة', 'الرقم التسلسلي', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الحساب', 'التارجت الشهري', 'الحالة', 'created_at'],
+        merchants: ['id', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الحساب', 'رقم الهاتف', 'المنطقة', 'العنوان', 'الحالة', 'updated_at'],
+        machines: ['id', 'رقم المكنة', 'الرقم التسلسلي', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'رقم الحساب', 'التارجت الشهري', 'الحالة', 'updated_at'],
         transfers: ['id', 'الرقم المرجعي', 'التاريخ', 'الوقت', 'الشهر', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'قيمة التحويل', 'نوع التحويل', 'created_at'],
         collections: ['id', 'الرقم المرجعي', 'التاريخ', 'الوقت', 'الشهر', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'قيمة التحصيل', 'نوع التحصيل', 'المتبقي بعد التحصيل', 'created_at'],
         requests: ['id', 'رقم الطلب', 'التاريخ', 'الوقت', 'رقم التاجر', 'اسم التاجر', 'اسم النشاط', 'نوع الطلب', 'المبلغ', 'الحالة', 'created_at'],
@@ -96,7 +96,7 @@ function getDefaultColumns(tableName) {
         logs: ['id', 'التاريخ', 'الوقت', 'النوع', 'التفاصيل', 'المستخدم', 'created_at'],
         settings: ['id', 'الخاصية', 'القيمة', 'created_at']
     };
-    return defaults[tableName] || ['id', 'created_at'];
+    return defaults[tableName] || ['id', 'updated_at'];
 }
 
 function renderDatabaseExplorer() {
@@ -170,7 +170,7 @@ async function loadTableData(tableName) {
         const { data, count, error } = await supabase
             .from(tableName)
             .select('*', { count: 'exact' })
-            .order('created_at', { ascending: false })
+            .order(tableName === 'merchants' || tableName === 'machines' ? 'updated_at' : 'created_at', { ascending: false })
             .limit(50);
         
         if (error) throw error;

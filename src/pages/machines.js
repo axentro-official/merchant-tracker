@@ -28,7 +28,7 @@ export async function loadMachines() {
         const { data: machines, error } = await supabase
             .from('machines')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('updated_at', { ascending: false });
             
         if (error) throw error;
         currentMachines = machines || [];
@@ -219,12 +219,10 @@ function initMerchantSearch() {
         }
         
         results.innerHTML = filtered.map(m => `
-            
-                ${escapeHtml(m['اسم التاجر'])}
-                
-                    ${escapeHtml(m['رقم التاجر'])} | ${escapeHtml(m['اسم النشاط'] || '-')}
-                
-            
+            <div class="search-result-item" data-id="${m.id}" style="padding:12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div style="font-weight:700;">${escapeHtml(m['اسم التاجر'])}</div>
+                <div style="font-size:12px;opacity:.8;">${escapeHtml(m['رقم التاجر'])} | ${escapeHtml(m['اسم النشاط'] || '-')}</div>
+            </div>
         `).join('');
         
         results.style.display = 'block';

@@ -236,19 +236,11 @@ function initMerchantSearch() {
         }
         
         results.innerHTML = filtered.slice(0, 10).map(m => `
-            
-                
-                    
-                        ${escapeHtml(m['اسم التاجر'])}
-                        
-                             ${escapeHtml(m['رقم التاجر'])} | 
-                             ${escapeHtml(m['اسم النشاط'] || '-')}
-                        
-                        ${(m['المنطقة'] ? ` ${escapeHtml(m['المنطقة'])}` : '')}
-                    
-                    
-                
-            
+            <div class="search-result-item" data-id="${m.id}" style="padding:12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div style="font-weight:700;">${escapeHtml(m['اسم التاجر'])}</div>
+                <div style="font-size:12px;opacity:.8;">${escapeHtml(m['رقم التاجر'])} | ${escapeHtml(m['اسم النشاط'] || '-')}</div>
+                <div style="font-size:11px;opacity:.7;">${m['المنطقة'] ? escapeHtml(m['المنطقة']) : ''}</div>
+            </div>
         `).join('');
         
         results.style.display = 'block';

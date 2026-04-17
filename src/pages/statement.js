@@ -12,7 +12,7 @@ let merchantsList = [];
 
 // تهيئة Supabase
 export function initStatementPage() {
-    supabase = window.supabaseaseClient || window.supabaseClient;
+    supabase = window.supabaseClient || window.supabase;
 }
 
 // تحميل قائمة التجار لعرضها في خانة البحث
@@ -23,7 +23,7 @@ export async function loadMerchantsForStatement() {
         const { data, error } = await supabase
             .from('merchants')
             .select('id, "رقم التاجر", "اسم التاجر", "اسم النشاط", "رقم الحساب", "رقم الهاتف", "المنطقة", "العنوان"')
-            .order('created_at', { ascending: false });
+            .order('updated_at', { ascending: false });
             
         if (error) throw error;
         merchantsList = data || [];
@@ -31,9 +31,7 @@ export async function loadMerchantsForStatement() {
         // 🔧 تحديث datalist
         const datalist = document.getElementById('merchantDatalistStmt');
         if (datalist) {
-            datalist.innerHTML = merchantsList.map(m => 
-                ``
-            ).join('');
+            datalist.innerHTML = merchantsList.map(m => `<option value="${escapeHtml(m['رقم التاجر'])} - ${escapeHtml(m['اسم التاجر'])}"></option>`).join('');
         }
         
         // 🔧 تهيئة نظام البحث الذكي
@@ -107,20 +105,11 @@ function initMerchantSearch() {
         }
         
         results.innerHTML = filtered.slice(0, 12).map(m => `
-            
-                
-                    
-                        ${escapeHtml(m['اسم التاجر'])}
-                        
-                             ${escapeHtml(m['رقم التاجر'])} | 
-                             ${escapeHtml(m['اسم النشاط'] || '-')}
-                        
-                        ${(m['المنطقة'] ? ` ${escapeHtml(m['المنطقة'])}` : '')}
-                        ${(m['رقم الهاتف'] ? ` ${escapeHtml(m['رقم الهاتف'])}` : '')}
-                    
-                    
-                
-            
+            <div class="search-result-item" data-id="${m.id}" style="padding:12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div style="font-weight:700;">${escapeHtml(m['اسم التاجر'])}</div>
+                <div style="font-size:12px;opacity:.8;">${escapeHtml(m['رقم التاجر'])} | ${escapeHtml(m['اسم النشاط'] || '-')}</div>
+                <div style="font-size:11px;opacity:.7;">${m['المنطقة'] ? escapeHtml(m['المنطقة']) : ''} ${m['رقم الهاتف'] ? ' | ' + escapeHtml(m['رقم الهاتف']) : ''}</div>
+            </div>
         `).join('');
         
         results.style.display = 'block';

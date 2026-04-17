@@ -21,7 +21,7 @@ export async function loadMerchants() {
         const { data, error } = await supabase
             .from('merchants')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('updated_at', { ascending: false });
         if (error) throw error;
         currentMerchants = data || [];
         renderMerchantsTable();
