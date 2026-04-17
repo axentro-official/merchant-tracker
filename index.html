@@ -1622,16 +1622,16 @@
 
 <script type="module">
     // استيراد جميع الوحدات
-    import { initMerchantsPage, loadMerchants, openMerchantModal, saveMerchant, editMerchant, deleteMerchant, closeMerchantModal } from './pages/merchants.js';
-    import { initMachinesPage, loadMachines, openMachineModal, saveMachine, editMachine, deleteMachine, closeMachineModal } from './pages/machines.js';
-    import { initTransfersPage, loadTransfers, openTransferModal, saveTransfer, editTransfer, deleteTransfer, closeTransferModal } from './pages/transfers.js';
-    import { initCollectionsPage, loadCollections, openCollectionModal, saveCollection, editCollection, deleteCollection, closeCollectionModal } from './pages/collections.js';
-    import { initArchivePage, loadArchives, closeMonth, deleteArchive } from './pages/archive.js';
-    import { initDashboardPage, loadDashboardStats, loadRecentActivities, loadTopMachines } from './pages/dashboard.js';
-    import { initRequestsPage, loadRequests, updateRequestStatus, convertRequest, deleteRequest } from './pages/requests.js';
-    import { initStatementPage, loadMerchantsForStatement, loadStatement } from './pages/statement.js';
-    import { initDatabasePage, discoverDatabase, refreshSelectedTable } from './pages/database.js';
-    import { processAiQuery } from './services/aiService.js';
+    import { initMerchantsPage, loadMerchants, openMerchantModal, saveMerchant, editMerchant, deleteMerchant, closeMerchantModal } from './src/pages/merchants.js';
+    import { initMachinesPage, loadMachines, openMachineModal, saveMachine, editMachine, deleteMachine, closeMachineModal } from './src/pages/machines.js';
+    import { initTransfersPage, loadTransfers, openTransferModal, saveTransfer, editTransfer, deleteTransfer, closeTransferModal } from './src/pages/transfers.js';
+    import { initCollectionsPage, loadCollections, openCollectionModal, saveCollection, editCollection, deleteCollection, closeCollectionModal } from './src/pages/collections.js';
+    import { initArchivePage, loadArchives, closeMonth, deleteArchive } from './src/pages/archive.js';
+    import { initDashboardPage, loadDashboardStats, loadRecentActivities, loadTopMachines } from './src/pages/dashboard.js';
+    import { initRequestsPage, loadRequests, updateRequestStatus, convertRequest, deleteRequest } from './src/pages/requests.js';
+    import { initStatementPage, loadMerchantsForStatement, loadStatement } from './src/pages/statement.js';
+    import { initDatabasePage, discoverDatabase, refreshSelectedTable } from './src/pages/database.js';
+    import { processAiQuery } from './src/services/aiService.js';
 
     // ربط الدوال بالنافذة العامة
     window.openMerchantModal = openMerchantModal;
@@ -1658,6 +1658,11 @@
     window.deleteCollection = deleteCollection;
     window.closeCollectionModal = closeCollectionModal;
     
+    window.loadDashboardStats = loadDashboardStats;
+    window.loadRecentActivities = loadRecentActivities;
+    window.loadTopMachines = loadTopMachines;
+    window.loadMerchantsForStatement = loadMerchantsForStatement;
+
     window.closeMonth = closeMonth;
     window.deleteArchive = deleteArchive;
     window.updateRequestStatus = updateRequestStatus;
@@ -1971,7 +1976,7 @@ async function populateMerchantDatalists() {
         const { data, error } = await supabaseClient
             .from('merchants')
             .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "المنطقة", "العنوان')
-            .order('created_at', { ascending: false });
+            .order('updated_at', { ascending: false });
         if (error) throw error;
         const merchants = data || [];
         const options = merchants.map(m => `<option value="${m['رقم التاجر']}">${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`).join('');
