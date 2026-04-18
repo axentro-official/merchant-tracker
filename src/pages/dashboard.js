@@ -1,4 +1,5 @@
 import { getTodayDate } from '../utils/helpers.js';
+import { formatMoney, formatDate, formatTime, escapeHtml } from '../utils/formatters.js';
 
 let supabase = null;
 
@@ -6,69 +7,69 @@ export function initDashboardPage() {
   supabase = window.supabaseClient;
 }
 
-// =========================
-// Helpers
-// =========================
 function setText(id, value) {
   const el = document.getElementById(id);
-  if (el) {
-    el.textContent =
-      typeof value === 'number'
-        ? value.toLocaleString('ar-EG')
-        : value;
+  if (!el) return;
+  el.textContent = typeof value === 'number' ? value.toLocaleString('ar-EG') : value;
+}
+
+function safeNumber(value) {
+  const num = parseFloat(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function buildDateTime(date, time) {
+  if (!date) return 0;
+  try {
+    const safeTime = time || '12:00 AM';
+    return new Date(`${date} ${safeTime}`).getTime();
+  } catch {
+    return 0;
   }
 }
 
-function safeNumber(v) {
-  const n = parseFloat(v);
-  return isNaN(n) ? 0 : n;
-}
-
-// =========================
-// Stats
-// =========================
 export async function loadDashboardStats() {
   supabase = supabase || window.supabaseClient;
   if (!supabase) return;
 
   const today = getTodayDate();
 
-  const [mc, mac, transfers, collections, todayTransfers] =
-    await Promise.all([
-      supabase.from('merchants').select('*', { count: 'exact', head: true }),
-      supabase.from('machines').select('*', { count: 'exact', head: true }),
-      supabase.from('transfers').select('قيمة التحويل'),
-      supabase.from('collections').select('قيمة التحصيل'),
-      supabase.from('transfers').select('قيمة التحويل').eq('التاريخ', today)
+  try {
+    const [merchantsRes, machinesRes, transfersRes, collectionsRes] = await Promise.all([
+      supabase.from('merchants').select('*'),
+      supabase.from('machines').select('*'),
+      supabase.from('transfers').select('*'),
+      supabase.from('collections').select('*')
     ]);
 
-  setText('totalMerchants', mc.count || 0);
-  setText('totalMachines', mac.count || 0);
+    if (merchantsRes.error) throw merchantsRes.error;
+    if (machinesRes.error) throw machinesRes.error;
+    if (transfersRes.error) throw transfersRes.error;
+    if (collectionsRes.error) throw collectionsRes.error;
 
-  const totalTransfers = (transfers.data || []).reduce(
-    (s, r) => s + safeNumber(r['قيمة التحويل']),
-    0
-  );
+    const merchants = merchantsRes.data || [];
+    const machines = machinesRes.data || [];
+    const transfers = transfersRes.data || [];
+    const collections = collectionsRes.data || [];
 
-  const totalCollections = (collections.data || []).reduce(
-    (s, r) => s + safeNumber(r['قيمة التحصيل']),
-    0
-  );
+    const totalTransfers = transfers.reduce((sum, row) => sum + safeNumber(row['قيمة التحويل']), 0);
+    const totalCollections = collections.reduce((sum, row) => sum + safeNumber(row['قيمة التحصيل']), 0);
 
-  const todaySum = (todayTransfers.data || []).reduce(
-    (s, r) => s + safeNumber(r['قيمة التحويل']),
-    0
-  );
+    const todayTransfers = transfers
+      .filter(row => row['التاريخ'] === today)
+      .reduce((sum, row) => sum + safeNumber(row['قيمة التحويل']), 0);
 
-  setText('totalTransfers', totalTransfers);
-  setText('totalCollections', totalCollections);
-  setText('totalRemaining', Math.max(0, totalTransfers - totalCollections));
-  setText('todayTransfers', todaySum);
+    setText('totalMerchants', merchants.length);
+    setText('totalMachines', machines.length);
+    setText('totalTransfers', totalTransfers);
+    setText('totalCollections', totalCollections);
+    setText('todayTransfers', todayTransfers);
+    setText('totalRemaining', Math.max(0, totalTransfers - totalCollections));
+  } catch (error) {
+    console.error('Dashboard Stats Error:', error);
+  }
 }
 
-// =========================
-// Recent Activities (FIXED)
-// =========================
 export async function loadRecentActivities() {
   supabase = supabase || window.supabaseClient;
   if (!supabase) return;
@@ -76,7 +77,14 @@ export async function loadRecentActivities() {
   const tbody = document.getElementById('recentActivityBody');
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="9">Loading...</td></tr>`;
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="9" class="empty-state">
+        <i class="fas fa-spinner fa-pulse"></i>
+        جاري تحميل البيانات...
+      </td>
+    </tr>
+  `;
 
   try {
     const [transfersRes, collectionsRes] = await Promise.all([
@@ -84,55 +92,75 @@ export async function loadRecentActivities() {
       supabase.from('collections').select('*')
     ]);
 
-    const transfers = (transfersRes.data || []).map(t => ({
+    if (transfersRes.error) throw transfersRes.error;
+    if (collectionsRes.error) throw collectionsRes.error;
+
+    const transfers = (transfersRes.data || []).map(row => ({
+      ref: row['الرقم المرجعي'] || '-',
       type: 'تحويل',
-      amount: safeNumber(t['قيمة التحويل']),
-      merchant: t['اسم التاجر'],
-      activity: t['اسم النشاط'],
-      date: t['التاريخ'],
-      time: t['الوقت'],
-      createdAt: t.created_at || `${t['التاريخ']} ${t['الوقت']}`
+      merchantName: row['اسم التاجر'] || '-',
+      activityName: row['اسم النشاط'] || '-',
+      amount: safeNumber(row['قيمة التحويل']),
+      date: row['التاريخ'] || '',
+      time: row['الوقت'] || '',
+      status: 'مكتمل',
+      sortKey: buildDateTime(row['التاريخ'], row['الوقت'])
     }));
 
-    const collections = (collectionsRes.data || []).map(c => ({
+    const collections = (collectionsRes.data || []).map(row => ({
+      ref: row['الرقم المرجعي'] || '-',
       type: 'تحصيل',
-      amount: safeNumber(c['قيمة التحصيل']),
-      merchant: c['اسم التاجر'],
-      activity: c['اسم النشاط'],
-      date: c['التاريخ'],
-      time: c['الوقت'],
-      createdAt: c.created_at || `${c['التاريخ']} ${c['الوقت']}`
+      merchantName: row['اسم التاجر'] || '-',
+      activityName: row['اسم النشاط'] || '-',
+      amount: safeNumber(row['قيمة التحصيل']),
+      date: row['التاريخ'] || '',
+      time: row['الوقت'] || '',
+      status: 'مكتمل',
+      sortKey: buildDateTime(row['التاريخ'], row['الوقت'])
     }));
 
     const activities = [...transfers, ...collections]
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .sort((a, b) => b.sortKey - a.sortKey)
       .slice(0, 10);
 
     if (!activities.length) {
-      tbody.innerHTML = `<tr><td colspan="9">لا توجد بيانات</td></tr>`;
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="empty-state">
+            <i class="fas fa-inbox"></i>
+            لا توجد عمليات حديثة
+          </td>
+        </tr>
+      `;
       return;
     }
 
-    tbody.innerHTML = activities.map((a, i) => `
+    tbody.innerHTML = activities.map((item, index) => `
       <tr>
-        <td>${i + 1}</td>
-        <td>${a.type}</td>
-        <td>${a.merchant}</td>
-        <td>${a.activity}</td>
-        <td>${a.amount.toLocaleString('ar-EG')}</td>
-        <td>${a.date}</td>
-        <td>${a.time}</td>
+        <td>${index + 1}</td>
+        <td><code class="ref-code">${escapeHtml(item.ref)}</code></td>
+        <td>${escapeHtml(item.type)}</td>
+        <td>${escapeHtml(item.merchantName)}</td>
+        <td>${escapeHtml(item.activityName)}</td>
+        <td>${formatMoney(item.amount)}</td>
+        <td>${formatDate(item.date)}</td>
+        <td>${formatTime(item.time || '-')}</td>
+        <td><span class="badge badge-success">${escapeHtml(item.status)}</span></td>
       </tr>
     `).join('');
-  } catch (e) {
-    console.error(e);
-    tbody.innerHTML = `<tr><td colspan="9">خطأ في التحميل</td></tr>`;
+  } catch (error) {
+    console.error('Recent Activities Error:', error);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          حدث خطأ أثناء تحميل آخر العمليات
+        </td>
+      </tr>
+    `;
   }
 }
 
-// =========================
-// Top Machines (FIXED)
-// =========================
 export async function loadTopMachines() {
   supabase = supabase || window.supabaseClient;
   if (!supabase) return;
@@ -140,7 +168,14 @@ export async function loadTopMachines() {
   const tbody = document.getElementById('topMachinesBody');
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="9">Loading...</td></tr>`;
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="9" class="empty-state">
+        <i class="fas fa-spinner fa-pulse"></i>
+        جاري تحميل البيانات...
+      </td>
+    </tr>
+  `;
 
   try {
     const [machinesRes, transfersRes] = await Promise.all([
@@ -148,49 +183,76 @@ export async function loadTopMachines() {
       supabase.from('transfers').select('*')
     ]);
 
+    if (machinesRes.error) throw machinesRes.error;
+    if (transfersRes.error) throw transfersRes.error;
+
     const machines = machinesRes.data || [];
     const transfers = transfersRes.data || [];
 
-    const stats = machines.map(m => {
-      const merchantId = m['رقم التاجر'];
+    if (!machines.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="empty-state">
+            <i class="fas fa-desktop"></i>
+            لا توجد مكن مسجلة
+          </td>
+        </tr>
+      `;
+      return;
+    }
 
-      const relatedTransfers = transfers.filter(
-        t => t['رقم التاجر'] === merchantId
-      );
-
-      const achieved = relatedTransfers.reduce(
-        (s, t) => s + safeNumber(t['قيمة التحويل']),
-        0
-      );
-
-      const target = safeNumber(m['التارجت الشهري']);
-      const percent = target ? (achieved / target) * 100 : 0;
+    const rows = machines.map(machine => {
+      const merchantId = machine['رقم التاجر'];
+      const merchantTransfers = transfers.filter(t => t['رقم التاجر'] === merchantId);
+      const achieved = merchantTransfers.reduce((sum, row) => sum + safeNumber(row['قيمة التحويل']), 0);
+      const target = safeNumber(machine['التارجت الشهري']);
+      const percentage = target > 0 ? (achieved / target) * 100 : 0;
 
       return {
-        merchant: m['اسم التاجر'],
-        machine: m['رقم المكنة'],
+        merchantCode: machine['رقم التاجر'] || '-',
+        merchantName: machine['اسم التاجر'] || '-',
+        activityName: machine['اسم النشاط'] || '-',
+        machineCode: machine['رقم المكنة'] || '-',
+        serial: machine['الرقم التسلسلي'] || '-',
         target,
         achieved,
-        percent
+        percentage
       };
     });
 
-    const sorted = stats
-      .sort((a, b) => b.percent - a.percent)
+    const sorted = rows
+      .sort((a, b) => b.percentage - a.percentage || b.achieved - a.achieved)
       .slice(0, 10);
 
-    tbody.innerHTML = sorted.map((s, i) => `
+    tbody.innerHTML = sorted.map((item, index) => `
       <tr>
-        <td>${i + 1}</td>
-        <td>${s.merchant}</td>
-        <td>${s.machine}</td>
-        <td>${s.target.toLocaleString('ar-EG')}</td>
-        <td>${s.achieved.toLocaleString('ar-EG')}</td>
-        <td>${s.percent.toFixed(1)}%</td>
+        <td>${index + 1}</td>
+        <td>${escapeHtml(String(item.merchantCode))}</td>
+        <td>${escapeHtml(item.merchantName)}</td>
+        <td>${escapeHtml(item.activityName)}</td>
+        <td>${escapeHtml(item.machineCode)}</td>
+        <td>${escapeHtml(item.serial)}</td>
+        <td>${formatMoney(item.target)}</td>
+        <td class="achieved-highlight">${formatMoney(item.achieved)}</td>
+        <td>
+          <div class="progress-wrapper">
+            <div class="progress-bar-bg">
+              <div class="progress-fill" style="width:${Math.min(item.percentage, 100)}%"></div>
+            </div>
+            <span class="percentage-text">${item.percentage.toFixed(1)}%</span>
+          </div>
+        </td>
       </tr>
     `).join('');
-  } catch (e) {
-    console.error(e);
-    tbody.innerHTML = `<tr><td colspan="9">خطأ</td></tr>`;
+  } catch (error) {
+    console.error('Top Machines Error:', error);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          حدث خطأ أثناء تحميل أعلى المكن
+        </td>
+      </tr>
+    `;
   }
 }
