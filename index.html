@@ -1631,7 +1631,7 @@
     import { initRequestsPage, loadRequests, updateRequestStatus, convertRequest, deleteRequest } from './src/pages/requests.js';
     import { initStatementPage, loadMerchantsForStatement, loadStatement } from './src/pages/statement.js';
     import { initDatabasePage, discoverDatabase, refreshSelectedTable } from './src/pages/database.js';
-    import { processQuery as processAiQuery } from './src/services/aiService.js';
+    import { processAiQuery } from './src/services/aiService.js';
 
     // ربط الدوال بالنافذة العامة
     window.openMerchantModal = openMerchantModal;
@@ -1970,7 +1970,7 @@ async function populateMerchantDatalists() {
     try {
         const { data, error } = await supabaseClient
             .from('merchants')
-            .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "المنطقة", "العنوان')
+            .select('*')
             .order('updated_at', { ascending: false });
         if (error) throw error;
         const merchants = data || [];
