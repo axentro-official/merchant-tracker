@@ -22,6 +22,17 @@ function getMerchantById(id) {
   return merchantsList.find(m => m.id === id);
 }
 
+function buildDateTime(date, time) {
+  if (!date) return 0;
+
+  try {
+    const safeTime = time || '12:00 AM';
+    return new Date(`${date} ${safeTime}`).getTime();
+  } catch {
+    return 0;
+  }
+}
+
 function renderMerchantInfo(merchant) {
   const infoEl = document.getElementById('statementMerchantInfo');
   if (!infoEl) return;
@@ -165,14 +176,12 @@ export async function loadStatement() {
       supabase
         .from('transfers')
         .select('*')
-        .eq('رقم التاجر', merchantId)
-        .order('created_at', { ascending: true }),
+        .eq('رقم التاجر', merchantId),
 
       supabase
         .from('collections')
         .select('*')
         .eq('رقم التاجر', merchantId)
-        .order('created_at', { ascending: true })
     ]);
 
     if (transfersRes.error) throw transfersRes.error;
@@ -185,11 +194,10 @@ export async function loadStatement() {
         kind: 'debit',
         type: 'تحويل',
         date: t['التاريخ'],
-        time: t['الوقت'],
+        time: t['الوقت'] || '12:00 AM',
         ref: t['الرقم المرجعي'],
         amount: parseFloat(t['قيمة التحويل']) || 0,
-        note: t['ملاحظات'] || '',
-        createdAt: t.created_at || ''
+        note: t['ملاحظات'] || ''
       });
     });
 
@@ -198,15 +206,14 @@ export async function loadStatement() {
         kind: 'credit',
         type: 'تحصيل',
         date: c['التاريخ'],
-        time: c['الوقت'],
+        time: c['الوقت'] || '12:00 AM',
         ref: c['الرقم المرجعي'],
         amount: parseFloat(c['قيمة التحصيل']) || 0,
-        note: c['ملاحظات'] || '',
-        createdAt: c.created_at || ''
+        note: c['ملاحظات'] || ''
       });
     });
 
-    rows.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    rows.sort((a, b) => buildDateTime(a.date, a.time) - buildDateTime(b.date, b.time));
 
     if (!rows.length) {
       renderStatementStats(0, 0, 0, 0);
