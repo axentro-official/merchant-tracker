@@ -25,45 +25,81 @@ export function initRequestsPage() {
 // بدء التنبيه الدوري كل 5 دقائق
 function startPendingRequestsChecker() {
     if (pendingCheckInterval) clearInterval(pendingCheckInterval);
+
     pendingCheckInterval = setInterval(async () => {
         if (!supabase) return;
+
         try {
             const { count, error } = await supabase
                 .from('requests')
                 .select('*', { count: 'exact', head: true })
                 .eq('الحالة', 'معلق');
+
             if (!error && count !== null && count !== lastPendingCount && count > 0) {
                 lastPendingCount = count;
                 showToast(`📋 يوجد ${count} طلب(ات) معلقة جديدة!`, 'warning');
+
                 if (window.Sound) window.Sound.play('warning');
-                // تحديث الجدول إذا كان مفتوحاً
+
                 if (document.getElementById('section-requests')?.style.display === 'block') {
                     await loadRequests();
                 }
             } else if (count === 0) {
                 lastPendingCount = 0;
             }
-        } catch(e) { console.warn(e); }
-    }, 300000); // 5 دقائق
+        } catch (e) {
+            console.warn(e);
+        }
+    }, 300000);
+}
+
+function getNowDate() {
+    return new Date().toISOString().split('T')[0];
+}
+
+function getNowTime12h() {
+    return new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+
+async function syncGoogleScript(payload) {
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+    } catch (e) {
+        console.warn('Google Script error:', e);
+    }
 }
 
 // تحميل الطلبات وعرضها
 export async function loadRequests() {
     if (!supabase) return;
+
     try {
         const { data: requests, error } = await supabase
             .from('requests')
             .select('*')
             .order('created_at', { ascending: false });
+
         if (error) throw error;
+
         currentRequests = requests || [];
-        
-        const { data: merchants } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر"');
+
+        const { data: merchants } = await supabase
+            .from('merchants')
+            .select('id, "رقم التاجر", "اسم التاجر"');
+
         merchantsList = merchants || [];
-        
-        // حساب المديونية الحالية لكل طلب
+
         await enrichRequestsWithCurrentDebt();
-        
+
         renderRequestsTable();
         updatePendingBadge();
     } catch (err) {
@@ -74,12 +110,16 @@ export async function loadRequests() {
 
 // حساب المديونية الحالية لكل تاجر بناءً على التحويلات والتحصيلات
 async function enrichRequestsWithCurrentDebt() {
-    // جلب جميع التحويلات والتحصيلات
-    const { data: transfers } = await supabase.from('transfers').select('"رقم التاجر", "قيمة التحويل"');
-    const { data: collections } = await supabase.from('collections').select('"رقم التاجر", "قيمة التحصيل"');
-    
+    const { data: transfers } = await supabase
+        .from('transfers')
+        .select('"رقم التاجر", "قيمة التحويل"');
+
+    const { data: collections } = await supabase
+        .from('collections')
+        .select('"رقم التاجر", "قيمة التحصيل"');
+
     const merchantBalance = new Map();
-    
+
     if (transfers) {
         transfers.forEach(t => {
             const merchantId = t['رقم التاجر'];
@@ -87,6 +127,7 @@ async function enrichRequestsWithCurrentDebt() {
             merchantBalance.set(merchantId, (merchantBalance.get(merchantId) || 0) + amount);
         });
     }
+
     if (collections) {
         collections.forEach(c => {
             const merchantId = c['رقم التاجر'];
@@ -94,11 +135,13 @@ async function enrichRequestsWithCurrentDebt() {
             merchantBalance.set(merchantId, (merchantBalance.get(merchantId) || 0) - amount);
         });
     }
-    
-    // إضافة حقل المديونية الحالية لكل طلب
+
     currentRequests = currentRequests.map(req => {
         const debt = merchantBalance.get(req['رقم التاجر']) || 0;
-        return { ...req, currentDebt: Math.max(0, debt) };
+        return {
+            ...req,
+            currentDebt: Math.max(0, debt)
+        };
     });
 }
 
@@ -106,14 +149,16 @@ function renderRequestsTable() {
     const tbody = document.getElementById('requestsTableBody');
     if (!tbody) return;
 
-    if (!currentRequests.length) {
+    const visibleRequests = currentRequests.filter(r => r['الحالة'] === 'معلق');
+
+    if (!visibleRequests.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="11" class="empty-state">
+                <td colspan="9" class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <p>لا توجد طلبات</p>
-                    
-                
+                    <p>لا توجد طلبات معلقة</p>
+                </td>
+            </tr>
         `;
         return;
     }
@@ -125,29 +170,26 @@ function renderRequestsTable() {
         'قيد التنفيذ': ['قيد التنفيذ', 'badge-info']
     };
 
-    tbody.innerHTML = currentRequests.map((r, idx) => {
+    tbody.innerHTML = visibleRequests.map((r, idx) => {
         const [statusText, statusClass] = statusMap[r['الحالة']] || [r['الحالة'] || 'معلق', 'badge-warning'];
-        const convertBtn = r['الحالة'] === 'معلق' 
-            ? `<button class="btn btn-success btn-sm" onclick="window.convertRequest('${r.id}')" title="تحويل تلقائي">
+        const convertBtn = r['الحالة'] === 'معلق'
+            ? `
+                <button class="btn btn-success btn-sm" onclick="window.convertRequest('${r.id}')" title="تحويل تلقائي">
                     <i class="fas fa-exchange-alt"></i>
-               </button>` 
+                </button>
+              `
             : '';
-        
+
         return `
             <tr>
-                <td>${idx + 1}  
-                <td><code class="ref-code">${escapeHtml(r['رقم الطلب'] || '-')}</code>  
-                <td>${formatDate(r['التاريخ'])}  
-                <td>${formatTime(r['الوقت'])}  
-                <td>${escapeHtml(r['اسم التاجر'] || '-')}  
-                <td>${escapeHtml(r['اسم النشاط'] || '-')}  
-                <td>${escapeHtml(r['نوع الطلب'] || '-')}  
-                <td><strong style="color:var(--danger);">${formatMoney(r['المبلغ'])}</strong>  
-                <td><strong style="color:var(--warning);">${formatMoney(r.currentDebt || 0)}</strong>  
-                <td>
-                    <span class="badge ${statusClass}">${statusText}</span>
-                    
-                  
+                <td>${idx + 1}</td>
+                <td><code class="ref-code">${escapeHtml(r['رقم الطلب'] || '-')}</code></td>
+                <td>${formatDate(r['التاريخ'])}</td>
+                <td>${escapeHtml(r['اسم التاجر'] || '-')}</td>
+                <td>${escapeHtml(r['نوع الطلب'] || '-')}</td>
+                <td><strong style="color:var(--danger);">${formatMoney(r['المبلغ'])}</strong></td>
+                <td><strong style="color:var(--warning);">${formatMoney(r.currentDebt || 0)}</strong></td>
+                <td><span class="badge ${statusClass}">${statusText}</span></td>
                 <td>
                     <div class="action-btns">
                         ${convertBtn}
@@ -155,8 +197,8 @@ function renderRequestsTable() {
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
-                    
-              
+                </td>
+            </tr>
         `;
     }).join('');
 }
@@ -165,6 +207,7 @@ function renderRequestsTable() {
 function updatePendingBadge() {
     const pendingCount = currentRequests.filter(r => r['الحالة'] === 'معلق').length;
     const badge = document.getElementById('pendingBadge');
+
     if (badge) {
         if (pendingCount > 0) {
             badge.textContent = pendingCount;
@@ -178,96 +221,112 @@ function updatePendingBadge() {
 // فتح نافذة إضافة طلب (للأدمن)
 export async function openRequestModal() {
     if (!merchantsList.length) {
-        const { data } = await supabase.from('merchants').select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+        const { data } = await supabase
+            .from('merchants')
+            .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+
         merchantsList = data || [];
     }
-    
+
     const modal = document.getElementById('requestModal');
     const title = document.getElementById('requestModalTitle');
     title.innerHTML = '<i class="fas fa-paper-plane"></i> تقديم طلب جديد';
-    
+
     const merchantSelect = document.getElementById('reqMerchantId');
     if (merchantSelect) {
-        merchantSelect.innerHTML = '<option value="">-- اختر تاجر --</option>' +
-            merchantsList.map(m => `<option value="${m.id}">${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`).join('');
+        merchantSelect.innerHTML =
+            '<option value="">-- اختر تاجر --</option>' +
+            merchantsList.map(m =>
+                `<option value="${m.id}">${escapeHtml(m['رقم التاجر'])} - ${escapeHtml(m['اسم التاجر'])}</option>`
+            ).join('');
     }
-    
+
     document.getElementById('editRequestId').value = '';
     document.getElementById('reqType').value = '';
     document.getElementById('reqAmount').value = '';
     document.getElementById('reqNotes').value = '';
     if (merchantSelect) merchantSelect.value = '';
-    
+
     modal.classList.add('show');
+
     if (window.Sound) window.Sound.play('click');
 }
 
 export function closeRequestModal() {
-    document.getElementById('requestModal').classList.remove('show');
+    document.getElementById('requestModal')?.classList.remove('show');
 }
 
-// حفظ طلب جديد (يُرسل إلى Google Script و Supabase)
+// حفظ طلب جديد
 export async function saveRequest() {
     const merchantId = document.getElementById('reqMerchantId').value;
     const type = document.getElementById('reqType').value;
     const amount = parseFloat(document.getElementById('reqAmount').value);
     const notes = document.getElementById('reqNotes').value.trim();
-    
+
     if (!merchantId) {
         showToast('يرجى اختيار التاجر', 'warning');
         return;
     }
+
     if (!type) {
         showToast('يرجى اختيار نوع الطلب', 'warning');
         return;
     }
+
     if (!amount || amount <= 0) {
         showToast('المبلغ غير صحيح', 'warning');
         return;
     }
-    
+
     const merchant = merchantsList.find(m => m.id === merchantId);
     if (!merchant) {
         showToast('التاجر غير موجود', 'error');
         return;
     }
-    
-    // حساب المديونية الحالية
-    const { data: transfers } = await supabase.from('transfers').select('قيمة التحويل').eq('رقم التاجر', merchantId);
-    const { data: collections } = await supabase.from('collections').select('قيمة التحصيل').eq('رقم التاجر', merchantId);
-    const totalTransfers = transfers?.reduce((s,t)=>s+(parseFloat(t['قيمة التحويل'])||0),0) || 0;
-    const totalCollections = collections?.reduce((s,c)=>s+(parseFloat(c['قيمة التحصيل'])||0),0) || 0;
+
+    const { data: transfers } = await supabase
+        .from('transfers')
+        .select('قيمة التحويل')
+        .eq('رقم التاجر', merchantId);
+
+    const { data: collections } = await supabase
+        .from('collections')
+        .select('قيمة التحصيل')
+        .eq('رقم التاجر', merchantId);
+
+    const totalTransfers = transfers?.reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0) || 0;
+    const totalCollections = collections?.reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0) || 0;
     const currentDebt = totalTransfers - totalCollections;
-    
+
     const requestData = {
-        "رقم التاجر": merchantId,
-        "اسم التاجر": merchant['اسم التاجر'],
-        "رقم الحساب": merchant['رقم الحساب'],
-        "اسم النشاط": merchant['اسم النشاط'],
-        "نوع الطلب": type,
-        "المبلغ": amount,
-        "المديونية الحالية": Math.max(0, currentDebt),
-        "ملاحظات": notes,
-        "التاريخ": new Date().toISOString().split('T')[0],
-        "الوقت": new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
-        "الحالة": 'معلق'
+        'رقم التاجر': merchantId,
+        'اسم التاجر': merchant['اسم التاجر'],
+        'رقم الحساب': merchant['رقم الحساب'],
+        'اسم النشاط': merchant['اسم النشاط'],
+        'نوع الطلب': type,
+        'المبلغ': amount,
+        'المديونية الحالية': Math.max(0, currentDebt),
+        'ملاحظات': notes,
+        'التاريخ': getNowDate(),
+        'الوقت': getNowTime12h(),
+        'الحالة': 'معلق'
     };
-    
+
     try {
-        // إرسال إلى Google Script (لا ننتظر الرد بسبب mode: 'no-cors')
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestData)
-        }).catch(e => console.warn('Google Script error:', e));
-        
-        // إدراج في Supabase (الرقم المرجعي يتولد تلقائياً)
-        const { error } = await supabase.from('requests').insert([requestData]);
+        await syncGoogleScript({
+            action: 'create_request',
+            ...requestData
+        });
+
+        const { error } = await supabase
+            .from('requests')
+            .insert([requestData]);
+
         if (error) throw error;
-        
+
         showToast('تم إرسال الطلب بنجاح', 'success');
         if (window.Sound) window.Sound.play('success');
+
         closeRequestModal();
         await loadRequests();
     } catch (err) {
@@ -281,39 +340,54 @@ export async function saveRequest() {
 export async function convertRequest(requestId) {
     const request = currentRequests.find(r => r.id === requestId);
     if (!request) return;
-    
+
     showConfirm(`تحويل الطلب "${request['رقم الطلب']}" إلى تحويل تلقائي؟`, async () => {
         try {
-            // إنشاء تحويل
             const transferData = {
-                "رقم التاجر": request['رقم التاجر'],
-                "اسم التاجر": request['اسم التاجر'],
-                "رقم الحساب": request['رقم الحساب'],
-                "اسم النشاط": request['اسم النشاط'],
-                "نوع التحويل": "رصيد خدمات",
-                "قيمة التحويل": request['المبلغ'],
-                "ملاحظات": `تحويل تلقائي من طلب: ${request['رقم الطلب']}`,
-                "التاريخ": new Date().toISOString().split('T')[0],
-                "الوقت": new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
-                "الشهر": new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' })
+                'رقم التاجر': request['رقم التاجر'],
+                'اسم التاجر': request['اسم التاجر'],
+                'رقم الحساب': request['رقم الحساب'],
+                'اسم النشاط': request['اسم النشاط'],
+                'نوع التحويل': 'رصيد خدمات',
+                'قيمة التحويل': request['المبلغ'],
+                'ملاحظات': `تحويل تلقائي من طلب: ${request['رقم الطلب']}`,
+                'التاريخ': getNowDate(),
+                'الوقت': getNowTime12h(),
+                'الشهر': new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' })
             };
-            const { error: transferError } = await supabase.from('transfers').insert([transferData]);
+
+            const { error: transferError } = await supabase
+                .from('transfers')
+                .insert([transferData]);
+
             if (transferError) throw transferError;
-            
-            // تحديث حالة الطلب
+
             const { error: updateError } = await supabase
                 .from('requests')
-                .update({ "الحالة": "مكتمل" })
+                .update({ 'الحالة': 'مكتمل' })
                 .eq('id', requestId);
+
             if (updateError) throw updateError;
-            
+
+            await syncGoogleScript({
+                action: 'update_request_status',
+                requestId,
+                requestNumber: request['رقم الطلب'],
+                status: 'مكتمل',
+                convertedToTransfer: true,
+                convertedAtDate: getNowDate(),
+                convertedAtTime: getNowTime12h()
+            });
+
             showToast('تم تحويل الطلب بنجاح', 'success');
             if (window.Sound) window.Sound.play('success');
+
             await loadRequests();
             if (window.loadDashboardStats) window.loadDashboardStats();
             if (window.loadRecentActivities) window.loadRecentActivities();
             if (window.loadTopMachines) window.loadTopMachines();
         } catch (err) {
+            console.error(err);
             showToast('خطأ في التحويل: ' + err.message, 'error');
             if (window.Sound) window.Sound.play('error');
         }
@@ -328,11 +402,20 @@ export function deleteRequest(requestId) {
                 .from('requests')
                 .delete()
                 .eq('id', requestId);
+
             if (error) throw error;
+
+            await syncGoogleScript({
+                action: 'delete_request',
+                requestId
+            });
+
             showToast('تم حذف الطلب', 'success');
             if (window.Sound) window.Sound.play('success');
+
             await loadRequests();
         } catch (err) {
+            console.error(err);
             showToast('خطأ في الحذف: ' + err.message, 'error');
             if (window.Sound) window.Sound.play('error');
         }
