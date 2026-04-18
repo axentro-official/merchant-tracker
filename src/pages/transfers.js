@@ -11,6 +11,9 @@ export function initTransfersPage() {
   supabase = window.supabaseClient;
 }
 
+// =========================
+// LOAD LISTS
+// =========================
 async function ensureLists() {
   if (listsLoaded) return;
 
@@ -32,11 +35,21 @@ function merchantById(id) {
   return merchantsList.find(m => m.id === id);
 }
 
-function merchantCodeById(id) {
-  const m = merchantById(id);
-  return m ? m['رقم التاجر'] : id; // fallback
+// =========================
+// NORMALIZE SEARCH (IMPORTANT)
+// =========================
+function normalizeArabic(text) {
+  return String(text || '')
+    .replace(/[أإآا]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .trim()
+    .toLowerCase();
 }
 
+// =========================
+// UI HELPERS
+// =========================
 function fillMerchantDatalist() {
   const dl = document.getElementById('merchantDatalistTrans');
   if (!dl) return;
@@ -48,33 +61,61 @@ function fillMerchantDatalist() {
   ).join('');
 }
 
-function fillMachinesSelect() {
+// ✅ FIX: فلترة المكن حسب التاجر
+function fillMachinesSelect(merchantId = '') {
   const el = document.getElementById('transMachineId');
   if (!el) return;
 
+  const filtered = merchantId
+    ? machinesList.filter(m => m['رقم التاجر'] === merchantId)
+    : machinesList;
+
   el.innerHTML =
     '<option value="">بدون مكنة</option>' +
-    machinesList.map(m =>
+    filtered.map(m =>
       `<option value="${escapeHtml(m['رقم المكنة'])}">
         ${escapeHtml(m['رقم المكنة'])}
       </option>`
     ).join('');
 }
 
+// =========================
+// SEARCH (FIXED)
+// =========================
 function attachSearch() {
   const s = document.getElementById('transMerchantSearch');
   const h = document.getElementById('transMerchantId');
   if (!s || !h) return;
 
-  s.onchange = s.oninput = () => {
-    const m = merchantsList.find(x =>
-      x['رقم التاجر'] === s.value ||
-      `${x['رقم التاجر']} - ${x['اسم التاجر']}` === s.value
-    );
+  const resolve = () => {
+    const val = s.value;
+    const norm = normalizeArabic(val);
+
+    const m = merchantsList.find(x => {
+      const code = String(x['رقم التاجر'] || '');
+      const name = String(x['اسم التاجر'] || '');
+      const full = `${code} - ${name}`;
+
+      return (
+        code === val ||
+        full === val ||
+        normalizeArabic(code) === norm ||
+        normalizeArabic(name).includes(norm) ||
+        normalizeArabic(full).includes(norm)
+      );
+    });
+
     h.value = m?.id || '';
+    fillMachinesSelect(m?.id || '');
   };
+
+  s.oninput = resolve;
+  s.onchange = resolve;
 }
 
+// =========================
+// LOAD
+// =========================
 export async function loadTransfers() {
   supabase = supabase || window.supabaseClient;
   if (!supabase) return;
@@ -98,6 +139,9 @@ export async function loadTransfers() {
   }
 }
 
+// =========================
+// RENDER
+// =========================
 function renderTransfersTable() {
   const tbody = document.getElementById('transfersTableBody');
   if (!tbody) return;
@@ -107,10 +151,7 @@ function renderTransfersTable() {
     return;
   }
 
-  tbody.innerHTML = currentTransfers.map((t, idx) => {
-    const merchantCode = merchantCodeById(t['رقم التاجر']);
-
-    return `
+  tbody.innerHTML = currentTransfers.map((t, idx) => `
     <tr>
       <td>${idx + 1}</td>
       <td><code class="ref-code">${escapeHtml(t['الرقم المرجعي'] || '-')}</code></td>
@@ -130,61 +171,40 @@ function renderTransfersTable() {
           </button>
         </div>
       </td>
-    </tr>`;
-  }).join('');
+    </tr>
+  `).join('');
 }
 
+// =========================
+// SAVE
+// =========================
 function getNowDateTime() {
   const now = new Date();
-
-  const date = now.toISOString().split('T')[0];
-
-  const time = now.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
-
-  return { date, time };
-}
-
-async function insertLog(action, details, ref = '') {
-  try {
-    await supabase.from('logs').insert([{
-      النوع: action,
-      التفاصيل: details,
-      الرقم_المرجعي: ref,
-      التاريخ: new Date().toISOString().split('T')[0],
-      الوقت: new Date().toLocaleTimeString('en-US', { hour12: true })
-    }]);
-  } catch (e) {
-    console.warn('log failed', e);
-  }
+  return {
+    date: now.toISOString().split('T')[0],
+    time: now.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
+  };
 }
 
 export async function saveTransfer() {
   const id = document.getElementById('editTransferId').value;
+  const merchant = merchantById(document.getElementById('transMerchantId').value);
 
-  const merchant = merchantById(
-    document.getElementById('transMerchantId').value
-  );
+  if (!merchant) return showToast('يرجى اختيار التاجر', 'warning');
 
-  if (!merchant)
-    return showToast('يرجى اختيار التاجر من القائمة', 'warning');
-
-  const amount = parseFloat(
-    document.getElementById('transAmount').value || '0'
-  );
-
-  if (!(amount > 0))
-    return showToast('يرجى إدخال مبلغ صحيح', 'warning');
+  const amount = parseFloat(document.getElementById('transAmount').value || '0');
+  if (!(amount > 0)) return showToast('المبلغ غير صحيح', 'warning');
 
   const { date, time } = getNowDateTime();
 
   const payload = {
     'رقم التاجر': merchant.id,
     'اسم التاجر': merchant['اسم التاجر'],
-    'اسم النشاط': merchant['اسم النشاط'] || 'غير محدد',
+    'اسم النشاط': merchant['اسم النشاط'] || '',
     'رقم الحساب': merchant['رقم الحساب'] || '',
     'رقم المكنة': document.getElementById('transMachineId').value || null,
     'قيمة التحويل': amount,
@@ -200,78 +220,41 @@ export async function saveTransfer() {
       : supabase.from('transfers').insert([payload]);
 
     const { error } = await q;
-
     if (error) throw error;
 
-    await insertLog(
-      id ? 'تعديل تحويل' : 'إضافة تحويل',
-      `تم ${id ? 'تعديل' : 'إضافة'} تحويل بمبلغ ${amount}`,
-      payload['الرقم المرجعي'] || ''
-    );
-
-    showToast(id ? 'تم تحديث التحويل' : 'تم إضافة التحويل', 'success');
+    showToast(id ? 'تم التعديل' : 'تم الإضافة', 'success');
 
     closeTransferModal();
     await loadTransfers();
     window.loadDashboardStats?.();
-
+    window.loadRecentActivities?.();
   } catch (err) {
     console.error(err);
-    showToast(err.message || 'فشل حفظ التحويل', 'error');
+    showToast(err.message || 'فشل الحفظ', 'error');
   }
 }
 
-export function editTransfer(id) {
-  const item = currentTransfers.find(t => t.id === id);
-  if (item) openTransferModal(item);
-}
-
-export function deleteTransfer(id) {
-  showConfirm('هل تريد حذف هذا التحويل؟', async () => {
-    const { error } = await supabase.from('transfers').delete().eq('id', id);
-
-    if (error) return showToast(error.message, 'error');
-
-    await insertLog('حذف تحويل', `تم حذف تحويل`, id);
-
-    showToast('تم حذف التحويل', 'success');
-
-    await loadTransfers();
-    window.loadDashboardStats?.();
-  });
-}
-
+// =========================
+// MODAL
+// =========================
 export async function openTransferModal(transfer = null) {
   await ensureLists();
 
   fillMerchantDatalist();
-  fillMachinesSelect();
   attachSearch();
-
-  document.getElementById('transferModalTitle').innerHTML =
-    transfer
-      ? '<i class="fas fa-edit"></i> تعديل تحويل'
-      : '<i class="fas fa-exchange-alt"></i> تحويل جديد';
 
   document.getElementById('editTransferId').value = transfer?.id || '';
   document.getElementById('transMerchantId').value = transfer?.['رقم التاجر'] || '';
 
   const merchant = merchantById(transfer?.['رقم التاجر']);
+  document.getElementById('transMerchantSearch').value = merchant?.['رقم التاجر'] || '';
 
-  document.getElementById('transMerchantSearch').value =
-    merchant?.['رقم التاجر'] || '';
+  fillMachinesSelect(transfer?.['رقم التاجر'] || '');
 
-  document.getElementById('transMachineId').value =
-    transfer?.['رقم المكنة'] || '';
-
-  document.getElementById('transAmount').value =
-    transfer?.['قيمة التحويل'] || '';
-
-  document.getElementById('transType').value =
-    transfer?.['نوع التحويل'] || 'نقدي';
-
-  document.getElementById('transNotes').value =
-    transfer?.['ملاحظات'] || '';
+  document.getElementById('transMachineId').value = transfer?.['رقم المكنة'] || '';
+  document.getElementById('transAmount').value = transfer?.['قيمة التحويل'] || '';
+  document.getElementById('transType').value = transfer?.['نوع التحويل'] || 'نقدي';
+  document.getElementById('transNotes').value = transfer?.['ملاحظات'] || '';
 
   document.getElementById('transferModal').classList.add('show');
 }
@@ -283,5 +266,13 @@ export function closeTransferModal() {
 window.openTransferModal = openTransferModal;
 window.closeTransferModal = closeTransferModal;
 window.saveTransfer = saveTransfer;
-window.editTransfer = editTransfer;
-window.deleteTransfer = deleteTransfer;
+window.editTransfer = id => {
+  const item = currentTransfers.find(t => t.id === id);
+  if (item) openTransferModal(item);
+};
+window.deleteTransfer = id => {
+  showConfirm('حذف؟', async () => {
+    await supabase.from('transfers').delete().eq('id', id);
+    await loadTransfers();
+  });
+};
