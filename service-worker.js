@@ -1,4 +1,4 @@
-const CACHE_NAME = 'axentro-merchant-v2';
+const CACHE_NAME = 'axentro-merchant-v1';
 const OFFLINE_URL = './merchantPortal.html';
 
 const APP_ASSETS = [
