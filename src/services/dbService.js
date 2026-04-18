@@ -32,8 +32,8 @@ export async function fetchAll(tableName, options = {}) {
             const [column, direction] = options.orderBy.split('.');
             query = query.order(column, { ascending: direction !== 'desc' });
         } else {
-            // Default order by updated_at desc
-            query = query.order('updated_at', { ascending: false });
+            // Default order by created_at desc
+            query = query.order('created_at', { ascending: false });
         }
         
         // Apply limit
@@ -170,7 +170,7 @@ export async function fetchWithCount(tableName, limit = 50) {
         const { data, error, count } = await supabase
             .from(tableName)
             .select('*', { count: 'exact' })
-            .order('updated_at', { ascending: false })
+            .order('created_at', { ascending: false })
             .limit(limit);
         
         if (error) {
@@ -255,7 +255,7 @@ export async function fetchByColumn(tableName, column, value) {
             .from(tableName)
             .select('*')
             .eq(column, value)
-            .order('updated_at', { ascending: false });
+            .order('created_at', { ascending: false });
         
         if (error) {
             console.error(`❌ Error fetching ${tableName} by ${column}:`, error);

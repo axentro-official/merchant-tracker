@@ -14,7 +14,7 @@ import { CONFIG, generateReferenceNumber } from '../config/supabase.js';
  */
 export async function getAllMerchants() {
     return await fetchAll('merchants', {
-        orderBy: 'updated_at.desc'
+        orderBy: 'created_at.desc'
     });
 }
 
@@ -58,7 +58,7 @@ export async function createMerchant(merchantData) {
         'ملاحظات': merchantData['ملاحظات'] || '',
         'تاريخ الإنشاء': new Date().toISOString().split('T')[0],
         'وقت الإنشاء': new Date().toTimeString().slice(0, 8),
-        'updated_at': new Date().toISOString(),
+        'created_at': new Date().toISOString(),
         'updated_at': new Date().toISOString()
     };
     
