@@ -1583,6 +1583,20 @@
     import { initDatabasePage, discoverDatabase, refreshSelectedTable } from './src/pages/database.js';
     import { processAiQuery } from './src/services/aiService.js';
 
+    window.loadMerchants = loadMerchants;
+    window.loadMachines = loadMachines;
+    window.loadTransfers = loadTransfers;
+    window.loadCollections = loadCollections;
+    window.loadRequests = loadRequests;
+    window.loadArchives = loadArchives;
+    window.loadDashboardStats = loadDashboardStats;
+    window.loadRecentActivities = loadRecentActivities;
+    window.loadTopMachines = loadTopMachines;
+    window.loadMerchantsForStatement = loadMerchantsForStatement;
+    window.loadStatement = loadStatement;
+    window.discoverDatabase = discoverDatabase;
+    window.refreshSelectedTable = refreshSelectedTable;
+
     window.openMerchantModal = openMerchantModal;
     window.saveMerchant = saveMerchant;
     window.editMerchant = editMerchant;
@@ -1612,10 +1626,6 @@
     window.convertRequest = convertRequest;
     window.deleteRequest = deleteRequest;
 
-    window.loadStatement = loadStatement;
-    window.discoverDatabase = discoverDatabase;
-    window.refreshSelectedTable = refreshSelectedTable;
-
     window.refreshCurrentPage = async () => {
         const scrollY = window.scrollY;
         const activeSection = document.querySelector('#dashboardSections section[style*="display: block"]');
@@ -1640,6 +1650,8 @@
                 await loadArchives();
             } else if (id === 'section-statement') {
                 await loadMerchantsForStatement();
+            } else if (id === 'section-database') {
+                await discoverDatabase();
             }
         } finally {
             setTimeout(() => window.scrollTo(0, scrollY), 50);
@@ -1683,7 +1695,8 @@
         const container = document.getElementById('aiMessages');
         const msgDiv = document.createElement('div');
         msgDiv.className = `ai-message ${role}`;
-        msgDiv.innerHTML = content.replace(/\n/g, '<br>');
+        msgDiv.innerHTML = content.replace(/
+/g, '<br>');
         container.appendChild(msgDiv);
         container.scrollTop = container.scrollHeight;
     };
@@ -1718,7 +1731,7 @@
                 collections: collections.data || [],
                 requests: requests.data || []
             };
-        } catch(e) {
+        } catch (e) {
             return {};
         }
     };
@@ -1772,6 +1785,7 @@ const Sound = {
         } catch(e) { console.warn(e); }
     }
 };
+window.Sound = Sound;
 function playClick() { Sound.play('click'); }
 
 window.showToast = (msg, type) => {
