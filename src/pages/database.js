@@ -23,9 +23,19 @@ export async function discoverDatabase() {
     }
 
     const container = document.getElementById('dbTablesList');
+    const detailsContainer = document.getElementById('dbTableDetails');
+    const thead = document.getElementById('dbDataHead');
+    const tbody = document.getElementById('dbDataBody');
+    const rowCountEl = document.getElementById('dbRowCount');
+
     if (container) {
         container.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري اكتشاف الجداول...</div>';
     }
+
+    if (detailsContainer) detailsContainer.style.display = 'none';
+    if (thead) thead.innerHTML = '';
+    if (tbody) tbody.innerHTML = '';
+    if (rowCountEl) rowCountEl.textContent = '0 صف';
 
     try {
         const tablesToCheck = [
@@ -47,40 +57,40 @@ export async function discoverDatabase() {
                     .from(tableName)
                     .select('*', { count: 'exact', head: true });
 
-                if (!error) {
-                    let columns = [];
-
-                    const { data: sample, error: sampleError } = await supabase
-                        .from(tableName)
-                        .select('*')
-                        .limit(1);
-
-                    if (!sampleError && sample && sample.length > 0) {
-                        columns = Object.keys(sample[0]);
-                    } else {
-                        columns = getDefaultColumns(tableName);
-                    }
-
-                    discoveredTables.push({
-                        name: tableName,
-                        count: count || 0,
-                        columns,
-                        status: 'connected'
-                    });
-                } else {
+                if (error) {
                     discoveredTables.push({
                         name: tableName,
                         count: 0,
-                        columns: [],
+                        columns: getDefaultColumns(tableName),
                         status: 'error',
                         error: error.message
                     });
+                    continue;
                 }
+
+                let columns = [];
+                const { data: sample, error: sampleError } = await supabase
+                    .from(tableName)
+                    .select('*')
+                    .limit(1);
+
+                if (!sampleError && Array.isArray(sample) && sample.length > 0) {
+                    columns = Object.keys(sample[0]);
+                } else {
+                    columns = getDefaultColumns(tableName);
+                }
+
+                discoveredTables.push({
+                    name: tableName,
+                    count: count || 0,
+                    columns,
+                    status: 'connected'
+                });
             } catch (err) {
                 discoveredTables.push({
                     name: tableName,
                     count: 0,
-                    columns: [],
+                    columns: getDefaultColumns(tableName),
                     status: 'error',
                     error: err.message
                 });
@@ -111,6 +121,7 @@ function getDefaultColumns(tableName) {
             'المنطقة',
             'العنوان',
             'الحالة',
+            'ملاحظات',
             'تاريخ الإنشاء',
             'وقت الإنشاء',
             'updated_at'
@@ -126,6 +137,7 @@ function getDefaultColumns(tableName) {
             'التارجت الشهري',
             'الحالة',
             'تاريخ الإسناد',
+            'ملاحظات',
             'وقت الإنشاء',
             'updated_at'
         ],
@@ -142,6 +154,8 @@ function getDefaultColumns(tableName) {
             'رقم الحساب',
             'نوع التحويل',
             'قيمة التحويل',
+            'ملاحظات',
+            'وقت الإنشاء',
             'created_at'
         ],
         collections: [
@@ -155,9 +169,11 @@ function getDefaultColumns(tableName) {
             'اسم النشاط',
             'رقم المكنة',
             'رقم الحساب',
-            'نوع التحصيل',
             'قيمة التحصيل',
+            'نوع التحصيل',
             'المتبقي بعد التحصيل',
+            'ملاحظات',
+            'وقت الإنشاء',
             'created_at'
         ],
         requests: [
@@ -170,9 +186,12 @@ function getDefaultColumns(tableName) {
             'اسم النشاط',
             'رقم الحساب',
             'رقم المكنة',
+            'المديونية الحالية',
             'نوع الطلب',
             'المبلغ',
+            'ملاحظات',
             'الحالة',
+            'وقت الإنشاء',
             'created_at'
         ],
         archives: [
@@ -186,6 +205,10 @@ function getDefaultColumns(tableName) {
             'إجمالي التحصيلات',
             'إجمالي المتبقي',
             'تاريخ الإغلاق',
+            'رابط الملف',
+            'ملاحظات',
+            'وقت الإنشاء',
+            'تاريخ الإنشاء',
             'created_at'
         ],
         logs: [
@@ -196,6 +219,19 @@ function getDefaultColumns(tableName) {
             'الرقم المرجعي',
             'التفاصيل',
             'المستخدم',
+            'اسم التاجر',
+            'رقم الحساب',
+            'اسم النشاط',
+            'رقم المكنة',
+            'الرقم التسلسلي',
+            'وقت الإنشاء',
+            'table_name',
+            'operation',
+            'user_id',
+            'ip_address',
+            'metadata',
+            'level',
+            'message',
             'created_at'
         ],
         settings: [
@@ -210,27 +246,24 @@ function getDefaultColumns(tableName) {
     return defaults[tableName] || ['id'];
 }
 
-function getOrderColumn(tableName, columns = []) {
+function getOrderCandidates(tableName) {
     const priorityMap = {
-        merchants: ['updated_at', 'تاريخ الإنشاء'],
+        merchants: ['updated_at', 'تاريخ الإنشاء', 'وقت الإنشاء'],
         machines: ['updated_at', 'تاريخ الإسناد', 'وقت الإنشاء'],
-        transfers: ['created_at', 'التاريخ'],
-        collections: ['created_at', 'التاريخ'],
-        requests: ['created_at', 'التاريخ'],
-        archives: ['created_at', 'تاريخ الإغلاق'],
-        logs: ['created_at', 'التاريخ'],
+        transfers: ['created_at', 'التاريخ', 'وقت الإنشاء'],
+        collections: ['created_at', 'التاريخ', 'وقت الإنشاء'],
+        requests: ['created_at', 'التاريخ', 'وقت الإنشاء'],
+        archives: ['created_at', 'تاريخ الإغلاق', 'تاريخ الإنشاء'],
+        logs: ['created_at', 'التاريخ', 'وقت الإنشاء'],
         settings: ['updated_at', 'created_at']
     };
 
-    const priorities = priorityMap[tableName] || ['created_at', 'updated_at'];
+    return priorityMap[tableName] || ['created_at', 'updated_at'];
+}
 
-    for (const column of priorities) {
-        if (columns.includes(column)) {
-            return column;
-        }
-    }
-
-    return null;
+function getAvailableOrderColumn(tableName, columns = []) {
+    const candidates = getOrderCandidates(tableName);
+    return candidates.find((column) => columns.includes(column)) || null;
 }
 
 function renderDatabaseExplorer() {
@@ -248,6 +281,9 @@ function renderDatabaseExplorer() {
             : '<i class="fas fa-exclamation-circle" style="color: var(--danger);"></i>';
 
         const statusClass = selectedTableName === table.name ? 'active' : '';
+        const errorHtml = table.status === 'error' && table.error
+            ? `<div style="margin-top:10px;color:var(--danger);font-size:12px;">${escapeHtml(table.error)}</div>`
+            : '';
 
         return `
             <div class="db-table-card ${statusClass}" onclick="window.selectTable('${table.name}', event)">
@@ -266,6 +302,7 @@ function renderDatabaseExplorer() {
                         ${table.columns.map((col) => `<span class="db-column-item">${escapeHtml(col)}</span>`).join('')}
                     </div>
                 </div>
+                ${errorHtml}
             </div>
         `;
     }).join('');
@@ -280,13 +317,50 @@ export async function selectTable(tableName, event) {
         if (columnsDiv) columnsDiv.style.display = 'none';
     });
 
-    if (event && event.currentTarget) {
+    if (event?.currentTarget) {
         event.currentTarget.classList.add('active');
         const columnsDiv = event.currentTarget.querySelector('.db-columns-list');
         if (columnsDiv) columnsDiv.style.display = 'block';
     }
 
     await loadTableData(tableName);
+}
+
+function stringifyCellValue(value) {
+    if (value === null || value === undefined) return '-';
+    if (typeof value === 'object') {
+        try {
+            return JSON.stringify(value, null, 2);
+        } catch (e) {
+            return String(value);
+        }
+    }
+    return String(value);
+}
+
+function buildCell(value) {
+    const fullValue = stringifyCellValue(value);
+    const shortValue = fullValue.length > 120 ? `${fullValue.slice(0, 120)}...` : fullValue;
+    return `<td title="${escapeHtml(fullValue)}">${escapeHtml(shortValue)}</td>`;
+}
+
+async function runTableQuery(tableName, columns) {
+    const orderColumn = getAvailableOrderColumn(tableName, columns);
+
+    if (orderColumn) {
+        const ordered = await supabase
+            .from(tableName)
+            .select('*', { count: 'exact' })
+            .order(orderColumn, { ascending: false })
+            .limit(50);
+
+        if (!ordered.error) return ordered;
+    }
+
+    return supabase
+        .from(tableName)
+        .select('*', { count: 'exact' })
+        .limit(50);
 }
 
 async function loadTableData(tableName) {
@@ -299,32 +373,19 @@ async function loadTableData(tableName) {
     if (!detailsContainer || !tbody || !thead) return;
 
     detailsContainer.style.display = 'block';
+
     if (tableNameEl) {
         tableNameEl.innerHTML = `<i class="fas fa-table"></i> جدول: ${escapeHtml(tableName)}`;
     }
 
-    tbody.innerHTML = '<tr><td colspan="100" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري تحميل البيانات...</td></tr>';
     thead.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="100" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري تحميل البيانات...</td></tr>';
 
     try {
-        let columns = [];
         const selectedTable = discoveredTables.find((t) => t.name === tableName);
-        if (selectedTable?.columns?.length) {
-            columns = selectedTable.columns;
-        }
+        const knownColumns = selectedTable?.columns?.length ? selectedTable.columns : getDefaultColumns(tableName);
 
-        let query = supabase
-            .from(tableName)
-            .select('*', { count: 'exact' });
-
-        const orderColumn = getOrderColumn(tableName, columns);
-        if (orderColumn) {
-            query = query.order(orderColumn, { ascending: false });
-        }
-
-        query = query.limit(50);
-
-        const { data, count, error } = await query;
+        const { data, count, error } = await runTableQuery(tableName, knownColumns);
         if (error) throw error;
 
         if (rowCountEl) {
@@ -332,8 +393,13 @@ async function loadTableData(tableName) {
         }
 
         if (!data || data.length === 0) {
-            thead.innerHTML = '';
-            tbody.innerHTML = '<tr><td colspan="100" class="empty-state">لا توجد بيانات</td></tr>';
+            const columns = knownColumns.length ? knownColumns : ['لا توجد أعمدة'];
+            thead.innerHTML = `
+                <tr>
+                    ${columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('')}
+                </tr>
+            `;
+            tbody.innerHTML = `<tr><td colspan="${columns.length}" class="empty-state">لا توجد بيانات</td></tr>`;
             return;
         }
 
@@ -345,33 +411,18 @@ async function loadTableData(tableName) {
             </tr>
         `;
 
-        tbody.innerHTML = data.map((row) => {
-            return `
-                <tr>
-                    ${actualColumns.map((col) => {
-                        let value = row[col];
-
-                        if (value === null || value === undefined) {
-                            value = '-';
-                        } else if (typeof value === 'object') {
-                            value = JSON.stringify(value);
-                        } else {
-                            value = String(value);
-                        }
-
-                        const shortValue = value.length > 100 ? `${value.substring(0, 100)}...` : value;
-
-                        return `<td title="${escapeHtml(value)}">${escapeHtml(shortValue)}</td>`;
-                    }).join('')}
-                </tr>
-            `;
-        }).join('');
+        tbody.innerHTML = data.map((row) => `
+            <tr>
+                ${actualColumns.map((col) => buildCell(row[col])).join('')}
+            </tr>
+        `).join('');
     } catch (err) {
         console.error(err);
+        const message = err?.message || 'حدث خطأ غير متوقع';
         tbody.innerHTML = `
             <tr>
                 <td colspan="100" class="empty-state" style="color: var(--danger);">
-                    خطأ: ${escapeHtml(err.message)}
+                    خطأ: ${escapeHtml(message)}
                 </td>
             </tr>
         `;
@@ -379,12 +430,16 @@ async function loadTableData(tableName) {
 }
 
 export async function refreshSelectedTable() {
-    if (selectedTableName) {
-        await loadTableData(selectedTableName);
-        showToast('تم تحديث البيانات', 'success');
+    if (!selectedTableName) {
+        showToast('اختر جدولاً أولاً', 'warning');
+        return;
     }
+
+    await loadTableData(selectedTableName);
+    showToast('تم تحديث البيانات', 'success');
 }
 
 // ربط الدوال بالنافذة العامة
+window.discoverDatabase = discoverDatabase;
 window.selectTable = selectTable;
 window.refreshSelectedTable = refreshSelectedTable;
