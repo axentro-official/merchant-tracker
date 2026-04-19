@@ -647,7 +647,8 @@
         background: var(--success);
         color: white;
     }
-        .modal-overlay {
+
+    .modal-overlay {
         position: fixed;
         inset: 0;
         background: rgba(0,0,0,0.7);
@@ -1415,11 +1416,11 @@
                 </div>
                 <div class="top-machines-section">
                     <div class="section-header"><i class="fas fa-trophy"></i><h3>🏆 أعلى المكن تحقيقاً للتارجت</h3></div>
-                    <div class="machines-table-container"><table class="machines-table" id="topMachinesTable"><thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th></tr></thead><tbody id="topMachinesBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> جاري تحميل البيانات...<\/td></tr></tbody></table></div>
+                    <div class="machines-table-container"><table class="machines-table" id="topMachinesTable"><thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم المكنة</th><th>السيريال</th><th>التارجت</th><th>المحقق</th><th>النسبة</th></tr></thead><tbody id="topMachinesBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-chart-line"></i> جاري تحميل البيانات...</td></tr></tbody></table></div>
                 </div>
                 <div class="recent-section">
                     <div class="section-header"><i class="fas fa-clock"></i><h3>📋 آخر العمليات</h3></div>
-                    <div class="table-container"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th><th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th></tr></thead><tbody id="recentActivityBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة<\/td></tr></tbody></table></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>#</th><th>الرقم المرجعي</th><th>النوع</th><th>اسم التاجر</th><th>اسم النشاط</th><th>القيمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th></tr></thead><tbody id="recentActivityBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> لا توجد عمليات حديثة</td></tr></tbody></table></div>
                 </div>
             </section>
 
@@ -1432,7 +1433,7 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>رقم التاجر</th><th>اسم التاجر</th><th>اسم النشاط</th><th>رقم الحساب</th><th>رقم الهاتف</th><th>المنطقة</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="merchantsTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
+                            <tbody id="merchantsTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1447,12 +1448,13 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>رقم المكنة</th><th>اسم التاجر</th><th>النشاط</th><th>السيريال</th><th>التارجت</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="machinesTableBody"><tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
+                            <tbody id="machinesTableBody"><tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </section>
-                        <section id="section-transfers" style="display:none;">
+
+            <section id="section-transfers" style="display:none;">
                 <div class="merchants-section">
                     <div class="table-actions">
                         <button class="btn-add" onclick="openTransferModal()"><i class="fas fa-plus"></i> إضافة تحويل جديد</button>
@@ -1461,7 +1463,7 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>القيمة</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="transfersTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
+                            <tbody id="transfersTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1476,7 +1478,7 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>القيمة</th><th>المتبقي</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="collectionsTableBody"><tr><td colspan="10" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
+                            <tbody id="collectionsTableBody"><tr><td colspan="10" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1490,7 +1492,7 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>رقم الطلب</th><th>التاريخ</th><th>التاجر</th><th>النوع</th><th>المبلغ</th><th>المديونية الحالية</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="requestsTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
+                            <tbody id="requestsTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1505,7 +1507,7 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>الشهر</th><th>السنة</th><th>عدد التحويلات</th><th>إجمالي التحويلات</th><th>عدد التحصيلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="archiveTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...<\/td></tr></tbody>
+                            <tbody id="archiveTableBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1527,7 +1529,7 @@
                     <div class="table-container">
                         <table class="data-table">
                             <thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>الملاحظات</th></tr></thead>
-                            <tbody id="statementTableBody"><td><td colspan="7" class="empty-state">اختر تاجراً لعرض كشف الحساب<\/td></tr></tbody>
+                            <tbody id="statementTableBody"><tr><td colspan="7" class="empty-state">اختر تاجراً لعرض كشف الحساب</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1570,7 +1572,6 @@
         </footer>
     </main>
 </div>
-
 <script type="module">
     import { initMerchantsPage, loadMerchants, openMerchantModal, saveMerchant, editMerchant, deleteMerchant, closeMerchantModal } from './src/pages/merchants.js';
     import { initMachinesPage, loadMachines, openMachineModal, saveMachine, editMachine, deleteMachine, closeMachineModal } from './src/pages/machines.js';
@@ -1695,8 +1696,7 @@
         const container = document.getElementById('aiMessages');
         const msgDiv = document.createElement('div');
         msgDiv.className = `ai-message ${role}`;
-        msgDiv.innerHTML = content.replace(/
-/g, '<br>');
+        msgDiv.innerHTML = String(content || '').replace(/\n/g, '<br>');
         container.appendChild(msgDiv);
         container.scrollTop = container.scrollHeight;
     };
@@ -1917,6 +1917,13 @@ async function closeCameraModal() {
 }
 window.closeCameraModal = closeCameraModal;
 
+function buildMerchantOptionLabel(merchant) {
+    const number = merchant?.['رقم التاجر'] || '';
+    const name = merchant?.['اسم التاجر'] || '';
+    const activity = merchant?.['اسم النشاط'] || 'غير محدد';
+    return `${number} - ${name} (${activity})`;
+}
+
 async function populateMerchantDatalists() {
     if (!supabaseClient) return;
     try {
@@ -1925,53 +1932,27 @@ async function populateMerchantDatalists() {
             .select('*')
             .order('updated_at', { ascending: false });
         if (error) throw error;
+
         const merchants = data || [];
-        const options = merchants.map(m => `<option value="${m['رقم التاجر']}">${m['رقم التاجر']} - ${m['اسم التاجر']}</option>`).join('');
+        const options = merchants.map(m => `<option value="${buildMerchantOptionLabel(m)}"></option>`).join('');
         const datalists = ['merchantDatalist', 'merchantDatalistTrans', 'merchantDatalistColl', 'merchantDatalistStmt'];
+
         datalists.forEach(id => {
             const dl = document.getElementById(id);
             if (dl) dl.innerHTML = options;
         });
+
         window.merchantsData = merchants;
-    } catch(e) { console.error(e); }
+    } catch(e) {
+        console.error(e);
+    }
 }
+window.populateMerchantDatalists = populateMerchantDatalists;
 
 function setupMerchantSearchListeners() {
-    const machSearch = document.getElementById('machMerchantSearch');
-    if (machSearch) {
-        machSearch.addEventListener('change', (e) => {
-            const val = e.target.value;
-            const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
-            if (merchant) document.getElementById('machMerchantId').value = merchant.id;
-        });
-    }
-    const transSearch = document.getElementById('transMerchantSearch');
-    if (transSearch) {
-        transSearch.addEventListener('change', (e) => {
-            const val = e.target.value;
-            const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
-            if (merchant) document.getElementById('transMerchantId').value = merchant.id;
-        });
-    }
-    const collSearch = document.getElementById('collMerchantSearch');
-    if (collSearch) {
-        collSearch.addEventListener('change', (e) => {
-            const val = e.target.value;
-            const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
-            if (merchant) document.getElementById('collMerchantId').value = merchant.id;
-        });
-    }
-    const stmtSearch = document.getElementById('stmtMerchantSearch');
-    if (stmtSearch) {
-        stmtSearch.addEventListener('change', (e) => {
-            const val = e.target.value;
-            const merchant = window.merchantsData?.find(m => m['رقم التاجر'] === val);
-            if (merchant) document.getElementById('stmtMerchantId').value = merchant.id;
-        });
-    }
+    // تم ترك منطق البحث لملفات الصفحات نفسها لتجنب تضارب listeners.
 }
-
-document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
     const session = localStorage.getItem('axentro_admin_session');
     let hasValidSession = false;
     if (session) {
