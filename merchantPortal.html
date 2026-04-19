@@ -27,7 +27,6 @@
     <audio id="clickSound" src="src/assets/scan.mp3" preload="auto"></audio>
 
     <style>
-        /* ===== RESET & BASE (متطابق مع index.html) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
         body {
@@ -53,6 +52,7 @@
             --warning: #f59e0b;
             --warning-light: rgba(245, 158, 11, 0.15);
             --purple: #8b5cf6;
+            --purple-light: rgba(139, 92, 246, 0.15);
             --text-primary: #f9fafb;
             --text-secondary: #9ca3af;
             --text-muted: #6b7280;
@@ -68,7 +68,6 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== BOOT SCREEN (مثل index) ===== */
         #bootScreen {
             position: fixed;
             inset: 0;
@@ -161,7 +160,6 @@
             margin-top: 12px;
         }
 
-        /* ===== MAIN APP ===== */
         #mainApp {
             display: none;
             min-height: 100vh;
@@ -170,7 +168,6 @@
         }
         #mainApp.visible { display: block; opacity: 1; }
 
-        /* ===== MAIN CONTENT ===== */
         .main-content {
             padding: 24px;
             max-width: 1400px;
@@ -178,7 +175,6 @@
             width: 100%;
         }
 
-        /* ===== TOP BAR (مشابه لـ index) ===== */
         .top-bar {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
@@ -244,7 +240,6 @@
             .action-buttons { justify-content: flex-end; }
         }
 
-        /* ===== LOGIN SECTION (بحث التاجر) ===== */
         .login-section {
             max-width: 520px;
             margin: 40px auto;
@@ -346,8 +341,12 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(59,130,246,0.4);
         }
+        .btn-outline {
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
 
-        /* ===== DASHBOARD ===== */
         .dashboard-section {
             display: none;
         }
@@ -426,7 +425,6 @@
             font-size: 24px;
         }
 
-        /* ===== STATS GRID (2 كروت بجانب بعض) ===== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -479,9 +477,7 @@
                 grid-template-columns: 1fr;
             }
         }
-
-        /* ===== TABLES ===== */
-        .section-card {
+                .section-card {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
@@ -565,7 +561,6 @@
         .amount-negative { color: var(--danger); font-weight: 700; }
         .amount-positive { color: var(--success); font-weight: 700; }
 
-        /* ===== ACTION BUTTONS ===== */
         .action-row {
             display: flex;
             gap: 12px;
@@ -596,7 +591,6 @@
             color: white;
         }
 
-        /* ===== MODAL ===== */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -675,7 +669,6 @@
             min-height: 80px;
         }
 
-        /* ===== TOAST ===== */
         #toastContainer {
             position: fixed;
             top: 20px;
@@ -707,7 +700,6 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        /* ===== FOOTER (مطابق تماماً لـ index) ===== */
         .app-footer {
             margin-top: 40px;
             padding: 32px 24px 24px;
@@ -744,7 +736,6 @@
 </head>
 <body>
 
-<!-- Boot Screen -->
 <div id="bootScreen">
     <div class="boot-container">
         <div class="boot-logo">
@@ -758,13 +749,10 @@
     </div>
 </div>
 
-<!-- Toast Container -->
 <div id="toastContainer"></div>
 
-<!-- Main Application -->
 <div id="mainApp">
     <div class="main-content">
-        <!-- Top Bar -->
         <div class="top-bar">
             <div class="brand-section">
                 <div class="brand-icon"><i class="fas fa-store"></i></div>
@@ -779,7 +767,6 @@
             </div>
         </div>
 
-        <!-- Login Section (بحث التاجر) -->
         <div class="login-section" id="loginSection">
             <div class="login-card">
                 <div class="login-header">
@@ -796,9 +783,7 @@
             </div>
         </div>
 
-        <!-- Dashboard Section (يظهر بعد البحث) -->
         <div id="dashboardSection" class="dashboard-section">
-            <!-- معلومات التاجر -->
             <div class="info-card" id="merchantInfoCard">
                 <h2 class="merchant-name" id="displayName">—</h2>
                 <div class="merchant-meta">
@@ -815,7 +800,6 @@
                 </div>
             </div>
 
-            <!-- إحصائيات سريعة (2 كروت بجانب بعض) -->
             <div class="stats-grid">
                 <div class="stat-card"><div class="stat-header"><div class="stat-icon blue"><i class="fas fa-arrow-up"></i></div></div><div class="stat-value" id="totalTransfers">0</div><div class="stat-label">إجمالي التحويلات (ج.م)</div></div>
                 <div class="stat-card"><div class="stat-header"><div class="stat-icon green"><i class="fas fa-arrow-down"></i></div></div><div class="stat-value" id="totalCollections">0</div><div class="stat-label">إجمالي التحصيلات (ج.م)</div></div>
@@ -823,13 +807,11 @@
                 <div class="stat-card"><div class="stat-header"><div class="stat-icon red"><i class="fas fa-desktop"></i></div></div><div class="stat-value" id="machinesCount">0</div><div class="stat-label">المكن المسجلة</div></div>
             </div>
 
-            <!-- أزرار الإجراءات -->
             <div class="action-row">
                 <button class="action-btn primary" onclick="openRequestModal()"><i class="fas fa-plus-circle"></i> تقديم طلب جديد</button>
                 <button class="action-btn" onclick="refreshData()"><i class="fas fa-sync-alt"></i> تحديث البيانات</button>
             </div>
 
-            <!-- آخر التحويلات -->
             <div class="section-card">
                 <div class="section-header"><i class="fas fa-arrow-up"></i><h3>آخر 5 تحويلات</h3></div>
                 <div class="table-container">
@@ -840,7 +822,6 @@
                 </div>
             </div>
 
-            <!-- آخر التحصيلات -->
             <div class="section-card">
                 <div class="section-header"><i class="fas fa-arrow-down"></i><h3>آخر 5 تحصيلات</h3></div>
                 <div class="table-container">
@@ -851,7 +832,6 @@
                 </div>
             </div>
 
-            <!-- الطلبات السابقة -->
             <div class="section-card">
                 <div class="section-header"><i class="fas fa-file-alt"></i><h3>طلباتي السابقة</h3></div>
                 <div class="requests-list" id="requestsList" style="padding: 20px;">
@@ -860,7 +840,6 @@
             </div>
         </div>
 
-        <!-- FOOTER (مطابق لـ index) -->
         <footer class="app-footer">
             <div class="footer-content">
                 <p class="footer-copyright">© 2024 Axentro – All Rights Reserved</p>
@@ -876,7 +855,6 @@
     </div>
 </div>
 
-<!-- Request Modal -->
 <div id="requestModal" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
@@ -913,9 +891,6 @@
 </div>
 
 <script>
-// ============================================================
-// CONFIGURATION
-// ============================================================
 const CONFIG = {
     SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
@@ -925,9 +900,6 @@ const CONFIG = {
 let supabaseClient = null;
 let currentMerchant = null;
 
-// ============================================================
-// SOUND SYSTEM
-// ============================================================
 const Sound = {
     play(type) {
         const audio = document.getElementById(type === 'success' ? 'successSound' : (type === 'error' ? 'errorSound' : 'clickSound'));
@@ -938,9 +910,6 @@ const Sound = {
     }
 };
 
-// ============================================================
-// TOAST
-// ============================================================
 const UI = {
     showToast(message, type = 'info') {
         const container = document.getElementById('toastContainer');
@@ -956,9 +925,6 @@ const UI = {
     }
 };
 
-// ============================================================
-// BOOT SEQUENCE
-// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('bootProgress');
     const statusText = document.getElementById('bootStatus');
@@ -1000,11 +966,48 @@ function initSupabase() {
     }
 }
 
-// ============================================================
-// البحث عن التاجر
-// ============================================================
+function normalizeArabicDigits(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .trim()
+        .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+        .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+        .replace(/\s+/g, ' ');
+}
+
+function formatMoney(value) {
+    return `${(parseFloat(value) || 0).toLocaleString('ar-EG')} ج.م`;
+}
+    async function findMerchantBySearchTerm(searchTerm) {
+    const normalized = normalizeArabicDigits(searchTerm);
+
+    let result = await supabaseClient
+        .from('merchants')
+        .select('*')
+        .eq('رقم الحساب', normalized)
+        .limit(1)
+        .maybeSingle();
+
+    if (result.error) throw result.error;
+    if (result.data) return result.data;
+
+    result = await supabaseClient
+        .from('merchants')
+        .select('*')
+        .eq('رقم التاجر', normalized)
+        .limit(1)
+        .maybeSingle();
+
+    if (result.error) throw result.error;
+    if (result.data) return result.data;
+
+    return null;
+}
+
 async function searchMerchant() {
-    const searchTerm = document.getElementById('searchInput').value.trim();
+    const input = document.getElementById('searchInput');
+    const searchTerm = normalizeArabicDigits(input.value);
+
     if (!searchTerm) {
         UI.showToast('يرجى إدخال رقم الحساب أو رقم التاجر', 'warning');
         Sound.play('error');
@@ -1017,32 +1020,23 @@ async function searchMerchant() {
     }
 
     try {
-        // البحث في جدول merchants باستخدام رقم الحساب أو رقم التاجر
-        const { data, error } = await supabaseClient
-            .from('merchants')
-            .select('*')
-            .or(`رقم الحساب.eq.${searchTerm},رقم التاجر.eq.${searchTerm}`)
-            .maybeSingle();
+        const merchant = await findMerchantBySearchTerm(searchTerm);
 
-        if (error) throw error;
-
-        if (!data) {
+        if (!merchant) {
             UI.showToast('لم يتم العثور على تاجر بهذا الرقم', 'error');
             Sound.play('error');
             return;
         }
 
-        currentMerchant = data;
+        currentMerchant = merchant;
         Sound.play('success');
-        UI.showToast(`مرحباً ${data['اسم التاجر']} 👋`, 'success');
+        UI.showToast(`مرحباً ${merchant['اسم التاجر']} 👋`, 'success');
 
-        // إظهار لوحة التحكم وإخفاء شاشة البحث
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('dashboardSection').style.display = 'block';
 
-        // عرض بيانات التاجر
-        renderMerchantInfo(data);
-        await loadMerchantData(data.id);
+        renderMerchantInfo(merchant);
+        await loadMerchantData(merchant.id);
     } catch (err) {
         console.error(err);
         UI.showToast('حدث خطأ أثناء البحث', 'error');
@@ -1063,57 +1057,67 @@ function renderMerchantInfo(merchant) {
 
 async function loadMerchantData(merchantId) {
     try {
-        // جلب المكن
         const { data: machines, error: mErr } = await supabaseClient
             .from('machines')
             .select('*')
             .eq('رقم التاجر', merchantId);
-        if (!mErr) document.getElementById('machinesCount').textContent = machines?.length || 0;
+        if (mErr) throw mErr;
+        document.getElementById('machinesCount').textContent = machines?.length || 0;
 
-        // جلب التحويلات
         const { data: transfers, error: tErr } = await supabaseClient
             .from('transfers')
             .select('*')
             .eq('رقم التاجر', merchantId)
             .order('created_at', { ascending: false })
             .limit(5);
-        if (!tErr) {
-            const totalTransfers = transfers?.reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0) || 0;
-            document.getElementById('totalTransfers').textContent = totalTransfers.toLocaleString();
-            renderTransfersTable(transfers || []);
-        }
+        if (tErr) throw tErr;
 
-        // جلب التحصيلات
+        const totalTransfers = (transfers || []).reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0);
+        document.getElementById('totalTransfers').textContent = totalTransfers.toLocaleString('ar-EG');
+        renderTransfersTable(transfers || []);
+
         const { data: collections, error: cErr } = await supabaseClient
             .from('collections')
             .select('*')
             .eq('رقم التاجر', merchantId)
             .order('created_at', { ascending: false })
             .limit(5);
-        if (!cErr) {
-            const totalCollections = collections?.reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0) || 0;
-            document.getElementById('totalCollections').textContent = totalCollections.toLocaleString();
-            renderCollectionsTable(collections || []);
-        }
+        if (cErr) throw cErr;
 
-        // حساب الرصيد الحالي
-        const { data: allTransfers } = await supabaseClient.from('transfers').select('قيمة التحويل').eq('رقم التاجر', merchantId);
-        const { data: allCollections } = await supabaseClient.from('collections').select('قيمة التحصيل').eq('رقم التاجر', merchantId);
-        const totalT = allTransfers?.reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0) || 0;
-        const totalC = allCollections?.reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0) || 0;
+        const totalCollections = (collections || []).reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0);
+        document.getElementById('totalCollections').textContent = totalCollections.toLocaleString('ar-EG');
+        renderCollectionsTable(collections || []);
+
+        const { data: allTransfers, error: allTErr } = await supabaseClient
+            .from('transfers')
+            .select('قيمة التحويل')
+            .eq('رقم التاجر', merchantId);
+        if (allTErr) throw allTErr;
+
+        const { data: allCollections, error: allCErr } = await supabaseClient
+            .from('collections')
+            .select('قيمة التحصيل')
+            .eq('رقم التاجر', merchantId);
+        if (allCErr) throw allCErr;
+
+        const totalT = (allTransfers || []).reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0);
+        const totalC = (allCollections || []).reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0);
         const balance = totalT - totalC;
-        document.getElementById('currentBalance').textContent = balance.toLocaleString();
-        document.getElementById('displayDebt').textContent = `${balance.toLocaleString()} ج.م`;
 
-        // جلب الطلبات
+        document.getElementById('currentBalance').textContent = balance.toLocaleString('ar-EG');
+        document.getElementById('displayDebt').textContent = formatMoney(balance);
+
         const { data: requests, error: rErr } = await supabaseClient
             .from('requests')
             .select('*')
             .eq('رقم التاجر', merchantId)
             .order('created_at', { ascending: false });
-        if (!rErr) renderRequestsList(requests || []);
+        if (rErr) throw rErr;
+
+        renderRequestsList(requests || []);
     } catch (err) {
         console.error(err);
+        UI.showToast('حدث خطأ أثناء تحميل بيانات التاجر', 'error');
     }
 }
 
@@ -1125,12 +1129,12 @@ function renderTransfersTable(transfers) {
     }
     tbody.innerHTML = transfers.map((t, i) => `
         <tr>
-            <td>${i+1}</td>
+            <td>${i + 1}</td>
             <td><code class="ref-code">${t['الرقم المرجعي'] || '—'}</code></td>
             <td>${t['التاريخ'] || '—'}</td>
             <td>${t['الوقت'] || '—'}</td>
             <td>${t['نوع التحويل'] || '—'}</td>
-            <td class="amount-negative">${(parseFloat(t['قيمة التحويل']) || 0).toLocaleString()} ج.م</td>
+            <td class="amount-negative">${formatMoney(t['قيمة التحويل'])}</td>
         </tr>
     `).join('');
 }
@@ -1143,12 +1147,12 @@ function renderCollectionsTable(collections) {
     }
     tbody.innerHTML = collections.map((c, i) => `
         <tr>
-            <td>${i+1}</td>
+            <td>${i + 1}</td>
             <td><code class="ref-code">${c['الرقم المرجعي'] || '—'}</code></td>
             <td>${c['التاريخ'] || '—'}</td>
             <td>${c['الوقت'] || '—'}</td>
-            <td class="amount-positive">${(parseFloat(c['قيمة التحصيل']) || 0).toLocaleString()} ج.م</td>
-            <td>${(parseFloat(c['المتبقي بعد التحصيل']) || 0).toLocaleString()} ج.م</td>
+            <td class="amount-positive">${formatMoney(c['قيمة التحصيل'])}</td>
+            <td>${formatMoney(c['المتبقي بعد التحصيل'])}</td>
         </tr>
     `).join('');
 }
@@ -1159,6 +1163,7 @@ function renderRequestsList(requests) {
         container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i> لا توجد طلبات سابقة</div>';
         return;
     }
+
     container.innerHTML = requests.map(r => `
         <div class="request-item" style="background: var(--bg-primary); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; border-right: 4px solid ${r['الحالة'] === 'معلق' ? 'var(--warning)' : 'var(--success)'}">
             <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
@@ -1168,15 +1173,12 @@ function renderRequestsList(requests) {
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 10px;">
                 <div><div class="detail-label" style="font-size: 11px; color: var(--text-muted);">التاريخ</div><div>${r['التاريخ'] || '—'}</div></div>
                 <div><div class="detail-label" style="font-size: 11px; color: var(--text-muted);">نوع الطلب</div><div>${r['نوع الطلب'] || '—'}</div></div>
-                <div><div class="detail-label" style="font-size: 11px; color: var(--text-muted);">المبلغ</div><div>${(parseFloat(r['المبلغ']) || 0).toLocaleString()} ج.م</div></div>
+                <div><div class="detail-label" style="font-size: 11px; color: var(--text-muted);">المبلغ</div><div>${formatMoney(r['المبلغ'])}</div></div>
             </div>
         </div>
     `).join('');
 }
 
-// ============================================================
-// إدارة الطلبات وإرسالها إلى Google Script + Supabase
-// ============================================================
 function openRequestModal() {
     if (!currentMerchant) {
         UI.showToast('الرجاء البحث عن التاجر أولاً', 'warning');
@@ -1222,7 +1224,6 @@ async function submitRequest() {
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
     };
 
-    // إرسال إلى Google Apps Script (لا ننتظر الرد بسبب no-cors)
     try {
         fetch(CONFIG.GOOGLE_SCRIPT_URL, {
             method: 'POST',
@@ -1230,9 +1231,10 @@ async function submitRequest() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestData)
         }).catch(e => console.warn('Google Script error:', e));
-    } catch(e) { console.warn(e); }
+    } catch (e) {
+        console.warn(e);
+    }
 
-    // إدراج الطلب في Supabase
     try {
         const supabaseRequest = {
             "رقم التاجر": currentMerchant.id,
@@ -1245,11 +1247,12 @@ async function submitRequest() {
             "التاريخ": requestData.date,
             "الوقت": requestData.time,
             "الحالة": 'معلق',
-            "المديونية الحالية": 0 // سيتم حسابه تلقائياً في admin
+            "المديونية الحالية": 0
         };
+
         const { error } = await supabaseClient.from('requests').insert([supabaseRequest]);
         if (error) throw error;
-        
+
         Sound.play('success');
         UI.showToast('تم إرسال طلبك بنجاح! سيتم مراجعته قريباً', 'success');
         closeRequestModal();
