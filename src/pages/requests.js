@@ -65,6 +65,13 @@ function getNowTime12h() {
     });
 }
 
+function getCurrentMonthLabel() {
+    return new Date().toLocaleString('ar-EG', {
+        month: 'long',
+        year: 'numeric'
+    });
+}
+
 async function syncGoogleScript(payload) {
     try {
         await fetch(GOOGLE_SCRIPT_URL, {
@@ -76,6 +83,18 @@ async function syncGoogleScript(payload) {
     } catch (e) {
         console.warn('Google Script error:', e);
     }
+}
+
+function safeText(value) {
+    return escapeHtml(value ?? '-');
+}
+
+function getMerchantIdentityMap() {
+    const map = new Map();
+    merchantsList.forEach(merchant => {
+        map.set(merchant.id, merchant);
+    });
+    return map;
 }
 
 // تحميل الطلبات وعرضها
@@ -94,12 +113,11 @@ export async function loadRequests() {
 
         const { data: merchants } = await supabase
             .from('merchants')
-            .select('id, "رقم التاجر", "اسم التاجر"');
+            .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
 
         merchantsList = merchants || [];
 
         await enrichRequestsWithCurrentDebt();
-
         renderRequestsTable();
         updatePendingBadge();
     } catch (err) {
@@ -136,11 +154,19 @@ async function enrichRequestsWithCurrentDebt() {
         });
     }
 
+    const merchantMap = getMerchantIdentityMap();
+
     currentRequests = currentRequests.map(req => {
         const debt = merchantBalance.get(req['رقم التاجر']) || 0;
+        const merchant = merchantMap.get(req['رقم التاجر']);
+
         return {
             ...req,
-            currentDebt: Math.max(0, debt)
+            currentDebt: Math.max(0, debt),
+            normalizedMerchantNumber: req['رقم التاجر'] || merchant?.['رقم التاجر'] || '-',
+            normalizedMerchantName: req['اسم التاجر'] || merchant?.['اسم التاجر'] || '-',
+            normalizedActivityName: req['اسم النشاط'] || merchant?.['اسم النشاط'] || '-',
+            normalizedAccountNumber: req['رقم الحساب'] || merchant?.['رقم الحساب'] || '-'
         };
     });
 }
@@ -183,17 +209,17 @@ function renderRequestsTable() {
         return `
             <tr>
                 <td>${idx + 1}</td>
-                <td><code class="ref-code">${escapeHtml(r['رقم الطلب'] || '-')}</code></td>
+                <td><code class="ref-code">${safeText(r['رقم الطلب'])}</code></td>
                 <td>${formatDate(r['التاريخ'])}</td>
-                <td>${escapeHtml(r['اسم التاجر'] || '-')}</td>
-                <td>${escapeHtml(r['نوع الطلب'] || '-')}</td>
+                <td>${safeText(r.normalizedMerchantName)}</td>
+                <td>${safeText(r['نوع الطلب'])}</td>
                 <td><strong style="color:var(--danger);">${formatMoney(r['المبلغ'])}</strong></td>
                 <td><strong style="color:var(--warning);">${formatMoney(r.currentDebt || 0)}</strong></td>
                 <td><span class="badge ${statusClass}">${statusText}</span></td>
                 <td>
                     <div class="action-btns">
                         ${convertBtn}
-                        <button class="btn btn-danger btn-sm" onclick="window.deleteRequest('${r.id}')">
+                        <button class="btn btn-danger btn-sm" onclick="window.deleteRequest('${r.id}')" title="حذف">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -230,9 +256,12 @@ export async function openRequestModal() {
 
     const modal = document.getElementById('requestModal');
     const title = document.getElementById('requestModalTitle');
-    title.innerHTML = '<i class="fas fa-paper-plane"></i> تقديم طلب جديد';
-
     const merchantSelect = document.getElementById('reqMerchantId');
+
+    if (title) {
+        title.innerHTML = '<i class="fas fa-paper-plane"></i> تقديم طلب جديد';
+    }
+
     if (merchantSelect) {
         merchantSelect.innerHTML =
             '<option value="">-- اختر تاجر --</option>' +
@@ -241,13 +270,18 @@ export async function openRequestModal() {
             ).join('');
     }
 
-    document.getElementById('editRequestId').value = '';
-    document.getElementById('reqType').value = '';
-    document.getElementById('reqAmount').value = '';
-    document.getElementById('reqNotes').value = '';
+    const editRequestId = document.getElementById('editRequestId');
+    const reqType = document.getElementById('reqType');
+    const reqAmount = document.getElementById('reqAmount');
+    const reqNotes = document.getElementById('reqNotes');
+
+    if (editRequestId) editRequestId.value = '';
+    if (reqType) reqType.value = '';
+    if (reqAmount) reqAmount.value = '';
+    if (reqNotes) reqNotes.value = '';
     if (merchantSelect) merchantSelect.value = '';
 
-    modal.classList.add('show');
+    modal?.classList.add('show');
 
     if (window.Sound) window.Sound.play('click');
 }
@@ -258,10 +292,10 @@ export function closeRequestModal() {
 
 // حفظ طلب جديد
 export async function saveRequest() {
-    const merchantId = document.getElementById('reqMerchantId').value;
-    const type = document.getElementById('reqType').value;
-    const amount = parseFloat(document.getElementById('reqAmount').value);
-    const notes = document.getElementById('reqNotes').value.trim();
+    const merchantId = document.getElementById('reqMerchantId')?.value || '';
+    const type = document.getElementById('reqType')?.value || '';
+    const amount = parseFloat(document.getElementById('reqAmount')?.value);
+    const notes = (document.getElementById('reqNotes')?.value || '').trim();
 
     if (!merchantId) {
         showToast('يرجى اختيار التاجر', 'warning');
@@ -284,15 +318,27 @@ export async function saveRequest() {
         return;
     }
 
-    const { data: transfers } = await supabase
+    const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
         .select('قيمة التحويل')
         .eq('رقم التاجر', merchantId);
 
-    const { data: collections } = await supabase
+    if (transfersError) {
+        console.error(transfersError);
+        showToast('تعذر احتساب مديونية التاجر', 'error');
+        return;
+    }
+
+    const { data: collections, error: collectionsError } = await supabase
         .from('collections')
         .select('قيمة التحصيل')
         .eq('رقم التاجر', merchantId);
+
+    if (collectionsError) {
+        console.error(collectionsError);
+        showToast('تعذر احتساب مديونية التاجر', 'error');
+        return;
+    }
 
     const totalTransfers = transfers?.reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0) || 0;
     const totalCollections = collections?.reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0) || 0;
@@ -345,15 +391,15 @@ export async function convertRequest(requestId) {
         try {
             const transferData = {
                 'رقم التاجر': request['رقم التاجر'],
-                'اسم التاجر': request['اسم التاجر'],
-                'رقم الحساب': request['رقم الحساب'],
-                'اسم النشاط': request['اسم النشاط'],
+                'اسم التاجر': request.normalizedMerchantName || request['اسم التاجر'],
+                'رقم الحساب': request.normalizedAccountNumber || request['رقم الحساب'],
+                'اسم النشاط': request.normalizedActivityName || request['اسم النشاط'],
                 'نوع التحويل': 'رصيد خدمات',
                 'قيمة التحويل': request['المبلغ'],
                 'ملاحظات': `تحويل تلقائي من طلب: ${request['رقم الطلب']}`,
                 'التاريخ': getNowDate(),
                 'الوقت': getNowTime12h(),
-                'الشهر': new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' })
+                'الشهر': getCurrentMonthLabel()
             };
 
             const { error: transferError } = await supabase
@@ -383,9 +429,11 @@ export async function convertRequest(requestId) {
             if (window.Sound) window.Sound.play('success');
 
             await loadRequests();
-            if (window.loadDashboardStats) window.loadDashboardStats();
-            if (window.loadRecentActivities) window.loadRecentActivities();
-            if (window.loadTopMachines) window.loadTopMachines();
+
+            if (window.loadDashboardStats) await window.loadDashboardStats();
+            if (window.loadRecentActivities) await window.loadRecentActivities();
+            if (window.loadTopMachines) await window.loadTopMachines();
+            if (window.loadTransfers) await window.loadTransfers();
         } catch (err) {
             console.error(err);
             showToast('خطأ في التحويل: ' + err.message, 'error');
