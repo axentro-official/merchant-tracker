@@ -1747,6 +1747,7 @@ const CONFIG = {
 let supabaseClient = null;
 let pendingConfirmCallback = null;
 let sessionCheckInterval = null;
+const LOGIN_THROTTLE_KEY = 'axentro_admin_login_throttle';
 let html5QrCode = null;
 let currentCameraTarget = null;
 let cameraStream = null;
@@ -2057,6 +2058,28 @@ function checkSessionAndShow() {
     showLogin();
 }
 
+
+function getLoginThrottleState() {
+    try {
+        const raw = localStorage.getItem(LOGIN_THROTTLE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (!parsed || Date.now() > (parsed.resetAt || 0)) {
+            return { attempts: 0, resetAt: Date.now() + (5 * 60 * 1000) };
+        }
+        return parsed;
+    } catch (e) {
+        return { attempts: 0, resetAt: Date.now() + (5 * 60 * 1000) };
+    }
+}
+
+function saveLoginThrottleState(state) {
+    localStorage.setItem(LOGIN_THROTTLE_KEY, JSON.stringify(state));
+}
+
+function clearLoginThrottleState() {
+    localStorage.removeItem(LOGIN_THROTTLE_KEY);
+}
+
 function createSession() {
     const session = { isLoggedIn: true, loginTime: Date.now(), expiry: Date.now() + CONFIG.SESSION_DURATION };
     localStorage.setItem('axentro_admin_session', JSON.stringify(session));
@@ -2069,6 +2092,13 @@ function clearSession() {
 async function adminLogin() {
     const input = document.getElementById('adminPasswordInput');
     const password = input.value.trim();
+    const throttle = getLoginThrottleState();
+    if (throttle.attempts >= 5 && Date.now() < throttle.resetAt) {
+        const waitMinutes = Math.max(1, Math.ceil((throttle.resetAt - Date.now()) / 60000));
+        window.showToast(`تم إيقاف المحاولات مؤقتاً. حاول بعد ${waitMinutes} دقيقة`, 'warning');
+        Sound.play('error');
+        return;
+    }
     if (!password) {
         window.showToast('يرجى إدخال كلمة المرور', 'warning');
         Sound.play('error');
@@ -2083,6 +2113,7 @@ async function adminLogin() {
         const { data, error } = await supabaseClient.rpc('verify_app_password', { input_password: password });
         if (error) throw error;
         if (data === true) {
+            clearLoginThrottleState();
             Sound.play('success');
             createSession();
             showMainApp();
@@ -2090,12 +2121,16 @@ async function adminLogin() {
             if (window.refreshCurrentPage) await window.refreshCurrentPage();
             window.showToast('🎉 مرحباً بك في لوحة التحكم', 'success');
         } else {
+            throttle.attempts += 1;
+            saveLoginThrottleState(throttle);
             window.showToast('كلمة المرور غير صحيحة', 'error');
             Sound.play('error');
             shakeElement(input);
         }
     } catch (err) {
         console.error(err);
+        throttle.attempts += 1;
+        saveLoginThrottleState(throttle);
         window.showToast('حدث خطأ أثناء التحقق', 'error');
         Sound.play('error');
     }

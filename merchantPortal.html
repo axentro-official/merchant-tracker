@@ -966,6 +966,40 @@ function initSupabase() {
     }
 }
 
+async function sendEmailNotification(payload) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    try {
+        const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-store',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'sendRequestEmail',
+                payload
+            }),
+            signal: controller.signal
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        const result = contentType.includes('application/json') ? await response.json() : await response.text();
+
+        if (!response.ok) {
+            const message = typeof result === 'string' ? result : result?.message || result?.error || `HTTP_${response.status}`;
+            throw new Error(message);
+        }
+
+        return result;
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
 function normalizeArabicDigits(value) {
     if (value === null || value === undefined) return '';
     return String(value)
@@ -1224,16 +1258,30 @@ async function submitRequest() {
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
     };
 
-    try {
-        fetch(CONFIG.GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestData)
-        }).catch(e => console.warn('Google Script error:', e));
-    } catch (e) {
-        console.warn(e);
-    }
+    const emailPayload = {
+        merchant: {
+            code: currentMerchant['رقم التاجر'],
+            name: currentMerchant['اسم التاجر'],
+            phone: currentMerchant['رقم الهاتف'] || '',
+            area: currentMerchant['المنطقة'] || '',
+            status: currentMerchant['الحالة'] || '',
+            accountNumber: currentMerchant['رقم الحساب'] || ''
+        },
+        request: {
+            code: requestData.merchant_number,
+            requestType: type,
+            amount: amount,
+            notes: notes,
+            date: requestData.date
+        },
+        machines: (currentMachines || []).map(machine => ({
+            code: machine['رقم المكنة'] || '',
+            serial: machine['الرقم التسلسلي'] || '',
+            status: machine['الحالة'] || '',
+            location: machine['المنطقة'] || machine['ملاحظات'] || ''
+        })),
+        remainingBalance: parseFloat(document.getElementById('remainingAmount')?.dataset?.raw || '0') || 0
+    };
 
     try {
         const supabaseRequest = {
@@ -1250,11 +1298,17 @@ async function submitRequest() {
             "المديونية الحالية": 0
         };
 
-        const { error } = await supabaseClient.from('requests').insert([supabaseRequest]);
+        const { data: insertedRows, error } = await supabaseClient.from('requests').insert([supabaseRequest]).select('"رقم الطلب"');
         if (error) throw error;
 
+        emailPayload.request.code = insertedRows?.[0]?.['رقم الطلب'] || 'REQUEST-PENDING';
+        const emailResult = await sendEmailNotification(emailPayload).catch(err => ({ error: err?.message || String(err) }));
+        if (emailResult?.error) {
+            console.warn('Email notification failed:', emailResult.error);
+        }
+
         Sound.play('success');
-        UI.showToast('تم إرسال طلبك بنجاح! سيتم مراجعته قريباً', 'success');
+        UI.showToast(emailResult?.error ? 'تم حفظ الطلب، لكن تعذر إرسال الإيميل الآن' : 'تم إرسال طلبك بنجاح! سيتم مراجعته قريباً', emailResult?.error ? 'warning' : 'success');
         closeRequestModal();
         if (currentMerchant) await loadMerchantData(currentMerchant.id);
     } catch (err) {

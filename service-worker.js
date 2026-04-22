@@ -1,4 +1,4 @@
-const CACHE_NAME = 'axentro-merchant-v1';
+const CACHE_NAME = 'axentro-merchant-v2';
 const OFFLINE_URL = './merchantPortal.html';
 
 const APP_ASSETS = [
@@ -30,11 +30,10 @@ self.addEventListener('fetch', (event) => {
 
   const reqUrl = new URL(request.url);
   const isSupabase = reqUrl.hostname.includes('supabase.co');
+  const isGoogleScript = reqUrl.hostname.includes('script.google.com');
 
-  if (isSupabase) {
-    event.respondWith(
-      fetch(request).catch(() => caches.match(request))
-    );
+  if (isSupabase || isGoogleScript) {
+    event.respondWith(fetch(request));
     return;
   }
 
