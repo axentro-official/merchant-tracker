@@ -6,6 +6,7 @@
 
 import { showToast, showConfirm } from '../ui/toast.js';
 import { escapeHtml, formatMoney, formatDate, formatTime } from '../utils/formatters.js';
+import { sendRequestEmailNotification } from '../services/networkService.js';
 
 let supabase = null;
 let currentRequests = [];
@@ -13,8 +14,6 @@ let merchantsList = [];
 let pendingCheckInterval = null;
 let lastPendingCount = 0;
 
-// رابط Google Script الثابت
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
 
 // تهيئة Supabase (باستخدام window.supabaseClient)
 export function initRequestsPage() {
@@ -73,16 +72,38 @@ function getCurrentMonthLabel() {
 }
 
 async function syncGoogleScript(payload) {
-    try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-    } catch (e) {
-        console.warn('Google Script error:', e);
-    }
+    if (!payload || payload.action !== 'create_request') return null;
+
+    const merchant = merchantsList.find(m => m.id === payload['رقم التاجر']) || {};
+    const { data: machines } = await supabase
+        .from('machines')
+        .select('"رقم المكنة", "الرقم التسلسلي", "الحالة", "ملاحظات"')
+        .eq('رقم التاجر', payload['رقم التاجر']);
+
+    return sendRequestEmailNotification({
+        merchant: {
+            code: merchant['رقم التاجر'] || '',
+            name: payload['اسم التاجر'] || merchant['اسم التاجر'] || '',
+            phone: merchant['رقم الهاتف'] || '',
+            area: merchant['المنطقة'] || '',
+            status: merchant['الحالة'] || '',
+            accountNumber: payload['رقم الحساب'] || merchant['رقم الحساب'] || ''
+        },
+        request: {
+            code: payload['رقم الطلب'] || 'REQUEST-PENDING',
+            requestType: payload['نوع الطلب'] || '',
+            amount: payload['المبلغ'] || 0,
+            notes: payload['ملاحظات'] || '',
+            date: payload['التاريخ'] || getNowDate()
+        },
+        machines: (machines || []).map(machine => ({
+            code: machine['رقم المكنة'] || '',
+            serial: machine['الرقم التسلسلي'] || '',
+            status: machine['الحالة'] || '',
+            location: machine['ملاحظات'] || ''
+        })),
+        remainingBalance: payload['المديونية الحالية'] || 0
+    }, { timeoutMs: 12000 });
 }
 
 function safeText(value) {
@@ -359,18 +380,20 @@ export async function saveRequest() {
     };
 
     try {
-        await syncGoogleScript({
-            action: 'create_request',
-            ...requestData
-        });
-
-        const { error } = await supabase
+        const { data: insertedRows, error } = await supabase
             .from('requests')
-            .insert([requestData]);
+            .insert([requestData])
+            .select('id, "رقم الطلب"');
 
         if (error) throw error;
 
-        showToast('تم إرسال الطلب بنجاح', 'success');
+        const emailResult = await syncGoogleScript({
+            action: 'create_request',
+            ...requestData,
+            'رقم الطلب': insertedRows?.[0]?.['رقم الطلب'] || 'REQUEST-PENDING'
+        }).catch(err => ({ error: err?.message || String(err) }));
+
+        showToast(emailResult?.error ? 'تم حفظ الطلب، لكن تعذر إرسال الإيميل الآن' : 'تم إرسال الطلب بنجاح', emailResult?.error ? 'warning' : 'success');
         if (window.Sound) window.Sound.play('success');
 
         closeRequestModal();

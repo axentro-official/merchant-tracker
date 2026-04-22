@@ -39,33 +39,33 @@ function renderArchiveTable() {
     if (!currentArchives.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="empty-state">
+                <td colspan="9" class="empty-state">
                     <i class="fas fa-archive"></i>
                     <p>لا يوجد أرشيف</p>
-                   
-                
+                </td>
+            </tr>
         `;
         return;
     }
 
     tbody.innerHTML = currentArchives.map((arch, idx) => `
         <tr>
-            <td>${idx + 1}  
-            <td><strong>${escapeHtml(arch['الشهر'] || '-')}</strong>  
-            <td>${arch['سنة التشغيل'] || '-'}  
-            <td>${arch['عدد التحويلات'] || 0}  
-            <td>${formatMoney(arch['إجمالي التحويلات'])}  
-            <td>${arch['عدد التحصيلات'] || 0}  
-            <td>${formatMoney(arch['إجمالي التحصيلات'])}  
-            <td><strong style="color:var(--danger);">${formatMoney(arch['إجمالي المتبقي'])}</strong>  
+            <td>${idx + 1}</td>
+            <td><strong>${escapeHtml(arch['الشهر'] || '-')}</strong></td>
+            <td>${arch['سنة التشغيل'] || '-'}</td>
+            <td>${arch['عدد التحويلات'] || 0}</td>
+            <td>${formatMoney(arch['إجمالي التحويلات'])}</td>
+            <td>${arch['عدد التحصيلات'] || 0}</td>
+            <td>${formatMoney(arch['إجمالي التحصيلات'])}</td>
+            <td><strong style="color:var(--danger);">${formatMoney(arch['إجمالي المتبقي'])}</strong></td>
             <td>
                 <div class="action-btns">
                     <button class="btn btn-danger btn-sm" onclick="window.deleteArchive('${arch.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-                
-            
+            </td>
+        </tr>
     `).join('');
 }
 
