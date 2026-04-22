@@ -1,9 +1,11 @@
 import { showToast, showConfirm } from '../ui/toast.js';
-import { escapeHtml, formatMoney, normalizeText } from '../utils/formatters.js';
+import { escapeHtml, formatMoney } from '../utils/formatters.js';
+import { buildMerchantLabel, filterMerchants, generateNextCode } from '../services/referenceService.js';
 
 let supabase = null;
 let currentMachines = [];
 let merchantsList = [];
+let filteredMerchants = [];
 let isSavingMachine = false;
 
 export function initMachinesPage() {
@@ -17,72 +19,146 @@ function extractSequence(code) {
 
 async function ensureMerchants(force = false) {
   if (merchantsList.length && !force) return;
-
   const { data, error } = await supabase.from('merchants').select('*');
   if (error) throw error;
-
   merchantsList = [...(data || [])].sort((a, b) => extractSequence(a['رقم التاجر']) - extractSequence(b['رقم التاجر']));
+  filteredMerchants = [...merchantsList];
 }
 
-function merchantLabel(merchant) {
-  return `${merchant['رقم التاجر']} - ${merchant['اسم التاجر']} (${merchant['اسم النشاط'] || 'غير محدد'})`;
+function renderMerchantSelect() {
+  const select = document.getElementById('machMerchantSelect');
+  if (!select) return;
+  select.innerHTML = '<option value="">اختر التاجر يدوياً...</option>' + filteredMerchants.map(merchant => (
+    `<option value="${escapeHtml(merchant.id)}">${escapeHtml(buildMerchantLabel(merchant))}</option>`
+  )).join('');
 }
 
-function fillMerchantDatalist() {
-  const dl = document.getElementById('merchantDatalist');
-  if (!dl) return;
-
-  dl.innerHTML = merchantsList.map(m => `<option value="${escapeHtml(merchantLabel(m))}"></option>`).join('');
+function renderMerchantQuickResults(items) {
+  const container = document.getElementById('machMerchantResults');
+  if (!container) return;
+  if (!items.length) {
+    container.innerHTML = '<div class="merchant-result-item muted">لا توجد نتائج مطابقة</div>';
+    container.classList.add('show');
+    return;
+  }
+  container.innerHTML = items.slice(0, 8).map(merchant => `
+    <button type="button" class="merchant-result-item" data-merchant-id="${escapeHtml(merchant.id)}">
+      <strong>${escapeHtml(merchant['اسم التاجر'] || 'بدون اسم')}</strong>
+      <span>${escapeHtml(merchant['رقم التاجر'] || '—')} • ${escapeHtml(merchant['اسم النشاط'] || 'غير محدد')} • ${escapeHtml(merchant['رقم الحساب'] || 'بدون حساب')}</span>
+    </button>
+  `).join('');
+  container.classList.add('show');
 }
 
-function resolveMerchant(inputValue) {
-  const raw = String(inputValue || '').trim();
-  const normalized = normalizeText(raw);
+function hideMerchantQuickResults() {
+  const container = document.getElementById('machMerchantResults');
+  if (!container) return;
+  container.classList.remove('show');
+}
 
-  return merchantsList.find(m => {
-    const code = String(m['رقم التاجر'] || '');
-    const name = String(m['اسم التاجر'] || '');
-    const activity = String(m['اسم النشاط'] || '');
-    const label = merchantLabel(m);
-    return (
-      code === raw ||
-      label === raw ||
-      normalizeText(code) === normalized ||
-      normalizeText(name).includes(normalized) ||
-      normalizeText(activity).includes(normalized) ||
-      normalizeText(label).includes(normalized)
-    );
-  }) || null;
+function setMachineMerchant(merchant) {
+  const hidden = document.getElementById('machMerchantId');
+  const search = document.getElementById('machMerchantSearch');
+  const select = document.getElementById('machMerchantSelect');
+  if (hidden) hidden.value = merchant?.id || '';
+  if (search) search.value = merchant ? buildMerchantLabel(merchant) : '';
+  if (select) select.value = merchant?.id || '';
+  renderMachineMerchantInfo(merchant);
+  hideMerchantQuickResults();
+}
+
+function renderMachineMerchantInfo(merchant) {
+  const card = document.getElementById('machMerchantInfo');
+  if (!card) return;
+  if (!merchant) {
+    card.innerHTML = '<div class="merchant-info-empty">اختر تاجراً ليتم تعبئة بياناته تلقائياً.</div>';
+    return;
+  }
+  card.innerHTML = `
+    <div class="merchant-info-grid compact">
+      <div><span>رقم التاجر</span><strong>${escapeHtml(merchant['رقم التاجر'] || '—')}</strong></div>
+      <div><span>رقم الحساب</span><strong>${escapeHtml(merchant['رقم الحساب'] || '—')}</strong></div>
+      <div><span>النشاط</span><strong>${escapeHtml(merchant['اسم النشاط'] || '—')}</strong></div>
+      <div><span>الهاتف</span><strong>${escapeHtml(merchant['رقم الهاتف'] || '—')}</strong></div>
+      <div><span>المنطقة</span><strong>${escapeHtml(merchant['المنطقة'] || '—')}</strong></div>
+      <div><span>العنوان</span><strong>${escapeHtml(merchant['العنوان'] || '—')}</strong></div>
+    </div>
+  `;
 }
 
 function attachMerchantSearch() {
   const search = document.getElementById('machMerchantSearch');
-  const hidden = document.getElementById('machMerchantId');
-  if (!search || !hidden) return;
+  const select = document.getElementById('machMerchantSelect');
+  if (!search || !select) return;
 
-  const resolve = () => {
-    const merchant = resolveMerchant(search.value);
-    hidden.value = merchant?.id || '';
-    if (merchant) {
-      search.value = merchantLabel(merchant);
+  renderMerchantSelect();
+  renderMachineMerchantInfo(null);
+
+  search.oninput = () => {
+    filteredMerchants = filterMerchants(merchantsList, search.value);
+    renderMerchantSelect();
+    renderMerchantQuickResults(filteredMerchants);
+    const exact = filteredMerchants.find(merchant => buildMerchantLabel(merchant) === search.value);
+    if (!search.value.trim()) {
+      setMachineMerchant(null);
+      filteredMerchants = [...merchantsList];
+      renderMerchantSelect();
+      hideMerchantQuickResults();
+    } else if (exact) {
+      setMachineMerchant(exact);
     }
   };
 
-  search.oninput = () => {
-    const merchant = resolveMerchant(search.value);
-    hidden.value = merchant?.id || '';
+  search.onfocus = () => {
+    filteredMerchants = filterMerchants(merchantsList, search.value);
+    renderMerchantSelect();
+    renderMerchantQuickResults(filteredMerchants);
   };
-  search.onchange = resolve;
+
+  search.onblur = () => {
+    setTimeout(() => {
+      const currentId = document.getElementById('machMerchantId')?.value;
+      if (!currentId) {
+        const first = filteredMerchants[0] || null;
+        if (first && search.value.trim()) setMachineMerchant(first);
+      }
+      hideMerchantQuickResults();
+    }, 160);
+  };
+
+  select.onchange = () => {
+    const merchant = merchantsList.find(item => item.id === select.value) || null;
+    setMachineMerchant(merchant);
+  };
+
+  document.getElementById('machMerchantResults')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-merchant-id]');
+    if (!button) return;
+    const merchant = merchantsList.find(item => item.id === button.dataset.merchantId) || null;
+    setMachineMerchant(merchant);
+  });
+}
+
+function clearMachineForm() {
+  document.getElementById('editMachineId').value = '';
+  document.getElementById('machMerchantSearch').value = '';
+  document.getElementById('machMerchantId').value = '';
+  document.getElementById('machMerchantSelect').value = '';
+  document.getElementById('machSerial').value = '';
+  document.getElementById('machTarget').value = '';
+  document.getElementById('machStatus').value = 'نشطة';
+  document.getElementById('machNotes').value = '';
+  renderMachineMerchantInfo(null);
+  filteredMerchants = [...merchantsList];
+  renderMerchantSelect();
 }
 
 export async function loadMachines() {
   supabase = supabase || window.supabaseClient;
   if (!supabase) return;
-
   try {
     const { data, error } = await supabase.from('machines').select('*');
     if (error) throw error;
-
     currentMachines = [...(data || [])].sort((a, b) => extractSequence(a['رقم المكنة']) - extractSequence(b['رقم المكنة']));
     await ensureMerchants(true);
     renderMachinesTable();
@@ -95,62 +171,43 @@ export async function loadMachines() {
 function renderMachinesTable() {
   const tbody = document.getElementById('machinesTableBody');
   if (!tbody) return;
-
   if (!currentMachines.length) {
     tbody.innerHTML = '<tr><td colspan="8" class="empty-state">لا توجد مكن</td></tr>';
     return;
   }
-
-  tbody.innerHTML = currentMachines.map((m, idx) => `
+  tbody.innerHTML = currentMachines.map((machine, idx) => `
     <tr>
       <td>${idx + 1}</td>
-      <td><code class="ref-code">${escapeHtml(m['رقم المكنة'] || '-')}</code></td>
-      <td>${escapeHtml(m['اسم التاجر'] || '-')}</td>
-      <td>${escapeHtml(m['اسم النشاط'] || '-')}</td>
-      <td dir="ltr">${escapeHtml(m['الرقم التسلسلي'] || '-')}</td>
-      <td>${formatMoney(m['التارجت الشهري'] || 0)}</td>
-      <td>${escapeHtml(m['الحالة'] || '-')}</td>
+      <td><code class="ref-code">${escapeHtml(machine['رقم المكنة'] || '-')}</code></td>
+      <td>${escapeHtml(machine['اسم التاجر'] || '-')}</td>
+      <td>${escapeHtml(machine['اسم النشاط'] || '-')}</td>
+      <td dir="ltr">${escapeHtml(machine['الرقم التسلسلي'] || '-')}</td>
+      <td>${formatMoney(machine['التارجت الشهري'] || 0)}</td>
+      <td>${escapeHtml(machine['الحالة'] || '-')}</td>
       <td>
         <div class="action-btns">
-          <button class="btn btn-primary btn-sm" onclick="window.editMachine('${m.id}')"><i class="fas fa-edit"></i></button>
-          <button class="btn btn-danger btn-sm" onclick="window.deleteMachine('${m.id}')"><i class="fas fa-trash"></i></button>
+          <button class="btn btn-primary btn-sm" onclick="window.editMachine('${machine.id}')"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="window.deleteMachine('${machine.id}')"><i class="fas fa-trash"></i></button>
         </div>
       </td>
     </tr>
   `).join('');
 }
 
-function clearMachineForm() {
-  document.getElementById('editMachineId').value = '';
-  document.getElementById('machMerchantSearch').value = '';
-  document.getElementById('machMerchantId').value = '';
-  document.getElementById('machSerial').value = '';
-  document.getElementById('machTarget').value = '';
-  document.getElementById('machStatus').value = 'نشطة';
-  document.getElementById('machNotes').value = '';
-}
-
 export async function openMachineModal(machine = null) {
   await ensureMerchants(true);
-  fillMerchantDatalist();
   attachMerchantSearch();
-
   document.getElementById('machineModalTitle').innerHTML = machine
     ? '<i class="fas fa-edit"></i> تعديل مكنة'
     : '<i class="fas fa-plus-circle"></i> إضافة مكنة جديدة';
-
   if (!machine) clearMachineForm();
-
   document.getElementById('editMachineId').value = machine?.id || '';
   document.getElementById('machSerial').value = machine?.['الرقم التسلسلي'] || '';
   document.getElementById('machTarget').value = machine?.['التارجت الشهري'] || '';
   document.getElementById('machStatus').value = machine?.['الحالة'] || 'نشطة';
   document.getElementById('machNotes').value = machine?.['ملاحظات'] || '';
-
-  const merchant = merchantsList.find(m => m.id === machine?.['رقم التاجر']);
-  document.getElementById('machMerchantSearch').value = merchant ? merchantLabel(merchant) : '';
-  document.getElementById('machMerchantId').value = merchant?.id || '';
-
+  const merchant = merchantsList.find(item => item.id === machine?.['رقم التاجر']) || null;
+  setMachineMerchant(merchant);
   document.getElementById('machineModal').classList.add('show');
 }
 
@@ -162,21 +219,16 @@ export function closeMachineModal() {
 export async function saveMachine() {
   if (isSavingMachine) return;
   isSavingMachine = true;
-
   try {
     supabase = supabase || window.supabaseClient;
     await ensureMerchants(true);
-
     const id = document.getElementById('editMachineId').value;
     const merchantId = document.getElementById('machMerchantId').value;
-    const merchant = merchantsList.find(m => m.id === merchantId);
-
-    if (!merchant) return showToast('يرجى اختيار التاجر من القائمة', 'warning');
-
+    const merchant = merchantsList.find(item => item.id === merchantId);
+    if (!merchant) return showToast('يرجى اختيار التاجر من القائمة أو نتائج البحث', 'warning');
     const serial = document.getElementById('machSerial').value.trim();
     if (!serial) return showToast('الرقم التسلسلي مطلوب', 'warning');
-
-    const duplicateSerial = currentMachines.find(m => m['الرقم التسلسلي'] === serial && m.id !== id);
+    const duplicateSerial = currentMachines.find(item => item['الرقم التسلسلي'] === serial && item.id !== id);
     if (duplicateSerial) return showToast('الرقم التسلسلي مستخدم بالفعل', 'warning');
 
     const payload = {
@@ -187,8 +239,14 @@ export async function saveMachine() {
       'الرقم التسلسلي': serial,
       'التارجت الشهري': parseFloat(document.getElementById('machTarget').value || '0') || 0,
       'الحالة': document.getElementById('machStatus').value || 'نشطة',
-      'ملاحظات': document.getElementById('machNotes').value.trim()
+      'ملاحظات': document.getElementById('machNotes').value.trim(),
+      'updated_at': new Date().toISOString()
     };
+
+    if (!id) {
+      payload['رقم المكنة'] = await generateNextCode(supabase, 'machines', 'رقم المكنة', { prefix: 'MAC', pad: 3 });
+      payload['created_at'] = new Date().toISOString();
+    }
 
     const query = id
       ? supabase.from('machines').update(payload).eq('id', id)
@@ -212,7 +270,7 @@ export async function saveMachine() {
 }
 
 export function editMachine(id) {
-  const machine = currentMachines.find(m => m.id === id);
+  const machine = currentMachines.find(item => item.id === id);
   if (machine) openMachineModal(machine);
 }
 
@@ -221,7 +279,6 @@ export function deleteMachine(id) {
     try {
       const { error } = await supabase.from('machines').delete().eq('id', id);
       if (error) throw error;
-
       showToast('تم حذف المكنة', 'success');
       await loadMachines();
       window.loadDashboardStats?.();

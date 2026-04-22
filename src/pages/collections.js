@@ -1,23 +1,308 @@
 import { showToast, showConfirm } from '../ui/toast.js';
-import { escapeHtml, formatMoney, formatDate, formatTime, normalizeText } from '../utils/formatters.js';
-let supabase=null,currentCollections=[],merchantsList=[],machinesList=[],listsLoaded=false,isSavingCollection=false;
-export function initCollectionsPage(){ supabase=window.supabaseClient; }
-async function ensureLists(force=false){ if(listsLoaded&&!force)return; const [m1,m2]=await Promise.all([supabase.from('merchants').select('*'),supabase.from('machines').select('*')]); if(m1.error) throw m1.error; if(m2.error) throw m2.error; merchantsList=m1.data||[]; machinesList=m2.data||[]; listsLoaded=true; }
-function merchantLabel(m){ return `${m['رقم التاجر']} - ${m['اسم التاجر']} (${m['اسم النشاط']||'غير محدد'})`; }
-function merchantById(id){ return merchantsList.find(m=>m.id===id); }
-function resolveMerchant(v){ const raw=String(v||'').trim(),norm=normalizeText(raw); return merchantsList.find(x=>{ const code=String(x['رقم التاجر']||''),name=String(x['اسم التاجر']||''),activity=String(x['اسم النشاط']||''),full=merchantLabel(x); return code===raw||full===raw||normalizeText(code)===norm||normalizeText(name).includes(norm)||normalizeText(activity).includes(norm)||normalizeText(full).includes(norm);})||null; }
-function fillMerchantDatalist(){ const dl=document.getElementById('merchantDatalistColl'); if(dl) dl.innerHTML=merchantsList.map(m=>`<option value="${escapeHtml(merchantLabel(m))}"></option>`).join(''); }
-function fillMachinesSelect(merchantId='',selected=''){ const el=document.getElementById('collMachineId'); if(!el)return; const filtered=merchantId?machinesList.filter(m=>m['رقم التاجر']===merchantId):[]; el.innerHTML='<option value="">بدون مكنة</option>'+filtered.map(m=>`<option value="${escapeHtml(m['رقم المكنة'])}" ${m['رقم المكنة']===selected?'selected':''}>${escapeHtml(m['رقم المكنة'])}</option>`).join(''); }
-function attachSearch(){ const s=document.getElementById('collMerchantSearch'),h=document.getElementById('collMerchantId'); if(!s||!h)return; s.oninput=()=>{ const m=resolveMerchant(s.value); h.value=m?.id||''; if(m) fillMachinesSelect(m.id); }; s.onchange=()=>{ const m=resolveMerchant(s.value); h.value=m?.id||''; s.value=m?merchantLabel(m):''; fillMachinesSelect(m?.id||''); }; }
-async function getMerchantDebt(merchantId, excludeCollectionId=null){ const [tRes,cRes]=await Promise.all([supabase.from('transfers').select('*').eq('رقم التاجر',merchantId),supabase.from('collections').select('*').eq('رقم التاجر',merchantId)]); if(tRes.error) throw tRes.error; if(cRes.error) throw cRes.error; const totalT=(tRes.data||[]).reduce((s,r)=>s+(parseFloat(r['قيمة التحويل'])||0),0); const totalC=(cRes.data||[]).filter(r=>!excludeCollectionId||r.id!==excludeCollectionId).reduce((s,r)=>s+(parseFloat(r['قيمة التحصيل'])||0),0); return Math.max(0,totalT-totalC); }
-function getNowDateTime(){ const now=new Date(); return {date:now.toISOString().split('T')[0], time:now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})}; }
-function buildDateTime(d,t){ try{return new Date(`${d||''} ${t||'12:00 AM'}`).getTime()||0;}catch{return 0;} }
-function clearForm(){ document.getElementById('editCollectionId').value=''; document.getElementById('collMerchantId').value=''; document.getElementById('collMerchantSearch').value=''; document.getElementById('collAmount').value=''; document.getElementById('collType').value='نقدي'; document.getElementById('collNotes').value=''; fillMachinesSelect(''); }
-export async function loadCollections(){ supabase=supabase||window.supabaseClient; if(!supabase)return; try{ const {data,error}=await supabase.from('collections').select('*'); if(error) throw error; currentCollections=(data||[]).sort((a,b)=>buildDateTime(b['التاريخ'],b['الوقت'])-buildDateTime(a['التاريخ'],a['الوقت'])); await ensureLists(true); renderCollectionsTable(); }catch(err){ console.error(err); showToast('خطأ في تحميل التحصيلات','error'); } }
-function renderCollectionsTable(){ const tbody=document.getElementById('collectionsTableBody'); if(!tbody)return; if(!currentCollections.length){ tbody.innerHTML='<tr><td colspan="10" class="empty-state">لا توجد تحصيلات</td></tr>'; return; } tbody.innerHTML=currentCollections.map((t,idx)=>`<tr><td>${idx+1}</td><td><code class="ref-code">${escapeHtml(t['الرقم المرجعي']||'-')}</code></td><td>${formatDate(t['التاريخ'])}</td><td>${formatTime(t['الوقت'])}</td><td>${escapeHtml(t['اسم التاجر']||'-')}</td><td>${escapeHtml(t['اسم النشاط']||'-')}</td><td>${formatMoney(t['قيمة التحصيل']||0)}</td><td>${formatMoney(t['المتبقي بعد التحصيل']||0)}</td><td>${escapeHtml(t['ملاحظات']||'-')}</td><td><div class="action-btns"><button class="btn btn-primary btn-sm" onclick="window.editCollection('${t.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-danger btn-sm" onclick="window.deleteCollection('${t.id}')"><i class="fas fa-trash"></i></button></div></td></tr>`).join(''); }
-export async function openCollectionModal(collection=null){ await ensureLists(true); fillMerchantDatalist(); attachSearch(); if(!collection) clearForm(); document.getElementById('collectionModalTitle').innerHTML=collection?'<i class="fas fa-edit"></i> تعديل تحصيل':'<i class="fas fa-hand-holding-usd"></i> تحصيل جديد'; document.getElementById('editCollectionId').value=collection?.id||''; const merchant=merchantById(collection?.['رقم التاجر']); document.getElementById('collMerchantId').value=merchant?.id||''; document.getElementById('collMerchantSearch').value=merchant?merchantLabel(merchant):''; fillMachinesSelect(merchant?.id||'', collection?.['رقم المكنة']||''); document.getElementById('collAmount').value=collection?.['قيمة التحصيل']||''; document.getElementById('collType').value=collection?.['نوع التحصيل']||'نقدي'; document.getElementById('collNotes').value=collection?.['ملاحظات']||''; document.getElementById('collectionModal').classList.add('show'); }
-export function closeCollectionModal(){ document.getElementById('collectionModal')?.classList.remove('show'); clearForm(); }
-export async function saveCollection(){ if(isSavingCollection) return; isSavingCollection=true; try{ const id=document.getElementById('editCollectionId').value; const merchant=merchantById(document.getElementById('collMerchantId').value); if(!merchant) return showToast('يرجى اختيار التاجر من القائمة','warning'); const amount=parseFloat(document.getElementById('collAmount').value||'0'); if(!(amount>0)) return showToast('يرجى إدخال مبلغ صحيح','warning'); const currentDebt=await getMerchantDebt(merchant.id,id||null); if(amount>currentDebt) return showToast(`مبلغ التحصيل (${formatMoney(amount)}) أكبر من المديونية الحالية (${formatMoney(currentDebt)})`,'warning'); const {date,time}=getNowDateTime(); const payload={'رقم التاجر':merchant.id,'اسم التاجر':merchant['اسم التاجر'],'اسم النشاط':merchant['اسم النشاط']||'غير محدد','رقم الحساب':merchant['رقم الحساب']||'','رقم المكنة':document.getElementById('collMachineId').value||null,'قيمة التحصيل':amount,'نوع التحصيل':document.getElementById('collType').value||'نقدي','المتبقي بعد التحصيل':Math.max(0,currentDebt-amount),'ملاحظات':document.getElementById('collNotes').value.trim(),'التاريخ':date,'الوقت':time}; const q=id?supabase.from('collections').update(payload).eq('id',id):supabase.from('collections').insert([payload]); const {error}=await q; if(error) throw error; showToast(id?'تم تحديث التحصيل':'تم إضافة التحصيل','success'); closeCollectionModal(); await loadCollections(); window.loadDashboardStats?.(); window.loadRecentActivities?.(); }catch(err){ console.error(err); showToast(err.message||'فشل حفظ التحصيل','error'); } finally{ isSavingCollection=false; } }
-export function editCollection(id){ const item=currentCollections.find(t=>t.id===id); if(item) openCollectionModal(item); }
-export function deleteCollection(id){ showConfirm('هل تريد حذف هذا التحصيل؟', async()=>{ const {error}=await supabase.from('collections').delete().eq('id',id); if(error) return showToast(error.message,'error'); showToast('تم حذف التحصيل','success'); await loadCollections(); window.loadDashboardStats?.(); window.loadRecentActivities?.(); }); }
-window.openCollectionModal=openCollectionModal; window.closeCollectionModal=closeCollectionModal; window.saveCollection=saveCollection; window.editCollection=editCollection; window.deleteCollection=deleteCollection;
+import { escapeHtml, formatMoney, formatDate } from '../utils/formatters.js';
+import { buildMachineOptionLabel, buildMerchantLabel, filterMerchants, generateNextCode } from '../services/referenceService.js';
+
+let supabase = null;
+let currentCollections = [];
+let merchantsList = [];
+let machinesList = [];
+let filteredMerchants = [];
+let listsLoaded = false;
+let isSavingCollection = false;
+
+export function initCollectionsPage() { supabase = window.supabaseClient; }
+
+async function ensureLists(force = false) {
+  if (listsLoaded && !force) return;
+  const [merchantsRes, machinesRes] = await Promise.all([
+    supabase.from('merchants').select('*'),
+    supabase.from('machines').select('*')
+  ]);
+  if (merchantsRes.error) throw merchantsRes.error;
+  if (machinesRes.error) throw machinesRes.error;
+  merchantsList = merchantsRes.data || [];
+  machinesList = machinesRes.data || [];
+  filteredMerchants = [...merchantsList];
+  listsLoaded = true;
+}
+
+function merchantById(id) { return merchantsList.find(item => item.id === id) || null; }
+function machineByCode(code) { return machinesList.find(item => item['رقم المكنة'] === code) || null; }
+function getNowDateTime() { const now = new Date(); return { date: now.toISOString().split('T')[0], time: now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:true }) }; }
+function buildDateTime(date, time) { try { return new Date(`${date || ''} ${time || '12:00 AM'}`).getTime() || 0; } catch { return 0; } }
+
+function renderMerchantSelect() {
+  const select = document.getElementById('collMerchantSelect');
+  if (!select) return;
+  select.innerHTML = '<option value="">اختر التاجر يدوياً...</option>' + filteredMerchants.map(merchant => (
+    `<option value="${escapeHtml(merchant.id)}">${escapeHtml(buildMerchantLabel(merchant))}</option>`
+  )).join('');
+}
+
+function renderQuickResults(items) {
+  const container = document.getElementById('collMerchantResults');
+  if (!container) return;
+  if (!items.length) {
+    container.innerHTML = '<div class="merchant-result-item muted">لا توجد نتائج مطابقة</div>';
+    container.classList.add('show');
+    return;
+  }
+  container.innerHTML = items.slice(0, 8).map(merchant => `
+    <button type="button" class="merchant-result-item" data-merchant-id="${escapeHtml(merchant.id)}">
+      <strong>${escapeHtml(merchant['اسم التاجر'] || 'بدون اسم')}</strong>
+      <span>${escapeHtml(merchant['رقم التاجر'] || '—')} • ${escapeHtml(merchant['اسم النشاط'] || 'غير محدد')} • ${escapeHtml(merchant['رقم الحساب'] || 'بدون حساب')}</span>
+    </button>
+  `).join('');
+  container.classList.add('show');
+}
+
+function hideQuickResults() { document.getElementById('collMerchantResults')?.classList.remove('show'); }
+
+function fillMachinesSelect(merchantId = '', selectedMachine = '') {
+  const select = document.getElementById('collMachineId');
+  if (!select) return;
+  const machines = merchantId ? machinesList.filter(machine => machine['رقم التاجر'] === merchantId) : [];
+  select.innerHTML = '<option value="">اختر المكنة المرتبطة...</option>' + machines.map(machine => (
+    `<option value="${escapeHtml(machine['رقم المكنة'])}" ${machine['رقم المكنة'] === selectedMachine ? 'selected' : ''}>${escapeHtml(buildMachineOptionLabel(machine))}</option>`
+  )).join('');
+  renderMachineInfo(machineByCode(selectedMachine));
+}
+
+async function getMerchantDebt(merchantId, excludeId = null) {
+  const [transfersRes, collectionsRes] = await Promise.all([
+    supabase.from('transfers').select('"قيمة التحويل"').eq('رقم التاجر', merchantId),
+    supabase.from('collections').select('id, "قيمة التحصيل"').eq('رقم التاجر', merchantId)
+  ]);
+  if (transfersRes.error) throw transfersRes.error;
+  if (collectionsRes.error) throw collectionsRes.error;
+  const totalTransfers = (transfersRes.data || []).reduce((sum, row) => sum + (parseFloat(row['قيمة التحويل']) || 0), 0);
+  const totalCollections = (collectionsRes.data || []).reduce((sum, row) => {
+    if (excludeId && row.id === excludeId) return sum;
+    return sum + (parseFloat(row['قيمة التحصيل']) || 0);
+  }, 0);
+  return Math.max(0, totalTransfers - totalCollections);
+}
+
+async function renderMerchantInfo(merchant, excludeId = null) {
+  const card = document.getElementById('collMerchantInfo');
+  if (!card) return;
+  if (!merchant) {
+    card.innerHTML = '<div class="merchant-info-empty">اختر تاجراً ليتم تحميل مديونيته الحالية والمكن المرتبط به فوراً.</div>';
+    document.getElementById('collCurrentDebt').textContent = formatMoney(0);
+    return;
+  }
+  const linkedMachines = machinesList.filter(machine => machine['رقم التاجر'] === merchant.id);
+  const debt = await getMerchantDebt(merchant.id, excludeId);
+  document.getElementById('collCurrentDebt').textContent = formatMoney(debt);
+  card.innerHTML = `
+    <div class="merchant-info-grid">
+      <div><span>رقم التاجر</span><strong>${escapeHtml(merchant['رقم التاجر'] || '—')}</strong></div>
+      <div><span>رقم الحساب</span><strong>${escapeHtml(merchant['رقم الحساب'] || '—')}</strong></div>
+      <div><span>اسم النشاط</span><strong>${escapeHtml(merchant['اسم النشاط'] || '—')}</strong></div>
+      <div><span>الهاتف</span><strong>${escapeHtml(merchant['رقم الهاتف'] || '—')}</strong></div>
+      <div><span>المكن المرتبط</span><strong>${linkedMachines.length}</strong></div>
+      <div class="full accent"><span>المديونية الحالية</span><strong>${formatMoney(debt)}</strong></div>
+    </div>
+  `;
+}
+
+function renderMachineInfo(machine) {
+  const card = document.getElementById('collMachineInfo');
+  if (!card) return;
+  if (!machine) {
+    card.innerHTML = '<div class="merchant-info-empty">اختر المكنة إن كانت العملية مرتبطة بجهاز محدد.</div>';
+    return;
+  }
+  card.innerHTML = `
+    <div class="merchant-info-grid compact">
+      <div><span>رقم المكنة</span><strong>${escapeHtml(machine['رقم المكنة'] || '—')}</strong></div>
+      <div><span>السيريال</span><strong>${escapeHtml(machine['الرقم التسلسلي'] || '—')}</strong></div>
+      <div><span>الحالة</span><strong>${escapeHtml(machine['الحالة'] || '—')}</strong></div>
+      <div><span>التارجت</span><strong>${formatMoney(machine['التارجت الشهري'] || 0)}</strong></div>
+    </div>
+  `;
+}
+
+async function setCollectionMerchant(merchant, selectedMachine = '', excludeId = null) {
+  document.getElementById('collMerchantId').value = merchant?.id || '';
+  document.getElementById('collMerchantSearch').value = merchant ? buildMerchantLabel(merchant) : '';
+  document.getElementById('collMerchantSelect').value = merchant?.id || '';
+  fillMachinesSelect(merchant?.id || '', selectedMachine);
+  await renderMerchantInfo(merchant, excludeId);
+  hideQuickResults();
+}
+
+function attachSearch() {
+  const search = document.getElementById('collMerchantSearch');
+  const select = document.getElementById('collMerchantSelect');
+  const machineSelect = document.getElementById('collMachineId');
+  if (!search || !select || !machineSelect) return;
+  renderMerchantSelect();
+  renderMerchantInfo(null);
+  renderMachineInfo(null);
+  search.oninput = () => {
+    filteredMerchants = filterMerchants(merchantsList, search.value);
+    renderMerchantSelect();
+    renderQuickResults(filteredMerchants);
+    if (!search.value.trim()) setCollectionMerchant(null);
+  };
+  search.onfocus = () => {
+    filteredMerchants = filterMerchants(merchantsList, search.value);
+    renderMerchantSelect();
+    renderQuickResults(filteredMerchants);
+  };
+  search.onblur = () => setTimeout(hideQuickResults, 160);
+  select.onchange = async () => setCollectionMerchant(merchantById(select.value), '', document.getElementById('editCollectionId').value || null);
+  machineSelect.onchange = () => renderMachineInfo(machineByCode(machineSelect.value));
+  document.getElementById('collMerchantResults')?.addEventListener('click', async event => {
+    const button = event.target.closest('[data-merchant-id]');
+    if (!button) return;
+    await setCollectionMerchant(merchantById(button.dataset.merchantId), '', document.getElementById('editCollectionId').value || null);
+  });
+}
+
+function clearForm() {
+  document.getElementById('editCollectionId').value = '';
+  document.getElementById('collMerchantId').value = '';
+  document.getElementById('collMerchantSearch').value = '';
+  document.getElementById('collMerchantSelect').value = '';
+  document.getElementById('collAmount').value = '';
+  document.getElementById('collType').value = 'تحصيل جزئي';
+  document.getElementById('collNotes').value = '';
+  document.getElementById('collCurrentDebt').textContent = formatMoney(0);
+  fillMachinesSelect('');
+  renderMerchantInfo(null);
+  renderMachineInfo(null);
+}
+
+export async function loadCollections() {
+  supabase = supabase || window.supabaseClient;
+  if (!supabase) return;
+  try {
+    const { data, error } = await supabase.from('collections').select('*');
+    if (error) throw error;
+    currentCollections = (data || []).sort((a, b) => buildDateTime(b['التاريخ'], b['الوقت']) - buildDateTime(a['التاريخ'], a['الوقت']));
+    await ensureLists(true);
+    renderCollectionsTable();
+  } catch (err) {
+    console.error(err);
+    showToast('خطأ في تحميل التحصيلات', 'error');
+  }
+}
+
+function renderCollectionsTable() {
+  const tbody = document.getElementById('collectionsTableBody');
+  if (!tbody) return;
+  if (!currentCollections.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">لا توجد تحصيلات</td></tr>';
+    return;
+  }
+  tbody.innerHTML = currentCollections.map((collection, idx) => `
+    <tr>
+      <td>${idx + 1}</td>
+      <td><code class="ref-code">${escapeHtml(collection['الرقم المرجعي'] || '-')}</code></td>
+      <td>${formatDate(collection['التاريخ'])}</td>
+      <td>${escapeHtml(collection['الوقت'] || '-')}</td>
+      <td>${escapeHtml(collection['اسم التاجر'] || '-')}</td>
+      <td>${escapeHtml(collection['اسم النشاط'] || '-')}</td>
+      <td>${formatMoney(collection['قيمة التحصيل'] || 0)}</td>
+      <td>${escapeHtml(collection['ملاحظات'] || '-')}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn btn-primary btn-sm" onclick="window.editCollection('${collection.id}')"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="window.deleteCollection('${collection.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+export async function openCollectionModal(collection = null) {
+  await ensureLists(true);
+  attachSearch();
+  if (!collection) clearForm();
+  document.getElementById('collectionModalTitle').innerHTML = collection ? '<i class="fas fa-edit"></i> تعديل تحصيل' : '<i class="fas fa-hand-holding-usd"></i> تحصيل جديد';
+  document.getElementById('editCollectionId').value = collection?.id || '';
+  document.getElementById('collAmount').value = collection?.['قيمة التحصيل'] || '';
+  document.getElementById('collType').value = collection?.['نوع التحصيل'] || 'تحصيل جزئي';
+  document.getElementById('collNotes').value = collection?.['ملاحظات'] || '';
+  const merchant = merchantById(collection?.['رقم التاجر']);
+  await setCollectionMerchant(merchant, collection?.['رقم المكنة'] || '', collection?.id || null);
+  document.getElementById('collectionModal').classList.add('show');
+}
+
+export function closeCollectionModal() {
+  document.getElementById('collectionModal')?.classList.remove('show');
+  clearForm();
+}
+
+export async function saveCollection() {
+  if (isSavingCollection) return;
+  isSavingCollection = true;
+  try {
+    const id = document.getElementById('editCollectionId').value;
+    const merchant = merchantById(document.getElementById('collMerchantId').value);
+    if (!merchant) return showToast('يرجى اختيار التاجر من القائمة أو نتائج البحث', 'warning');
+    const amount = parseFloat(document.getElementById('collAmount').value || '0');
+    if (!(amount > 0)) return showToast('يرجى إدخال مبلغ صحيح', 'warning');
+    const currentDebt = await getMerchantDebt(merchant.id, id || null);
+    if (amount > currentDebt) {
+      return showToast(`مبلغ التحصيل أكبر من المديونية الحالية. المديونية الفعلية الآن: ${formatMoney(currentDebt)}`, 'warning');
+    }
+    const { date, time } = getNowDateTime();
+    const payload = {
+      'رقم التاجر': merchant.id,
+      'اسم التاجر': merchant['اسم التاجر'],
+      'اسم النشاط': merchant['اسم النشاط'] || 'غير محدد',
+      'رقم الحساب': merchant['رقم الحساب'] || '',
+      'رقم المكنة': document.getElementById('collMachineId').value || null,
+      'قيمة التحصيل': amount,
+      'نوع التحصيل': document.getElementById('collType').value || 'تحصيل جزئي',
+      'المتبقي بعد التحصيل': Math.max(0, currentDebt - amount),
+      'ملاحظات': document.getElementById('collNotes').value.trim(),
+      'التاريخ': date,
+      'الوقت': time,
+      'الشهر': new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' }),
+      'updated_at': new Date().toISOString()
+    };
+    if (!id) {
+      payload['الرقم المرجعي'] = await generateNextCode(supabase, 'collections', 'الرقم المرجعي', { prefix: 'COL', pad: 5 });
+      payload['created_at'] = new Date().toISOString();
+    }
+    const query = id ? supabase.from('collections').update(payload).eq('id', id) : supabase.from('collections').insert([payload]);
+    const { error } = await query;
+    if (error) throw error;
+    showToast(id ? 'تم تحديث التحصيل' : 'تم إضافة التحصيل', 'success');
+    closeCollectionModal();
+    await loadCollections();
+    window.loadDashboardStats?.();
+    window.loadRecentActivities?.();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'فشل حفظ التحصيل', 'error');
+  } finally {
+    isSavingCollection = false;
+  }
+}
+
+export function editCollection(id) {
+  const item = currentCollections.find(collection => collection.id === id);
+  if (item) openCollectionModal(item);
+}
+
+export function deleteCollection(id) {
+  showConfirm('هل تريد حذف هذا التحصيل؟', async () => {
+    const { error } = await supabase.from('collections').delete().eq('id', id);
+    if (error) return showToast(error.message, 'error');
+    showToast('تم حذف التحصيل', 'success');
+    await loadCollections();
+    window.loadDashboardStats?.();
+    window.loadRecentActivities?.();
+  });
+}
+
+window.openCollectionModal = openCollectionModal;
+window.closeCollectionModal = closeCollectionModal;
+window.saveCollection = saveCollection;
+window.editCollection = editCollection;
+window.deleteCollection = deleteCollection;

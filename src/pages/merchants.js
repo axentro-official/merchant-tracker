@@ -1,5 +1,6 @@
 import { showToast, showConfirm } from '../ui/toast.js';
 import { escapeHtml, normalizeText } from '../utils/formatters.js';
+import { generateNextCode } from '../services/referenceService.js';
 
 let supabase = null;
 let currentMerchants = [];
@@ -150,9 +151,17 @@ export async function saveMerchant() {
       return showToast('يوجد تاجر بنفس الاسم والنشاط بالفعل', 'warning');
     }
 
+    const record = { ...payload, 'updated_at': new Date().toISOString() };
+    if (!id) {
+      record['رقم التاجر'] = await generateNextCode(supabase, 'merchants', 'رقم التاجر', { prefix: 'MER', pad: 3 });
+      record['created_at'] = new Date().toISOString();
+      record['تاريخ الإنشاء'] = new Date().toISOString().split('T')[0];
+      record['وقت الإنشاء'] = new Date().toTimeString().slice(0, 8);
+    }
+
     const query = id
-      ? supabase.from('merchants').update(payload).eq('id', id)
-      : supabase.from('merchants').insert([payload]);
+      ? supabase.from('merchants').update(record).eq('id', id)
+      : supabase.from('merchants').insert([record]);
 
     const { error } = await query;
     if (error) throw error;
