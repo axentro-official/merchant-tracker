@@ -1980,10 +1980,9 @@ async function populateMerchantDatalists() {
     try {
         const { data, error } = await supabaseClient
             .from('merchants')
-            .select('*')
-            .order('updated_at', { ascending: false });
+            .select('*');
         if (error) throw error;
-        window.merchantsData = data || [];
+        window.merchantsData = (data || []).sort((a, b) => { const aSeq = parseInt(String(a['رقم التاجر'] || '').match(/(\d+)(?!.*\d)/)?.[1] || '0', 10); const bSeq = parseInt(String(b['رقم التاجر'] || '').match(/(\d+)(?!.*\d)/)?.[1] || '0', 10); return aSeq - bSeq || String(a['اسم التاجر'] || '').localeCompare(String(b['اسم التاجر'] || ''), 'ar'); });
     } catch(e) {
         console.error(e);
     }
