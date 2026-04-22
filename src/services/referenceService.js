@@ -77,3 +77,70 @@ export function buildMachineOptionLabel(machine) {
   const status = machine?.['الحالة'] || '—';
   return `${machineCode} - ${serial} - ${status}`;
 }
+
+
+export function sortMerchantsByCode(merchants = []) {
+  return [...merchants].sort((a, b) => {
+    const aSeq = extractSequenceFromCode(a?.['رقم التاجر'], { prefix: 'MER' });
+    const bSeq = extractSequenceFromCode(b?.['رقم التاجر'], { prefix: 'MER' });
+    if (aSeq !== bSeq) return aSeq - bSeq;
+    return String(a?.['اسم التاجر'] || '').localeCompare(String(b?.['اسم التاجر'] || ''), 'ar');
+  });
+}
+
+export function sortMachinesByCode(machines = []) {
+  return [...machines].sort((a, b) => {
+    const aSeq = extractSequenceFromCode(a?.['رقم المكنة'], { prefix: 'MAC' });
+    const bSeq = extractSequenceFromCode(b?.['رقم المكنة'], { prefix: 'MAC' });
+    if (aSeq !== bSeq) return aSeq - bSeq;
+    return String(a?.['الرقم التسلسلي'] || '').localeCompare(String(b?.['الرقم التسلسلي'] || ''), 'en');
+  });
+}
+
+function extractMissingColumn(error) {
+  const message = String(error?.message || '');
+  const patterns = [
+    /Could not find the '([^']+)' column/i,
+    /column\s+[^.]+\.([^\s'"`]+)\s+does not exist/i,
+    /column\s+"([^"]+)"\s+does not exist/i
+  ];
+  for (const pattern of patterns) {
+    const match = message.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+  return '';
+}
+
+export async function safeMutateRecord(supabase, tableName, payload, { id = '', maxRetries = 8 } = {}) {
+  let currentPayload = { ...(payload || {}) };
+  let lastError = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt += 1) {
+    const query = id
+      ? supabase.from(tableName).update(currentPayload).eq('id', id)
+      : supabase.from(tableName).insert([currentPayload]);
+
+    const { error } = await query;
+    if (!error) return { ok: true, payload: currentPayload };
+
+    lastError = error;
+    const missingColumn = extractMissingColumn(error);
+    if (!missingColumn || !(missingColumn in currentPayload)) {
+      break;
+    }
+
+    delete currentPayload[missingColumn];
+  }
+
+  throw lastError || new Error('فشل تنفيذ العملية على قاعدة البيانات');
+}
+
+export function sortRowsByDateTime(rows = [], dateKey = 'التاريخ', timeKey = 'الوقت') {
+  const parseValue = row => {
+    const date = String(row?.[dateKey] || '').trim();
+    const time = String(row?.[timeKey] || '').trim() || '12:00 AM';
+    const value = new Date(`${date} ${time}`).getTime();
+    return Number.isFinite(value) ? value : 0;
+  };
+  return [...rows].sort((a, b) => parseValue(b) - parseValue(a));
+}

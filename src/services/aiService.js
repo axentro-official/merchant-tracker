@@ -28,10 +28,14 @@ function safeNumber(value) {
 }
 
 function detectMerchant(context, question) {
+  const raw = String(question || '').trim();
   const q = normalizeArabic(question);
   return (context.merchants || []).find(merchant => {
     const fields = [merchant['اسم التاجر'], merchant['رقم التاجر'], merchant['رقم الحساب'], merchant['اسم النشاط']];
-    return fields.some(field => normalizeArabic(field).includes(q) || q.includes(normalizeArabic(field)));
+    return fields.some(field => {
+      const normalizedField = normalizeArabic(field);
+      return normalizedField.includes(q) || q.includes(normalizedField) || String(field || '').trim() === raw;
+    });
   }) || null;
 }
 
@@ -72,8 +76,11 @@ export async function processQuery(question, context = {}) {
     return 'يمكنني الإجابة عن: عدد التجار، عدد المكن، إجمالي التحويلات، إجمالي التحصيلات، المديونية، الطلبات المعلقة، أكبر مديونية، وكشف مختصر لأي تاجر بالاسم أو رقم التاجر أو رقم الحساب.';
   }
 
-  if (q.includes('عدد التجار')) {
-    return `عدد التجار الحالي: ${(context.merchants || []).length}`;
+  if (q === 'التجار' || q.includes('عدد التجار') || q.includes('قائمة التجار')) {
+    const merchants = context.merchants || [];
+    if (!merchants.length) return 'لا يوجد تجار حالياً.';
+    const preview = merchants.slice().sort((a, b) => String(a['رقم التاجر'] || '').localeCompare(String(b['رقم التاجر'] || ''), 'en')).slice(0, 10).map((merchant, index) => `${index + 1}) ${merchant['رقم التاجر'] || '—'} - ${merchant['اسم التاجر'] || 'بدون اسم'} - ${merchant['رقم الحساب'] || 'بدون حساب'}`).join('\n');
+    return `عدد التجار الحالي: ${merchants.length}\nأول 10 تجار في القائمة:\n${preview}`;
   }
 
   if (q.includes('عدد المكن')) {
@@ -108,6 +115,11 @@ export async function processQuery(question, context = {}) {
       .slice(0, 5);
     if (!ranked.length) return 'لا توجد مديونيات حالية على التجار.';
     return 'أعلى 5 مديونيات حالياً:\n' + ranked.map((item, index) => `${index + 1}) ${item.merchant['اسم التاجر']} — ${money(item.debt)}`).join('\n');
+  }
+
+  if (/^\d{6,}$/.test(String(question || '').trim())) {
+    const merchant = detectMerchant(context, question);
+    if (merchant) return buildMerchantStatement(merchant, context);
   }
 
   if (q.includes('كشف') || q.includes('حساب') || q.includes('بيانات تاجر') || q.includes('تفاصيل تاجر')) {
