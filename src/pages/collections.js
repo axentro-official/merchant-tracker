@@ -1,6 +1,6 @@
 import { showToast, showConfirm } from '../ui/toast.js';
 import { escapeHtml, formatMoney, formatDate } from '../utils/formatters.js';
-import { buildMachineOptionLabel, buildMerchantLabel, filterMerchants, generateNextCode } from '../services/referenceService.js';
+import { buildMachineOptionLabel, buildMerchantLabel, filterMerchants, generateNextCode, safeMutateRecord, sortMachinesByCode, sortMerchantsByCode, sortRowsByDateTime } from '../services/referenceService.js';
 
 let supabase = null;
 let currentCollections = [];
@@ -20,8 +20,8 @@ async function ensureLists(force = false) {
   ]);
   if (merchantsRes.error) throw merchantsRes.error;
   if (machinesRes.error) throw machinesRes.error;
-  merchantsList = merchantsRes.data || [];
-  machinesList = machinesRes.data || [];
+  merchantsList = sortMerchantsByCode(merchantsRes.data || []);
+  machinesList = sortMachinesByCode(machinesRes.data || []);
   filteredMerchants = [...merchantsList];
   listsLoaded = true;
 }
@@ -181,7 +181,7 @@ export async function loadCollections() {
   try {
     const { data, error } = await supabase.from('collections').select('*');
     if (error) throw error;
-    currentCollections = (data || []).sort((a, b) => buildDateTime(b['التاريخ'], b['الوقت']) - buildDateTime(a['التاريخ'], a['الوقت']));
+    currentCollections = sortRowsByDateTime(data || []);
     await ensureLists(true);
     renderCollectionsTable();
   } catch (err) {
@@ -269,9 +269,7 @@ export async function saveCollection() {
       payload['الرقم المرجعي'] = await generateNextCode(supabase, 'collections', 'الرقم المرجعي', { prefix: 'COL', pad: 5 });
       payload['created_at'] = new Date().toISOString();
     }
-    const query = id ? supabase.from('collections').update(payload).eq('id', id) : supabase.from('collections').insert([payload]);
-    const { error } = await query;
-    if (error) throw error;
+    await safeMutateRecord(supabase, 'collections', payload, { id });
     showToast(id ? 'تم تحديث التحصيل' : 'تم إضافة التحصيل', 'success');
     closeCollectionModal();
     await loadCollections();

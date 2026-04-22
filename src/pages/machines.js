@@ -1,6 +1,6 @@
 import { showToast, showConfirm } from '../ui/toast.js';
 import { escapeHtml, formatMoney } from '../utils/formatters.js';
-import { buildMerchantLabel, filterMerchants, generateNextCode } from '../services/referenceService.js';
+import { buildMerchantLabel, filterMerchants, generateNextCode, safeMutateRecord, sortMerchantsByCode, sortMachinesByCode } from '../services/referenceService.js';
 
 let supabase = null;
 let currentMachines = [];
@@ -21,7 +21,7 @@ async function ensureMerchants(force = false) {
   if (merchantsList.length && !force) return;
   const { data, error } = await supabase.from('merchants').select('*');
   if (error) throw error;
-  merchantsList = [...(data || [])].sort((a, b) => extractSequence(a['رقم التاجر']) - extractSequence(b['رقم التاجر']));
+  merchantsList = sortMerchantsByCode(data || []);
   filteredMerchants = [...merchantsList];
 }
 
@@ -159,7 +159,7 @@ export async function loadMachines() {
   try {
     const { data, error } = await supabase.from('machines').select('*');
     if (error) throw error;
-    currentMachines = [...(data || [])].sort((a, b) => extractSequence(a['رقم المكنة']) - extractSequence(b['رقم المكنة']));
+    currentMachines = sortMachinesByCode(data || []);
     await ensureMerchants(true);
     renderMachinesTable();
   } catch (err) {
@@ -248,12 +248,7 @@ export async function saveMachine() {
       payload['created_at'] = new Date().toISOString();
     }
 
-    const query = id
-      ? supabase.from('machines').update(payload).eq('id', id)
-      : supabase.from('machines').insert([payload]);
-
-    const { error } = await query;
-    if (error) throw error;
+    await safeMutateRecord(supabase, 'machines', payload, { id });
 
     showToast(id ? 'تم تحديث المكنة' : 'تم إضافة المكنة', 'success');
     closeMachineModal();

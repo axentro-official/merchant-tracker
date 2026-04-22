@@ -1,6 +1,6 @@
 import { showToast, showConfirm } from '../ui/toast.js';
 import { escapeHtml, normalizeText } from '../utils/formatters.js';
-import { generateNextCode } from '../services/referenceService.js';
+import { generateNextCode, safeMutateRecord, sortMerchantsByCode } from '../services/referenceService.js';
 
 let supabase = null;
 let currentMerchants = [];
@@ -15,12 +15,7 @@ function extractSequence(code) {
 }
 
 function sortMerchants(list) {
-  return [...(list || [])].sort((a, b) => {
-    const aSeq = extractSequence(a['رقم التاجر']);
-    const bSeq = extractSequence(b['رقم التاجر']);
-    if (aSeq !== bSeq) return aSeq - bSeq;
-    return String(a['اسم التاجر'] || '').localeCompare(String(b['اسم التاجر'] || ''), 'ar');
-  });
+  return sortMerchantsByCode(list || []);
 }
 
 export async function loadMerchants() {
@@ -159,12 +154,7 @@ export async function saveMerchant() {
       record['وقت الإنشاء'] = new Date().toTimeString().slice(0, 8);
     }
 
-    const query = id
-      ? supabase.from('merchants').update(record).eq('id', id)
-      : supabase.from('merchants').insert([record]);
-
-    const { error } = await query;
-    if (error) throw error;
+    await safeMutateRecord(supabase, 'merchants', record, { id });
 
     showToast(id ? 'تم تحديث التاجر' : 'تم إضافة التاجر', 'success');
     closeMerchantModal();
