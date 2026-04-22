@@ -6,11 +6,21 @@ let confirmCallback = null;
 export function showToast(message, type = 'success') {
   const container = document.getElementById('toastContainer');
   if (!container) return;
+
   const icons = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
   const toast = document.createElement('div');
+  const icon = document.createElement('i');
+  const textNode = document.createElement('span');
+
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> <span>${message}</span>`;
+  icon.className = `fas ${icons[type] || icons.info}`;
+  textNode.textContent = String(message ?? '');
+
+  toast.appendChild(icon);
+  toast.appendChild(document.createTextNode(' '));
+  toast.appendChild(textNode);
   container.appendChild(toast);
+
   setTimeout(() => toast.classList.add('removing'), REMOVING_CLASS_DELAY);
   setTimeout(() => toast.remove(), TOAST_DURATION);
 }
