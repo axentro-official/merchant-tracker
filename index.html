@@ -244,6 +244,41 @@
         border-color: var(--primary);
         background: rgba(59,130,246,0.1);
     }
+
+    .merchant-picker-stack { display:flex; flex-direction:column; gap:12px; }
+    .merchant-search-shell { position: relative; }
+    .merchant-picker-select { width:100%; }
+    .merchant-results {
+        position:absolute; top:calc(100% + 8px); right:0; left:0; z-index:30; display:none;
+        background: rgba(10,15,30,0.98); border:1px solid var(--border-color); border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg); overflow:hidden; max-height:280px; overflow-y:auto;
+    }
+    .merchant-results.show { display:block; }
+    .merchant-result-item {
+        width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:4px; text-align:right;
+        padding:12px 14px; border:none; background:transparent; color:var(--text-primary); cursor:pointer;
+        border-bottom:1px solid var(--border-light); font-family:'Cairo', sans-serif;
+    }
+    .merchant-result-item:hover { background: rgba(59,130,246,0.08); }
+    .merchant-result-item span { color: var(--text-secondary); font-size: 12px; }
+    .merchant-result-item.muted { color: var(--text-secondary); cursor: default; }
+    .merchant-info-card {
+        margin-top: 12px; padding: 14px; border-radius: var(--radius-md); background: rgba(255,255,255,0.02);
+        border: 1px solid var(--border-color);
+    }
+    .merchant-info-grid {
+        display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px;
+    }
+    .merchant-info-grid.compact { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+    .merchant-info-grid > div {
+        display:flex; flex-direction:column; gap:4px; padding:10px 12px; border-radius:12px;
+        background: rgba(2,6,23,0.55); border:1px solid var(--border-light);
+    }
+    .merchant-info-grid > div span { font-size:12px; color:var(--text-secondary); }
+    .merchant-info-grid > div strong { font-size:14px; color:var(--text-primary); word-break:break-word; }
+    .merchant-info-grid > div.full { grid-column:1 / -1; }
+    .merchant-info-grid > div.accent { border-color: rgba(59,130,246,0.25); background: rgba(59,130,246,0.08); }
+    .merchant-info-empty { color: var(--text-secondary); font-size: 13px; }
     .password-toggle {
         position: absolute;
         left: 16px;
@@ -1241,12 +1276,16 @@
         <div class="modal-body">
             <input type="hidden" id="editMachineId">
             <div class="form-group">
-                <label>التاجر *</label>
-                <div class="searchable-select">
-                    <input type="text" id="machMerchantSearch" class="form-input" placeholder="ابحث عن تاجر..." list="merchantDatalist" autocomplete="off">
-                    <datalist id="merchantDatalist"></datalist>
+                <label>بحث سريع عن التاجر *</label>
+                <div class="merchant-picker-stack">
+                    <div class="merchant-search-shell">
+                        <input type="text" id="machMerchantSearch" class="form-input" placeholder="اكتب أي حرف من اسم التاجر / رقم التاجر / رقم الحساب" autocomplete="off">
+                        <div id="machMerchantResults" class="merchant-results"></div>
+                    </div>
+                    <select id="machMerchantSelect" class="form-select merchant-picker-select"></select>
                     <input type="hidden" id="machMerchantId">
                 </div>
+                <div id="machMerchantInfo" class="merchant-info-card"><div class="merchant-info-empty">اختر تاجراً ليتم تعبئة بياناته تلقائياً.</div></div>
             </div>
             <div class="form-group">
                 <label>الرقم التسلسلي *</label>
@@ -1275,16 +1314,21 @@
         <div class="modal-body">
             <input type="hidden" id="editTransferId">
             <div class="form-group">
-                <label>التاجر *</label>
-                <div class="searchable-select">
-                    <input type="text" id="transMerchantSearch" class="form-input" placeholder="ابحث عن تاجر..." list="merchantDatalistTrans" autocomplete="off">
-                    <datalist id="merchantDatalistTrans"></datalist>
+                <label>بحث سريع عن التاجر *</label>
+                <div class="merchant-picker-stack">
+                    <div class="merchant-search-shell">
+                        <input type="text" id="transMerchantSearch" class="form-input" placeholder="اكتب أي حرف من اسم التاجر / رقم التاجر / رقم الحساب" autocomplete="off">
+                        <div id="transMerchantResults" class="merchant-results"></div>
+                    </div>
+                    <select id="transMerchantSelect" class="form-select merchant-picker-select"></select>
                     <input type="hidden" id="transMerchantId">
                 </div>
+                <div id="transMerchantInfo" class="merchant-info-card"><div class="merchant-info-empty">اختر تاجراً ليتم جلب بياناته والمكن المرتبط به تلقائياً.</div></div>
             </div>
-            <div class="form-group"><label>المكنة (اختياري)</label><select id="transMachineId" class="form-select"></select></div>
+            <div class="form-group"><label>المكنة المرتبطة</label><select id="transMachineId" class="form-select"></select></div>
+            <div id="transMachineInfo" class="merchant-info-card"><div class="merchant-info-empty">عند اختيار التاجر ستظهر المكن المرتبطة به هنا.</div></div>
             <div class="form-group"><label>المبلغ *</label><input type="number" id="transAmount" class="form-input" step="any" min="0.01" placeholder="0.00"></div>
-            <div class="form-group"><label>نوع التحويل</label><select id="transType" class="form-select"><option value="نقدي">نقدي</option><option value="شيك">شيك</option><option value="تحويل بنكي">تحويل بنكي</option><option value="إيداع خزينة">إيداع خزينة</option><option value="أخرى">أخرى</option></select></div>
+            <div class="form-group"><label>نوع التحويل</label><select id="transType" class="form-select"><option value="رصيد خدمات">رصيد خدمات</option><option value="رصيد كاش">رصيد كاش</option><option value="أخرى">أخرى</option></select></div>
             <div class="form-group"><label>ملاحظات</label><textarea id="transNotes" class="form-input" rows="3"></textarea></div>
         </div>
         <div class="modal-footer">
@@ -1303,16 +1347,22 @@
         <div class="modal-body">
             <input type="hidden" id="editCollectionId">
             <div class="form-group">
-                <label>التاجر *</label>
-                <div class="searchable-select">
-                    <input type="text" id="collMerchantSearch" class="form-input" placeholder="ابحث عن تاجر..." list="merchantDatalistColl" autocomplete="off">
-                    <datalist id="merchantDatalistColl"></datalist>
+                <label>بحث سريع عن التاجر *</label>
+                <div class="merchant-picker-stack">
+                    <div class="merchant-search-shell">
+                        <input type="text" id="collMerchantSearch" class="form-input" placeholder="اكتب أي حرف من اسم التاجر / رقم التاجر / رقم الحساب" autocomplete="off">
+                        <div id="collMerchantResults" class="merchant-results"></div>
+                    </div>
+                    <select id="collMerchantSelect" class="form-select merchant-picker-select"></select>
                     <input type="hidden" id="collMerchantId">
                 </div>
+                <div id="collMerchantInfo" class="merchant-info-card"><div class="merchant-info-empty">اختر تاجراً ليتم تحميل مديونيته الحالية والمكن المرتبط به فوراً.</div></div>
             </div>
-            <div class="form-group"><label>المكنة (اختياري)</label><select id="collMachineId" class="form-select"></select></div>
+            <div class="form-group"><label>المكنة المرتبطة</label><select id="collMachineId" class="form-select"></select></div>
+            <div id="collMachineInfo" class="merchant-info-card"><div class="merchant-info-empty">اختر المكنة إن كانت العملية مرتبطة بجهاز محدد.</div></div>
+            <div class="form-group"><label>المديونية الحالية</label><div id="collCurrentDebt" class="form-input" style="display:flex;align-items:center;">0.00 <span class="currency">جنيه</span></div></div>
             <div class="form-group"><label>المبلغ *</label><input type="number" id="collAmount" class="form-input" step="any" min="0.01" placeholder="0.00"></div>
-            <div class="form-group"><label>نوع التحصيل</label><select id="collType" class="form-select"><option value="نقدي">نقدي</option><option value="شيك">شيك</option><option value="تحويل بنكي">تحويل بنكي</option><option value="خصم من الرصيد">خصم من الرصيد</option><option value="أخرى">أخرى</option></select></div>
+            <div class="form-group"><label>نوع التحصيل</label><select id="collType" class="form-select"><option value="تحصيل كلي">تحصيل كلي</option><option value="تحصيل جزئي">تحصيل جزئي</option></select></div>
             <div class="form-group"><label>ملاحظات</label><textarea id="collNotes" class="form-input" rows="3"></textarea></div>
         </div>
         <div class="modal-footer">
@@ -1933,17 +1983,7 @@ async function populateMerchantDatalists() {
             .select('*')
             .order('updated_at', { ascending: false });
         if (error) throw error;
-
-        const merchants = data || [];
-        const options = merchants.map(m => `<option value="${buildMerchantOptionLabel(m)}"></option>`).join('');
-        const datalists = ['merchantDatalist', 'merchantDatalistTrans', 'merchantDatalistColl', 'merchantDatalistStmt'];
-
-        datalists.forEach(id => {
-            const dl = document.getElementById(id);
-            if (dl) dl.innerHTML = options;
-        });
-
-        window.merchantsData = merchants;
+        window.merchantsData = data || [];
     } catch(e) {
         console.error(e);
     }

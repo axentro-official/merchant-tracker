@@ -16,7 +16,22 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial Black,sans-serif' font-size='50' font-weight='900' fill='white' text-anchor='middle'%3EA%3C/text%3E%3Ccircle cx='82' cy='82' r='12' fill='%2310b981'/%3E%3Cpath d='M77 82 L80 85 L87 78' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
     <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+function applyHistoryFilter() {
+    if (!currentMerchant) {
+        UI.showToast('ابحث عن التاجر أولاً', 'warning');
+        return;
+    }
+    loadMerchantData(currentMerchant.id);
+}
+
+function resetHistoryFilter() {
+    document.getElementById('filterFromDate').value = '';
+    document.getElementById('filterToDate').value = '';
+    currentHistoryFilter = { from: '', to: '' };
+    if (currentMerchant) loadMerchantData(currentMerchant.id);
+}
+</script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -772,10 +787,10 @@
                 <div class="login-header">
                     <div class="login-avatar"><i class="fas fa-user-circle"></i></div>
                     <h2 class="login-title">مرحباً بك في بوابة التاجر👋</h2>
-                    <p class="login-desc">أدخل رقم الحساب أو رقم التاجر لعرض بياناتك</p>
+                    <p class="login-desc">أدخل رقم الحساب فقط لعرض بياناتك</p>
                 </div>
                 <div class="form-group">
-                    <input type="text" id="searchInput" class="form-input" placeholder="رقم الحساب أو رقم التاجر *" autocomplete="off" onkeypress="if(event.key==='Enter') searchMerchant()">
+                    <input type="text" id="searchInput" class="form-input" placeholder="رقم الحساب فقط *" autocomplete="off" onkeypress="if(event.key==='Enter') searchMerchant()">
                 </div>
                 <div class="btn-group">
                     <button class="btn btn-primary" onclick="searchMerchant()"><i class="fas fa-search"></i> عرض بياناتي</button>
@@ -812,22 +827,42 @@
                 <button class="action-btn" onclick="refreshData()"><i class="fas fa-sync-alt"></i> تحديث البيانات</button>
             </div>
 
+            <div class="section-card" style="margin-bottom:20px;">
+                <div class="section-header"><i class="fas fa-filter"></i><h3>فلترة العمليات حسب المدة</h3></div>
+                <div class="info-grid" style="padding:20px;">
+                    <div class="form-group"><label style="display:block; font-size:12px; font-weight:700; margin-bottom:8px;">من تاريخ</label><input type="date" id="filterFromDate" class="form-input"></div>
+                    <div class="form-group"><label style="display:block; font-size:12px; font-weight:700; margin-bottom:8px;">إلى تاريخ</label><input type="date" id="filterToDate" class="form-input"></div>
+                    <div class="form-group" style="align-self:end;"><button class="btn btn-primary" style="width:100%;" onclick="applyHistoryFilter()"><i class="fas fa-search"></i> عرض العمليات</button></div>
+                    <div class="form-group" style="align-self:end;"><button class="btn btn-outline" style="width:100%;" onclick="resetHistoryFilter()"><i class="fas fa-rotate-left"></i> إعادة الضبط</button></div>
+                </div>
+            </div>
+
             <div class="section-card">
-                <div class="section-header"><i class="fas fa-arrow-up"></i><h3>آخر 5 تحويلات</h3></div>
+                <div class="section-header"><i class="fas fa-arrow-up"></i><h3>التحويلات</h3></div>
                 <div class="table-container">
                     <table class="data-table">
-                        <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>القيمة</th></tr></thead>
-                        <tbody id="transfersTableBody"><tr><td colspan="6" class="empty-state"><i class="fas fa-inbox"></i> لا توجد تحويلات</td></tr></tbody>
+                        <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>رقم المكنة</th><th>القيمة</th></tr></thead>
+                        <tbody id="transfersTableBody"><tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i> لا توجد تحويلات</td></tr></tbody>
                     </table>
                 </div>
             </div>
 
             <div class="section-card">
-                <div class="section-header"><i class="fas fa-arrow-down"></i><h3>آخر 5 تحصيلات</h3></div>
+                <div class="section-header"><i class="fas fa-arrow-down"></i><h3>التحصيلات</h3></div>
                 <div class="table-container">
                     <table class="data-table">
-                        <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>القيمة</th><th>المتبقي</th></tr></thead>
-                        <tbody id="collectionsTableBody"><tr><td colspan="6" class="empty-state"><i class="fas fa-inbox"></i> لا توجد تحصيلات</td></tr></tbody>
+                        <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>رقم المكنة</th><th>القيمة</th><th>المتبقي</th></tr></thead>
+                        <tbody id="collectionsTableBody"><tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i> لا توجد تحصيلات</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header"><i class="fas fa-desktop"></i><h3>المكن المرتبط بالتاجر</h3></div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead><tr><th>#</th><th>رقم المكنة</th><th>السيريال</th><th>الحالة</th><th>التارجت الشهري</th><th>ملاحظات</th></tr></thead>
+                        <tbody id="machinesTableBody"><tr><td colspan="6" class="empty-state"><i class="fas fa-inbox"></i> لا توجد مكن مرتبطة</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -899,10 +934,13 @@ const CONFIG = {
 
 let supabaseClient = null;
 let currentMerchant = null;
+let currentMachines = [];
+let currentHistoryFilter = { from: '', to: '' };
 
 const Sound = {
     play(type) {
-        const audio = document.getElementById(type === 'success' ? 'successSound' : (type === 'error' ? 'errorSound' : 'clickSound'));
+        const audioMap = { success: 'successSound', error: 'errorSound' };
+        const audio = document.getElementById(audioMap[type]);
         if (audio) {
             audio.currentTime = 0;
             audio.play().catch(() => {});
@@ -928,75 +966,32 @@ const UI = {
 document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('bootProgress');
     const statusText = document.getElementById('bootStatus');
-    const phaseText = document.getElementById('bootPhase');
-    const percentText = document.getElementById('bootPercent');
+    const phases = ['تحميل الواجهة...', 'تهيئة الاتصال...', 'جاري تأمين الجلسة...', 'جاهز'];
     let progress = 0;
-    const phases = [
-        { p:20, s:'تحميل النواة...', ph:'System Core' },
-        { p:40, s:'تهيئة الواجهة...', ph:'UI Engine' },
-        { p:60, s:'الاتصال بقاعدة البيانات...', ph:'Database' },
-        { p:80, s:'التحقق من الأمان...', ph:'Security' },
-        { p:100, s:'جاهز!', ph:'Ready' }
-    ];
-    let idx = 0;
+    let index = 0;
+
     const interval = setInterval(() => {
-        if (idx < phases.length) {
-            const ph = phases[idx];
-            progress = ph.p;
-            progressBar.style.width = progress + '%';
-            statusText.textContent = ph.s;
-            phaseText.textContent = ph.ph;
-            percentText.textContent = progress + '%';
-            idx++;
-        } else {
+        progress += 25;
+        progressBar.style.width = progress + '%';
+        statusText.textContent = phases[index] || 'جاهز';
+        index++;
+        if (progress >= 100) {
             clearInterval(interval);
             setTimeout(() => {
                 document.getElementById('bootScreen').classList.add('hidden');
                 initSupabase();
-                document.getElementById('mainApp').classList.add('visible');
-            }, 500);
+            }, 400);
         }
-    }, 400);
+    }, 450);
 });
 
 function initSupabase() {
-    if (window.supabase && !supabaseClient) {
+    try {
         supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
         console.log('✅ Supabase initialized');
-    }
-}
-
-async function sendEmailNotification(payload) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12000);
-
-    try {
-        const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'cors',
-            cache: 'no-store',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                action: 'sendRequestEmail',
-                payload
-            }),
-            signal: controller.signal
-        });
-
-        const contentType = response.headers.get('content-type') || '';
-        const result = contentType.includes('application/json') ? await response.json() : await response.text();
-
-        if (!response.ok) {
-            const message = typeof result === 'string' ? result : result?.message || result?.error || `HTTP_${response.status}`;
-            throw new Error(message);
-        }
-
-        return result;
-    } finally {
-        clearTimeout(timeoutId);
+    } catch (err) {
+        console.error(err);
+        UI.showToast('تعذر الاتصال بقاعدة البيانات', 'error');
     }
 }
 
@@ -1012,63 +1007,50 @@ function normalizeArabicDigits(value) {
 function formatMoney(value) {
     return `${(parseFloat(value) || 0).toLocaleString('ar-EG')} ج.م`;
 }
-    async function findMerchantBySearchTerm(searchTerm) {
-    const normalized = normalizeArabicDigits(searchTerm);
 
-    let result = await supabaseClient
+function parseDateRange() {
+    const from = document.getElementById('filterFromDate')?.value || '';
+    const to = document.getElementById('filterToDate')?.value || '';
+    currentHistoryFilter = { from, to };
+    return currentHistoryFilter;
+}
+
+async function findMerchantBySearchTerm(searchTerm) {
+    const normalized = normalizeArabicDigits(searchTerm);
+    const result = await supabaseClient
         .from('merchants')
         .select('*')
         .eq('رقم الحساب', normalized)
         .limit(1)
         .maybeSingle();
-
     if (result.error) throw result.error;
-    if (result.data) return result.data;
-
-    result = await supabaseClient
-        .from('merchants')
-        .select('*')
-        .eq('رقم التاجر', normalized)
-        .limit(1)
-        .maybeSingle();
-
-    if (result.error) throw result.error;
-    if (result.data) return result.data;
-
-    return null;
+    return result.data || null;
 }
 
 async function searchMerchant() {
     const input = document.getElementById('searchInput');
     const searchTerm = normalizeArabicDigits(input.value);
-
     if (!searchTerm) {
-        UI.showToast('يرجى إدخال رقم الحساب أو رقم التاجر', 'warning');
+        UI.showToast('يرجى إدخال رقم الحساب فقط', 'warning');
         Sound.play('error');
         return;
     }
-
     if (!supabaseClient) {
         UI.showToast('قاعدة البيانات غير جاهزة', 'error');
         return;
     }
-
     try {
         const merchant = await findMerchantBySearchTerm(searchTerm);
-
         if (!merchant) {
-            UI.showToast('لم يتم العثور على تاجر بهذا الرقم', 'error');
+            UI.showToast('لم يتم العثور على تاجر بهذا رقم الحساب', 'error');
             Sound.play('error');
             return;
         }
-
         currentMerchant = merchant;
         Sound.play('success');
         UI.showToast(`مرحباً ${merchant['اسم التاجر']} 👋`, 'success');
-
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('dashboardSection').style.display = 'block';
-
         renderMerchantInfo(merchant);
         await loadMerchantData(merchant.id);
     } catch (err) {
@@ -1077,7 +1059,6 @@ async function searchMerchant() {
         Sound.play('error');
     }
 }
-
 function renderMerchantInfo(merchant) {
     document.getElementById('displayName').textContent = merchant['اسم التاجر'] || '—';
     document.getElementById('displayNumber').textContent = merchant['رقم التاجر'] || '—';
@@ -1091,74 +1072,70 @@ function renderMerchantInfo(merchant) {
 
 async function loadMerchantData(merchantId) {
     try {
-        const { data: machines, error: mErr } = await supabaseClient
-            .from('machines')
-            .select('*')
-            .eq('رقم التاجر', merchantId);
-        if (mErr) throw mErr;
-        document.getElementById('machinesCount').textContent = machines?.length || 0;
-
-        const { data: transfers, error: tErr } = await supabaseClient
-            .from('transfers')
-            .select('*')
-            .eq('رقم التاجر', merchantId)
-            .order('created_at', { ascending: false })
-            .limit(5);
-        if (tErr) throw tErr;
-
-        const totalTransfers = (transfers || []).reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0);
+        const range = parseDateRange();
+        const machineQuery = supabaseClient.from('machines').select('*').eq('رقم التاجر', merchantId).order('created_at', { ascending: false });
+        let transferQuery = supabaseClient.from('transfers').select('*').eq('رقم التاجر', merchantId).order('created_at', { ascending: false });
+        let collectionQuery = supabaseClient.from('collections').select('*').eq('رقم التاجر', merchantId).order('created_at', { ascending: false });
+        let requestQuery = supabaseClient.from('requests').select('*').eq('رقم التاجر', merchantId).order('created_at', { ascending: false });
+        if (range.from) {
+            transferQuery = transferQuery.gte('التاريخ', range.from);
+            collectionQuery = collectionQuery.gte('التاريخ', range.from);
+            requestQuery = requestQuery.gte('التاريخ', range.from);
+        }
+        if (range.to) {
+            transferQuery = transferQuery.lte('التاريخ', range.to);
+            collectionQuery = collectionQuery.lte('التاريخ', range.to);
+            requestQuery = requestQuery.lte('التاريخ', range.to);
+        }
+        const [machinesRes, transfersRes, collectionsRes, requestsRes] = await Promise.all([machineQuery, transferQuery, collectionQuery, requestQuery]);
+        if (machinesRes.error) throw machinesRes.error;
+        if (transfersRes.error) throw transfersRes.error;
+        if (collectionsRes.error) throw collectionsRes.error;
+        if (requestsRes.error) throw requestsRes.error;
+        currentMachines = machinesRes.data || [];
+        const transfers = transfersRes.data || [];
+        const collections = collectionsRes.data || [];
+        const requests = requestsRes.data || [];
+        document.getElementById('machinesCount').textContent = currentMachines.length;
+        renderMachinesTable(currentMachines);
+        const totalTransfers = transfers.reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0);
+        const totalCollections = collections.reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0);
+        const balance = totalTransfers - totalCollections;
         document.getElementById('totalTransfers').textContent = totalTransfers.toLocaleString('ar-EG');
-        renderTransfersTable(transfers || []);
-
-        const { data: collections, error: cErr } = await supabaseClient
-            .from('collections')
-            .select('*')
-            .eq('رقم التاجر', merchantId)
-            .order('created_at', { ascending: false })
-            .limit(5);
-        if (cErr) throw cErr;
-
-        const totalCollections = (collections || []).reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0);
         document.getElementById('totalCollections').textContent = totalCollections.toLocaleString('ar-EG');
-        renderCollectionsTable(collections || []);
-
-        const { data: allTransfers, error: allTErr } = await supabaseClient
-            .from('transfers')
-            .select('قيمة التحويل')
-            .eq('رقم التاجر', merchantId);
-        if (allTErr) throw allTErr;
-
-        const { data: allCollections, error: allCErr } = await supabaseClient
-            .from('collections')
-            .select('قيمة التحصيل')
-            .eq('رقم التاجر', merchantId);
-        if (allCErr) throw allCErr;
-
-        const totalT = (allTransfers || []).reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0);
-        const totalC = (allCollections || []).reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0);
-        const balance = totalT - totalC;
-
         document.getElementById('currentBalance').textContent = balance.toLocaleString('ar-EG');
         document.getElementById('displayDebt').textContent = formatMoney(balance);
-
-        const { data: requests, error: rErr } = await supabaseClient
-            .from('requests')
-            .select('*')
-            .eq('رقم التاجر', merchantId)
-            .order('created_at', { ascending: false });
-        if (rErr) throw rErr;
-
-        renderRequestsList(requests || []);
+        renderTransfersTable(transfers);
+        renderCollectionsTable(collections);
+        renderRequestsList(requests);
     } catch (err) {
         console.error(err);
         UI.showToast('حدث خطأ أثناء تحميل بيانات التاجر', 'error');
     }
 }
 
+function renderMachinesTable(machines) {
+    const tbody = document.getElementById('machinesTableBody');
+    if (!machines.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">لا توجد مكن مرتبطة</td></tr>';
+        return;
+    }
+    tbody.innerHTML = machines.map((machine, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td><code class="ref-code">${machine['رقم المكنة'] || '—'}</code></td>
+            <td>${machine['الرقم التسلسلي'] || '—'}</td>
+            <td>${machine['الحالة'] || '—'}</td>
+            <td>${formatMoney(machine['التارجت الشهري'])}</td>
+            <td>${machine['ملاحظات'] || '—'}</td>
+        </tr>
+    `).join('');
+}
+
 function renderTransfersTable(transfers) {
     const tbody = document.getElementById('transfersTableBody');
     if (!transfers.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">لا توجد تحويلات</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">لا توجد تحويلات</td></tr>';
         return;
     }
     tbody.innerHTML = transfers.map((t, i) => `
@@ -1168,6 +1145,7 @@ function renderTransfersTable(transfers) {
             <td>${t['التاريخ'] || '—'}</td>
             <td>${t['الوقت'] || '—'}</td>
             <td>${t['نوع التحويل'] || '—'}</td>
+            <td>${t['رقم المكنة'] || '—'}</td>
             <td class="amount-negative">${formatMoney(t['قيمة التحويل'])}</td>
         </tr>
     `).join('');
@@ -1176,7 +1154,7 @@ function renderTransfersTable(transfers) {
 function renderCollectionsTable(collections) {
     const tbody = document.getElementById('collectionsTableBody');
     if (!collections.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">لا توجد تحصيلات</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">لا توجد تحصيلات</td></tr>';
         return;
     }
     tbody.innerHTML = collections.map((c, i) => `
@@ -1185,12 +1163,12 @@ function renderCollectionsTable(collections) {
             <td><code class="ref-code">${c['الرقم المرجعي'] || '—'}</code></td>
             <td>${c['التاريخ'] || '—'}</td>
             <td>${c['الوقت'] || '—'}</td>
+            <td>${c['رقم المكنة'] || '—'}</td>
             <td class="amount-positive">${formatMoney(c['قيمة التحصيل'])}</td>
             <td>${formatMoney(c['المتبقي بعد التحصيل'])}</td>
         </tr>
     `).join('');
 }
-
 function renderRequestsList(requests) {
     const container = document.getElementById('requestsList');
     if (!requests.length) {
@@ -1219,7 +1197,6 @@ function openRequestModal() {
         return;
     }
     document.getElementById('requestModal').classList.add('show');
-    Sound.play('click');
 }
 
 function closeRequestModal() {
@@ -1280,7 +1257,7 @@ async function submitRequest() {
             status: machine['الحالة'] || '',
             location: machine['المنطقة'] || machine['ملاحظات'] || ''
         })),
-        remainingBalance: parseFloat(document.getElementById('remainingAmount')?.dataset?.raw || '0') || 0
+        remainingBalance: parseFloat(String(document.getElementById('displayDebt')?.textContent || '0').replace(/[^\d.-]/g, '')) || 0
     };
 
     try {
@@ -1325,7 +1302,21 @@ async function refreshData() {
     }
     await loadMerchantData(currentMerchant.id);
     UI.showToast('تم تحديث البيانات', 'success');
-    Sound.play('click');
+}
+
+function applyHistoryFilter() {
+    if (!currentMerchant) {
+        UI.showToast('ابحث عن التاجر أولاً', 'warning');
+        return;
+    }
+    loadMerchantData(currentMerchant.id);
+}
+
+function resetHistoryFilter() {
+    document.getElementById('filterFromDate').value = '';
+    document.getElementById('filterToDate').value = '';
+    currentHistoryFilter = { from: '', to: '' };
+    if (currentMerchant) loadMerchantData(currentMerchant.id);
 }
 </script>
 </body>
