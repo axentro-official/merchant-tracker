@@ -985,12 +985,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 450);
 });
 
+function revealMainApp() {
+    const app = document.getElementById('mainApp');
+    if (!app) return;
+    app.style.display = 'block';
+    requestAnimationFrame(() => app.classList.add('visible'));
+}
+
 function initSupabase() {
     try {
         supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        revealMainApp();
         console.log('✅ Supabase initialized');
     } catch (err) {
         console.error(err);
+        revealMainApp();
         UI.showToast('تعذر الاتصال بقاعدة البيانات', 'error');
     }
 }
@@ -1006,6 +1015,15 @@ function normalizeArabicDigits(value) {
 
 function formatMoney(value) {
     return `${(parseFloat(value) || 0).toLocaleString('ar-EG')} ج.م`;
+}
+
+function extractTaggedType(noteValue) {
+    const match = String(noteValue || '').match(/^\[(?:TYPE|COLLECTION_TYPE):([^\]]+)\]/i);
+    return match?.[1] || '';
+}
+
+function cleanTaggedNote(noteValue) {
+    return String(noteValue || '').replace(/^\[(?:TYPE|COLLECTION_TYPE):[^\]]+\]\s*/i, '').trim();
 }
 
 function parseDateRange() {
@@ -1144,7 +1162,7 @@ function renderTransfersTable(transfers) {
             <td><code class="ref-code">${t['الرقم المرجعي'] || '—'}</code></td>
             <td>${t['التاريخ'] || '—'}</td>
             <td>${t['الوقت'] || '—'}</td>
-            <td>${t['نوع التحويل'] || '—'}</td>
+            <td>${extractTaggedType(t['ملاحظات']) || t['نوع التحويل'] || '—'}</td>
             <td>${t['رقم المكنة'] || 'بدون مكنة'}</td>
             <td class="amount-negative">${formatMoney(t['قيمة التحويل'])}</td>
         </tr>
