@@ -62,12 +62,16 @@ function hideQuickResults() {
 
 function fillMachinesSelect(merchantId = '', selectedMachine = '') {
   const select = document.getElementById('transMachineId');
-  if (!select) return;
+  if (!select) return null;
   const machines = merchantId ? machinesList.filter(machine => machine['رقم التاجر'] === merchantId) : [];
-  select.innerHTML = '<option value="">اختر المكنة المرتبطة...</option>' + machines.map(machine => (
-    `<option value="${escapeHtml(machine['رقم المكنة'])}" ${machine['رقم المكنة'] === selectedMachine ? 'selected' : ''}>${escapeHtml(buildMachineOptionLabel(machine))}</option>`
+  const autoSelected = selectedMachine || machines[0]?.['رقم المكنة'] || '';
+  select.innerHTML = '<option value="">لا توجد مكنة مرتبطة</option>' + machines.map(machine => (
+    `<option value="${escapeHtml(machine['رقم المكنة'])}" ${machine['رقم المكنة'] === autoSelected ? 'selected' : ''}>${escapeHtml(buildMachineOptionLabel(machine))}</option>`
   )).join('');
-  renderMachineInfo(machineByCode(selectedMachine));
+  select.value = autoSelected;
+  select.disabled = true;
+  renderMachineInfo(machineByCode(autoSelected));
+  return machineByCode(autoSelected);
 }
 
 async function calculateMerchantDebt(merchantId) {
@@ -109,7 +113,7 @@ function renderMachineInfo(machine) {
   const card = document.getElementById('transMachineInfo');
   if (!card) return;
   if (!machine) {
-    card.innerHTML = '<div class="merchant-info-empty">عند اختيار التاجر ستظهر المكن المرتبطة به هنا.</div>';
+    card.innerHTML = '<div class="merchant-info-empty">سيتم ربط أول مكنة نشطة أو أول مكنة متاحة بالتاجر تلقائياً.</div>';
     return;
   }
   card.innerHTML = `
@@ -207,7 +211,7 @@ function renderTransfersTable() {
       <td>${escapeHtml(transfer['اسم التاجر'] || '-')}</td>
       <td>${escapeHtml(transfer['اسم النشاط'] || '-')}</td>
       <td>${formatMoney(transfer['قيمة التحويل'] || 0)}</td>
-      <td>${escapeHtml(transfer['ملاحظات'] || '-')}</td>
+      <td>${escapeHtml(String(transfer['ملاحظات'] || '').replace(/^\[TYPE:[^\]]+\]\s*/i, '') || '-')}</td>
       <td>
         <div class="action-btns">
           <button class="btn btn-primary btn-sm" onclick="window.editTransfer('${transfer.id}')"><i class="fas fa-edit"></i></button>
@@ -226,7 +230,7 @@ export async function openTransferModal(transfer = null) {
   document.getElementById('transferModalTitle').innerHTML = transfer ? '<i class="fas fa-edit"></i> تعديل تحويل' : '<i class="fas fa-exchange-alt"></i> تحويل جديد';
   document.getElementById('editTransferId').value = transfer?.id || '';
   document.getElementById('transAmount').value = transfer?.['قيمة التحويل'] || '';
-  document.getElementById('transType').value = transfer?.['نوع التحويل'] || 'رصيد خدمات';
+  document.getElementById('transType').value = transfer?.['نوع التحويل'] || extractTypeFromNotes(transfer?.['ملاحظات']) || 'رصيد خدمات';
   document.getElementById('transNotes').value = transfer?.['ملاحظات'] || '';
   const merchant = merchantById(transfer?.['رقم التاجر']);
   await setTransferMerchant(merchant, transfer?.['رقم المكنة'] || '');
@@ -236,6 +240,30 @@ export async function openTransferModal(transfer = null) {
 export function closeTransferModal() {
   document.getElementById('transferModal')?.classList.remove('show');
   clearForm();
+}
+
+function buildTypeTaggedNotes(typeValue, notesValue) {
+  const cleanNotes = String(notesValue || '').trim().replace(/^\[TYPE:[^\]]+\]\s*/i, '');
+  return `[TYPE:${typeValue}] ${cleanNotes}`.trim();
+}
+
+function extractTypeFromNotes(notesValue) {
+  const match = String(notesValue || '').match(/^\[TYPE:([^\]]+)\]/i);
+  return match?.[1] || '';
+}
+
+function normalizeTransferType(value) {
+  const raw = String(value || '').trim();
+  const map = {
+    'رصيد خدمات': 'رصيد خدمات',
+    'رصيد كاش': 'رصيد كاش',
+    'أخرى': 'أخرى'
+  };
+  return map[raw] || 'أخرى';
+}
+
+async function persistTransferWithFallback(payload, { id = '' } = {}) {
+  return await safeMutateRecord(supabase, 'transfers', payload, { id });
 }
 
 export async function saveTransfer() {
@@ -256,18 +284,15 @@ export async function saveTransfer() {
       'رقم الحساب': merchant['رقم الحساب'] || '',
       'رقم المكنة': document.getElementById('transMachineId').value || null,
       'قيمة التحويل': amount,
-      'نوع التحويل': document.getElementById('transType').value || 'رصيد خدمات',
-      'ملاحظات': document.getElementById('transNotes').value.trim(),
+      'ملاحظات': buildTypeTaggedNotes(normalizeTransferType(document.getElementById('transType').value || 'رصيد خدمات'), document.getElementById('transNotes').value.trim()),
       'التاريخ': date,
       'الوقت': time,
-      'الشهر': new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' }),
-      'updated_at': new Date().toISOString()
+      'الشهر': new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' })
     };
     if (!id) {
       payload['الرقم المرجعي'] = await generateNextCode(supabase, 'transfers', 'الرقم المرجعي', { prefix: 'TRF', pad: 5 });
-      payload['created_at'] = new Date().toISOString();
     }
-    await safeMutateRecord(supabase, 'transfers', payload, { id });
+    await persistTransferWithFallback(payload, { id });
     showToast(id ? 'تم تعديل التحويل' : 'تم إضافة التحويل', 'success');
     closeTransferModal();
     await loadTransfers();

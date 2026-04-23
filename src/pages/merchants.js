@@ -146,10 +146,9 @@ export async function saveMerchant() {
       return showToast('يوجد تاجر بنفس الاسم والنشاط بالفعل', 'warning');
     }
 
-    const record = { ...payload, 'updated_at': new Date().toISOString() };
+    const record = { ...payload };
     if (!id) {
       record['رقم التاجر'] = await generateNextCode(supabase, 'merchants', 'رقم التاجر', { prefix: 'MER', pad: 3 });
-      record['created_at'] = new Date().toISOString();
       record['تاريخ الإنشاء'] = new Date().toISOString().split('T')[0];
       record['وقت الإنشاء'] = new Date().toTimeString().slice(0, 8);
     }

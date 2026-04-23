@@ -239,13 +239,11 @@ export async function saveMachine() {
       'الرقم التسلسلي': serial,
       'التارجت الشهري': parseFloat(document.getElementById('machTarget').value || '0') || 0,
       'الحالة': document.getElementById('machStatus').value || 'نشطة',
-      'ملاحظات': document.getElementById('machNotes').value.trim(),
-      'updated_at': new Date().toISOString()
+      'ملاحظات': document.getElementById('machNotes').value.trim()
     };
 
     if (!id) {
       payload['رقم المكنة'] = await generateNextCode(supabase, 'machines', 'رقم المكنة', { prefix: 'MAC', pad: 3 });
-      payload['created_at'] = new Date().toISOString();
     }
 
     await safeMutateRecord(supabase, 'machines', payload, { id });

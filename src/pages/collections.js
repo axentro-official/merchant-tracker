@@ -60,12 +60,16 @@ function hideQuickResults() { document.getElementById('collMerchantResults')?.cl
 
 function fillMachinesSelect(merchantId = '', selectedMachine = '') {
   const select = document.getElementById('collMachineId');
-  if (!select) return;
+  if (!select) return null;
   const machines = merchantId ? machinesList.filter(machine => machine['رقم التاجر'] === merchantId) : [];
-  select.innerHTML = '<option value="">اختر المكنة المرتبطة...</option>' + machines.map(machine => (
-    `<option value="${escapeHtml(machine['رقم المكنة'])}" ${machine['رقم المكنة'] === selectedMachine ? 'selected' : ''}>${escapeHtml(buildMachineOptionLabel(machine))}</option>`
+  const autoSelected = selectedMachine || machines[0]?.['رقم المكنة'] || '';
+  select.innerHTML = '<option value="">لا توجد مكنة مرتبطة</option>' + machines.map(machine => (
+    `<option value="${escapeHtml(machine['رقم المكنة'])}" ${machine['رقم المكنة'] === autoSelected ? 'selected' : ''}>${escapeHtml(buildMachineOptionLabel(machine))}</option>`
   )).join('');
-  renderMachineInfo(machineByCode(selectedMachine));
+  select.value = autoSelected;
+  select.disabled = true;
+  renderMachineInfo(machineByCode(autoSelected));
+  return machineByCode(autoSelected);
 }
 
 async function getMerchantDebt(merchantId, excludeId = null) {
@@ -110,7 +114,7 @@ function renderMachineInfo(machine) {
   const card = document.getElementById('collMachineInfo');
   if (!card) return;
   if (!machine) {
-    card.innerHTML = '<div class="merchant-info-empty">اختر المكنة إن كانت العملية مرتبطة بجهاز محدد.</div>';
+    card.innerHTML = '<div class="merchant-info-empty">سيتم تحميل بيانات أول مكنة مرتبطة بالتاجر تلقائياً.</div>';
     return;
   }
   card.innerHTML = `
@@ -206,7 +210,7 @@ function renderCollectionsTable() {
       <td>${escapeHtml(collection['اسم التاجر'] || '-')}</td>
       <td>${escapeHtml(collection['اسم النشاط'] || '-')}</td>
       <td>${formatMoney(collection['قيمة التحصيل'] || 0)}</td>
-      <td>${escapeHtml(collection['ملاحظات'] || '-')}</td>
+      <td>${escapeHtml(String(collection['ملاحظات'] || '').replace(/^\[COLLECTION_TYPE:[^\]]+\]\s*/i, '') || '-')}</td>
       <td>
         <div class="action-btns">
           <button class="btn btn-primary btn-sm" onclick="window.editCollection('${collection.id}')"><i class="fas fa-edit"></i></button>
@@ -224,7 +228,7 @@ export async function openCollectionModal(collection = null) {
   document.getElementById('collectionModalTitle').innerHTML = collection ? '<i class="fas fa-edit"></i> تعديل تحصيل' : '<i class="fas fa-hand-holding-usd"></i> تحصيل جديد';
   document.getElementById('editCollectionId').value = collection?.id || '';
   document.getElementById('collAmount').value = collection?.['قيمة التحصيل'] || '';
-  document.getElementById('collType').value = collection?.['نوع التحصيل'] || 'تحصيل جزئي';
+  document.getElementById('collType').value = collection?.['نوع التحصيل'] || extractCollectionTypeFromNotes(collection?.['ملاحظات']) || 'تحصيل جزئي';
   document.getElementById('collNotes').value = collection?.['ملاحظات'] || '';
   const merchant = merchantById(collection?.['رقم التاجر']);
   await setCollectionMerchant(merchant, collection?.['رقم المكنة'] || '', collection?.id || null);
@@ -234,6 +238,29 @@ export async function openCollectionModal(collection = null) {
 export function closeCollectionModal() {
   document.getElementById('collectionModal')?.classList.remove('show');
   clearForm();
+}
+
+function buildCollectionTypeTaggedNotes(typeValue, notesValue) {
+  const cleanNotes = String(notesValue || '').trim().replace(/^\[COLLECTION_TYPE:[^\]]+\]\s*/i, '');
+  return `[COLLECTION_TYPE:${typeValue}] ${cleanNotes}`.trim();
+}
+
+function extractCollectionTypeFromNotes(notesValue) {
+  const match = String(notesValue || '').match(/^\[COLLECTION_TYPE:([^\]]+)\]/i);
+  return match?.[1] || '';
+}
+
+function normalizeCollectionType(value) {
+  const raw = String(value || '').trim();
+  const map = {
+    'تحصيل كلي': 'تحصيل كلي',
+    'تحصيل جزئي': 'تحصيل جزئي'
+  };
+  return map[raw] || 'تحصيل جزئي';
+}
+
+async function persistCollectionWithFallback(payload, { id = '' } = {}) {
+  return await safeMutateRecord(supabase, 'collections', payload, { id });
 }
 
 export async function saveCollection() {
@@ -257,19 +284,16 @@ export async function saveCollection() {
       'رقم الحساب': merchant['رقم الحساب'] || '',
       'رقم المكنة': document.getElementById('collMachineId').value || null,
       'قيمة التحصيل': amount,
-      'نوع التحصيل': document.getElementById('collType').value || 'تحصيل جزئي',
       'المتبقي بعد التحصيل': Math.max(0, currentDebt - amount),
-      'ملاحظات': document.getElementById('collNotes').value.trim(),
+      'ملاحظات': buildCollectionTypeTaggedNotes(normalizeCollectionType(document.getElementById('collType').value || 'تحصيل جزئي'), document.getElementById('collNotes').value.trim()),
       'التاريخ': date,
       'الوقت': time,
-      'الشهر': new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' }),
-      'updated_at': new Date().toISOString()
+      'الشهر': new Date().toLocaleString('ar-EG', { month: 'long', year: 'numeric' })
     };
     if (!id) {
       payload['الرقم المرجعي'] = await generateNextCode(supabase, 'collections', 'الرقم المرجعي', { prefix: 'COL', pad: 5 });
-      payload['created_at'] = new Date().toISOString();
     }
-    await safeMutateRecord(supabase, 'collections', payload, { id });
+    await persistCollectionWithFallback(payload, { id });
     showToast(id ? 'تم تحديث التحصيل' : 'تم إضافة التحصيل', 'success');
     closeCollectionModal();
     await loadCollections();
