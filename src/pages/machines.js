@@ -12,6 +12,12 @@ export function initMachinesPage() {
   supabase = window.supabaseClient;
 }
 
+function normalizeMachineStatus(value) {
+  const raw = String(value || '').trim();
+  const map = { 'نشطة': 'نشط', 'نشط': 'نشط', 'غير نشطة': 'غير نشط', 'غير نشط': 'غير نشط', 'صيانة': 'صيانة' };
+  return map[raw] || 'نشط';
+}
+
 function extractSequence(code) {
   const match = String(code || '').match(/(\d+)(?!.*\d)/);
   return match ? parseInt(match[1], 10) : 0;
@@ -146,7 +152,7 @@ function clearMachineForm() {
   document.getElementById('machMerchantSelect').value = '';
   document.getElementById('machSerial').value = '';
   document.getElementById('machTarget').value = '';
-  document.getElementById('machStatus').value = 'نشطة';
+  document.getElementById('machStatus').value = 'نشط';
   document.getElementById('machNotes').value = '';
   renderMachineMerchantInfo(null);
   filteredMerchants = [...merchantsList];
@@ -204,7 +210,7 @@ export async function openMachineModal(machine = null) {
   document.getElementById('editMachineId').value = machine?.id || '';
   document.getElementById('machSerial').value = machine?.['الرقم التسلسلي'] || '';
   document.getElementById('machTarget').value = machine?.['التارجت الشهري'] || '';
-  document.getElementById('machStatus').value = machine?.['الحالة'] || 'نشطة';
+  document.getElementById('machStatus').value = normalizeMachineStatus(machine?.['الحالة'] || 'نشط');
   document.getElementById('machNotes').value = machine?.['ملاحظات'] || '';
   const merchant = merchantsList.find(item => item.id === machine?.['رقم التاجر']) || null;
   setMachineMerchant(merchant);
@@ -238,7 +244,7 @@ export async function saveMachine() {
       'رقم الحساب': merchant['رقم الحساب'] || '',
       'الرقم التسلسلي': serial,
       'التارجت الشهري': parseFloat(document.getElementById('machTarget').value || '0') || 0,
-      'الحالة': document.getElementById('machStatus').value || 'نشطة',
+      'الحالة': normalizeMachineStatus(document.getElementById('machStatus').value || 'نشط'),
       'ملاحظات': document.getElementById('machNotes').value.trim()
     };
 

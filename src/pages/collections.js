@@ -1,5 +1,5 @@
 import { showToast, showConfirm } from '../ui/toast.js';
-import { escapeHtml, formatMoney, formatDate } from '../utils/formatters.js';
+import { escapeHtml, formatMoney, formatMoneyText, formatDate } from '../utils/formatters.js';
 import { buildMachineOptionLabel, buildMerchantLabel, filterMerchants, generateNextCode, safeMutateRecord, sortMachinesByCode, sortMerchantsByCode, sortRowsByDateTime } from '../services/referenceService.js';
 
 let supabase = null;
@@ -92,12 +92,12 @@ async function renderMerchantInfo(merchant, excludeId = null) {
   if (!card) return;
   if (!merchant) {
     card.innerHTML = '<div class="merchant-info-empty">اختر تاجراً ليتم تحميل مديونيته الحالية والمكن المرتبط به فوراً.</div>';
-    document.getElementById('collCurrentDebt').textContent = formatMoney(0);
+    document.getElementById('collCurrentDebt').textContent = formatMoneyText(0);
     return;
   }
   const linkedMachines = machinesList.filter(machine => machine['رقم التاجر'] === merchant.id);
   const debt = await getMerchantDebt(merchant.id, excludeId);
-  document.getElementById('collCurrentDebt').textContent = formatMoney(debt);
+  document.getElementById('collCurrentDebt').textContent = formatMoneyText(debt);
   card.innerHTML = `
     <div class="merchant-info-grid">
       <div><span>رقم التاجر</span><strong>${escapeHtml(merchant['رقم التاجر'] || '—')}</strong></div>
@@ -105,7 +105,6 @@ async function renderMerchantInfo(merchant, excludeId = null) {
       <div><span>اسم النشاط</span><strong>${escapeHtml(merchant['اسم النشاط'] || '—')}</strong></div>
       <div><span>الهاتف</span><strong>${escapeHtml(merchant['رقم الهاتف'] || '—')}</strong></div>
       <div><span>المكن المرتبط</span><strong>${linkedMachines.length}</strong></div>
-      <div class="full accent"><span>المديونية الحالية</span><strong>${formatMoney(debt)}</strong></div>
     </div>
   `;
 }
@@ -173,7 +172,7 @@ function clearForm() {
   document.getElementById('collAmount').value = '';
   document.getElementById('collType').value = 'تحصيل جزئي';
   document.getElementById('collNotes').value = '';
-  document.getElementById('collCurrentDebt').textContent = formatMoney(0);
+  document.getElementById('collCurrentDebt').textContent = formatMoneyText(0);
   fillMachinesSelect('');
   renderMerchantInfo(null);
   renderMachineInfo(null);
