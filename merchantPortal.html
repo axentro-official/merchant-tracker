@@ -1251,6 +1251,16 @@ function closeRequestModal() {
 }
 
 async function generateNextRequestCode() {
+    // First choice: database-side function, safer against duplicate request numbers.
+    try {
+        const { data, error } = await supabaseClient.rpc('axentro_next_request_code');
+        if (!error && data) return data;
+        if (error) console.warn('RPC axentro_next_request_code fallback:', error.message);
+    } catch (rpcError) {
+        console.warn('RPC axentro_next_request_code unavailable:', rpcError);
+    }
+
+    // Fallback for old databases that do not yet have the RPC function.
     const yy = String(new Date().getFullYear()).slice(-2);
     const prefix = `REQ-${yy}-`;
     const { data, error } = await supabaseClient
@@ -1263,6 +1273,19 @@ async function generateNextRequestCode() {
     const last = data?.[0]?.['رقم الطلب'] || '';
     const seq = (parseInt(String(last).match(/(\d+)$/)?.[1] || '0', 10) || 0) + 1;
     return `${prefix}${String(seq).padStart(5, '0')}`;
+}
+
+function normalizeRequestTypeForDatabase(type) {
+    const normalized = String(type || '').trim();
+    const allowed = [
+        'كاش على المكنة',
+        'رصيد خدمات',
+        'تحويل',
+        'تحصيل',
+        'صيانة',
+        'أخرى'
+    ];
+    return allowed.includes(normalized) ? normalized : 'أخرى';
 }
 
 async function sendEmailNotification(payload) {
@@ -1345,7 +1368,7 @@ async function submitRequest() {
             "اسم التاجر": currentMerchant['اسم التاجر'],
             "رقم الحساب": currentMerchant['رقم الحساب'],
             "اسم النشاط": currentMerchant['اسم النشاط'],
-            "نوع الطلب": type,
+            "نوع الطلب": normalizeRequestTypeForDatabase(type),
             "المبلغ": amount,
             "ملاحظات": notes,
             "التاريخ": requestData.date,
@@ -1369,7 +1392,13 @@ async function submitRequest() {
         if (currentMerchant) await loadMerchantData(currentMerchant.id);
     } catch (err) {
         console.error(err);
-        UI.showToast('حدث خطأ أثناء إرسال الطلب إلى قاعدة البيانات', 'error');
+        if (err?.code === '22P02' && String(err?.message || '').includes('request_type')) {
+            UI.showToast('نوع الطلب غير مضاف في enum داخل Supabase. نفّذ ملف SQL المرفق ثم جرّب مرة أخرى.', 'error');
+        } else if (err?.code === '23505') {
+            UI.showToast('حدث تعارض في رقم الطلب. أعد المحاولة بعد تحديث الصفحة.', 'error');
+        } else {
+            UI.showToast('حدث خطأ أثناء إرسال الطلب إلى قاعدة البيانات', 'error');
+        }
         Sound.play('error');
     }
 }
