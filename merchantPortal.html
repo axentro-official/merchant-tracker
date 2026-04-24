@@ -1333,35 +1333,87 @@ async function submitRequest() {
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
     };
 
-    const emailPayload = {
-        merchant: {
-            code: currentMerchant['رقم التاجر'],
-            name: currentMerchant['اسم التاجر'],
-            phone: currentMerchant['رقم الهاتف'] || '',
-            area: currentMerchant['المنطقة'] || '',
-            status: currentMerchant['الحالة'] || '',
-            accountNumber: currentMerchant['رقم الحساب'] || ''
-        },
-        request: {
-            code: 'REQUEST-PENDING',
-            requestType: type,
-            amount: amount,
-            notes: notes,
-            date: requestData.date
-        },
-        machines: (currentMachines || []).map(machine => ({
-            code: machine['رقم المكنة'] || '',
-            serial: machine['الرقم التسلسلي'] || '',
-            status: machine['الحالة'] || '',
-            location: machine['المنطقة'] || machine['ملاحظات'] || ''
-        })),
-        remainingBalance: parseFloat(String(document.getElementById('displayDebt')?.textContent || '0').replace(/[^\d.-]/g, '')) || 0
-    };
 
     try {
         const requestCode = await generateNextRequestCode();
-        const currentDebtAmount = (currentTransfers || []).reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0)
-            - (currentCollections || []).reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0);
+        const totalTransfersAmount = (currentTransfers || []).reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0);
+        const totalCollectionsAmount = (currentCollections || []).reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0);
+        const currentDebtAmount = totalTransfersAmount - totalCollectionsAmount;
+
+        const emailPayload = {
+            merchant: {
+                id: currentMerchant.id,
+                code: currentMerchant['رقم التاجر'] || '',
+                name: currentMerchant['اسم التاجر'] || '',
+                phone: currentMerchant['رقم الهاتف'] || '',
+                area: currentMerchant['المنطقة'] || '',
+                address: currentMerchant['العنوان'] || '',
+                status: currentMerchant['الحالة'] || '',
+                accountNumber: currentMerchant['رقم الحساب'] || '',
+                activity: currentMerchant['اسم النشاط'] || '',
+                "رقم التاجر": currentMerchant['رقم التاجر'] || '',
+                "اسم التاجر": currentMerchant['اسم التاجر'] || '',
+                "اسم النشاط": currentMerchant['اسم النشاط'] || '',
+                "رقم الحساب": currentMerchant['رقم الحساب'] || '',
+                "رقم الهاتف": currentMerchant['رقم الهاتف'] || '',
+                "المنطقة": currentMerchant['المنطقة'] || '',
+                "العنوان": currentMerchant['العنوان'] || '',
+                "الحالة": currentMerchant['الحالة'] || ''
+            },
+            request: {
+                code: requestCode,
+                requestType: type,
+                amount: amount,
+                notes: notes || 'لا يوجد',
+                date: requestData.date,
+                time: requestData.time,
+                status: 'معلق',
+                "رقم الطلب": requestCode,
+                "نوع الطلب": type,
+                "المبلغ": amount,
+                "ملاحظات": notes || 'لا يوجد',
+                "التاريخ": requestData.date,
+                "الوقت": requestData.time,
+                "الحالة": 'معلق'
+            },
+            summary: {
+                totalTransfers: totalTransfersAmount,
+                totalCollections: totalCollectionsAmount,
+                currentDebt: currentDebtAmount,
+                machinesCount: (currentMachines || []).length
+            },
+            machines: (currentMachines || []).map(machine => {
+                const machineCode = machine['رقم المكنة'] || '';
+                const achieved = (currentTransfers || [])
+                    .filter(t => (t['رقم المكنة'] || '') === machineCode || (!t['رقم المكنة'] && t['رقم التاجر'] === machine['رقم التاجر']))
+                    .reduce((sum, t) => sum + (parseFloat(t['قيمة التحويل']) || 0), 0);
+                const target = parseFloat(machine['التارجت الشهري']) || 0;
+                const percentage = target > 0 ? Math.min((achieved / target) * 100, 100) : 0;
+
+                return {
+                    code: machineCode,
+                    serial: machine['الرقم التسلسلي'] || '',
+                    status: machine['الحالة'] || '',
+                    target,
+                    achieved,
+                    percentage,
+                    location: machine['المنطقة'] || '',
+                    notes: machine['ملاحظات'] || 'لا يوجد',
+                    "رقم المكنة": machine['رقم المكنة'] || '',
+                    "الرقم التسلسلي": machine['الرقم التسلسلي'] || '',
+                    "رقم التاجر": machine['رقم التاجر'] || '',
+                    "اسم التاجر": machine['اسم التاجر'] || '',
+                    "اسم النشاط": machine['اسم النشاط'] || '',
+                    "رقم الحساب": machine['رقم الحساب'] || '',
+                    "الحالة": machine['الحالة'] || '',
+                    "التارجت الشهري": machine['التارجت الشهري'] || '',
+                    "المحقق": achieved,
+                    "النسبة": percentage,
+                    "ملاحظات": machine['ملاحظات'] || 'لا يوجد'
+                };
+            }),
+            remainingBalance: currentDebtAmount
+        };
         const supabaseRequest = {
             "رقم الطلب": requestCode,
             "رقم التاجر": currentMerchant.id,
@@ -1380,7 +1432,9 @@ async function submitRequest() {
         const { data: insertedRows, error } = await supabaseClient.from('requests').insert([supabaseRequest]).select('"رقم الطلب"');
         if (error) throw error;
 
-        emailPayload.request.code = insertedRows?.[0]?.['رقم الطلب'] || requestCode;
+        const finalRequestCode = insertedRows?.[0]?.['رقم الطلب'] || requestCode;
+        emailPayload.request.code = finalRequestCode;
+        emailPayload.request["رقم الطلب"] = finalRequestCode;
         const emailResult = await sendEmailNotification(emailPayload).catch(err => ({ error: err?.message || String(err) }));
         if (emailResult?.error) {
             console.warn('Email notification failed:', emailResult.error);
