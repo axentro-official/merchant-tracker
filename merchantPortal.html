@@ -145,6 +145,13 @@
             height: 10px;
             overflow: hidden;
         }
+
+        .progress-wrapper { display:flex; align-items:center; gap:10px; min-width:160px; }
+        .progress-bar-bg { flex:1; height:8px; background:rgba(255,255,255,0.10); border-radius:999px; overflow:hidden; }
+        .progress-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--primary),var(--purple)); width:0%; transition:width .45s ease; }
+        .percentage-text { min-width:48px; direction:ltr; text-align:left; font-weight:800; color:var(--text-primary); }
+        .achieved-highlight { color:var(--success); font-weight:800; }
+
         .progress-bar {
             height: 100%;
             width: 0%;
@@ -846,8 +853,8 @@
                 <div class="section-header"><i class="fas fa-desktop"></i><h3>المكن المرتبط بالتاجر</h3></div>
                 <div class="table-container">
                     <table class="data-table">
-                        <thead><tr><th>#</th><th>رقم المكنة</th><th>السيريال</th><th>الحالة</th><th>التارجت الشهري</th><th>ملاحظات</th></tr></thead>
-                        <tbody id="machinesTableBody"><tr><td colspan="6" class="empty-state"><i class="fas fa-inbox"></i> لا توجد مكن مرتبطة</td></tr></tbody>
+                        <thead><tr><th>#</th><th>رقم المكنة</th><th>السيريال</th><th>الحالة</th><th>التارجت الشهري</th><th>المحقق</th><th>النسبة</th><th>ملاحظات</th></tr></thead>
+                        <tbody id="machinesTableBody"><tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i> لا توجد مكن مرتبطة</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -920,6 +927,8 @@ const CONFIG = {
 let supabaseClient = null;
 let currentMerchant = null;
 let currentMachines = [];
+let currentTransfers = [];
+let currentCollections = [];
 let currentHistoryFilter = { from: '', to: '' };
 
 
@@ -930,6 +939,10 @@ function buildDateTimeValue(dateValue, timeValue) {
 
 function sortByDateTimeDesc(rows = []) {
     return [...rows].sort((a, b) => buildDateTimeValue(b['التاريخ'], b['الوقت']) - buildDateTimeValue(a['التاريخ'], a['الوقت']));
+}
+
+function sortByDateTimeAsc(rows = []) {
+    return [...rows].sort((a, b) => buildDateTimeValue(a['التاريخ'], a['الوقت']) - buildDateTimeValue(b['التاريخ'], b['الوقت']));
 }
 
 function extractSequence(value) {
@@ -966,6 +979,7 @@ const UI = {
 document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('bootProgress');
     const statusText = document.getElementById('bootStatus');
+    const percentText = document.getElementById('bootPercent');
     const phases = ['تحميل الواجهة...', 'تهيئة الاتصال...', 'جاري تأمين الجلسة...', 'جاهز'];
     let progress = 0;
     let index = 0;
@@ -973,6 +987,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const interval = setInterval(() => {
         progress += 25;
         progressBar.style.width = progress + '%';
+        if (percentText) percentText.textContent = progress + '%';
         statusText.textContent = phases[index] || 'جاهز';
         index++;
         if (progress >= 100) {
@@ -1111,9 +1126,11 @@ async function loadMerchantData(merchantId) {
         if (collectionsRes.error) throw collectionsRes.error;
         if (requestsRes.error) throw requestsRes.error;
         currentMachines = [...(machinesRes.data || [])].sort((a, b) => extractSequence(a['رقم المكنة']) - extractSequence(b['رقم المكنة']));
-        const transfers = sortByDateTimeDesc(transfersRes.data || []);
-        const collections = sortByDateTimeDesc(collectionsRes.data || []);
-        const requests = sortByDateTimeDesc(requestsRes.data || []);
+        const transfers = sortByDateTimeAsc(transfersRes.data || []);
+        const collections = sortByDateTimeAsc(collectionsRes.data || []);
+        const requests = sortByDateTimeAsc(requestsRes.data || []);
+        currentTransfers = transfers;
+        currentCollections = collections;
         document.getElementById('machinesCount').textContent = currentMachines.length;
         renderMachinesTable(currentMachines);
         const totalTransfers = transfers.reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0);
@@ -1135,19 +1152,28 @@ async function loadMerchantData(merchantId) {
 function renderMachinesTable(machines) {
     const tbody = document.getElementById('machinesTableBody');
     if (!machines.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">لا توجد مكن مرتبطة</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">لا توجد مكن مرتبطة</td></tr>';
         return;
     }
-    tbody.innerHTML = machines.map((machine, index) => `
+    tbody.innerHTML = machines.map((machine, index) => {
+        const machineCode = machine['رقم المكنة'] || '';
+        const achieved = (currentTransfers || [])
+            .filter(t => (t['رقم المكنة'] || '') === machineCode || (!t['رقم المكنة'] && t['رقم التاجر'] === machine['رقم التاجر']))
+            .reduce((sum, t) => sum + (parseFloat(t['قيمة التحويل']) || 0), 0);
+        const target = parseFloat(machine['التارجت الشهري']) || 0;
+        const percentage = target > 0 ? Math.min((achieved / target) * 100, 100) : 0;
+        return `
         <tr>
             <td>${index + 1}</td>
-            <td><code class="ref-code">${machine['رقم المكنة'] || '—'}</code></td>
+            <td><code class="ref-code">${machineCode || '—'}</code></td>
             <td>${machine['الرقم التسلسلي'] || '—'}</td>
             <td>${machine['الحالة'] || '—'}</td>
-            <td>${formatMoney(machine['التارجت الشهري'])}</td>
+            <td>${formatMoney(target)}</td>
+            <td class="achieved-highlight">${formatMoney(achieved)}</td>
+            <td><div class="progress-wrapper"><div class="progress-bar-bg"><div class="progress-fill" style="width:${percentage}%"></div></div><span class="percentage-text">${percentage.toFixed(1)}%</span></div></td>
             <td>${machine['ملاحظات'] || 'لا توجد ملاحظات'}</td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
 }
 
 function renderTransfersTable(transfers) {
@@ -1224,6 +1250,37 @@ function closeRequestModal() {
     document.getElementById('requestNotes').value = '';
 }
 
+async function generateNextRequestCode() {
+    const yy = String(new Date().getFullYear()).slice(-2);
+    const prefix = `REQ-${yy}-`;
+    const { data, error } = await supabaseClient
+        .from('requests')
+        .select('"رقم الطلب"')
+        .like('رقم الطلب', `${prefix}%`)
+        .order('رقم الطلب', { ascending: false })
+        .limit(1);
+    if (error) throw error;
+    const last = data?.[0]?.['رقم الطلب'] || '';
+    const seq = (parseInt(String(last).match(/(\d+)$/)?.[1] || '0', 10) || 0) + 1;
+    return `${prefix}${String(seq).padStart(5, '0')}`;
+}
+
+async function sendEmailNotification(payload) {
+    if (!CONFIG.GOOGLE_SCRIPT_URL) return { skipped: true };
+    try {
+        await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'sendRequestEmail', payload })
+        });
+        return { success: true, opaque: true };
+    } catch (error) {
+        console.warn('Email notification request failed:', error);
+        return { error: error?.message || String(error) };
+    }
+}
+
 async function submitRequest() {
     const type = document.getElementById('requestType').value;
     const amount = parseFloat(document.getElementById('requestAmount').value);
@@ -1263,7 +1320,7 @@ async function submitRequest() {
             accountNumber: currentMerchant['رقم الحساب'] || ''
         },
         request: {
-            code: requestData.merchant_number,
+            code: 'REQUEST-PENDING',
             requestType: type,
             amount: amount,
             notes: notes,
@@ -1279,7 +1336,11 @@ async function submitRequest() {
     };
 
     try {
+        const requestCode = await generateNextRequestCode();
+        const currentDebtAmount = (currentTransfers || []).reduce((s, t) => s + (parseFloat(t['قيمة التحويل']) || 0), 0)
+            - (currentCollections || []).reduce((s, c) => s + (parseFloat(c['قيمة التحصيل']) || 0), 0);
         const supabaseRequest = {
+            "رقم الطلب": requestCode,
             "رقم التاجر": currentMerchant.id,
             "اسم التاجر": currentMerchant['اسم التاجر'],
             "رقم الحساب": currentMerchant['رقم الحساب'],
@@ -1290,13 +1351,13 @@ async function submitRequest() {
             "التاريخ": requestData.date,
             "الوقت": requestData.time,
             "الحالة": 'معلق',
-            "المديونية الحالية": 0
+            "المديونية الحالية": currentDebtAmount
         };
 
         const { data: insertedRows, error } = await supabaseClient.from('requests').insert([supabaseRequest]).select('"رقم الطلب"');
         if (error) throw error;
 
-        emailPayload.request.code = insertedRows?.[0]?.['رقم الطلب'] || 'REQUEST-PENDING';
+        emailPayload.request.code = insertedRows?.[0]?.['رقم الطلب'] || requestCode;
         const emailResult = await sendEmailNotification(emailPayload).catch(err => ({ error: err?.message || String(err) }));
         if (emailResult?.error) {
             console.warn('Email notification failed:', emailResult.error);
