@@ -117,6 +117,39 @@ function buildMerchantStatement(merchant, context) {
   ].join('\n');
 }
 
+function buildFocusedMerchantAnswer(merchant, context, q) {
+  const machines = (context.machines || []).filter(machine => machine['رقم التاجر'] === merchant.id);
+  const transfers = (context.transfers || []).filter(item => item['رقم التاجر'] === merchant.id);
+  const collections = (context.collections || []).filter(item => item['رقم التاجر'] === merchant.id);
+  const requests = (context.requests || []).filter(item => item['رقم التاجر'] === merchant.id);
+  const { totalTransfers, totalCollections, debt } = calculateDebtForMerchant(merchant.id, context);
+
+  if (includesAny(q, ['مكن', 'مكينه', 'مكنه', 'ماكينات'])) {
+    if (!machines.length) return `لا توجد مكن مرتبطة بالتاجر ${merchant['اسم التاجر'] || '—'}.`;
+    return `المكن المرتبطة بالتاجر ${merchant['اسم التاجر'] || '—'}:\n` + machines.map((m, i) =>
+      `${i + 1}) ${m['رقم المكنة'] || '—'} • سيريال ${m['الرقم التسلسلي'] || '—'} • حالة ${m['الحالة'] || '—'} • تارجت ${money(m['التارجت الشهري'])}`
+    ).join('\n');
+  }
+
+  if (includesAny(q, ['تحويل', 'التحويلات'])) {
+    return `إجمالي تحويلات ${merchant['اسم التاجر'] || '—'}: ${money(totalTransfers)}\nعدد التحويلات: ${transfers.length}`;
+  }
+
+  if (includesAny(q, ['تحصيل', 'التحصيلات'])) {
+    return `إجمالي تحصيلات ${merchant['اسم التاجر'] || '—'}: ${money(totalCollections)}\nعدد التحصيلات: ${collections.length}`;
+  }
+
+  if (includesAny(q, ['طلب', 'طلبات', 'معلق', 'المعلقه', 'المعلقة'])) {
+    const pending = requests.filter(item => normalizeArabic(item['الحالة']) === 'معلق').length;
+    return `طلبات ${merchant['اسم التاجر'] || '—'}: ${requests.length}\nالطلبات المعلقة: ${pending}`;
+  }
+
+  if (includesAny(q, ['مديونيه', 'رصيد', 'مستحق', 'متبقي'])) {
+    return `مديونية ${merchant['اسم التاجر'] || '—'} الحالية: ${money(debt)}\nإجمالي التحويلات: ${money(totalTransfers)}\nإجمالي التحصيلات: ${money(totalCollections)}`;
+  }
+
+  return buildMerchantStatement(merchant, context);
+}
 function buildTopDebtors(context) {
   const ranked = (context.merchants || []).map(merchant => ({ merchant, ...calculateDebtForMerchant(merchant.id, context) }))
     .sort((a, b) => b.debt - a.debt)
@@ -159,8 +192,14 @@ export async function processQuery(question, context = {}) {
       '- إجمالي التحويلات والتحصيلات والمديونية',
       '- أعلى المديونيات',
       '- كشف مختصر لأي تاجر بالاسم أو رقم التاجر أو رقم الحساب',
-      '- آخر الحركات الخاصة بأي تاجر'
+      '- آخر الحركات الخاصة بأي تاجر',
+      '- أسئلة مرنة مثل: مديونية أحمد، تحويلات حساب 2468، مكن التاجر، طلباته المعلقة'
     ].join('\n');
+  }
+
+  const mentionedMerchant = detectMerchant(context, question);
+  if (mentionedMerchant && includesAny(q, ['كشف', 'حساب', 'بيانات', 'تفاصيل', 'حركات', 'تحويل', 'تحصيل', 'مديونيه', 'رصيد', 'مستحق', 'مكن', 'مكينه', 'مكنه', 'طلبات', 'طلب'])) {
+    return buildFocusedMerchantAnswer(mentionedMerchant, context, q);
   }
 
   if (includesAny(q, ['ملخص', 'احصائيات', 'احصائيات النظام', 'لوحه', 'لوحة', 'overview'])) {
