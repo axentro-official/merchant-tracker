@@ -1592,12 +1592,12 @@
         <div id="dashboardSections" style="display:none;">
             <section id="section-dashboard">
                 <div class="dashboard-grid">
-                    <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي التجار</div><div class="stat-card-icon blue"><i class="fas fa-users"></i></div></div><div class="stat-card-value" id="totalMerchants">0</div><div class="stat-card-label">تاجر نشط</div></div>
-                    <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي المكن</div><div class="stat-card-icon green"><i class="fas fa-desktop"></i></div></div><div class="stat-card-value" id="totalMachines">0</div><div class="stat-card-label">مكنة مسجلة</div></div>
-                    <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">تحويلات اليوم</div><div class="stat-card-icon purple"><i class="fas fa-calendar-day"></i></div></div><div class="stat-card-value" id="todayTransfers">0</div><div class="stat-card-label">جنيه (اليوم)</div></div>
-                    <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي المتبقي</div><div class="stat-card-icon red"><i class="fas fa-balance-scale"></i></div></div><div class="stat-card-value" id="totalRemaining">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
-                    <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي التحويلات</div><div class="stat-card-icon orange"><i class="fas fa-exchange-alt"></i></div></div><div class="stat-card-value" id="totalTransfers">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
-                    <div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">إجمالي التحصيلات</div><div class="stat-card-icon green"><i class="fas fa-hand-holding-usd"></i></div></div><div class="stat-card-value" id="totalCollections">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
+                    <div class="stat-card clickable" role="button" tabindex="0" onclick="navigateToPage('merchants')"><div class="stat-card-header"><div class="stat-card-title">إجمالي التجار</div><div class="stat-card-icon blue"><i class="fas fa-users"></i></div></div><div class="stat-card-value" id="totalMerchants">0</div><div class="stat-card-label">تاجر نشط</div></div>
+                    <div class="stat-card clickable" role="button" tabindex="0" onclick="navigateToPage('machines')"><div class="stat-card-header"><div class="stat-card-title">إجمالي المكن</div><div class="stat-card-icon green"><i class="fas fa-desktop"></i></div></div><div class="stat-card-value" id="totalMachines">0</div><div class="stat-card-label">مكنة مسجلة</div></div>
+                    <div class="stat-card clickable" role="button" tabindex="0" onclick="navigateToPage('transfers')"><div class="stat-card-header"><div class="stat-card-title">تحويلات اليوم</div><div class="stat-card-icon purple"><i class="fas fa-calendar-day"></i></div></div><div class="stat-card-value" id="todayTransfers">0</div><div class="stat-card-label">جنيه (اليوم)</div></div>
+                    <div class="stat-card clickable" role="button" tabindex="0" onclick="openDebtorsFromDashboard()"><div class="stat-card-header"><div class="stat-card-title">إجمالي المتبقي</div><div class="stat-card-icon red"><i class="fas fa-balance-scale"></i></div></div><div class="stat-card-value" id="totalRemaining">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
+                    <div class="stat-card clickable" role="button" tabindex="0" onclick="navigateToPage('transfers')"><div class="stat-card-header"><div class="stat-card-title">إجمالي التحويلات</div><div class="stat-card-icon orange"><i class="fas fa-exchange-alt"></i></div></div><div class="stat-card-value" id="totalTransfers">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
+                    <div class="stat-card clickable" role="button" tabindex="0" onclick="navigateToPage('collections')"><div class="stat-card-header"><div class="stat-card-title">إجمالي التحصيلات</div><div class="stat-card-icon green"><i class="fas fa-hand-holding-usd"></i></div></div><div class="stat-card-value" id="totalCollections">0</div><div class="stat-card-label">جنيه (الكل)</div></div>
                 </div>
                 <div class="top-machines-section">
                     <div class="section-header"><i class="fas fa-trophy"></i><h3>🏆 أعلى المكن تحقيقاً للتارجت</h3></div>
@@ -1783,6 +1783,8 @@
     window.discoverDatabase = discoverDatabase;
     window.refreshSelectedTable = refreshSelectedTable;
 
+    window.navigateToPage = (page) => { if (window.showSection) window.showSection(page); };
+
     window.openMerchantModal = openMerchantModal;
     window.saveMerchant = saveMerchant;
     window.editMerchant = editMerchant;
@@ -1812,12 +1814,11 @@
     window.convertRequest = convertRequest;
     window.deleteRequest = deleteRequest;
 
-    window.refreshCurrentPage = async () => {
+    window.refreshCurrentPage = async (silent = false) => {
         const scrollY = window.scrollY;
-        const activeSection = document.querySelector('#dashboardSections section[style*="display: block"]');
-        if (!activeSection) return;
-        const id = activeSection.id;
+        const id = window.currentSectionName ? `section-${window.currentSectionName}` : (document.querySelector('#dashboardSections section[style*="display: block"]')?.id || 'section-dashboard');
         try {
+            if (!silent) window.showToast('جاري تحديث البيانات...', 'info');
             if (id === 'section-dashboard') {
                 await loadDashboardStats();
                 await loadRecentActivities();
@@ -1836,9 +1837,15 @@
                 await loadArchives();
             } else if (id === 'section-statement') {
                 await loadMerchantsForStatement();
+                const select = document.getElementById('statementMerchantSelect');
+                if (select && select.value && window.loadStatement) await window.loadStatement();
             } else if (id === 'section-database') {
                 await discoverDatabase();
             }
+            if (!silent) window.showToast('تم تحديث البيانات بنجاح', 'success');
+        } catch (error) {
+            console.error('Refresh Error:', error);
+            if (!silent) window.showToast('تعذر تحديث البيانات', 'error');
         } finally {
             setTimeout(() => window.scrollTo(0, scrollY), 50);
         }
@@ -1926,7 +1933,7 @@
 const CONFIG = {
     SUPABASE_URL: 'https://bwcrdcudpnxkmcyyhzhe.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3Y3JkY3VkcG54a21jeXloemhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQxNDEsImV4cCI6MjA5MDcyMDE0MX0.Yz19f5HAHfPt2MH-ky56Ccfwb5BAV1eN8PAdmuE1BTY',
-    SESSION_DURATION: 60 * 60 * 1000
+    SESSION_DURATION: 8 * 60 * 60 * 1000
 };
 
 let supabaseClient = null;
@@ -2251,15 +2258,39 @@ function setupNavbarEvents() {
     });
 }
 
+let lastSessionTouch = 0;
+function touchSession() {
+    const now = Date.now();
+    if (now - lastSessionTouch < 60000) return;
+    lastSessionTouch = now;
+    try {
+        const session = localStorage.getItem('axentro_admin_session');
+        if (!session) return;
+        const data = JSON.parse(session);
+        if (!data || !data.isLoggedIn) return;
+        data.expiry = now + CONFIG.SESSION_DURATION;
+        localStorage.setItem('axentro_admin_session', JSON.stringify(data));
+    } catch(e) {}
+}
+function expireSessionSilently() {
+    clearSession();
+    if (sessionCheckInterval) clearInterval(sessionCheckInterval);
+    showLogin();
+    window.showToast('انتهت الجلسة. سجل الدخول مرة أخرى.', 'warning');
+}
 function startAutoLogoutTimer() {
     if (sessionCheckInterval) clearInterval(sessionCheckInterval);
+    ['click','keydown','scroll','touchstart'].forEach(evt => {
+        document.removeEventListener(evt, touchSession, { passive: true });
+        document.addEventListener(evt, touchSession, { passive: true });
+    });
     sessionCheckInterval = setInterval(() => {
         const session = localStorage.getItem('axentro_admin_session');
         if (session) {
             try {
                 const data = JSON.parse(session);
-                if (Date.now() > data.expiry) logout();
-            } catch(e) {}
+                if (Date.now() > data.expiry) expireSessionSilently();
+            } catch(e) { expireSessionSilently(); }
         }
     }, 30000);
 }
@@ -2394,6 +2425,7 @@ function showMainApp() {
 }
 
 function showSection(sectionName) {
+    window.currentSectionName = sectionName;
     const sections = ['dashboard','merchants','machines','transfers','collections','requests','archive','statement','database'];
     sections.forEach(s => {
         const el = document.getElementById(`section-${s}`);
@@ -2406,9 +2438,63 @@ function showSection(sectionName) {
         if (page === sectionName) link.classList.add('active');
         else link.classList.remove('active');
     });
-    if (window.refreshCurrentPage) window.refreshCurrentPage();
+    if (window.refreshCurrentPage) window.refreshCurrentPage(true);
 }
 window.showSection = showSection;
+
+window.openDebtorsFromDashboard = async function() {
+    const existing = document.getElementById('debtorsOverlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'debtorsOverlay';
+    overlay.className = 'modal-overlay show';
+    overlay.style.zIndex = '12000';
+    overlay.innerHTML = `
+        <div class="modal-content" style="max-width:900px;width:94%;">
+            <div class="modal-header">
+                <h3><i class="fas fa-balance-scale"></i> التجار أصحاب المديونية</h3>
+                <button class="modal-close" onclick="document.getElementById('debtorsOverlay')?.remove()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="debtorsOverlayBody" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري تحميل التجار...</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="document.getElementById('debtorsOverlay')?.remove(); navigateToPage('collections');">فتح التحصيلات</button>
+                <button class="btn btn-outline" onclick="document.getElementById('debtorsOverlay')?.remove()">إغلاق</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    const body = document.getElementById('debtorsOverlayBody');
+    try {
+        const [merchantsRes, transfersRes, collectionsRes] = await Promise.all([
+            supabaseClient.from('merchants').select('*'),
+            supabaseClient.from('transfers').select('*'),
+            supabaseClient.from('collections').select('*')
+        ]);
+        if (merchantsRes.error) throw merchantsRes.error;
+        if (transfersRes.error) throw transfersRes.error;
+        if (collectionsRes.error) throw collectionsRes.error;
+        const merchants = merchantsRes.data || [];
+        const transfers = transfersRes.data || [];
+        const collections = collectionsRes.data || [];
+        const related = (row, merchant) => String(row['رقم التاجر']) === String(merchant.id)
+            || String(row['رقم التاجر']) === String(merchant['رقم التاجر'])
+            || String(row['رقم الحساب']) === String(merchant['رقم الحساب']);
+        const rows = merchants.map(merchant => {
+            const totalTransfers = transfers.filter(t => related(t, merchant)).reduce((sum, t) => sum + (parseFloat(t['قيمة التحويل']) || 0), 0);
+            const totalCollections = collections.filter(c => related(c, merchant)).reduce((sum, c) => sum + (parseFloat(c['قيمة التحصيل']) || 0), 0);
+            return { merchant, totalTransfers, totalCollections, debt: Math.max(0, totalTransfers - totalCollections) };
+        }).filter(row => row.totalTransfers > 0 && row.debt > 0).sort((a,b) => b.debt - a.debt);
+        if (!rows.length) {
+            body.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i> لا توجد مديونيات حالية لتجار لديهم تحويلات.</div>';
+            return;
+        }
+        body.innerHTML = `<div class="table-container"><table class="data-table" style="min-width:720px"><thead><tr><th>#</th><th>التاجر</th><th>رقم الحساب</th><th>النشاط</th><th>إجمالي التحويلات</th><th>إجمالي التحصيلات</th><th>المتبقي</th></tr></thead><tbody>${rows.map((row, index) => `<tr><td>${index + 1}</td><td>${row.merchant['اسم التاجر'] || '—'}</td><td>${row.merchant['رقم الحساب'] || '—'}</td><td>${row.merchant['اسم النشاط'] || '—'}</td><td>${(row.totalTransfers).toLocaleString('ar-EG')} ج.م</td><td>${(row.totalCollections).toLocaleString('ar-EG')} ج.م</td><td class="amount-negative">${(row.debt).toLocaleString('ar-EG')} ج.م</td></tr>`).join('')}</tbody></table></div>`;
+    } catch (error) {
+        console.error(error);
+        body.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i> تعذر تحميل قائمة المديونيات.</div>';
+    }
+};
 
 function togglePasswordVisibility() {
     const input = document.getElementById('adminPasswordInput');
