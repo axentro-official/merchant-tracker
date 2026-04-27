@@ -7,6 +7,7 @@
 import { showToast, showConfirm } from '../ui/toast.js';
 import { escapeHtml, formatMoney, formatDate, formatTime } from '../utils/formatters.js';
 import { sendRequestEmailNotification } from '../services/networkService.js';
+import { generateNextCode } from '../services/referenceService.js';
 
 let supabase = null;
 let currentRequests = [];
@@ -405,6 +406,43 @@ export async function saveRequest() {
     }
 }
 
+function normalizeRequestTransferType(requestType) {
+    const raw = String(requestType || '').trim();
+    if (raw === 'رصيد خدمات') return 'رصيد خدمات';
+    if (raw === 'كاش على المكنة' || raw === 'رصيد كاش') return 'رصيد كاش';
+    return 'أخرى';
+}
+
+async function generateTransferReference() {
+    return await generateNextCode(supabase, 'transfers', 'الرقم المرجعي', { prefix: 'TRF', pad: 5 });
+}
+
+async function insertTransferFromRequest(transferData) {
+    let lastError = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+        const payload = {
+            ...transferData,
+            'الرقم المرجعي': await generateTransferReference()
+        };
+
+        const { data, error } = await supabase
+            .from('transfers')
+            .insert([payload])
+            .select('id, "الرقم المرجعي"')
+            .single();
+
+        if (!error) return data;
+
+        lastError = error;
+        const msg = String(error.message || '');
+        if (!msg.includes('duplicate key') && error.code !== '23505') {
+            throw error;
+        }
+    }
+
+    throw lastError || new Error('تعذر توليد رقم مرجعي فريد للتحويل');
+}
+
 // تحويل طلب إلى تحويل (للأدمن)
 export async function convertRequest(requestId) {
     const request = currentRequests.find(r => r.id === requestId);
@@ -417,7 +455,7 @@ export async function convertRequest(requestId) {
                 'اسم التاجر': request.normalizedMerchantName || request['اسم التاجر'],
                 'رقم الحساب': request.normalizedAccountNumber || request['رقم الحساب'],
                 'اسم النشاط': request.normalizedActivityName || request['اسم النشاط'],
-                'نوع التحويل': 'رصيد خدمات',
+                'نوع التحويل': normalizeRequestTransferType(request['نوع الطلب']),
                 'قيمة التحويل': request['المبلغ'],
                 'ملاحظات': `تحويل تلقائي من طلب: ${request['رقم الطلب']}`,
                 'التاريخ': getNowDate(),
@@ -425,11 +463,7 @@ export async function convertRequest(requestId) {
                 'الشهر': getCurrentMonthLabel()
             };
 
-            const { error: transferError } = await supabase
-                .from('transfers')
-                .insert([transferData]);
-
-            if (transferError) throw transferError;
+            const insertedTransfer = await insertTransferFromRequest(transferData);
 
             const { error: updateError } = await supabase
                 .from('requests')
@@ -444,6 +478,7 @@ export async function convertRequest(requestId) {
                 requestNumber: request['رقم الطلب'],
                 status: 'مكتمل',
                 convertedToTransfer: true,
+                transferReference: insertedTransfer?.['الرقم المرجعي'] || '',
                 convertedAtDate: getNowDate(),
                 convertedAtTime: getNowTime12h()
             });
