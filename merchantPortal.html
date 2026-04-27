@@ -945,6 +945,39 @@ function sortByDateTimeAsc(rows = []) {
     return [...rows].sort((a, b) => buildDateTimeValue(a['التاريخ'], a['الوقت']) - buildDateTimeValue(b['التاريخ'], b['الوقت']));
 }
 
+function uniqueNonEmpty(values) {
+    return [...new Set((values || []).map(v => String(v ?? '').trim()).filter(Boolean))];
+}
+
+async function fetchRowsByMerchantIdentity(tableName, merchant, extraBuilder) {
+    const merchantCandidates = uniqueNonEmpty([merchant?.id, merchant?.['رقم التاجر']]);
+    const accountCandidates = uniqueNonEmpty([merchant?.['رقم الحساب']]);
+    const nameCandidates = uniqueNonEmpty([merchant?.['اسم التاجر']]);
+
+    const orParts = [];
+    merchantCandidates.forEach(value => orParts.push(`رقم التاجر.eq.${value}`));
+    accountCandidates.forEach(value => orParts.push(`رقم الحساب.eq.${value}`));
+    nameCandidates.forEach(value => orParts.push(`اسم التاجر.eq.${value}`));
+
+    let query = supabaseClient.from(tableName).select('*');
+    if (orParts.length) query = query.or(orParts.join(','));
+    if (typeof extraBuilder === 'function') query = extraBuilder(query);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+}
+
+function getFallbackMachineCode() {
+    const activeMachine = (currentMachines || []).find(machine => ['نشط', 'نشطة'].includes(String(machine['الحالة'] || '').trim()));
+    const firstMachine = activeMachine || (currentMachines || [])[0];
+    return firstMachine?.['رقم المكنة'] || '';
+}
+
+function resolveDisplayMachineCode(row) {
+    return row?.['رقم المكنة'] || getFallbackMachineCode() || 'بدون مكنة';
+}
+
 function extractSequence(value) {
     const match = String(value || '').match(/(\d+)(?!.*\d)/);
     return match ? parseInt(match[1], 10) : 0;
@@ -1106,29 +1139,24 @@ function renderMerchantInfo(merchant) {
 async function loadMerchantData(merchantId) {
     try {
         const range = parseDateRange();
-        const machineQuery = supabaseClient.from('machines').select('*').eq('رقم التاجر', merchantId);
-        let transferQuery = supabaseClient.from('transfers').select('*').eq('رقم التاجر', merchantId);
-        let collectionQuery = supabaseClient.from('collections').select('*').eq('رقم التاجر', merchantId);
-        let requestQuery = supabaseClient.from('requests').select('*').eq('رقم التاجر', merchantId);
-        if (range.from) {
-            transferQuery = transferQuery.gte('التاريخ', range.from);
-            collectionQuery = collectionQuery.gte('التاريخ', range.from);
-            requestQuery = requestQuery.gte('التاريخ', range.from);
-        }
-        if (range.to) {
-            transferQuery = transferQuery.lte('التاريخ', range.to);
-            collectionQuery = collectionQuery.lte('التاريخ', range.to);
-            requestQuery = requestQuery.lte('التاريخ', range.to);
-        }
-        const [machinesRes, transfersRes, collectionsRes, requestsRes] = await Promise.all([machineQuery, transferQuery, collectionQuery, requestQuery]);
-        if (machinesRes.error) throw machinesRes.error;
-        if (transfersRes.error) throw transfersRes.error;
-        if (collectionsRes.error) throw collectionsRes.error;
-        if (requestsRes.error) throw requestsRes.error;
-        currentMachines = [...(machinesRes.data || [])].sort((a, b) => extractSequence(a['رقم المكنة']) - extractSequence(b['رقم المكنة']));
-        const transfers = sortByDateTimeAsc(transfersRes.data || []);
-        const collections = sortByDateTimeAsc(collectionsRes.data || []);
-        const requests = sortByDateTimeAsc(requestsRes.data || []);
+        const merchant = currentMerchant || { id: merchantId };
+        const dateFilter = (query) => {
+            if (range.from) query = query.gte('التاريخ', range.from);
+            if (range.to) query = query.lte('التاريخ', range.to);
+            return query;
+        };
+
+        const [machinesData, transfersData, collectionsData, requestsData] = await Promise.all([
+            fetchRowsByMerchantIdentity('machines', merchant),
+            fetchRowsByMerchantIdentity('transfers', merchant, dateFilter),
+            fetchRowsByMerchantIdentity('collections', merchant, dateFilter),
+            fetchRowsByMerchantIdentity('requests', merchant, dateFilter)
+        ]);
+
+        currentMachines = [...machinesData].sort((a, b) => extractSequence(a['رقم المكنة']) - extractSequence(b['رقم المكنة']));
+        const transfers = sortByDateTimeAsc(transfersData);
+        const collections = sortByDateTimeAsc(collectionsData);
+        const requests = sortByDateTimeAsc(requestsData);
         currentTransfers = transfers;
         currentCollections = collections;
         document.getElementById('machinesCount').textContent = currentMachines.length;
@@ -1189,7 +1217,7 @@ function renderTransfersTable(transfers) {
             <td>${t['التاريخ'] || '—'}</td>
             <td>${t['الوقت'] || '—'}</td>
             <td>${extractTaggedType(t['ملاحظات']) || t['نوع التحويل'] || '—'}</td>
-            <td>${t['رقم المكنة'] || 'بدون مكنة'}</td>
+            <td>${resolveDisplayMachineCode(t)}</td>
             <td class="amount-negative">${formatMoney(t['قيمة التحويل'])}</td>
         </tr>
     `).join('');
@@ -1207,7 +1235,7 @@ function renderCollectionsTable(collections) {
             <td><code class="ref-code">${c['الرقم المرجعي'] || '—'}</code></td>
             <td>${c['التاريخ'] || '—'}</td>
             <td>${c['الوقت'] || '—'}</td>
-            <td>${c['رقم المكنة'] || 'بدون مكنة'}</td>
+            <td>${resolveDisplayMachineCode(c)}</td>
             <td class="amount-positive">${formatMoney(c['قيمة التحصيل'])}</td>
             <td>${formatMoney(c['المتبقي بعد التحصيل'])}</td>
         </tr>
