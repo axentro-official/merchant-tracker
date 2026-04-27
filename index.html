@@ -834,7 +834,7 @@
         position: fixed;
         top: 20px;
         left: 20px;
-        z-index: 9999;
+        z-index: 30000;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -859,6 +859,91 @@
     @keyframes toast-in {
         from { opacity: 0; transform: translateX(-30px); }
         to { opacity: 1; transform: translateX(0); }
+    }
+
+
+    #collectionDebtWarningOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 40000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(2, 6, 23, 0.72);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .collection-debt-warning-card {
+        width: min(460px, 100%);
+        background: linear-gradient(180deg, rgba(17,24,39,0.98), rgba(15,23,42,0.98));
+        border: 1px solid rgba(245, 158, 11, 0.45);
+        border-right: 5px solid var(--warning);
+        border-radius: 22px;
+        padding: 24px;
+        box-shadow: 0 28px 90px rgba(0,0,0,0.55), 0 0 40px rgba(245,158,11,0.12);
+        text-align: right;
+        animation: modal-in 0.25s ease;
+    }
+    .collection-debt-warning-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(245, 158, 11, 0.16);
+        color: var(--warning);
+        font-size: 26px;
+        margin-bottom: 14px;
+    }
+    .collection-debt-warning-card h3 {
+        margin: 0 0 8px;
+        color: var(--text-primary);
+        font-size: 21px;
+        font-weight: 900;
+    }
+    .collection-debt-warning-card p {
+        margin: 0 0 16px;
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+    .collection-debt-warning-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 14px 0 20px;
+    }
+    .collection-debt-warning-grid div {
+        background: rgba(255,255,255,0.035);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 12px;
+    }
+    .collection-debt-warning-grid span {
+        display: block;
+        color: var(--text-muted);
+        font-size: 11px;
+        margin-bottom: 6px;
+    }
+    .collection-debt-warning-grid strong {
+        color: var(--warning);
+        font-size: 17px;
+        font-weight: 900;
+    }
+    .collection-debt-warning-btn {
+        width: 100%;
+        border: none;
+        border-radius: 14px;
+        padding: 13px 18px;
+        background: linear-gradient(135deg, var(--warning), #d97706);
+        color: #111827;
+        font-family: 'Cairo', sans-serif;
+        font-weight: 900;
+        cursor: pointer;
+    }
+    @media (max-width: 560px) {
+        .collection-debt-warning-grid { grid-template-columns: 1fr; }
     }
 
     .confirm-modal {
@@ -1577,8 +1662,8 @@
                     </div>
                     <div class="table-container">
                         <table class="data-table">
-                            <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>القيمة</th><th>المتبقي</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="collectionsTableBody"><tr><td colspan="10" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
+                            <thead><tr><th>#</th><th>الرقم المرجعي</th><th>التاريخ</th><th>الوقت</th><th>التاجر</th><th>النشاط</th><th>نوع التحصيل</th><th>القيمة</th><th>المتبقي</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="collectionsTableBody"><tr><td colspan="11" class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
