@@ -761,15 +761,62 @@
         min-height: 80px;
     }
 
+    .camera-modal {
+        z-index: 30000 !important;
+        background: rgba(0, 0, 0, 0.86);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
     .camera-modal .modal-content {
-        max-width: 500px;
-        background: var(--bg-primary);
+        max-width: 560px;
+        width: min(94vw, 560px);
+        background: #050b18;
+        border: 1px solid rgba(96,165,250,0.35);
+        box-shadow: 0 30px 90px rgba(0,0,0,0.75), 0 0 60px rgba(59,130,246,0.18);
     }
     #cameraPreview {
+        position: relative;
         width: 100%;
+        min-height: 320px;
         border-radius: var(--radius-lg);
         background: #000;
+        overflow: hidden;
         margin-bottom: 16px;
+        border: 1px solid rgba(255,255,255,0.10);
+    }
+    #cameraPreview video {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 320px;
+        object-fit: cover;
+        border-radius: var(--radius-lg);
+    }
+    .scan-frame {
+        position:absolute;
+        inset: 42px;
+        border: 3px solid rgba(255,255,255,0.92);
+        border-radius: 18px;
+        pointer-events:none;
+        box-shadow: 0 0 0 9999px rgba(0,0,0,0.28), 0 0 24px rgba(59,130,246,0.55);
+    }
+    .scan-frame::after {
+        content:'';
+        position:absolute;
+        left: 10%;
+        right: 10%;
+        top: 50%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+        animation: scanLine 1.8s ease-in-out infinite;
+    }
+    @keyframes scanLine {
+        0%,100% { transform: translateY(-95px); opacity: .55; }
+        50% { transform: translateY(95px); opacity: 1; }
+    }
+    .camera-hint {
+        color: var(--text-secondary);
+        font-size: 12px;
+        margin: 10px 0 0;
     }
     .flash-btn {
         background: var(--bg-glass);
@@ -1234,7 +1281,10 @@
             <button class="modal-close" onclick="closeCameraModal()"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body" style="text-align: center;">
-            <div id="cameraPreview" style="width:100%; max-width:400px; margin:0 auto;"></div>
+            <div id="cameraPreview">
+                <div class="scan-frame"></div>
+            </div>
+            <div class="camera-hint">وجّه الكاميرا نحو QR/Barcode أو السيريال بوضوح، وسيتم الإغلاق تلقائياً بعد الالتقاط.</div>
             <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
                 <button id="flashToggleBtn" class="flash-btn"><i class="fas fa-bolt"></i> فلاش</button>
                 <button class="btn btn-primary" onclick="closeCameraModal()">إلغاء</button>
@@ -1886,32 +1936,74 @@ async function startCamera() {
     if (!previewElem) return;
     try {
         if (html5QrCode) {
-            await html5QrCode.stop();
-            html5QrCode.clear();
+            try { await html5QrCode.stop(); } catch(e) {}
+            try { html5QrCode.clear(); } catch(e) {}
         }
-        html5QrCode = new Html5Qrcode("cameraPreview");
-        const constraints = { facingMode: "environment" };
+
+        html5QrCode = new Html5Qrcode("cameraPreview", {
+            verbose: false,
+            formatsToSupport: window.Html5QrcodeSupportedFormats ? [
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.UPC_E,
+                Html5QrcodeSupportedFormats.ITF
+            ] : undefined
+        });
+
         const devices = await Html5Qrcode.getCameras();
         let cameraId = null;
         if (devices && devices.length) {
-            const backCamera = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment'));
+            const backCamera = devices.find(d => /back|rear|environment|خلف/i.test(d.label || ''));
             cameraId = backCamera ? backCamera.id : devices[0].id;
         }
+
+        const qrbox = function(viewfinderWidth, viewfinderHeight) {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const size = Math.max(220, Math.floor(minEdge * 0.72));
+            return { width: size, height: Math.floor(size * 0.62) };
+        };
+
         await html5QrCode.start(
-            cameraId ? { deviceId: { exact: cameraId } } : constraints,
-            { fps: 10, qrbox: { width: 250, height: 250 } },
+            cameraId ? { deviceId: { exact: cameraId } } : { facingMode: { ideal: "environment" } },
+            {
+                fps: 15,
+                qrbox,
+                aspectRatio: 1.7777778,
+                disableFlip: false,
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                videoConstraints: {
+                    facingMode: { ideal: "environment" },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    focusMode: "continuous"
+                }
+            },
             onScanSuccess,
             onScanError
         );
+
+        if (!previewElem.querySelector('.scan-frame')) {
+            const frame = document.createElement('div');
+            frame.className = 'scan-frame';
+            previewElem.appendChild(frame);
+        }
+
         const videoElem = document.querySelector('#cameraPreview video');
         if (videoElem && videoElem.srcObject) {
             cameraStream = videoElem.srcObject;
             currentTrack = cameraStream.getVideoTracks()[0];
+            try {
+                await currentTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+            } catch(e) {}
         }
         setupFlashButton();
     } catch (err) {
         console.error("Camera error:", err);
-        window.showToast("تعذر تشغيل الكاميرا", "error");
+        window.showToast("تعذر تشغيل الكاميرا. تأكد من السماح للمتصفح باستخدام الكاميرا.", "error");
         closeCameraModal();
     }
 }
@@ -1938,11 +2030,17 @@ function setupFlashButton() {
 }
 
 function onScanSuccess(decodedText, decodedResult) {
+    const cleanSerial = String(decodedText || '').trim().replace(/\s+/g, '');
+    if (!cleanSerial) return;
     Sound.play('scan');
     if (currentCameraTarget === 'machine') {
         const serialInput = document.getElementById('machSerial');
-        if (serialInput) serialInput.value = decodedText;
-        window.showToast("تم مسح السيريال: " + decodedText, "success");
+        if (serialInput) {
+            serialInput.value = cleanSerial;
+            serialInput.dispatchEvent(new Event('input', { bubbles: true }));
+            serialInput.focus();
+        }
+        window.showToast("تم مسح السيريال: " + cleanSerial, "success");
     }
     closeCameraModal();
 }
