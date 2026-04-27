@@ -1215,12 +1215,13 @@ function renderCollectionsTable(collections) {
 }
 function renderRequestsList(requests) {
     const container = document.getElementById('requestsList');
-    if (!requests.length) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i> لا توجد طلبات سابقة</div>';
+    const visibleRequests = (requests || []).filter(r => String(r['الحالة'] || '').trim() === 'معلق');
+    if (!visibleRequests.length) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i> لا توجد طلبات معلقة</div>';
         return;
     }
 
-    container.innerHTML = requests.map(r => `
+    container.innerHTML = visibleRequests.map(r => `
         <div class="request-item" style="background: var(--bg-primary); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; border-right: 4px solid ${r['الحالة'] === 'معلق' ? 'var(--warning)' : 'var(--success)'}">
             <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
                 <strong>#${r['رقم الطلب'] || '—'}</strong>
