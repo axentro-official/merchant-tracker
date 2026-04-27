@@ -1041,6 +1041,65 @@ function cleanTaggedNote(noteValue) {
     return String(noteValue || '').replace(/^\[(?:TYPE|COLLECTION_TYPE):[^\]]+\]\s*/i, '').trim();
 }
 
+
+function normalizeComparable(value) {
+    return normalizeArabicDigits(value).toLowerCase();
+}
+
+function mergeUniqueRows(rows) {
+    const map = new Map();
+    (rows || []).forEach(row => {
+        if (!row) return;
+        const key = row.id || row['رقم المكنة'] || row['الرقم التسلسلي'] || JSON.stringify(row);
+        if (!map.has(String(key))) map.set(String(key), row);
+    });
+    return Array.from(map.values());
+}
+
+async function loadMachinesForMerchant(merchantId) {
+    const filters = [
+        ['رقم التاجر', merchantId],
+        ['رقم التاجر', currentMerchant?.['رقم التاجر']],
+        ['رقم الحساب', currentMerchant?.['رقم الحساب']],
+        ['اسم التاجر', currentMerchant?.['اسم التاجر']]
+    ].filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== '');
+
+    const results = [];
+    for (const [column, value] of filters) {
+        const { data, error } = await supabaseClient.from('machines').select('*').eq(column, value);
+        if (error) {
+            console.warn(`تعذر تحميل المكن باستخدام ${column}:`, error.message || error);
+            continue;
+        }
+        results.push(...(data || []));
+    }
+
+    return mergeUniqueRows(results).sort((a, b) => extractSequence(a['رقم المكنة']) - extractSequence(b['رقم المكنة']));
+}
+
+function getBestMachineForTransfer(transferRow) {
+    const machines = currentMachines || [];
+    if (!machines.length) return null;
+
+    const transferMachineCode = normalizeComparable(transferRow?.['رقم المكنة']);
+    if (transferMachineCode) {
+        const matchedByCode = machines.find(machine =>
+            normalizeComparable(machine['رقم المكنة']) === transferMachineCode ||
+            normalizeComparable(machine['الرقم التسلسلي']) === transferMachineCode
+        );
+        if (matchedByCode) return matchedByCode;
+    }
+
+    const activeMachine = machines.find(machine => ['نشط', 'نشطة'].includes(String(machine['الحالة'] || '').trim()));
+    return activeMachine || machines[0];
+}
+
+function getTransferMachineDisplay(transferRow) {
+    const machine = getBestMachineForTransfer(transferRow);
+    if (machine) return machine['الرقم التسلسلي'] || machine['رقم المكنة'] || 'بدون مكنة';
+    return transferRow?.['رقم المكنة'] || 'بدون مكنة';
+}
+
 function parseDateRange() {
     const from = document.getElementById('filterFromDate')?.value || '';
     const to = document.getElementById('filterToDate')?.value || '';
@@ -1106,7 +1165,7 @@ function renderMerchantInfo(merchant) {
 async function loadMerchantData(merchantId) {
     try {
         const range = parseDateRange();
-        const machineQuery = supabaseClient.from('machines').select('*').eq('رقم التاجر', merchantId);
+        const machinesPromise = loadMachinesForMerchant(merchantId);
         let transferQuery = supabaseClient.from('transfers').select('*').eq('رقم التاجر', merchantId);
         let collectionQuery = supabaseClient.from('collections').select('*').eq('رقم التاجر', merchantId);
         let requestQuery = supabaseClient.from('requests').select('*').eq('رقم التاجر', merchantId);
@@ -1120,12 +1179,11 @@ async function loadMerchantData(merchantId) {
             collectionQuery = collectionQuery.lte('التاريخ', range.to);
             requestQuery = requestQuery.lte('التاريخ', range.to);
         }
-        const [machinesRes, transfersRes, collectionsRes, requestsRes] = await Promise.all([machineQuery, transferQuery, collectionQuery, requestQuery]);
-        if (machinesRes.error) throw machinesRes.error;
+        const [machinesData, transfersRes, collectionsRes, requestsRes] = await Promise.all([machinesPromise, transferQuery, collectionQuery, requestQuery]);
         if (transfersRes.error) throw transfersRes.error;
         if (collectionsRes.error) throw collectionsRes.error;
         if (requestsRes.error) throw requestsRes.error;
-        currentMachines = [...(machinesRes.data || [])].sort((a, b) => extractSequence(a['رقم المكنة']) - extractSequence(b['رقم المكنة']));
+        currentMachines = machinesData || [];
         const transfers = sortByDateTimeAsc(transfersRes.data || []);
         const collections = sortByDateTimeAsc(collectionsRes.data || []);
         const requests = sortByDateTimeAsc(requestsRes.data || []);
@@ -1189,7 +1247,7 @@ function renderTransfersTable(transfers) {
             <td>${t['التاريخ'] || '—'}</td>
             <td>${t['الوقت'] || '—'}</td>
             <td>${extractTaggedType(t['ملاحظات']) || t['نوع التحويل'] || '—'}</td>
-            <td>${t['رقم المكنة'] || 'بدون مكنة'}</td>
+            <td>${getTransferMachineDisplay(t)}</td>
             <td class="amount-negative">${formatMoney(t['قيمة التحويل'])}</td>
         </tr>
     `).join('');
