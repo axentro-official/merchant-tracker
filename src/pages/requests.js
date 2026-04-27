@@ -417,6 +417,66 @@ async function generateTransferReference() {
     return await generateNextCode(supabase, 'transfers', 'الرقم المرجعي', { prefix: 'TRF', pad: 5 });
 }
 
+function uniqueNonEmpty(values) {
+    return [...new Set((values || []).map(v => String(v ?? '').trim()).filter(Boolean))];
+}
+
+async function resolveMachineCodeForRequest(request) {
+    const directMachineCode = String(request?.['رقم المكنة'] || '').trim();
+    if (directMachineCode) return directMachineCode;
+
+    const merchantCandidates = uniqueNonEmpty([
+        request?.['رقم التاجر'],
+        request?.merchant_id,
+        request?.normalizedMerchantCode,
+        request?.['merchant_number']
+    ]);
+
+    const accountCandidates = uniqueNonEmpty([
+        request?.['رقم الحساب'],
+        request?.normalizedAccountNumber,
+        request?.account_number
+    ]);
+
+    const merchantNameCandidates = uniqueNonEmpty([
+        request?.['اسم التاجر'],
+        request?.normalizedMerchantName
+    ]);
+
+    try {
+        const orParts = [];
+        merchantCandidates.forEach(value => orParts.push(`رقم التاجر.eq.${value}`));
+        accountCandidates.forEach(value => orParts.push(`رقم الحساب.eq.${value}`));
+        merchantNameCandidates.forEach(value => orParts.push(`اسم التاجر.eq.${value}`));
+
+        if (!orParts.length) return '';
+
+        const { data, error } = await supabase
+            .from('machines')
+            .select('"رقم المكنة", "الحالة", created_at')
+            .or(orParts.join(','));
+
+        if (error) {
+            console.warn('تعذر جلب المكنة المرتبطة بالطلب:', error.message);
+            return '';
+        }
+
+        const machines = (data || [])
+            .filter(machine => String(machine['رقم المكنة'] || '').trim())
+            .sort((a, b) => {
+                const aActive = ['نشط', 'نشطة'].includes(String(a['الحالة'] || '').trim()) ? 0 : 1;
+                const bActive = ['نشط', 'نشطة'].includes(String(b['الحالة'] || '').trim()) ? 0 : 1;
+                if (aActive !== bActive) return aActive - bActive;
+                return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+            });
+
+        return machines[0]?.['رقم المكنة'] || '';
+    } catch (error) {
+        console.warn('خطأ أثناء تحديد مكنة الطلب:', error);
+        return '';
+    }
+}
+
 async function insertTransferFromRequest(transferData) {
     let lastError = null;
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -450,6 +510,8 @@ export async function convertRequest(requestId) {
 
     showConfirm(`تحويل الطلب "${request['رقم الطلب']}" إلى تحويل تلقائي؟`, async () => {
         try {
+            const resolvedMachineCode = await resolveMachineCodeForRequest(request);
+
             const transferData = {
                 'رقم التاجر': request['رقم التاجر'],
                 'اسم التاجر': request.normalizedMerchantName || request['اسم التاجر'],
@@ -457,6 +519,7 @@ export async function convertRequest(requestId) {
                 'اسم النشاط': request.normalizedActivityName || request['اسم النشاط'],
                 'نوع التحويل': normalizeRequestTransferType(request['نوع الطلب']),
                 'قيمة التحويل': request['المبلغ'],
+                'رقم المكنة': resolvedMachineCode || null,
                 'ملاحظات': `تحويل تلقائي من طلب: ${request['رقم الطلب']}`,
                 'التاريخ': getNowDate(),
                 'الوقت': getNowTime12h(),
