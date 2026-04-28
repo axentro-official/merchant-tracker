@@ -1077,6 +1077,32 @@ async function loadMachinesForMerchant(merchantId) {
     return mergeUniqueRows(results).sort((a, b) => extractSequence(a['رقم المكنة']) - extractSequence(b['رقم المكنة']));
 }
 
+
+async function loadRowsForMerchant(tableName, merchantId, range = {}) {
+    const filters = [
+        ['رقم التاجر', merchantId],
+        ['رقم التاجر', currentMerchant?.['رقم التاجر']],
+        ['رقم الحساب', currentMerchant?.['رقم الحساب']],
+        ['اسم التاجر', currentMerchant?.['اسم التاجر']]
+    ].filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== '');
+
+    const results = [];
+    for (const [column, value] of filters) {
+        let query = supabaseClient.from(tableName).select('*').eq(column, value);
+        if (range.from) query = query.gte('التاريخ', range.from);
+        if (range.to) query = query.lte('التاريخ', range.to);
+
+        const { data, error } = await query;
+        if (error) {
+            console.warn(`تعذر تحميل ${tableName} باستخدام ${column}:`, error.message || error);
+            continue;
+        }
+        results.push(...(data || []));
+    }
+
+    return mergeUniqueRows(results);
+}
+
 function getBestMachineForTransfer(transferRow) {
     const machines = currentMachines || [];
     if (!machines.length) return null;
@@ -1165,28 +1191,17 @@ function renderMerchantInfo(merchant) {
 async function loadMerchantData(merchantId) {
     try {
         const range = parseDateRange();
-        const machinesPromise = loadMachinesForMerchant(merchantId);
-        let transferQuery = supabaseClient.from('transfers').select('*').eq('رقم التاجر', merchantId);
-        let collectionQuery = supabaseClient.from('collections').select('*').eq('رقم التاجر', merchantId);
-        let requestQuery = supabaseClient.from('requests').select('*').eq('رقم التاجر', merchantId);
-        if (range.from) {
-            transferQuery = transferQuery.gte('التاريخ', range.from);
-            collectionQuery = collectionQuery.gte('التاريخ', range.from);
-            requestQuery = requestQuery.gte('التاريخ', range.from);
-        }
-        if (range.to) {
-            transferQuery = transferQuery.lte('التاريخ', range.to);
-            collectionQuery = collectionQuery.lte('التاريخ', range.to);
-            requestQuery = requestQuery.lte('التاريخ', range.to);
-        }
-        const [machinesData, transfersRes, collectionsRes, requestsRes] = await Promise.all([machinesPromise, transferQuery, collectionQuery, requestQuery]);
-        if (transfersRes.error) throw transfersRes.error;
-        if (collectionsRes.error) throw collectionsRes.error;
-        if (requestsRes.error) throw requestsRes.error;
+        const [machinesData, transfersData, collectionsData, requestsData] = await Promise.all([
+            loadMachinesForMerchant(merchantId),
+            loadRowsForMerchant('transfers', merchantId, range),
+            loadRowsForMerchant('collections', merchantId, range),
+            loadRowsForMerchant('requests', merchantId, range)
+        ]);
+
         currentMachines = machinesData || [];
-        const transfers = sortByDateTimeAsc(transfersRes.data || []);
-        const collections = sortByDateTimeAsc(collectionsRes.data || []);
-        const requests = sortByDateTimeAsc(requestsRes.data || []);
+        const transfers = sortByDateTimeAsc(transfersData || []);
+        const collections = sortByDateTimeAsc(collectionsData || []);
+        const requests = sortByDateTimeAsc(requestsData || []);
         currentTransfers = transfers;
         currentCollections = collections;
         document.getElementById('machinesCount').textContent = currentMachines.length;
