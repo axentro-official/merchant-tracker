@@ -1584,7 +1584,9 @@
                 <button class="nav-link" data-page="database"><i class="fas fa-database"></i> قاعدة البيانات</button>
             </div>
             <div class="navbar-actions">
-                <button class="icon-btn" onclick="refreshCurrentPage()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
+                <button class="icon-btn" onclick="refreshCurrentPage()" title="تحديث البيانات الحالية"><i class="fas fa-sync-alt"></i></button>
+                <button class="icon-btn" onclick="exportCurrentPageCSV()" title="تصدير الصفحة الحالية Excel/CSV"><i class="fas fa-file-csv"></i></button>
+                <button class="icon-btn" onclick="exportFullBackup()" title="نسخة احتياطية كاملة JSON"><i class="fas fa-download"></i></button>
                 <button class="icon-btn" onclick="logout()" title="تسجيل خروج"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </nav>
@@ -1816,6 +1818,9 @@
 
     window.refreshCurrentPage = async (silent = false) => {
         const scrollY = window.scrollY;
+        const refreshButtons = Array.from(document.querySelectorAll('button[onclick^="refreshCurrentPage"]'));
+        refreshButtons.forEach(btn => { btn.classList.add('refreshing'); btn.disabled = true; });
+        window.dispatchEvent(new CustomEvent('axentro:refresh:start', { detail: { page: window.currentSectionName || 'dashboard' } }));
         const id = window.currentSectionName ? `section-${window.currentSectionName}` : (document.querySelector('#dashboardSections section[style*="display: block"]')?.id || 'section-dashboard');
         try {
             if (!silent) window.showToast('جاري تحديث البيانات...', 'info');
@@ -1842,11 +1847,13 @@
             } else if (id === 'section-database') {
                 await discoverDatabase();
             }
+            window.dispatchEvent(new CustomEvent('axentro:refresh:done', { detail: { page: window.currentSectionName || 'dashboard' } }));
             if (!silent) window.showToast('تم تحديث البيانات بنجاح', 'success');
         } catch (error) {
             console.error('Refresh Error:', error);
             if (!silent) window.showToast('تعذر تحديث البيانات', 'error');
         } finally {
+            refreshButtons.forEach(btn => { btn.classList.remove('refreshing'); btn.disabled = false; });
             setTimeout(() => window.scrollTo(0, scrollY), 50);
         }
     };
@@ -1888,7 +1895,7 @@
         const container = document.getElementById('aiMessages');
         const msgDiv = document.createElement('div');
         msgDiv.className = `ai-message ${role}`;
-        msgDiv.innerHTML = String(content || '').replace(/\n/g, '<br>');
+        msgDiv.textContent = String(content || '');
         container.appendChild(msgDiv);
         container.scrollTop = container.scrollHeight;
     };
@@ -2524,6 +2531,72 @@ window.animateValue = function(elementId, start, end, duration) {
         if (progress < 1) requestAnimationFrame(update);
     }
     requestAnimationFrame(update);
+};
+
+
+function axentroPad(value) { return String(value).padStart(2, '0'); }
+function axentroStamp() {
+    const d = new Date();
+    return `${d.getFullYear()}-${axentroPad(d.getMonth()+1)}-${axentroPad(d.getDate())}_${axentroPad(d.getHours())}-${axentroPad(d.getMinutes())}`;
+}
+function downloadTextFile(filename, content, mimeType = 'text/plain;charset=utf-8') {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+function csvEscape(value) {
+    const text = value === null || value === undefined ? '' : String(value).replace(/\r?\n/g, ' ');
+    return `"${text.replace(/"/g, '""')}"`;
+}
+function rowsToCSV(rows) {
+    if (!rows || !rows.length) return '';
+    const headers = Array.from(rows.reduce((set, row) => {
+        Object.keys(row || {}).forEach(k => set.add(k));
+        return set;
+    }, new Set()));
+    const lines = [headers.map(csvEscape).join(',')];
+    rows.forEach(row => lines.push(headers.map(h => csvEscape(row?.[h])).join(',')));
+    return '\ufeff' + lines.join('\n');
+}
+window.exportFullBackup = async function() {
+    if (!window.supabaseClient) return window.showToast('قاعدة البيانات غير جاهزة', 'error');
+    const tables = ['merchants','machines','transfers','collections','requests','archives','logs','settings'];
+    const backup = { app: 'Axentro', version: 'free-tier-backup-v1', exportedAt: new Date().toISOString(), tables: {} };
+    try {
+        window.showToast('جاري تجهيز النسخة الاحتياطية...', 'info');
+        for (const table of tables) {
+            const { data, error } = await supabaseClient.from(table).select('*');
+            backup.tables[table] = error ? { error: error.message, rows: [] } : { rows: data || [] };
+        }
+        downloadTextFile(`axentro-backup-${axentroStamp()}.json`, JSON.stringify(backup, null, 2), 'application/json;charset=utf-8');
+        window.showToast('تم تحميل النسخة الاحتياطية', 'success');
+    } catch (error) {
+        console.error('Backup Error:', error);
+        window.showToast('تعذر إنشاء النسخة الاحتياطية', 'error');
+    }
+};
+window.exportCurrentPageCSV = async function() {
+    if (!window.supabaseClient) return window.showToast('قاعدة البيانات غير جاهزة', 'error');
+    const page = window.currentSectionName || 'dashboard';
+    const map = { merchants:'merchants', machines:'machines', transfers:'transfers', collections:'collections', requests:'requests', archive:'archives' };
+    const table = map[page];
+    if (!table) return window.showToast('هذه الصفحة لا تحتوي جدول مباشر للتصدير', 'warning');
+    try {
+        const { data, error } = await supabaseClient.from(table).select('*');
+        if (error) throw error;
+        if (!data?.length) return window.showToast('لا توجد بيانات للتصدير', 'warning');
+        downloadTextFile(`axentro-${table}-${axentroStamp()}.csv`, rowsToCSV(data), 'text/csv;charset=utf-8');
+        window.showToast('تم تصدير البيانات بنجاح', 'success');
+    } catch (error) {
+        console.error('CSV Export Error:', error);
+        window.showToast('تعذر تصدير البيانات', 'error');
+    }
 };
 
 window.refreshAll = async function() {
