@@ -1329,6 +1329,18 @@
     }
     @keyframes shake { 0%,100%{transform:translateX(0)} 25%,75%{transform:translateX(-8px)} 50%{transform:translateX(8px)} }
     .shake { animation: shake 0.5s ease; }
+
+        .settings-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-bottom:20px; }
+        .settings-card, .about-card { background: var(--bg-card); border:1px solid var(--border-color); border-radius: var(--radius-lg); padding:20px; }
+        .settings-card label { display:block; margin-bottom:8px; color: var(--text-secondary); font-size:12px; font-weight:800; }
+        .settings-card .form-input { padding:12px 14px; }
+        .logs-toolbar { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+        .logs-toolbar .form-input, .logs-toolbar .form-select { max-width:220px; }
+        .license-banner { display:none; margin-bottom:16px; padding:14px 18px; border-radius: var(--radius-md); background: rgba(245,158,11,.13); border:1px solid rgba(245,158,11,.35); color: var(--warning); font-weight:800; }
+        .license-banner.show { display:block; }
+        .refreshing i { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
 </style>
 </head>
 <body>
@@ -1581,6 +1593,9 @@
                 <button class="nav-link" data-page="requests"><i class="fas fa-file-alt"></i> الطلبات</button>
                 <button class="nav-link" data-page="archive"><i class="fas fa-archive"></i> الأرشيف</button>
                 <button class="nav-link" data-page="statement"><i class="fas fa-receipt"></i> كشف الحساب</button>
+                <button class="nav-link" data-page="logs"><i class="fas fa-history"></i> السجل</button>
+                <button class="nav-link" data-page="settings"><i class="fas fa-cog"></i> الإعدادات</button>
+                <button class="nav-link" data-page="about"><i class="fas fa-info-circle"></i> حول النظام</button>
                 <button class="nav-link" data-page="database"><i class="fas fa-database"></i> قاعدة البيانات</button>
             </div>
             <div class="navbar-actions">
@@ -1743,6 +1758,53 @@
                     </div>
                 </div>
             </section>
+
+            <section id="section-logs" style="display:none;">
+                <div class="merchants-section">
+                    <div class="table-actions">
+                        <button class="btn-add" onclick="loadLogs()"><i class="fas fa-sync-alt"></i> تحديث السجل</button>
+                        <button class="icon-btn" onclick="exportLogsCSV()" title="تصدير السجل CSV"><i class="fas fa-file-csv"></i></button>
+                    </div>
+                    <div class="logs-toolbar">
+                        <input type="date" id="logsFromDate" class="form-input" title="من تاريخ">
+                        <input type="date" id="logsToDate" class="form-input" title="إلى تاريخ">
+                        <input type="text" id="logsSearch" class="form-input" placeholder="بحث بالمرجع/التاجر/التفاصيل">
+                        <select id="logsType" class="form-select"><option value="">كل الأنواع</option><option value="إضافة">إضافة</option><option value="تعديل">تعديل</option><option value="حذف">حذف</option><option value="طلب">طلب</option><option value="تحويل">تحويل</option><option value="تحصيل">تحصيل</option><option value="مكنة">مكنة</option><option value="تاجر">تاجر</option></select>
+                    </div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>الرقم المرجعي</th><th>التفاصيل</th><th>المستخدم</th></tr></thead><tbody id="logsTableBody"><tr><td colspan="7" class="empty-state">اضغط تحديث السجل</td></tr></tbody></table></div>
+                </div>
+            </section>
+
+            <section id="section-settings" style="display:none;">
+                <div class="merchants-section">
+                    <div id="licenseBanner" class="license-banner"><i class="fas fa-exclamation-triangle"></i> نسخة غير مفعلة: أضف License Key من الإعدادات.</div>
+                    <div class="section-header"><i class="fas fa-cog"></i><h3>إعدادات النظام</h3></div>
+                    <div class="settings-grid">
+                        <div class="settings-card"><label>اسم الشركة</label><input id="setting_company_name" class="form-input" placeholder="Axentro"></div>
+                        <div class="settings-card"><label>إيميل الدعم</label><input id="setting_support_email" class="form-input" placeholder="support@example.com"></div>
+                        <div class="settings-card"><label>رقم الدعم</label><input id="setting_support_phone" class="form-input" placeholder="01xxxxxxxxx"></div>
+                        <div class="settings-card"><label>رابط QR / الموقع</label><input id="setting_qr_url" class="form-input" placeholder="https://..."></div>
+                        <div class="settings-card"><label>حد تحذير المديونية</label><input id="setting_debt_warning" type="number" class="form-input" placeholder="15000"></div>
+                        <div class="settings-card"><label>حد خطر المديونية</label><input id="setting_debt_danger" type="number" class="form-input" placeholder="50000"></div>
+                        <div class="settings-card"><label>License Key</label><input id="setting_license_key" class="form-input" placeholder="AXENTRO-FREE-CLIENT"></div>
+                    </div>
+                    <div class="table-actions"><button class="btn-add" onclick="saveSettings()"><i class="fas fa-save"></i> حفظ الإعدادات</button><button class="icon-btn" onclick="loadSettings()" title="إعادة تحميل"><i class="fas fa-sync-alt"></i></button></div>
+                </div>
+            </section>
+
+            <section id="section-about" style="display:none;">
+                <div class="about-card">
+                    <h2><i class="fas fa-shield-alt"></i> Axentro Merchant Tracker</h2>
+                    <p style="color:var(--text-secondary);margin-top:10px;">نسخة Free-Tier Production: تعمل على GitHub Pages + Supabase Free + Google Apps Script بدون اشتراكات مدفوعة.</p>
+                    <div class="settings-grid" style="margin-top:20px;">
+                        <div class="settings-card"><strong>الإصدار</strong><br><span id="aboutVersion">Production Free Tier - Phase 3</span></div>
+                        <div class="settings-card"><strong>البيانات</strong><br>Supabase</div>
+                        <div class="settings-card"><strong>الإيميلات</strong><br>Google Apps Script</div>
+                        <div class="settings-card"><strong>التصدير</strong><br>CSV / JSON Backup</div>
+                    </div>
+                    <div class="table-actions"><button class="btn-add" onclick="exportFullBackup()"><i class="fas fa-download"></i> تحميل نسخة احتياطية</button><button class="btn-add" onclick="window.print()"><i class="fas fa-print"></i> طباعة بيانات النظام</button></div>
+                </div>
+            </section>
         </div>
 
         <footer id="globalFooter" class="app-footer" style="display:none;">
@@ -1769,6 +1831,8 @@
     import { initRequestsPage, loadRequests, convertRequest, deleteRequest } from './src/pages/requests.js';
     import { initStatementPage, loadMerchantsForStatement, loadStatement } from './src/pages/statement.js';
     import { initDatabasePage, discoverDatabase, refreshSelectedTable } from './src/pages/database.js';
+    import { initSettingsPage, loadSettings, saveSettings, applyRuntimeSettings } from './src/pages/settings.js';
+    import { initLogsPage, loadLogs, exportLogsCSV } from './src/pages/logs.js';
     import { processAiQuery } from './src/services/aiService.js';
 
     window.loadMerchants = loadMerchants;
@@ -1784,6 +1848,10 @@
     window.loadStatement = loadStatement;
     window.discoverDatabase = discoverDatabase;
     window.refreshSelectedTable = refreshSelectedTable;
+    window.loadSettings = loadSettings;
+    window.saveSettings = saveSettings;
+    window.loadLogs = loadLogs;
+    window.exportLogsCSV = exportLogsCSV;
 
     window.navigateToPage = (page) => { if (window.showSection) window.showSection(page); };
 
@@ -1846,6 +1914,10 @@
                 if (select && select.value && window.loadStatement) await window.loadStatement();
             } else if (id === 'section-database') {
                 await discoverDatabase();
+            } else if (id === 'section-settings') {
+                await loadSettings();
+            } else if (id === 'section-logs') {
+                await loadLogs();
             }
             window.dispatchEvent(new CustomEvent('axentro:refresh:done', { detail: { page: window.currentSectionName || 'dashboard' } }));
             if (!silent) window.showToast('تم تحديث البيانات بنجاح', 'success');
@@ -1868,6 +1940,9 @@
         initRequestsPage();
         initStatementPage();
         initDatabasePage();
+        initSettingsPage();
+        initLogsPage();
+        applyRuntimeSettings();
     };
 
     window.sendAiMessage = async () => {
@@ -2433,7 +2508,7 @@ function showMainApp() {
 
 function showSection(sectionName) {
     window.currentSectionName = sectionName;
-    const sections = ['dashboard','merchants','machines','transfers','collections','requests','archive','statement','database'];
+    const sections = ['dashboard','merchants','machines','transfers','collections','requests','archive','statement','database','logs','settings','about'];
     sections.forEach(s => {
         const el = document.getElementById(`section-${s}`);
         if (el) el.style.display = 'none';
@@ -2584,7 +2659,7 @@ window.exportFullBackup = async function() {
 window.exportCurrentPageCSV = async function() {
     if (!window.supabaseClient) return window.showToast('قاعدة البيانات غير جاهزة', 'error');
     const page = window.currentSectionName || 'dashboard';
-    const map = { merchants:'merchants', machines:'machines', transfers:'transfers', collections:'collections', requests:'requests', archive:'archives' };
+    const map = { merchants:'merchants', machines:'machines', transfers:'transfers', collections:'collections', requests:'requests', archive:'archives', logs:'logs' };
     const table = map[page];
     if (!table) return window.showToast('هذه الصفحة لا تحتوي جدول مباشر للتصدير', 'warning');
     try {
