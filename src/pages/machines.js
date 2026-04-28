@@ -18,6 +18,11 @@ function normalizeMachineStatus(value) {
   return map[raw] || 'نشط';
 }
 
+
+function isMerchantActive(merchant) {
+  return String(merchant?.['الحالة'] || '').trim() === 'نشط';
+}
+
 function extractSequence(code) {
   const match = String(code || '').match(/(\d+)(?!.*\d)/);
   return match ? parseInt(match[1], 10) : 0;
@@ -232,6 +237,10 @@ export async function saveMachine() {
     const merchantId = document.getElementById('machMerchantId').value;
     const merchant = merchantsList.find(item => item.id === merchantId);
     if (!merchant) return showToast('يرجى اختيار التاجر من القائمة أو نتائج البحث', 'warning');
+    const normalizedStatus = normalizeMachineStatus(document.getElementById('machStatus').value || 'نشط');
+    if (!isMerchantActive(merchant) && normalizedStatus === 'نشط') {
+      return showToast('⛔ لا يمكن تشغيل أو إضافة مكنة نشطة لتاجر غير نشط. فعّل التاجر أولاً أو احفظ المكنة كغير نشطة/صيانة.', 'error');
+    }
     const serial = document.getElementById('machSerial').value.trim();
     if (!serial) return showToast('الرقم التسلسلي مطلوب', 'warning');
     const duplicateSerial = currentMachines.find(item => item['الرقم التسلسلي'] === serial && item.id !== id);
@@ -244,7 +253,7 @@ export async function saveMachine() {
       'رقم الحساب': merchant['رقم الحساب'] || '',
       'الرقم التسلسلي': serial,
       'التارجت الشهري': parseFloat(document.getElementById('machTarget').value || '0') || 0,
-      'الحالة': normalizeMachineStatus(document.getElementById('machStatus').value || 'نشط'),
+      'الحالة': normalizedStatus,
       'ملاحظات': document.getElementById('machNotes').value.trim()
     };
 

@@ -111,6 +111,24 @@ function safeText(value) {
     return escapeHtml(value ?? '-');
 }
 
+
+function normalizeStatus(value) {
+    return String(value || '').trim();
+}
+
+function isMerchantActive(merchant) {
+    return normalizeStatus(merchant?.['الحالة']) === 'نشط';
+}
+
+function isMachineActive(machine) {
+    return ['نشط', 'نشطة'].includes(normalizeStatus(machine?.['الحالة']));
+}
+
+function showRequestBlockedToast(reason, details = '') {
+    const suffix = details ? ` — ${details}` : '';
+    showToast(`⛔ لا يمكن تحويل الطلب${suffix}. ${reason}`, 'error');
+}
+
 function getMerchantIdentityMap() {
     const map = new Map();
     merchantsList.forEach(merchant => {
@@ -135,7 +153,7 @@ export async function loadRequests() {
 
         const { data: merchants } = await supabase
             .from('merchants')
-            .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+            .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "الحالة"');
 
         merchantsList = merchants || [];
 
@@ -271,7 +289,7 @@ export async function openRequestModal() {
     if (!merchantsList.length) {
         const { data } = await supabase
             .from('merchants')
-            .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط"');
+            .select('id, "رقم التاجر", "اسم التاجر", "رقم الحساب", "اسم النشاط", "الحالة"');
 
         merchantsList = data || [];
     }
@@ -463,12 +481,8 @@ async function resolveMachineCodeForRequest(request) {
 
         const machines = (data || [])
             .filter(machine => String(machine['رقم المكنة'] || '').trim())
-            .sort((a, b) => {
-                const aActive = ['نشط', 'نشطة'].includes(String(a['الحالة'] || '').trim()) ? 0 : 1;
-                const bActive = ['نشط', 'نشطة'].includes(String(b['الحالة'] || '').trim()) ? 0 : 1;
-                if (aActive !== bActive) return aActive - bActive;
-                return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-            });
+            .filter(isMachineActive)
+            .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
         return machines[0]?.['رقم المكنة'] || '';
     } catch (error) {
@@ -510,7 +524,23 @@ export async function convertRequest(requestId) {
 
     showConfirm(`تحويل الطلب "${request['رقم الطلب']}" إلى تحويل تلقائي؟`, async () => {
         try {
+            const merchant = merchantsList.find(m =>
+                m.id === request['رقم التاجر'] ||
+                m['رقم التاجر'] === request['رقم التاجر'] ||
+                m['رقم الحساب'] === request['رقم الحساب'] ||
+                m['رقم الحساب'] === request.normalizedAccountNumber
+            );
+
+            if (merchant && !isMerchantActive(merchant)) {
+                showRequestBlockedToast('التاجر غير نشط', `حالة التاجر: ${merchant['الحالة'] || 'غير محددة'}`);
+                return;
+            }
+
             const resolvedMachineCode = await resolveMachineCodeForRequest(request);
+            if (!resolvedMachineCode) {
+                showRequestBlockedToast('لا توجد مكنة نشطة مرتبطة بهذا التاجر. فعّل مكنة أو أضف مكنة نشطة أولاً');
+                return;
+            }
 
             const transferData = {
                 'رقم التاجر': request['رقم التاجر'],

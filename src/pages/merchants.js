@@ -18,6 +18,20 @@ function sortMerchants(list) {
   return sortMerchantsByCode(list || []);
 }
 
+function isInactiveStatus(status) {
+  return String(status || '').trim() !== 'نشط';
+}
+
+async function deactivateMerchantMachinesIfNeeded(merchantId, nextStatus) {
+  if (!merchantId || !isInactiveStatus(nextStatus)) return;
+  const { error } = await supabase
+    .from('machines')
+    .update({ 'الحالة': 'غير نشط' })
+    .eq('رقم التاجر', merchantId)
+    .in('الحالة', ['نشط', 'نشطة']);
+  if (error) throw error;
+}
+
 export async function loadMerchants() {
   supabase = supabase || window.supabaseClient;
   if (!supabase) return;
@@ -154,8 +168,9 @@ export async function saveMerchant() {
     }
 
     await safeMutateRecord(supabase, 'merchants', record, { id });
+    await deactivateMerchantMachinesIfNeeded(id || record['رقم التاجر'], record['الحالة']);
 
-    showToast(id ? 'تم تحديث التاجر' : 'تم إضافة التاجر', 'success');
+    showToast(id ? (isInactiveStatus(record['الحالة']) ? 'تم تحديث التاجر وإيقاف المكن المرتبطة به' : 'تم تحديث التاجر') : 'تم إضافة التاجر', 'success');
     closeMerchantModal();
     await loadMerchants();
     window.populateMerchantDatalists?.();
