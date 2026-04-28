@@ -18,7 +18,32 @@ function extractSequenceFromCode(code, { prefix, year = currentYearSuffix() }) {
   return fallback ? parseInt(fallback[1], 10) || 0 : 0;
 }
 
+function getCodeRpcName(tableName, prefix) {
+  const normalizedTable = String(tableName || '').trim();
+  const normalizedPrefix = String(prefix || '').trim().toUpperCase();
+  const map = {
+    'merchants:MER': 'axentro_next_merchant_code',
+    'machines:MAC': 'axentro_next_machine_code',
+    'transfers:TRF': 'axentro_next_transfer_code',
+    'collections:COL': 'axentro_next_collection_code',
+    'requests:REQ': 'axentro_next_request_code'
+  };
+  return map[`${normalizedTable}:${normalizedPrefix}`] || '';
+}
+
 export async function generateNextCode(supabase, tableName, columnName, { prefix, pad = 3, year = currentYearSuffix() }) {
+  const rpcName = getCodeRpcName(tableName, prefix);
+
+  if (rpcName) {
+    try {
+      const { data, error } = await supabase.rpc(rpcName);
+      if (!error && data) return String(data).trim();
+      if (error) console.warn(`RPC ${rpcName} fallback:`, error.message || error);
+    } catch (rpcError) {
+      console.warn(`RPC ${rpcName} unavailable, using frontend fallback:`, rpcError);
+    }
+  }
+
   const { data, error } = await supabase.from(tableName).select(`"${columnName}"`);
   if (error) throw error;
 
@@ -29,6 +54,7 @@ export async function generateNextCode(supabase, tableName, columnName, { prefix
 
   return `${prefix}-${year}-${String(next).padStart(pad, '0')}`;
 }
+
 
 export async function generateUniqueCodeWithRetry(supabase, tableName, columnName, config, maxRetries = 4) {
   let lastError = null;
