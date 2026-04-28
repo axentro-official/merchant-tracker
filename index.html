@@ -1340,6 +1340,19 @@
         .license-banner.show { display:block; }
         .refreshing i { animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .license-lock-overlay { position: fixed; inset: 0; z-index: 25000; display:none; align-items:center; justify-content:center; padding:20px; background: radial-gradient(circle at top right, rgba(37,99,235,.16), transparent 34%), rgba(2,6,23,.88); backdrop-filter: blur(14px); }
+        .license-lock-overlay.show { display:flex; }
+        .license-lock-card { width:min(560px, 94vw); background: var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:28px; box-shadow: var(--shadow-xl); text-align:right; }
+        .license-lock-icon { width:72px; height:72px; border-radius:22px; display:grid; place-items:center; background: linear-gradient(135deg,var(--primary),var(--secondary)); color:#fff; font-size:30px; margin-bottom:18px; }
+        .license-lock-card h2 { font-size:24px; margin-bottom:10px; color:var(--text-primary); }
+        .license-lock-card p { color:var(--text-secondary); line-height:1.9; margin-bottom:18px; }
+        .license-status-box { border:1px solid var(--border-color); background:var(--bg-tertiary); border-radius:16px; padding:14px; margin:14px 0; color:var(--text-secondary); font-weight:800; }
+        .license-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
+        .license-actions .btn { flex:1; min-width:160px; justify-content:center; }
+        .license-badge { display:inline-flex; gap:6px; align-items:center; padding:6px 12px; border-radius:999px; font-weight:900; font-size:12px; border:1px solid rgba(255,255,255,.12); }
+        .license-badge.active { color:var(--success); background:rgba(16,185,129,.12); }
+        .license-badge.warning { color:var(--warning); background:rgba(245,158,11,.12); }
+        .license-badge.danger { color:var(--danger); background:rgba(239,68,68,.12); }
 
 </style>
 </head>
@@ -1367,6 +1380,23 @@
         <div class="confirm-buttons">
             <button class="confirm-btn cancel" id="confirmCancelBtn">إلغاء</button>
             <button class="confirm-btn confirm" id="confirmOkBtn">تأكيد</button>
+        </div>
+    </div>
+</div>
+
+<div id="licenseLockOverlay" class="license-lock-overlay">
+    <div class="license-lock-card">
+        <div class="license-lock-icon"><i class="fas fa-key"></i></div>
+        <h2>تفعيل نسخة Axentro</h2>
+        <p>هذه النسخة مقفولة حتى يتم إدخال License Key صالح. استخدم المفتاح المخصص للعميل، ثم اضغط تفعيل.</p>
+        <div id="licenseStatusBox" class="license-status-box">لم يتم التحقق من الترخيص بعد.</div>
+        <div class="form-group">
+            <label>License Key</label>
+            <input id="licenseActivationInput" class="form-input" dir="ltr" placeholder="AXENTRO-CLIENT-001">
+        </div>
+        <div class="license-actions">
+            <button class="btn btn-primary" onclick="activateLicenseFromOverlay()"><i class="fas fa-unlock"></i> تفعيل النسخة</button>
+            <button class="btn btn-outline" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
         </div>
     </div>
 </div>
@@ -1602,7 +1632,9 @@
                 <button class="icon-btn" onclick="refreshCurrentPage()" title="تحديث البيانات الحالية"><i class="fas fa-sync-alt"></i></button>
                 <button class="icon-btn" onclick="exportCurrentPageCSV()" title="تصدير الصفحة الحالية Excel/CSV"><i class="fas fa-file-csv"></i></button>
                 <button class="icon-btn" onclick="exportFullBackup()" title="نسخة احتياطية كاملة JSON"><i class="fas fa-download"></i></button>
+                <button class="icon-btn" onclick="triggerRestoreBackup()" title="استعادة نسخة احتياطية JSON"><i class="fas fa-upload"></i></button>
                 <button class="icon-btn" onclick="logout()" title="تسجيل خروج"><i class="fas fa-sign-out-alt"></i></button>
+                <input id="backupRestoreInput" type="file" accept="application/json,.json" style="display:none">
             </div>
         </nav>
 
@@ -1786,7 +1818,11 @@
                         <div class="settings-card"><label>رابط QR / الموقع</label><input id="setting_qr_url" class="form-input" placeholder="https://..."></div>
                         <div class="settings-card"><label>حد تحذير المديونية</label><input id="setting_debt_warning" type="number" class="form-input" placeholder="15000"></div>
                         <div class="settings-card"><label>حد خطر المديونية</label><input id="setting_debt_danger" type="number" class="form-input" placeholder="50000"></div>
-                        <div class="settings-card"><label>License Key</label><input id="setting_license_key" class="form-input" placeholder="AXENTRO-FREE-CLIENT"></div>
+                        <div class="settings-card"><label>License Key</label><input id="setting_license_key" class="form-input" dir="ltr" placeholder="AXENTRO-FREE-CLIENT"></div>
+                        <div class="settings-card"><label>نوع الترخيص</label><select id="setting_license_plan" class="form-select"><option value="trial">تجريبي 7 أيام</option><option value="monthly">شهري</option><option value="yearly">سنوي</option><option value="lifetime">مدى الحياة</option></select></div>
+                        <div class="settings-card"><label>إيميل العميل</label><input id="setting_license_email" class="form-input" dir="ltr" placeholder="client@example.com"></div>
+                        <div class="settings-card"><label>تاريخ انتهاء الترخيص</label><input id="setting_license_expires_at" type="date" class="form-input"></div>
+                        <div class="settings-card"><label>حالة الترخيص</label><select id="setting_license_status" class="form-select"><option value="active">نشط</option><option value="trial">تجريبي</option><option value="expired">منتهي</option><option value="disabled">موقوف</option></select></div>
                     </div>
                     <div class="table-actions"><button class="btn-add" onclick="saveSettings()"><i class="fas fa-save"></i> حفظ الإعدادات</button><button class="icon-btn" onclick="loadSettings()" title="إعادة تحميل"><i class="fas fa-sync-alt"></i></button></div>
                 </div>
@@ -1802,7 +1838,7 @@
                         <div class="settings-card"><strong>الإيميلات</strong><br>Google Apps Script</div>
                         <div class="settings-card"><strong>التصدير</strong><br>CSV / JSON Backup</div>
                     </div>
-                    <div class="table-actions"><button class="btn-add" onclick="exportFullBackup()"><i class="fas fa-download"></i> تحميل نسخة احتياطية</button><button class="btn-add" onclick="window.print()"><i class="fas fa-print"></i> طباعة بيانات النظام</button></div>
+                    <div class="table-actions"><button class="btn-add" onclick="exportFullBackup()"><i class="fas fa-download"></i> تحميل نسخة احتياطية</button><button class="btn-add" onclick="triggerRestoreBackup()"><i class="fas fa-upload"></i> استعادة نسخة JSON</button><button class="btn-add" onclick="window.print()"><i class="fas fa-print"></i> طباعة بيانات النظام</button></div>
                 </div>
             </section>
         </div>
@@ -1834,6 +1870,7 @@
     import { initSettingsPage, loadSettings, saveSettings, applyRuntimeSettings } from './src/pages/settings.js';
     import { initLogsPage, loadLogs, exportLogsCSV } from './src/pages/logs.js';
     import { processAiQuery } from './src/services/aiService.js';
+    import { verifyCurrentLicense, activateLicense, renderLicenseState } from './src/services/licenseService.js';
 
     window.loadMerchants = loadMerchants;
     window.loadMachines = loadMachines;
@@ -1942,7 +1979,7 @@
         initDatabasePage();
         initSettingsPage();
         initLogsPage();
-        applyRuntimeSettings();
+        applyRuntimeSettings().then(() => window.enforceLicenseGate?.());
     };
 
     window.sendAiMessage = async () => {
@@ -2504,6 +2541,7 @@ function showMainApp() {
     document.getElementById('globalFooter').style.display = 'block';
     document.getElementById('mainApp').classList.add('visible');
     showSection('dashboard');
+    setTimeout(() => window.enforceLicenseGate?.(), 300);
 }
 
 function showSection(sectionName) {
@@ -2609,6 +2647,48 @@ window.animateValue = function(elementId, start, end, duration) {
 };
 
 
+
+window.enforceLicenseGate = async function() {
+    const overlay = document.getElementById('licenseLockOverlay');
+    const input = document.getElementById('licenseActivationInput');
+    const box = document.getElementById('licenseStatusBox');
+    if (!overlay || !window.supabaseClient) return;
+    try {
+        const result = await verifyCurrentLicense(window.supabaseClient, window.getRuntimeSettings?.() || {});
+        if (box) box.innerHTML = renderLicenseState(result);
+        if (input && result.licenseKey) input.value = result.licenseKey;
+        overlay.classList.toggle('show', !result.valid);
+        if (result.valid && result.warning && !window.__licenseWarningShown) {
+            window.__licenseWarningShown = true;
+            window.showToast(result.message, 'warning');
+        }
+        return result;
+    } catch (error) {
+        console.error('License check error:', error);
+        if (box) box.textContent = 'تعذر التحقق من الترخيص. تأكد من تنفيذ SQL الخاص بالترخيص.';
+        overlay.classList.add('show');
+        return { valid: false, reason: 'error' };
+    }
+};
+
+window.activateLicenseFromOverlay = async function() {
+    const key = document.getElementById('licenseActivationInput')?.value?.trim();
+    if (!key) return window.showToast('اكتب License Key أولاً', 'warning');
+    try {
+        const result = await activateLicense(window.supabaseClient, key);
+        if (!result.valid) {
+            document.getElementById('licenseStatusBox').innerHTML = renderLicenseState(result);
+            return window.showToast(result.message || 'License غير صالح', 'error');
+        }
+        if (window.loadSettings) await window.loadSettings(true);
+        await window.enforceLicenseGate();
+        window.showToast('تم تفعيل النسخة بنجاح', 'success');
+    } catch (error) {
+        console.error(error);
+        window.showToast('تعذر تفعيل الترخيص', 'error');
+    }
+};
+
 function axentroPad(value) { return String(value).padStart(2, '0'); }
 function axentroStamp() {
     const d = new Date();
@@ -2656,6 +2736,59 @@ window.exportFullBackup = async function() {
         window.showToast('تعذر إنشاء النسخة الاحتياطية', 'error');
     }
 };
+
+window.triggerRestoreBackup = function() {
+    const input = document.getElementById('backupRestoreInput');
+    if (!input) return window.showToast('عنصر الاستعادة غير موجود', 'error');
+    input.value = '';
+    input.click();
+};
+
+window.restoreBackupFromFile = async function(file) {
+    if (!window.supabaseClient) return window.showToast('قاعدة البيانات غير جاهزة', 'error');
+    if (!file) return;
+    const text = await file.text();
+    let backup;
+    try { backup = JSON.parse(text); } catch (_) { return window.showToast('ملف JSON غير صالح', 'error'); }
+    if (!backup || !backup.tables || typeof backup.tables !== 'object') return window.showToast('ملف النسخة الاحتياطية غير متوافق', 'error');
+    const tables = ['settings','merchants','machines','transfers','collections','requests','archives','logs'];
+    window.showConfirm('سيتم دمج بيانات النسخة الاحتياطية مع قاعدة البيانات الحالية. هل تريد المتابعة؟', async () => {
+        try {
+            window.showToast('جاري استعادة النسخة الاحتياطية...', 'info');
+            const summary = [];
+            for (const table of tables) {
+                const rows = backup.tables?.[table]?.rows || [];
+                if (!Array.isArray(rows) || rows.length === 0) { summary.push(`${table}: 0`); continue; }
+                const chunkSize = 200;
+                let restored = 0;
+                for (let i = 0; i < rows.length; i += chunkSize) {
+                    const chunk = rows.slice(i, i + chunkSize).map(row => ({ ...row }));
+                    const options = table === 'settings' ? { onConflict: 'setting_key' } : undefined;
+                    const { error } = options
+                        ? await window.supabaseClient.from(table).upsert(chunk, options)
+                        : await window.supabaseClient.from(table).upsert(chunk);
+                    if (error) throw new Error(`${table}: ${error.message}`);
+                    restored += chunk.length;
+                }
+                summary.push(`${table}: ${restored}`);
+            }
+            console.log('Restore summary:', summary.join(' | '));
+            window.showToast('تمت استعادة النسخة الاحتياطية بنجاح', 'success');
+            if (window.refreshCurrentPage) await window.refreshCurrentPage(true);
+            if (window.loadSettings) await window.loadSettings(true);
+            await window.enforceLicenseGate?.();
+        } catch (error) {
+            console.error('Restore Error:', error);
+            window.showToast('فشل الاستعادة: ' + error.message, 'error');
+        }
+    }, 'استعادة');
+};
+
+document.getElementById('backupRestoreInput')?.addEventListener('change', (event) => {
+    const file = event.target.files?.[0];
+    if (file) window.restoreBackupFromFile(file);
+});
+
 window.exportCurrentPageCSV = async function() {
     if (!window.supabaseClient) return window.showToast('قاعدة البيانات غير جاهزة', 'error');
     const page = window.currentSectionName || 'dashboard';
