@@ -34,11 +34,15 @@ function updateDebtVisual(totalRemaining) {
   const card = document.getElementById('totalRemaining')?.closest('.stat-card');
   if (!card) return;
   card.classList.remove('debt-warning', 'debt-danger');
-  if (totalRemaining >= 50000) card.classList.add('debt-danger');
-  else if (totalRemaining >= 15000) card.classList.add('debt-warning');
+  const runtimeSettings = window.getRuntimeSettings?.() || {};
+  const warningLimit = parseFloat(runtimeSettings.debt_warning) || 15000;
+  const dangerLimit = parseFloat(runtimeSettings.debt_danger) || 50000;
+  if (totalRemaining >= dangerLimit) card.classList.add('debt-danger');
+  else if (totalRemaining >= warningLimit) card.classList.add('debt-warning');
 
   const now = Date.now();
-  if (totalRemaining >= 50000 && now - lastDebtAlertAt > 60000) {
+  const dangerToastLimit = parseFloat((window.getRuntimeSettings?.() || {}).debt_danger) || 50000;
+  if (totalRemaining >= dangerToastLimit && now - lastDebtAlertAt > 60000) {
     lastDebtAlertAt = now;
     window.showToast?.(`تنبيه: إجمالي المتبقي مرتفع (${formatMoney(totalRemaining)})`, 'warning');
   }
