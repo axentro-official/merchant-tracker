@@ -1872,6 +1872,12 @@
     import { processAiQuery } from './src/services/aiService.js';
     import { verifyCurrentLicense, activateLicense, renderLicenseState } from './src/services/licenseService.js';
 
+    // Expose license helpers for the non-module scripts below.
+    // Without this, classic scripts cannot access module-scoped imports.
+    window.verifyCurrentLicense = verifyCurrentLicense;
+    window.activateLicense = activateLicense;
+    window.renderLicenseState = renderLicenseState;
+
     window.loadMerchants = loadMerchants;
     window.loadMachines = loadMachines;
     window.loadTransfers = loadTransfers;
@@ -2654,8 +2660,8 @@ window.enforceLicenseGate = async function() {
     const box = document.getElementById('licenseStatusBox');
     if (!overlay || !window.supabaseClient) return;
     try {
-        const result = await verifyCurrentLicense(window.supabaseClient, window.getRuntimeSettings?.() || {});
-        if (box) box.innerHTML = renderLicenseState(result);
+        const result = await window.verifyCurrentLicense(window.supabaseClient, window.getRuntimeSettings?.() || {});
+        if (box) box.innerHTML = window.renderLicenseState(result);
         if (input && result.licenseKey) input.value = result.licenseKey;
         overlay.classList.toggle('show', !result.valid);
         if (result.valid && result.warning && !window.__licenseWarningShown) {
@@ -2675,9 +2681,9 @@ window.activateLicenseFromOverlay = async function() {
     const key = document.getElementById('licenseActivationInput')?.value?.trim();
     if (!key) return window.showToast('اكتب License Key أولاً', 'warning');
     try {
-        const result = await activateLicense(window.supabaseClient, key);
+        const result = await window.activateLicense(window.supabaseClient, key);
         if (!result.valid) {
-            document.getElementById('licenseStatusBox').innerHTML = renderLicenseState(result);
+            document.getElementById('licenseStatusBox').innerHTML = window.renderLicenseState(result);
             return window.showToast(result.message || 'License غير صالح', 'error');
         }
         if (window.loadSettings) await window.loadSettings(true);
