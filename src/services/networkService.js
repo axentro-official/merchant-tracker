@@ -51,3 +51,10 @@ export async function sendRequestEmailNotification(payload, options = {}) {
     payload
   }, options);
 }
+
+export async function sendLicenseEmailNotification(payload, options = {}) {
+  return postJson(CONFIG.EMAIL_ENDPOINT, {
+    action: 'sendLicenseEmail',
+    payload
+  }, options);
+}
