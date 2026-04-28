@@ -202,6 +202,47 @@ function buildTopMachines(context) {
   return 'أعلى المكن أداءً:\n' + rows.map((row, i) => `${i+1}) ${row.machine['رقم المكنة'] || '—'} • ${row.machine['اسم التاجر'] || '—'} • محقق ${money(row.achieved)} من ${money(row.target)} • ${row.pct.toFixed(1)}%`).join('\n');
 }
 
+
+function isToday(row) {
+  const d = new Date();
+  const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return String(row?.['التاريخ'] || '') === today;
+}
+
+function isCurrentMonth(row) {
+  const d = new Date();
+  const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  const rowDate = String(row?.['التاريخ'] || '');
+  const rowMonth = String(row?.['الشهر'] || '');
+  return rowDate.startsWith(ym) || rowMonth.includes(ym) || rowMonth.includes(String(d.getMonth()+1));
+}
+
+function buildTransactionsAnswer(context, kind, scope = 'all') {
+  const isTransfer = kind === 'transfer';
+  const rows = isTransfer ? (context.transfers || []) : (context.collections || []);
+  const filtered = scope === 'today' ? rows.filter(isToday) : scope === 'month' ? rows.filter(isCurrentMonth) : rows;
+  const amountField = isTransfer ? 'قيمة التحويل' : 'قيمة التحصيل';
+  const refTitle = isTransfer ? 'التحويلات' : 'التحصيلات';
+  const total = filtered.reduce((sum, row) => sum + safeNumber(row[amountField]), 0);
+  const latest = filtered.slice().sort((a,b) => rowDateValue(b)-rowDateValue(a)).slice(0, 8);
+  const scopeLabel = scope === 'today' ? 'اليوم' : scope === 'month' ? 'هذا الشهر' : 'الإجمالية';
+  return [
+    `${refTitle} ${scopeLabel}: ${money(total)}`,
+    `عدد العمليات: ${filtered.length}`,
+    latest.length ? 'آخر العمليات:' : 'لا توجد عمليات في هذا النطاق.',
+    ...latest.map((row, i) => `${i+1}) ${row['اسم التاجر'] || '—'} • ${row['الرقم المرجعي'] || '—'} • ${money(row[amountField])} • ${row['التاريخ'] || '—'} ${row['الوقت'] || ''}`)
+  ].join('\n');
+}
+
+function buildCollectionsNeeded(context) {
+  const rows = buildDebtors(context);
+  if (!rows.length) return 'لا يوجد تجار مطلوب تحصيل منهم حالياً.';
+  return [
+    'التجار المقترح البدء بتحصيلهم حسب أعلى مديونية:',
+    ...rows.slice(0, 15).map((row, i) => `${i+1}) ${row.merchant['اسم التاجر'] || '—'} — حساب ${row.merchant['رقم الحساب'] || '—'} — المتبقي ${money(row.debt)} — الهاتف ${row.merchant['رقم الهاتف'] || '—'}`)
+  ].join('\n');
+}
+
 function buildHelp() {
   return [
     'أنا مساعد Axentro الذكي. أقدر أساعدك في:',
@@ -218,7 +259,10 @@ function buildHelp() {
     'كشف حساب أحمد',
     'رقم الحساب 2468',
     'أعلى مديونية',
-    'أعلى المكن'
+    'أعلى المكن',
+    'تحويلات اليوم',
+    'تحصيلات هذا الشهر',
+    'اعمل تحصيل لمين؟'
   ].join('\n');
 }
 
@@ -238,6 +282,7 @@ export async function processQuery(question, context = {}) {
     if (!rows.length) return 'لا توجد مديونيات حالية.';
     return 'أعلى المديونيات حالياً:\n' + rows.map((row, index) => `${index + 1}) ${row.merchant['اسم التاجر'] || '—'} — ${money(row.debt)} — حساب ${row.merchant['رقم الحساب'] || '—'}`).join('\n');
   }
+  if (includesAny(q, ['مين احصل', 'اعمل تحصيل لمين', 'تحصيل من مين', 'التجار اللي عليهم فلوس', 'اللي عليهم فلوس'])) return buildCollectionsNeeded(context);
   if (includesAny(q, ['ملخص', 'احصائيات', 'احصائيات النظام', 'لوحه', 'لوحة', 'overview', 'system'])) return buildOverview(context);
   if (includesAny(q, ['اعلى المكن', 'افضل المكن', 'اداء المكن', 'التارجت'])) return buildTopMachines(context);
   if (includesAny(q, ['التجار', 'عدد التجار', 'قائمه التجار', 'قائمة التجار']) && !merchant) {
@@ -248,12 +293,12 @@ export async function processQuery(question, context = {}) {
   }
   if (includesAny(q, ['المكن', 'مكينه', 'مكنه', 'عدد المكن', 'عدد المكينات'])) return `عدد المكن الحالي: ${(context.machines || []).length}`;
   if (includesAny(q, ['تحويل', 'التحويل', 'التحويلات', 'اجمالي التحويلات'])) {
-    const total = (context.transfers || []).reduce((sum, row) => sum + safeNumber(row['قيمة التحويل']), 0);
-    return `إجمالي التحويلات الحالية: ${money(total)}\nعدد التحويلات: ${(context.transfers || []).length}`;
+    const scope = includesAny(q, ['اليوم', 'النهارده', 'نهارده']) ? 'today' : includesAny(q, ['الشهر', 'شهري', 'هذا الشهر']) ? 'month' : 'all';
+    return buildTransactionsAnswer(context, 'transfer', scope);
   }
   if (includesAny(q, ['تحصيل', 'التحصيل', 'التحصيلات', 'اجمالي التحصيلات'])) {
-    const total = (context.collections || []).reduce((sum, row) => sum + safeNumber(row['قيمة التحصيل']), 0);
-    return `إجمالي التحصيلات الحالية: ${money(total)}\nعدد التحصيلات: ${(context.collections || []).length}`;
+    const scope = includesAny(q, ['اليوم', 'النهارده', 'نهارده']) ? 'today' : includesAny(q, ['الشهر', 'شهري', 'هذا الشهر']) ? 'month' : 'all';
+    return buildTransactionsAnswer(context, 'collection', scope);
   }
   if (includesAny(q, ['طلبات', 'طلب', 'معلق', 'المعلقه', 'المعلقة'])) {
     const pending = (context.requests || []).filter(item => normalizeArabic(item['الحالة']) === 'معلق');
