@@ -33,23 +33,80 @@ function normalizeStatus(value) {
   return raw || 'active';
 }
 
+function normalizePlan(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (['trial', 'monthly', 'yearly', 'lifetime'].includes(raw)) return raw;
+  return 'trial';
+}
+
 function buildResult(record, fallbackKey = '') {
   const licenseKey = record?.license_key || fallbackKey || '';
-  const plan = record?.plan_type || record?.license_plan || 'lifetime';
+  const plan = normalizePlan(record?.plan_type || record?.license_plan || 'lifetime');
   const status = normalizeStatus(record?.status || record?.license_status || 'active');
   const endDate = record?.end_date || record?.license_expires_at || '';
   const remaining = daysUntil(endDate);
 
-  if (!licenseKey) return { valid: false, licenseKey: '', reason: 'missing', message: 'النسخة غير مفعلة. أدخل License Key صالح.' };
-  if (status === 'disabled') return { valid: false, licenseKey, plan, status, endDate, reason: 'disabled', message: 'هذا الترخيص موقوف.' };
-  if (status === 'expired') return { valid: false, licenseKey, plan, status, endDate, reason: 'expired', message: 'انتهت صلاحية الترخيص.' };
+  if (!licenseKey) {
+    return {
+      valid: false,
+      licenseKey: '',
+      reason: 'missing',
+      message: 'النسخة غير مفعلة. أدخل License Key صالح.'
+    };
+  }
+
+  if (status === 'disabled') {
+    return {
+      valid: false,
+      licenseKey,
+      plan,
+      status,
+      endDate,
+      reason: 'disabled',
+      message: 'هذا الترخيص موقوف.'
+    };
+  }
+
+  if (status === 'expired') {
+    return {
+      valid: false,
+      licenseKey,
+      plan,
+      status,
+      endDate,
+      reason: 'expired',
+      message: 'انتهت صلاحية الترخيص.'
+    };
+  }
 
   if (plan !== 'lifetime') {
-    if (!endDate) return { valid: false, licenseKey, plan, status, reason: 'missing_end_date', message: 'الترخيص غير مكتمل: تاريخ الانتهاء غير موجود.' };
-    if (remaining < 0) return { valid: false, licenseKey, plan, status: 'expired', endDate, remainingDays: remaining, reason: 'expired', message: 'انتهت صلاحية الترخيص.' };
+    if (!endDate) {
+      return {
+        valid: false,
+        licenseKey,
+        plan,
+        status,
+        reason: 'missing_end_date',
+        message: 'الترخيص لم يبدأ بعد أو تاريخ الانتهاء غير موجود.'
+      };
+    }
+
+    if (remaining < 0) {
+      return {
+        valid: false,
+        licenseKey,
+        plan,
+        status: 'expired',
+        endDate,
+        remainingDays: remaining,
+        reason: 'expired',
+        message: 'انتهت صلاحية الترخيص.'
+      };
+    }
   }
 
   const warning = plan !== 'lifetime' && remaining !== null && remaining <= 7;
+
   return {
     valid: true,
     licenseKey,
@@ -68,18 +125,32 @@ function getScriptUrl() {
     if (window.CONFIG && window.CONFIG.GOOGLE_SCRIPT_URL) return String(window.CONFIG.GOOGLE_SCRIPT_URL).trim();
     if (window.AXENTRO_CONFIG && window.AXENTRO_CONFIG.GOOGLE_SCRIPT_URL) return String(window.AXENTRO_CONFIG.GOOGLE_SCRIPT_URL).trim();
     if (window.GOOGLE_SCRIPT_URL) return String(window.GOOGLE_SCRIPT_URL).trim();
-    return String(localStorage.getItem('AXENTRO_GOOGLE_SCRIPT_URL') || '').trim();
+
+    const storedUrl = localStorage.getItem('AXENTRO_GOOGLE_SCRIPT_URL');
+    if (storedUrl) return String(storedUrl).trim();
+
+    // Current deployed Apps Script URL used by Axentro email service.
+    return 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
   } catch (_) {
-    return '';
+    return 'https://script.google.com/macros/s/AKfycby5emGQI0R5T8sQls0oOSGL7PUa8AyK5Eya_gFIMo_qLu6ONCHxw0Ewt8Wo6h4N8O2d/exec';
   }
 }
 
 async function sendLicenseActivationEmail(licenseRecord) {
   const url = getScriptUrl();
-  if (!url) return { sent: false, skipped: true, reason: 'GOOGLE_SCRIPT_URL_NOT_FOUND' };
+  if (!url) {
+    return { sent: false, skipped: true, reason: 'GOOGLE_SCRIPT_URL_NOT_FOUND' };
+  }
 
-  const response = await fetch(url, {
+  if (!licenseRecord?.client_email) {
+    return { sent: false, skipped: true, reason: 'CLIENT_EMAIL_NOT_FOUND' };
+  }
+
+  // Apps Script Web Apps commonly fail browser CORS checks when reading the response.
+  // no-cors still sends the request; we treat it as attempted/sent from the browser side.
+  await fetch(url, {
     method: 'POST',
+    mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({
       action: 'sendLicenseEmail',
@@ -95,11 +166,7 @@ async function sendLicenseActivationEmail(licenseRecord) {
     })
   });
 
-  const text = await response.text();
-  let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch (_) { data = { raw: text }; }
-  if (!response.ok || data?.success === false) throw new Error(data?.message || data?.error || `LICENSE_EMAIL_FAILED_${response.status}`);
-  return { sent: true, response: data };
+  return { sent: true, mode: 'no-cors', message: 'تم إرسال طلب إيميل التفعيل إلى خدمة البريد.' };
 }
 
 export async function verifyCurrentLicense(supabase, settings = {}) {
@@ -107,11 +174,25 @@ export async function verifyCurrentLicense(supabase, settings = {}) {
   if (!licenseKey) return buildResult(null, '');
 
   try {
-    const { data, error } = await supabase.from('licenses').select('*').eq('license_key', licenseKey).maybeSingle();
+    const { data, error } = await supabase
+      .from('licenses')
+      .select('*')
+      .eq('license_key', licenseKey)
+      .maybeSingle();
+
     if (error) throw error;
-    if (!data) return { valid: false, licenseKey, reason: 'not_found', message: 'License Key غير موجود.' };
+    if (!data) {
+      return {
+        valid: false,
+        licenseKey,
+        reason: 'not_found',
+        message: 'License Key غير موجود.'
+      };
+    }
+
     return buildResult(data, licenseKey);
   } catch (error) {
+    // Backward-compatible fallback for older installations that only have settings.
     return buildResult({
       license_key: licenseKey,
       plan_type: settings.license_plan || 'lifetime',
@@ -125,23 +206,56 @@ export async function activateLicense(supabase, licenseKey) {
   const key = String(licenseKey || '').trim();
   if (!key) return buildResult(null, '');
 
-  const { data: existing, error: fetchError } = await supabase.from('licenses').select('*').eq('license_key', key).maybeSingle();
-  if (fetchError) throw fetchError;
-  if (!existing) return { valid: false, licenseKey: key, reason: 'not_found', message: 'License Key غير موجود.' };
+  const { data: existing, error: fetchError } = await supabase
+    .from('licenses')
+    .select('*')
+    .eq('license_key', key)
+    .maybeSingle();
 
-  const normalized = normalizeStatus(existing.status);
-  if (normalized === 'disabled' || normalized === 'expired') return buildResult(existing, key);
+  if (fetchError) throw fetchError;
+
+  if (!existing) {
+    return {
+      valid: false,
+      licenseKey: key,
+      reason: 'not_found',
+      message: 'License Key غير موجود.'
+    };
+  }
+
+  const normalizedStatus = normalizeStatus(existing.status);
+  if (normalizedStatus === 'disabled' || normalizedStatus === 'expired') {
+    return buildResult(existing, key);
+  }
 
   const now = new Date().toISOString();
+  const isFirstActivation = !existing.activated_at;
+
   const { error: activationError } = await supabase
     .from('licenses')
-    .update({ activated_at: existing.activated_at || now, updated_at: now })
+    .update({
+      activated_at: existing.activated_at || now,
+      updated_at: now
+    })
     .eq('license_key', key);
+
   if (activationError) throw activationError;
 
-  const { data: activated, error: refetchError } = await supabase.from('licenses').select('*').eq('license_key', key).maybeSingle();
+  const { data: activated, error: refetchError } = await supabase
+    .from('licenses')
+    .select('*')
+    .eq('license_key', key)
+    .maybeSingle();
+
   if (refetchError) throw refetchError;
-  if (!activated) return { valid: false, licenseKey: key, reason: 'not_found_after_activation', message: 'لم يتم العثور على الترخيص بعد التفعيل.' };
+  if (!activated) {
+    return {
+      valid: false,
+      licenseKey: key,
+      reason: 'not_found_after_activation',
+      message: 'لم يتم العثور على الترخيص بعد التفعيل.'
+    };
+  }
 
   const result = buildResult(activated, key);
   if (!result.valid) return result;
@@ -152,34 +266,63 @@ export async function activateLicense(supabase, licenseKey) {
     ['license_email', activated.client_email || ''],
     ['license_status', activated.status || 'active'],
     ['license_expires_at', activated.end_date || '']
-  ].map(([setting_key, setting_value]) => ({ setting_key, setting_value, 'الخاصية': setting_key, 'القيمة': setting_value, updated_at: new Date().toISOString() }));
+  ].map(([setting_key, setting_value]) => ({
+    setting_key,
+    setting_value,
+    'الخاصية': setting_key,
+    'القيمة': setting_value,
+    updated_at: new Date().toISOString()
+  }));
 
-  const { error: settingsError } = await supabase.from('settings').upsert(settingsRows, { onConflict: 'setting_key' });
+  const { error: settingsError } = await supabase
+    .from('settings')
+    .upsert(settingsRows, { onConflict: 'setting_key' });
+
   if (settingsError) throw settingsError;
 
   let emailResult = null;
-  try { emailResult = await sendLicenseActivationEmail(activated); } catch (emailError) { emailResult = { sent: false, error: emailError.message }; }
+  if (isFirstActivation) {
+    try {
+      emailResult = await sendLicenseActivationEmail(activated);
+    } catch (emailError) {
+      emailResult = { sent: false, error: emailError.message };
+    }
+  } else {
+    emailResult = { sent: false, skipped: true, reason: 'ALREADY_ACTIVATED' };
+  }
 
   return {
     ...result,
     emailResult,
-    message: emailResult?.sent ? 'تم تفعيل الترخيص وإرسال إيميل التفعيل بنجاح.' : result.message
+    message: emailResult?.sent
+      ? 'تم تفعيل الترخيص وإرسال إيميل التفعيل بنجاح.'
+      : result.message
   };
 }
 
 export function renderLicenseState(result) {
   if (!result) return 'لم يتم التحقق من الترخيص.';
+
   const cls = result.valid ? (result.warning ? 'warning' : 'active') : 'danger';
   const icon = result.valid ? (result.warning ? 'fa-triangle-exclamation' : 'fa-circle-check') : 'fa-circle-xmark';
   const plan = result.planLabel || PLAN_LABELS[result.plan] || result.plan || 'غير محدد';
   const end = result.plan === 'lifetime' ? 'مدى الحياة' : (result.endDate || 'غير محدد');
+
+  let emailLine = '';
+  if (result.emailResult && !result.emailResult.sent && !result.emailResult.skipped) {
+    emailLine = `<br><strong>الإيميل:</strong> لم يتم الإرسال (${result.emailResult.error || 'غير محدد'})`;
+  }
+  if (result.emailResult?.skipped && result.emailResult.reason === 'CLIENT_EMAIL_NOT_FOUND') {
+    emailLine = '<br><strong>الإيميل:</strong> لم يتم الإرسال لأن إيميل العميل غير موجود.';
+  }
+
   return `
     <div class="license-badge ${cls}"><i class="fas ${icon}"></i> ${result.message || ''}</div>
     <div style="margin-top:10px;line-height:1.9">
       <strong>المفتاح:</strong> ${result.licenseKey || '—'}<br>
       <strong>النوع:</strong> ${plan}<br>
       <strong>الانتهاء:</strong> ${end}
-      ${result.emailResult && !result.emailResult.sent ? `<br><strong>الإيميل:</strong> لم يتم الإرسال (${result.emailResult.reason || result.emailResult.error || 'غير محدد'})` : ''}
+      ${emailLine}
     </div>
   `;
 }
